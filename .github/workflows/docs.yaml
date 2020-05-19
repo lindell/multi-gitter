@@ -22,6 +22,8 @@ jobs:
       - name: Generate docs
         run: go run ./tools/docs.go
 
+      - run: git config user.email "johan@lindell.me"
+      - run: git config user.name "Automated docs generator"
       - run: git checkout docs
       - run: mv tmp-docs/* ./
       - run: git add *
