@@ -1,0 +1,29 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Generate docs
+
+jobs:
+  build:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.14
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
+      - name: Generate docs
+        run: go run ./tools/docs.go
+
+      - run: git checkout docs
+      - run: mv tmp-docs/* ./
+      - run: git add *
+      - run: git commit -m "Updated docs"
+      - run: git push
