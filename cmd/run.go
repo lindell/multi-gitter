@@ -14,7 +14,7 @@ import (
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "hello",
+	Short: "Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.",
 	Args:  cobra.ExactArgs(1),
 	RunE:  run,
 }
