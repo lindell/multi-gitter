@@ -21,7 +21,7 @@ var runCmd = &cobra.Command{
 
 func init() {
 	runCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	runCmd.Flags().StringP("org", "o", "", "The name of the  GitHub organization.")
+	runCmd.Flags().StringP("org", "o", "", "The name of the GitHub organization.")
 	runCmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
 	runCmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
 	runCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
