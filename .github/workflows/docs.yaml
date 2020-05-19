@@ -22,10 +22,12 @@ jobs:
       - name: Generate docs
         run: go run ./tools/docs.go
 
-      - run: git config user.email "johan@lindell.me"
-      - run: git config user.name "Automated docs generator"
-      - run: git checkout docs
-      - run: mv tmp-docs/* ./
-      - run: git add *
-      - run: git commit -m "Updated docs"
-      - run: git push
+      - run: |
+          git config user.email "johan@lindell.me"
+          git config user.name "Automated docs generator"
+          git checkout docs
+          mv tmp-docs/* ./
+          git add *
+          git commit -m "Updated docs"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+          git push
