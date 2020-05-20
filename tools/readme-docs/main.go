@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
+	"strings"
 	"text/template"
 
 	"github.com/lindell/multi-gitter/cmd"
@@ -31,7 +32,7 @@ func main() {
 
 	tmplBuf := &bytes.Buffer{}
 	err = tmpl.Execute(tmplBuf, templateData{
-		Usage: usageBuf.String(),
+		Usage: strings.TrimSpace(usageBuf.String()),
 	})
 	if err != nil {
 		log.Fatal(err)
