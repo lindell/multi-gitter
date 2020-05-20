@@ -16,7 +16,7 @@ func init() {
 	RootCmd.PersistentFlags().StringP("gh-base-url", "g", "https://api.github.com/", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
 	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub personal access token. Can also be set using the GITHUB_TOKEN enviroment variable.")
 
-	RootCmd.AddCommand(runCmd)
+	RootCmd.AddCommand(RunCmd)
 }
 
 func Execute() {

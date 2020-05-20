@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var runCmd = &cobra.Command{
+var RunCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.",
 	Args:  cobra.ExactArgs(1),
@@ -20,12 +20,12 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	runCmd.Flags().StringP("org", "o", "", "The name of the GitHub organization.")
-	runCmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
-	runCmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
-	runCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
-	runCmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
+	RunCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	RunCmd.Flags().StringP("org", "o", "", "The name of the GitHub organization.")
+	RunCmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
+	RunCmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
+	RunCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
+	RunCmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
 }
 
 func run(cmd *cobra.Command, args []string) error {

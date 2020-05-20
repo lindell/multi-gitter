@@ -3,7 +3,7 @@ on:
     branches:
       - master
 
-name: Generate docs
+name: Generate readme
 
 jobs:
   build:
@@ -19,15 +19,19 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
 
-      - name: Generate docs
-        run: go run ./tools/docs/main.go
+      - name: Generate readme
+        run: go run ./tools/docs.go
 
-      - run: |
+      - name: Commit changes
+        continue-on-error: true
+        run: |
           git config user.email "johan@lindell.me"
-          git config user.name "Automated docs generator"
-          git checkout docs
-          mv tmp-docs/* ./
-          git add *
-          git commit -m "Updated docs"
+          git config user.name "Johan Lindell"
+          git add README.md
+          git commit -m "Updated README"
+
+      - name: Push changes
+        if: ${{ success() }}
+        run: |
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
           git push
