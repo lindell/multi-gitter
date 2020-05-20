@@ -27,7 +27,7 @@ jobs:
         run: |
           git config user.email "johan@lindell.me"
           git config user.name "Automated docs generator"
-          git checkout docs
+          git checkout docs --
           mv tmp-docs/* ./
           git add *
           git commit -m "Updated docs"
