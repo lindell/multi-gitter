@@ -8,7 +8,7 @@ The script can be both a shell script or a binary. If the script returns with a 
 ### Usage
 ```
 Usage:
-  multi-gitter run [flags]
+  multi-gitter run [script path] [flags]
 
 Flags:
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
