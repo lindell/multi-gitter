@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Generate readme
-        run: go run ./tools/docs.go
+        run: go run ./tools/readme-docs/main.go
 
       - name: Commit changes
         continue-on-error: true
