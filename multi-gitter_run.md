@@ -26,7 +26,7 @@ multi-gitter run [script path] [flags]
 
 ```
   -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
-  -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN enviroment variable.
+  -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
 ```
 
 ### SEE ALSO
