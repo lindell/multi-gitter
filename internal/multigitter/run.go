@@ -36,7 +36,7 @@ type Runner struct {
 	Reviewers        []string
 }
 
-// RunCmd runs a script for multiple repositories and creates PRs with the changes made
+// Run runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run() error {
 	repos, err := r.RepoGetter.GetRepositories()
 	if err != nil {
@@ -99,7 +99,7 @@ func (r Runner) runSingleRepo(url string) error {
 	cmd.Stdout = writer
 	cmd.Stderr = writer
 
-	// Print each line that is outputed by the script
+	// Print each line that is outputted by the script
 	go func() {
 		buf := bufio.NewReader(reader)
 		for {

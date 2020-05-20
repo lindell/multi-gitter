@@ -51,7 +51,7 @@ func run(cmd *cobra.Command, args []string) error {
 	} else if ght := os.Getenv("GITHUB_TOKEN"); ght != "" {
 		ghConfig.Token = ght
 	} else {
-		fmt.Println("Either the --token flag or the GITHUB_TOKEN enviroment variable has to be set.")
+		fmt.Println("Either the --token flag or the GITHUB_TOKEN environment variable has to be set.")
 		flag.Usage()
 		os.Exit(1)
 	}
