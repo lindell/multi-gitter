@@ -25,6 +25,7 @@ jobs:
       - name: Commit changes
         continue-on-error: true
         run: |
+          git checkout master
           git config user.email "johan@lindell.me"
           git config user.name "Johan Lindell"
           git add README.md
