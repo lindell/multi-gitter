@@ -4,10 +4,10 @@ Run clones multiple repostories, run a script in that directory, and creates a P
 
 ### Synopsis
 
-Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.
+Run will clone down multiple repositories. For each of those repositories, the script will be run. If the script finished with a zero exit code, and the script resulted in file changes, a pull request will be created with.
 
 ```
-multi-gitter run [flags]
+multi-gitter run [script path] [flags]
 ```
 
 ### Options
