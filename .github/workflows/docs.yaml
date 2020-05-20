@@ -22,12 +22,18 @@ jobs:
       - name: Generate docs
         run: go run ./tools/docs/main.go
 
-      - run: |
+      - name: Commit changes
+        continue-on-error: true
+        run: |
           git config user.email "johan@lindell.me"
           git config user.name "Automated docs generator"
           git checkout docs
           mv tmp-docs/* ./
           git add *
           git commit -m "Updated docs"
+
+      - name: Push changes
+        if: ${{ success() }}
+        run: |
           git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
           git push
