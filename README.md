@@ -1,5 +1,6 @@
-multi-gitter
-----
+<h1 align="center">
+  🛠 multi-gitter
+</h1>
 
 Multi-gitter is a tool that allows you to run a script or program for every repository in a GitHub organisation that will then be committed and a PR will be created.
 
