@@ -10,6 +10,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
+// Config contain github configuration
 type Config struct {
 	BaseURL string
 	Token   string // Personal access token
@@ -51,12 +52,14 @@ func (r repository) GetBranch() string {
 	return r.DefaultBranch
 }
 
+// OrgRepoGetter fetches repositories from and organization
 type OrgRepoGetter struct {
 	Config
 
 	Organization string
 }
 
+// GetRepositories fetches repositories from and organization
 func (g OrgRepoGetter) GetRepositories() ([]domain.Repository, error) {
 	url := fmt.Sprintf("%sorgs/%s/repos", g.BaseURL, g.Organization)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
@@ -88,10 +91,12 @@ func (g OrgRepoGetter) GetRepositories() ([]domain.Repository, error) {
 	return repos, nil
 }
 
+// PullRequestCreator creates pull requests
 type PullRequestCreator struct {
 	Config
 }
 
+// CreatePullRequest creates a pull request
 func (g PullRequestCreator) CreatePullRequest(repo domain.Repository, newPR domain.NewPullRequest) error {
 	repository, ok := repo.(repository)
 	if !ok {

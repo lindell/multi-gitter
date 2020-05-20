@@ -2,8 +2,6 @@ package git
 
 import (
 	"bytes"
-	"fmt"
-	"os/exec"
 	"strings"
 
 	"github.com/lindell/multi-gitter/internal/domain"
@@ -17,14 +15,7 @@ type Git struct {
 	NewBranch string // The name of the new branch that new changes will be pushed to
 }
 
-// errorWrap converts errors a failed command into more a more useful error
-func errorWrap(err error) error {
-	if exitErr, ok := err.(*exec.ExitError); ok {
-		return fmt.Errorf("git command existed with status code %d:\n%s\n", exitErr.ExitCode(), exitErr.Stderr)
-	}
-	return err
-}
-
+// Clone clones a repository
 func (g Git) Clone() error {
 	cmd := g.command("git", "clone", g.Repo, g.Directory)
 	cmd.Stderr = &bytes.Buffer{}
@@ -35,6 +26,7 @@ func (g Git) Clone() error {
 	return nil
 }
 
+// Commit commits and pushes changes
 func (g Git) Commit(commitMessage string) error {
 	cmd := g.command("git", "add", ".")
 	cmd.Dir = g.Directory

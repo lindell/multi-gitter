@@ -12,14 +12,17 @@ import (
 	"github.com/lindell/multi-gitter/internal/git"
 )
 
+// RepoGetter fetches repositories
 type RepoGetter interface {
 	GetRepositories() ([]domain.Repository, error)
 }
 
+// PullRequestCreator creates pull requests
 type PullRequestCreator interface {
 	CreatePullRequest(repo domain.Repository, newPR domain.NewPullRequest) error
 }
 
+// Runner conains fields to be able to do the run
 type Runner struct {
 	ScriptPath    string // Must be absolute path
 	FeatureBranch string
@@ -33,6 +36,7 @@ type Runner struct {
 	Reviewers        []string
 }
 
+// RunCmd runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run() error {
 	repos, err := r.RepoGetter.GetRepositories()
 	if err != nil {

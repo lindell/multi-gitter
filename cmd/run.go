@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// RunCmd is the main command that runs a script for multiple repositories and creates PRs with the changes made
 var RunCmd = &cobra.Command{
 	Use:   "run [script path]",
 	Short: "Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.",
