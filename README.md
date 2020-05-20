@@ -7,15 +7,21 @@ The script can be both a shell script or a binary. If the script returns with a 
 
 ### Usage
 ```
-Usage: multi-gitter [OPTION]... FILE
+Usage:
+  multi-gitter run [flags]
+
+Flags:
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
-  -g, --gh-base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
-  -o, --org string              The name of the  GitHub organization.
+  -o, --org string              The name of the GitHub organization.
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
-  -T, --token string            The GitHub personal access token. Can also be set using the GITHUB_TOKEN enviroment variable.
+
+Global Flags:
+  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
+  -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN enviroment variable.
+
 ```
 
 ## Example script
