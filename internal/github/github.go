@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -96,7 +95,7 @@ func (g OrgRepoGetter) getRepositories(page int) ([]domain.Repository, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unknown status code %d when fetching repositories from %s", resp.StatusCode, url)
+		return nil, responseToError(resp, "cloud not fetching repositories")
 	}
 
 	var rr []repository
@@ -158,7 +157,7 @@ func (g PullRequestCreator) createPullRequest(repo repository, newPR domain.NewP
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return pr{}, fmt.Errorf("could not create pull request, got status code: %d", resp.StatusCode)
+		return pr{}, responseToError(resp, "could not create pull request")
 	}
 
 	var pullRequest pr
@@ -187,8 +186,7 @@ func (g PullRequestCreator) addReviewers(repo repository, newPR domain.NewPullRe
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		b, _ := ioutil.ReadAll(resp.Body)
-		return fmt.Errorf("could add reviewers to pull request, got status code: %d\nBody: %s", resp.StatusCode, b)
+		return responseToError(resp, "could not add reviewers to pull request")
 	}
 
 	return nil
