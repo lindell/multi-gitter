@@ -54,20 +54,20 @@ func run(cmd *cobra.Command, args []string) error {
 		ghConfig.Token = ght
 	} else {
 		fmt.Println("Either the --token flag or the GITHUB_TOKEN environment variable has to be set.")
-		flag.Usage()
+		cmd.Usage()
 		os.Exit(1)
 	}
 
 	if org == "" {
 		fmt.Println("No organisation set.")
-		flag.Usage()
+		cmd.Usage()
 		os.Exit(1)
 	}
 
 	// Set commit message based on pr title and body or the reverse
 	if commitMessage == "" && prTitle == "" {
 		fmt.Println("Pull request title or commit message must be set.")
-		flag.Usage()
+		cmd.Usage()
 		os.Exit(1)
 	} else if commitMessage == "" {
 		commitMessage = prTitle
