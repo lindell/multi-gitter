@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 )
@@ -61,7 +63,26 @@ type OrgRepoGetter struct {
 
 // GetRepositories fetches repositories from and organization
 func (g OrgRepoGetter) GetRepositories() ([]domain.Repository, error) {
-	url := fmt.Sprintf("%sorgs/%s/repos", g.BaseURL, g.Organization)
+	allRepos := []domain.Repository{}
+	for i := 1; ; i++ {
+		repos, err := g.getRepositories(i)
+		if err != nil {
+			return nil, err
+		} else if len(repos) == 0 {
+			break
+		}
+		allRepos = append(allRepos, repos...)
+	}
+	return allRepos, nil
+}
+
+func (g OrgRepoGetter) getRepositories(page int) ([]domain.Repository, error) {
+	q := url.Values{
+		"page":     []string{fmt.Sprint(page)},
+		"per_page": []string{"100"},
+	}
+
+	url := fmt.Sprintf("%sorgs/%s/repos?"+q.Encode(), g.BaseURL, g.Organization)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -166,7 +187,8 @@ func (g PullRequestCreator) addReviewers(repo repository, newPR domain.NewPullRe
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("could add reviewers to pull request, got status code: %d", resp.StatusCode)
+		b, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("could add reviewers to pull request, got status code: %d\nBody: %s", resp.StatusCode, b)
 	}
 
 	return nil
