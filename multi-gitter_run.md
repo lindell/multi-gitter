@@ -16,6 +16,7 @@ multi-gitter run [script path] [flags]
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
   -h, --help                    help for run
+  -R, --max-reviewers int       If this value is set, reviewers will be randomized
   -o, --org string              The name of the GitHub organization.
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
