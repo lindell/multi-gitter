@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 
@@ -34,6 +35,7 @@ type Runner struct {
 	PullRequestTitle string
 	PullRequestBody  string
 	Reviewers        []string
+	MaxReviewers     int // If set to zero, all reviewers will be used
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
@@ -62,7 +64,7 @@ func (r Runner) Run() error {
 			Body:      r.PullRequestBody,
 			Head:      r.FeatureBranch,
 			Base:      repo.GetBranch(),
-			Reviewers: r.Reviewers,
+			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 		})
 		if err != nil {
 			return err
@@ -70,6 +72,16 @@ func (r Runner) Run() error {
 	}
 
 	return nil
+}
+
+func getReviewers(reviewers []string, maxReviewers int) []string {
+	if maxReviewers == 0 || len(reviewers) <= maxReviewers {
+		return reviewers
+	}
+
+	rand.Shuffle(len(reviewers), func(i, j int) { reviewers[i], reviewers[j] = reviewers[j], reviewers[i] })
+
+	return reviewers[0:maxReviewers]
 }
 
 func (r Runner) runSingleRepo(url string) error {

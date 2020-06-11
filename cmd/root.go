@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/spf13/cobra"
 )
 
@@ -15,4 +18,6 @@ func init() {
 	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.")
 
 	RootCmd.AddCommand(RunCmd)
+
+	rand.Seed(time.Now().UTC().UnixNano())
 }
