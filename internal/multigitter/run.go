@@ -2,6 +2,7 @@ package multigitter
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -45,17 +46,52 @@ func (r Runner) Run() error {
 		return err
 	}
 
+	log.Printf("Running on %d repositories\n", len(repos))
+
+	exitCodeRepos := map[int][]domain.Repository{}
+	noChangeRepos := []domain.Repository{}
+	successRepos := []domain.Repository{}
+
+	defer func() {
+		var exitInfo string
+		for exitCode := range exitCodeRepos {
+			exitInfo += fmt.Sprintf("Repositories with exit code %d:\n", exitCode)
+			for _, repo := range exitCodeRepos[exitCode] {
+				exitInfo += fmt.Sprintf("  %s\n", repo.GetURL())
+			}
+		}
+
+		if len(noChangeRepos) > 0 {
+			exitInfo += "Repositories where nothing was changed:\n"
+			for _, repo := range noChangeRepos {
+				exitInfo += fmt.Sprintf("  %s\n", repo.GetURL())
+			}
+		}
+
+		if len(successRepos) > 0 {
+			exitInfo += "Repositories with a successful run:\n"
+			for _, repo := range successRepos {
+				exitInfo += fmt.Sprintf("  %s\n", repo.GetURL())
+			}
+		}
+
+		if exitInfo != "" {
+			log.Print(exitInfo)
+		}
+	}()
+
 	for _, repo := range repos {
 		log.Printf("Cloning and running script on: %s\n", repo.GetURL())
 		err := r.runSingleRepo(repo.GetURL())
-		switch {
-		case err == domain.ExitCodeError:
-			log.Printf("Got exit code when running %s\n", repo.GetURL())
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			log.Printf("Got exit code %d when running %s\n", exitErr.ExitCode(), repo.GetURL())
+			exitCodeRepos[exitErr.ExitCode()] = append(exitCodeRepos[exitErr.ExitCode()], repo)
 			continue
-		case err == domain.NoChangeError:
+		} else if err == domain.NoChangeError {
 			log.Printf("No change done on the repo by the script when running: %s\n", repo.GetURL())
+			noChangeRepos = append(noChangeRepos, repo)
 			continue
-		case err != nil:
+		} else if err != nil {
 			return err
 		}
 
@@ -69,6 +105,9 @@ func (r Runner) Run() error {
 		if err != nil {
 			return err
 		}
+
+		successRepos = append(successRepos, repo)
+		return nil
 	}
 
 	return nil
@@ -127,9 +166,6 @@ func (r Runner) runSingleRepo(url string) error {
 
 	err = cmd.Run()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); ok {
-			return domain.ExitCodeError
-		}
 		return err
 	}
 
