@@ -43,6 +43,9 @@ type repository struct {
 	SSH           string `json:"ssh_url"`
 	Slug          string `json:"full_name"`
 	DefaultBranch string `json:"default_branch"`
+
+	Archived bool `json:"archived"`
+	Disabled bool `json:"disabled"`
 }
 
 func (r repository) GetURL() string {
@@ -104,9 +107,11 @@ func (g OrgRepoGetter) getRepositories(page int) ([]domain.Repository, error) {
 	}
 
 	// Transform the slice of repositories struct into a slice of the interface repositories
-	repos := make([]domain.Repository, len(rr))
-	for i := range rr {
-		repos[i] = rr[i]
+	repos := make([]domain.Repository, 0, len(rr))
+	for _, r := range rr {
+		if !r.Archived && !r.Disabled {
+			repos = append(repos, r)
+		}
 	}
 	return repos, nil
 }
