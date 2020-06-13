@@ -1,26 +1,41 @@
 package github
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"errors"
-	"fmt"
-	"net/http"
-	"net/url"
+
+	"github.com/google/go-github/v32/github"
+	"golang.org/x/oauth2"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
-// Github contain github configuration
-type Github struct {
-	BaseURL string
-	Token   string // Personal access token
+func New(token string, baseURL string) (*Github, error) {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	var client *github.Client
+	if baseURL != "" {
+		var err error
+		client, err = github.NewEnterpriseClient(baseURL, "", tc)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		client = github.NewClient(tc)
+	}
+
+	return &Github{
+		ghClient: client,
+	}, nil
 }
 
-// DefaultConfig contains values for the github.com api
-// The access token is still always needed
-var DefaultConfig = Github{
-	BaseURL: "https://api.github.com/",
+// Github contain github configuration
+type Github struct {
+	ghClient *github.Client
 }
 
 type createPrRequest struct {
@@ -30,9 +45,9 @@ type createPrRequest struct {
 	Base  string `json:"base"`
 }
 
-type pr struct {
-	ID     int `json:"id"`
-	Number int `json:"number"`
+type pullRequest struct {
+	ID     int64 `json:"id"`
+	Number int   `json:"number"`
 }
 
 type addReviewersRequest struct {
@@ -40,12 +55,10 @@ type addReviewersRequest struct {
 }
 
 type repository struct {
-	SSH           string `json:"ssh_url"`
-	Slug          string `json:"full_name"`
-	DefaultBranch string `json:"default_branch"`
-
-	Archived bool `json:"archived"`
-	Disabled bool `json:"disabled"`
+	SSH           string
+	Name          string
+	OwnerName     string
+	DefaultBranch string
 }
 
 func (r repository) GetURL() string {
@@ -57,10 +70,10 @@ func (r repository) GetBranch() string {
 }
 
 // GetRepositories fetches repositories from and organization
-func (g Github) GetRepositories(orgName string) ([]domain.Repository, error) {
+func (g Github) GetRepositories(ctx context.Context, orgName string) ([]domain.Repository, error) {
 	allRepos := []domain.Repository{}
 	for i := 1; ; i++ {
-		repos, err := g.getRepositories(orgName, i)
+		repos, err := g.getRepositories(ctx, orgName, i)
 		if err != nil {
 			return nil, err
 		} else if len(repos) == 0 {
@@ -71,116 +84,70 @@ func (g Github) GetRepositories(orgName string) ([]domain.Repository, error) {
 	return allRepos, nil
 }
 
-func (g Github) getRepositories(orgName string, page int) ([]domain.Repository, error) {
-	q := url.Values{
-		"page":     []string{fmt.Sprint(page)},
-		"per_page": []string{"100"},
-	}
-
-	url := fmt.Sprintf("%sorgs/%s/repos?"+q.Encode(), g.BaseURL, orgName)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+func (g Github) getRepositories(ctx context.Context, orgName string, page int) ([]domain.Repository, error) {
+	rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
+		ListOptions: github.ListOptions{
+			Page:    page,
+			PerPage: 100,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", "token "+g.Token)
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, responseToError(resp, "cloud not fetching repositories")
-	}
-
-	var rr []repository
-	if err := json.NewDecoder(resp.Body).Decode(&rr); err != nil {
-		return nil, err
-	}
-
-	// Transform the slice of repositories struct into a slice of the interface repositories
 	repos := make([]domain.Repository, 0, len(rr))
 	for _, r := range rr {
-		if !r.Archived && !r.Disabled {
-			repos = append(repos, r)
+		if !r.GetArchived() && !r.GetDisabled() {
+			repos = append(repos, repository{
+				SSH:           r.GetSSHURL(),
+				Name:          r.GetName(),
+				OwnerName:     r.GetOwner().GetLogin(),
+				DefaultBranch: r.GetDefaultBranch(),
+			})
 		}
 	}
 	return repos, nil
 }
 
 // CreatePullRequest creates a pull request
-func (g Github) CreatePullRequest(repo domain.Repository, newPR domain.NewPullRequest) error {
+func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error {
 	repository, ok := repo.(repository)
 	if !ok {
 		return errors.New("the repository needs to originate from this package")
 	}
 
-	pr, err := g.createPullRequest(repository, newPR)
+	pr, err := g.createPullRequest(ctx, repository, newPR)
 	if err != nil {
 		return err
 	}
 
-	if err := g.addReviewers(repository, newPR, pr); err != nil {
+	if err := g.addReviewers(ctx, repository, newPR, pr); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (g Github) createPullRequest(repo repository, newPR domain.NewPullRequest) (pr, error) {
-	buf := &bytes.Buffer{}
-	_ = json.NewEncoder(buf).Encode(createPrRequest{
-		Title: newPR.Title,
-		Body:  newPR.Body,
-		Head:  newPR.Head,
-		Base:  newPR.Base,
+func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (pullRequest, error) {
+	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.OwnerName, repo.Name, &github.NewPullRequest{
+		Title: &newPR.Title,
+		Body:  &newPR.Body,
+		Head:  &newPR.Head,
+		Base:  &newPR.Base,
 	})
-
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%srepos/%s/pulls", g.BaseURL, repo.Slug), buf)
 	if err != nil {
-		return pr{}, err
-	}
-	req.Header.Add("Authorization", "token "+g.Token)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return pr{}, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return pr{}, responseToError(resp, "could not create pull request")
+		return pullRequest{}, err
 	}
 
-	var pullRequest pr
-	if err := json.NewDecoder(resp.Body).Decode(&pullRequest); err != nil {
-		return pr{}, err
-	}
-	return pullRequest, nil
+	return pullRequest{
+		ID:     pr.GetID(),
+		Number: pr.GetNumber(),
+	}, nil
 }
 
-func (g Github) addReviewers(repo repository, newPR domain.NewPullRequest, createdPR pr) error {
-	buf := &bytes.Buffer{}
-	_ = json.NewEncoder(buf).Encode(addReviewersRequest{
+func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.NewPullRequest, createdPR pullRequest) error {
+	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.OwnerName, repo.Name, createdPR.Number, github.ReviewersRequest{
 		Reviewers: newPR.Reviewers,
 	})
-
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%srepos/%s/pulls/%d/requested_reviewers", g.BaseURL, repo.Slug, createdPR.Number), buf)
-	if err != nil {
-		return err
-	}
-	req.Header.Add("Authorization", "token "+g.Token)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		return responseToError(resp, "could not add reviewers to pull request")
-	}
-
-	return nil
+	return err
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -46,13 +47,13 @@ func run(cmd *cobra.Command, args []string) error {
 
 	programPath := flag.Arg(0)
 
-	ghConfig := github.DefaultConfig
-	ghConfig.BaseURL = ghBaseUrl
 	if token != "" {
-		ghConfig.Token = token
-	} else if ght := os.Getenv("GITHUB_TOKEN"); ght != "" {
-		ghConfig.Token = ght
-	} else {
+		if ght := os.Getenv("GITHUB_TOKEN"); ght != "" {
+			token = ght
+		}
+	}
+
+	if token == "" {
 		fmt.Println("Either the --token flag or the GITHUB_TOKEN environment variable has to be set.")
 		cmd.Usage()
 		os.Exit(1)
@@ -87,14 +88,16 @@ func run(cmd *cobra.Command, args []string) error {
 		log.Fatalln(workingDir)
 	}
 
+	vc, err := github.New(token, ghBaseUrl)
+	if err != nil {
+		log.Fatalln(workingDir)
+	}
+
 	runner := multigitter.Runner{
 		ScriptPath:    path.Join(workingDir, programPath),
 		FeatureBranch: branchName,
 
-		VersionController: github.Github{
-			BaseURL: ghBaseUrl,
-			Token:   token,
-		},
+		VersionController: vc,
 
 		OrgName:          org,
 		CommitMessage:    commitMessage,
@@ -104,7 +107,7 @@ func run(cmd *cobra.Command, args []string) error {
 		MaxReviewers:     maxReviewers,
 	}
 
-	err = runner.Run()
+	err = runner.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
