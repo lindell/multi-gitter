@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"os"
 	"path"
@@ -54,22 +54,16 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	if token == "" {
-		fmt.Println("Either the --token flag or the GITHUB_TOKEN environment variable has to be set.")
-		_ = cmd.Usage()
-		os.Exit(1)
+		return errors.New("either the --token flag or the GITHUB_TOKEN environment variable has to be set")
 	}
 
 	if org == "" {
-		fmt.Println("No organization set.")
-		_ = cmd.Usage()
-		os.Exit(1)
+		return errors.New("no organization set")
 	}
 
 	// Set commit message based on pr title and body or the reverse
 	if commitMessage == "" && prTitle == "" {
-		fmt.Println("Pull request title or commit message must be set.")
-		_ = cmd.Usage()
-		os.Exit(1)
+		return errors.New("pull request title or commit message must be set")
 	} else if commitMessage == "" {
 		commitMessage = prTitle
 		if prBody != "" {
@@ -85,12 +79,12 @@ func run(cmd *cobra.Command, args []string) error {
 
 	workingDir, err := os.Getwd()
 	if err != nil {
-		log.Fatalln(workingDir)
+		return errors.New("could not get the working directory")
 	}
 
 	vc, err := github.New(token, ghBaseURL)
 	if err != nil {
-		log.Fatalln(workingDir)
+		return err
 	}
 
 	runner := multigitter.Runner{
