@@ -10,7 +10,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
-func New(token string, baseURL string) (*Github, error) {
+func New(token, baseURL string) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -38,20 +38,9 @@ type Github struct {
 	ghClient *github.Client
 }
 
-type createPrRequest struct {
-	Title string `json:"title"`
-	Body  string `json:"body"`
-	Head  string `json:"head"`
-	Base  string `json:"base"`
-}
-
 type pullRequest struct {
 	ID     int64 `json:"id"`
 	Number int   `json:"number"`
-}
-
-type addReviewersRequest struct {
-	Reviewers []string `json:"reviewers"`
 }
 
 type repository struct {

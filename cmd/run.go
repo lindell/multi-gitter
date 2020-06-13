@@ -35,7 +35,7 @@ func init() {
 func run(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
-	ghBaseUrl, _ := flag.GetString("gh-base-url")
+	ghBaseURL, _ := flag.GetString("gh-base-url")
 	token, _ := flag.GetString("token")
 	branchName, _ := flag.GetString("branch")
 	org, _ := flag.GetString("org")
@@ -55,20 +55,20 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if token == "" {
 		fmt.Println("Either the --token flag or the GITHUB_TOKEN environment variable has to be set.")
-		cmd.Usage()
+		_ = cmd.Usage()
 		os.Exit(1)
 	}
 
 	if org == "" {
-		fmt.Println("No organisation set.")
-		cmd.Usage()
+		fmt.Println("No organization set.")
+		_ = cmd.Usage()
 		os.Exit(1)
 	}
 
 	// Set commit message based on pr title and body or the reverse
 	if commitMessage == "" && prTitle == "" {
 		fmt.Println("Pull request title or commit message must be set.")
-		cmd.Usage()
+		_ = cmd.Usage()
 		os.Exit(1)
 	} else if commitMessage == "" {
 		commitMessage = prTitle
@@ -88,7 +88,7 @@ func run(cmd *cobra.Command, args []string) error {
 		log.Fatalln(workingDir)
 	}
 
-	vc, err := github.New(token, ghBaseUrl)
+	vc, err := github.New(token, ghBaseURL)
 	if err != nil {
 		log.Fatalln(workingDir)
 	}

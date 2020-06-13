@@ -24,7 +24,7 @@ type cmd struct {
 func (c *cmd) Run() error {
 	err := c.Cmd.Run()
 	if exitErr, ok := err.(*exec.ExitError); ok {
-		return fmt.Errorf("command exit with error code %d:\n%s\n", exitErr.ExitCode(), c.Stderr)
+		return fmt.Errorf("command exit with error code %d:\n%s", exitErr.ExitCode(), c.Stderr)
 	}
 	return nil
 }
