@@ -2,6 +2,7 @@ package multigitter
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,14 +15,10 @@ import (
 	"github.com/lindell/multi-gitter/internal/git"
 )
 
-// RepoGetter fetches repositories
-type RepoGetter interface {
-	GetRepositories() ([]domain.Repository, error)
-}
-
-// PullRequestCreator creates pull requests
-type PullRequestCreator interface {
-	CreatePullRequest(repo domain.Repository, newPR domain.NewPullRequest) error
+// VersionController fetches repositories
+type VersionController interface {
+	GetRepositories(ctx context.Context, orgName string) ([]domain.Repository, error)
+	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error
 }
 
 // Runner conains fields to be able to do the run
@@ -29,9 +26,9 @@ type Runner struct {
 	ScriptPath    string // Must be absolute path
 	FeatureBranch string
 
-	RepoGetter         RepoGetter
-	PullRequestCreator PullRequestCreator
+	VersionController VersionController
 
+	OrgName          string
 	CommitMessage    string
 	PullRequestTitle string
 	PullRequestBody  string
@@ -40,8 +37,8 @@ type Runner struct {
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
-func (r Runner) Run() error {
-	repos, err := r.RepoGetter.GetRepositories()
+func (r Runner) Run(ctx context.Context) error {
+	repos, err := r.VersionController.GetRepositories(ctx, r.OrgName)
 	if err != nil {
 		return err
 	}
@@ -95,7 +92,7 @@ func (r Runner) Run() error {
 			return err
 		}
 
-		err = r.PullRequestCreator.CreatePullRequest(repo, domain.NewPullRequest{
+		err = r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
 			Title:     r.PullRequestTitle,
 			Body:      r.PullRequestBody,
 			Head:      r.FeatureBranch,
@@ -107,7 +104,6 @@ func (r Runner) Run() error {
 		}
 
 		successRepos = append(successRepos, repo)
-		return nil
 	}
 
 	return nil
