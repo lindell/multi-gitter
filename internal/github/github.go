@@ -10,6 +10,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
+// New create a new Github client
 func New(token, baseURL string) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
