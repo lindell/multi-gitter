@@ -11,15 +11,15 @@ import (
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
-// Config contain github configuration
-type Config struct {
+// Github contain github configuration
+type Github struct {
 	BaseURL string
 	Token   string // Personal access token
 }
 
 // DefaultConfig contains values for the github.com api
 // The access token is still always needed
-var DefaultConfig = Config{
+var DefaultConfig = Github{
 	BaseURL: "https://api.github.com/",
 }
 
@@ -56,18 +56,11 @@ func (r repository) GetBranch() string {
 	return r.DefaultBranch
 }
 
-// OrgRepoGetter fetches repositories from and organization
-type OrgRepoGetter struct {
-	Config
-
-	Organization string
-}
-
 // GetRepositories fetches repositories from and organization
-func (g OrgRepoGetter) GetRepositories() ([]domain.Repository, error) {
+func (g Github) GetRepositories(orgName string) ([]domain.Repository, error) {
 	allRepos := []domain.Repository{}
 	for i := 1; ; i++ {
-		repos, err := g.getRepositories(i)
+		repos, err := g.getRepositories(orgName, i)
 		if err != nil {
 			return nil, err
 		} else if len(repos) == 0 {
@@ -78,13 +71,13 @@ func (g OrgRepoGetter) GetRepositories() ([]domain.Repository, error) {
 	return allRepos, nil
 }
 
-func (g OrgRepoGetter) getRepositories(page int) ([]domain.Repository, error) {
+func (g Github) getRepositories(orgName string, page int) ([]domain.Repository, error) {
 	q := url.Values{
 		"page":     []string{fmt.Sprint(page)},
 		"per_page": []string{"100"},
 	}
 
-	url := fmt.Sprintf("%sorgs/%s/repos?"+q.Encode(), g.BaseURL, g.Organization)
+	url := fmt.Sprintf("%sorgs/%s/repos?"+q.Encode(), g.BaseURL, orgName)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -116,13 +109,8 @@ func (g OrgRepoGetter) getRepositories(page int) ([]domain.Repository, error) {
 	return repos, nil
 }
 
-// PullRequestCreator creates pull requests
-type PullRequestCreator struct {
-	Config
-}
-
 // CreatePullRequest creates a pull request
-func (g PullRequestCreator) CreatePullRequest(repo domain.Repository, newPR domain.NewPullRequest) error {
+func (g Github) CreatePullRequest(repo domain.Repository, newPR domain.NewPullRequest) error {
 	repository, ok := repo.(repository)
 	if !ok {
 		return errors.New("the repository needs to originate from this package")
@@ -140,7 +128,7 @@ func (g PullRequestCreator) CreatePullRequest(repo domain.Repository, newPR doma
 	return nil
 }
 
-func (g PullRequestCreator) createPullRequest(repo repository, newPR domain.NewPullRequest) (pr, error) {
+func (g Github) createPullRequest(repo repository, newPR domain.NewPullRequest) (pr, error) {
 	buf := &bytes.Buffer{}
 	_ = json.NewEncoder(buf).Encode(createPrRequest{
 		Title: newPR.Title,
@@ -172,7 +160,7 @@ func (g PullRequestCreator) createPullRequest(repo repository, newPR domain.NewP
 	return pullRequest, nil
 }
 
-func (g PullRequestCreator) addReviewers(repo repository, newPR domain.NewPullRequest, createdPR pr) error {
+func (g Github) addReviewers(repo repository, newPR domain.NewPullRequest, createdPR pr) error {
 	buf := &bytes.Buffer{}
 	_ = json.NewEncoder(buf).Encode(addReviewersRequest{
 		Reviewers: newPR.Reviewers,

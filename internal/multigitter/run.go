@@ -14,13 +14,9 @@ import (
 	"github.com/lindell/multi-gitter/internal/git"
 )
 
-// RepoGetter fetches repositories
-type RepoGetter interface {
-	GetRepositories() ([]domain.Repository, error)
-}
-
-// PullRequestCreator creates pull requests
-type PullRequestCreator interface {
+// VersionController fetches repositories
+type VersionController interface {
+	GetRepositories(orgName string) ([]domain.Repository, error)
 	CreatePullRequest(repo domain.Repository, newPR domain.NewPullRequest) error
 }
 
@@ -29,9 +25,9 @@ type Runner struct {
 	ScriptPath    string // Must be absolute path
 	FeatureBranch string
 
-	RepoGetter         RepoGetter
-	PullRequestCreator PullRequestCreator
+	VersionController VersionController
 
+	OrgName          string
 	CommitMessage    string
 	PullRequestTitle string
 	PullRequestBody  string
@@ -41,7 +37,7 @@ type Runner struct {
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run() error {
-	repos, err := r.RepoGetter.GetRepositories()
+	repos, err := r.VersionController.GetRepositories(r.OrgName)
 	if err != nil {
 		return err
 	}
@@ -95,7 +91,7 @@ func (r Runner) Run() error {
 			return err
 		}
 
-		err = r.PullRequestCreator.CreatePullRequest(repo, domain.NewPullRequest{
+		err = r.VersionController.CreatePullRequest(repo, domain.NewPullRequest{
 			Title:     r.PullRequestTitle,
 			Body:      r.PullRequestBody,
 			Head:      r.FeatureBranch,

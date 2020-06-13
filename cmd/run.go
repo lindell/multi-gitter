@@ -91,14 +91,12 @@ func run(cmd *cobra.Command, args []string) error {
 		ScriptPath:    path.Join(workingDir, programPath),
 		FeatureBranch: branchName,
 
-		RepoGetter: github.OrgRepoGetter{
-			Config:       ghConfig,
-			Organization: org,
-		},
-		PullRequestCreator: github.PullRequestCreator{
-			Config: ghConfig,
+		VersionController: github.Github{
+			BaseURL: ghBaseUrl,
+			Token:   token,
 		},
 
+		OrgName:          org,
 		CommitMessage:    commitMessage,
 		PullRequestTitle: prTitle,
 		PullRequestBody:  prBody,
