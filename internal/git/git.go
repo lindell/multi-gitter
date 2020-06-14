@@ -3,9 +3,8 @@ package git
 import (
 	"net/url"
 
-	"github.com/go-git/go-git/v5/plumbing"
-
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 )
@@ -26,6 +25,7 @@ func (g Git) Clone() error {
 		return err
 	}
 
+	// Set the token as https://TOKEN@url
 	u.User = url.User(g.Token)
 
 	_, err = git.PlainClone(g.Directory, false, &git.CloneOptions{
