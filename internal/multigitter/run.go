@@ -25,6 +25,7 @@ type VersionController interface {
 type Runner struct {
 	ScriptPath    string // Must be absolute path
 	FeatureBranch string
+	Token         string
 
 	VersionController VersionController
 
@@ -130,6 +131,7 @@ func (r Runner) runSingleRepo(url string) error {
 		Directory: tmpDir,
 		Repo:      url,
 		NewBranch: r.FeatureBranch,
+		Token:     r.Token,
 	}
 
 	err = sourceController.Clone()
