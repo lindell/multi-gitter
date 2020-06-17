@@ -1,8 +1,10 @@
 package git
 
 import (
-	"bytes"
-	"strings"
+	"net/url"
+
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 )
@@ -13,46 +15,67 @@ type Git struct {
 	Directory string // The (temporary) directory that should be worked within
 	Repo      string // The "url" to the repo, any format can be used as long as it's pushable
 	NewBranch string // The name of the new branch that new changes will be pushed to
+	Token     string
 }
 
 // Clone clones a repository
 func (g Git) Clone() error {
-	cmd := g.command("git", "clone", g.Repo, g.Directory)
-	cmd.Stderr = &bytes.Buffer{}
-	err := cmd.Run()
+	u, err := url.Parse(g.Repo)
 	if err != nil {
 		return err
 	}
-	return nil
+
+	// Set the token as https://TOKEN@url
+	u.User = url.User(g.Token)
+
+	_, err = git.PlainClone(g.Directory, false, &git.CloneOptions{
+		URL:        u.String(),
+		RemoteName: "origin",
+	})
+
+	return err
 }
 
 // Commit commits and pushes changes
 func (g Git) Commit(commitMessage string) error {
-	cmd := g.command("git", "add", ".")
-	cmd.Dir = g.Directory
-	err := cmd.Run()
+	r, err := git.PlainOpen(g.Directory)
 	if err != nil {
 		return err
 	}
 
-	cmd = g.command("git", "checkout", "-b", g.NewBranch)
-	cmd.Dir = g.Directory
-	err = cmd.Run()
+	w, err := r.Worktree()
 	if err != nil {
 		return err
 	}
 
-	cmd = g.command("git", "commit", "-F", "-")
-	cmd.Dir = g.Directory
-	cmd.Stdin = strings.NewReader(commitMessage)
-	err = cmd.Run()
+	status, err := w.Status()
 	if err != nil {
+		return err
+	}
+
+	if status.IsClean() {
 		return domain.NoChangeError
 	}
 
-	cmd = g.command("git", "push", "-u", "origin", g.NewBranch)
-	cmd.Dir = g.Directory
-	err = cmd.Run()
+	_, err = w.Add(".")
+	if err != nil {
+		return err
+	}
+
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
+		Create: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Commit(commitMessage, &git.CommitOptions{})
+	if err != nil {
+		return err
+	}
+
+	err = r.Push(&git.PushOptions{})
 	if err != nil {
 		return err
 	}

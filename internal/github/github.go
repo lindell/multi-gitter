@@ -89,7 +89,7 @@ func (g Github) getRepositories(ctx context.Context, orgName string, page int) (
 	for _, r := range rr {
 		if !r.GetArchived() && !r.GetDisabled() {
 			repos = append(repos, repository{
-				SSH:           r.GetSSHURL(),
+				SSH:           r.GetCloneURL(),
 				Name:          r.GetName(),
 				OwnerName:     r.GetOwner().GetLogin(),
 				DefaultBranch: r.GetDefaultBranch(),

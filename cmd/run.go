@@ -90,6 +90,7 @@ func run(cmd *cobra.Command, args []string) error {
 	runner := multigitter.Runner{
 		ScriptPath:    path.Join(workingDir, programPath),
 		FeatureBranch: branchName,
+		Token:         token,
 
 		VersionController: vc,
 
