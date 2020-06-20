@@ -12,7 +12,25 @@ Multi-gitter is a tool that allows you to run a script or program for every repo
 
 The script can be both a shell script or a binary. If the script returns with a 0 exit code and has made changes to the directory, a PR will be created.
 
-### Usage
+## Usage
+```
+Usage:
+  multi-gitter [command]
+
+Available Commands:
+  run         Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.
+  status      Get the status of pull requests
+
+Flags:
+  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
+  -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
+
+Use "multi-gitter [command] --help" for more information about a command.
+```
+
+
+### Usage of `run`
+Run will clone down multiple repositories. For each of those repositories, the script will be run. If the script finished with a zero exit code, and the script resulted in file changes, a pull request will be created with.
 ```
 Usage:
   multi-gitter run [script path] [flags]
@@ -30,6 +48,24 @@ Global Flags:
   -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
   -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
 ```
+
+
+### Usage of `status`
+Get the status of all pull requests with a specified branch name in an organization.
+```
+Usage:
+  multi-gitter status [flags]
+
+Flags:
+  -B, --branch string   The name of the branch where changes are committed. (default "multi-gitter-branch")
+  -o, --org string      The name of the GitHub organization.
+
+Global Flags:
+  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
+  -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
+```
+
+
 
 ## Example script
 

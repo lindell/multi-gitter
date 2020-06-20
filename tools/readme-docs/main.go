@@ -14,15 +14,27 @@ const templatePath = "./docs/README.template.md"
 const resultingPath = "./README.md"
 
 type templateData struct {
-	Usage string
+	MainUsage string
+	Commands  []command
+}
+
+type command struct {
+	Name        string
+	Description string
+	Usage       string
 }
 
 func main() {
-	usageBuf := &bytes.Buffer{}
-	cmd.RunCmd.SetOutput(usageBuf)
-	err := cmd.RunCmd.Usage()
-	if err != nil {
-		log.Fatal(err)
+	data := templateData{}
+
+	data.MainUsage = strings.TrimSpace(cmd.RootCmd.UsageString())
+
+	for _, c := range cmd.RootCmd.Commands() {
+		data.Commands = append(data.Commands, command{
+			Name:        c.Name(),
+			Description: c.Long,
+			Usage:       strings.TrimSpace(c.UsageString()),
+		})
 	}
 
 	tmpl, err := template.ParseFiles(templatePath)
@@ -31,9 +43,7 @@ func main() {
 	}
 
 	tmplBuf := &bytes.Buffer{}
-	err = tmpl.Execute(tmplBuf, templateData{
-		Usage: strings.TrimSpace(usageBuf.String()),
-	})
+	err = tmpl.Execute(tmplBuf, data)
 	if err != nil {
 		log.Fatal(err)
 	}
