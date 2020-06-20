@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/go-github/v32/github"
 	"golang.org/x/oauth2"
@@ -140,4 +141,79 @@ func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.
 		Reviewers: newPR.Reviewers,
 	})
 	return err
+}
+
+// GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch name in an organization
+func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName string) ([]domain.PullRequest, error) {
+	// TODO: If this is implemented with the GitHub v4 graphql api, it would be much faster
+
+	var repos []*github.Repository
+	for {
+		rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
+			ListOptions: github.ListOptions{
+				Page:    1,
+				PerPage: 100,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, rr...)
+		if len(rr) != 100 {
+			break
+		}
+	}
+
+	prStatuses := []domain.PullRequest{}
+	for _, r := range repos {
+		prs, _, err := g.ghClient.PullRequests.List(ctx, orgName, r.GetName(), &github.PullRequestListOptions{
+			Head:      fmt.Sprintf("%s:%s", orgName, branchName),
+			State:     "all",
+			Direction: "desc",
+			ListOptions: github.ListOptions{
+				PerPage: 1,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		if len(prs) != 1 {
+			continue
+		}
+		pr := prs[0]
+
+		// Determine the status of the pr
+		var status domain.PullRequestStatus
+		if pr.GetMergeCommitSHA() != "" {
+			status = domain.PullRequestStatusMerged
+		} else if pr.ClosedAt != nil {
+			status = domain.PullRequestStatusClosed
+		} else {
+			combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, orgName, r.GetName(), *pr.GetHead().SHA, nil)
+			if err != nil {
+				return nil, err
+			}
+
+			if combinedStatus.GetTotalCount() == 0 {
+				status = domain.PullRequestStatusSuccess
+			} else {
+				switch combinedStatus.GetState() {
+				case "pending":
+					status = domain.PullRequestStatusPending
+				case "success":
+					status = domain.PullRequestStatusSuccess
+				case "failure":
+					status = domain.PullRequestStatusError
+				}
+			}
+		}
+
+		prStatuses = append(prStatuses, domain.PullRequest{
+			RepoName: r.GetName(),
+			Status:   status,
+		})
+
+	}
+
+	return prStatuses, nil
 }
