@@ -41,7 +41,7 @@ func (s PullRequestStatus) String() string {
 	return "Unkown"
 }
 
-// PullRequest
+// PullRequest represents a pull request
 type PullRequest struct {
 	RepoName string
 	Status   PullRequestStatus
