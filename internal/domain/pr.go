@@ -9,3 +9,40 @@ type NewPullRequest struct {
 
 	Reviewers []string // The username of all reviewers
 }
+
+// PullRequestStatus is the status of a pull request, including statuses of the last commit
+type PullRequestStatus int
+
+// All PullRequestStatuses
+const (
+	PullRequestStatusUnknown PullRequestStatus = iota
+	PullRequestStatusSuccess
+	PullRequestStatusPending
+	PullRequestStatusError
+	PullRequestStatusMerged
+	PullRequestStatusClosed
+)
+
+func (s PullRequestStatus) String() string {
+	switch s {
+	case PullRequestStatusUnknown:
+		return "Unknown"
+	case PullRequestStatusSuccess:
+		return "Success"
+	case PullRequestStatusPending:
+		return "Pending"
+	case PullRequestStatusError:
+		return "Error"
+	case PullRequestStatusMerged:
+		return "Merged"
+	case PullRequestStatusClosed:
+		return "Closed"
+	}
+	return "Unkown"
+}
+
+// PullRequest
+type PullRequest struct {
+	RepoName string
+	Status   PullRequestStatus
+}

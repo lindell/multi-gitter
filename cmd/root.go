@@ -18,6 +18,7 @@ func init() {
 	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.")
 
 	RootCmd.AddCommand(RunCmd)
+	RootCmd.AddCommand(StatusCmd)
 
 	rand.Seed(time.Now().UTC().UnixNano())
 }

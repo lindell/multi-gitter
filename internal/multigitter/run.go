@@ -19,15 +19,16 @@ import (
 type VersionController interface {
 	GetRepositories(ctx context.Context, orgName string) ([]domain.Repository, error)
 	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error
+	GetPullRequestStatuses(ctx context.Context, orgName, branchName string) ([]domain.PullRequest, error)
 }
 
 // Runner conains fields to be able to do the run
 type Runner struct {
+	VersionController VersionController
+
 	ScriptPath    string // Must be absolute path
 	FeatureBranch string
 	Token         string
-
-	VersionController VersionController
 
 	OrgName          string
 	CommitMessage    string
@@ -74,7 +75,7 @@ func (r Runner) Run(ctx context.Context) error {
 		}
 
 		if exitInfo != "" {
-			log.Print(exitInfo)
+			fmt.Print(exitInfo)
 		}
 	}()
 
@@ -144,9 +145,26 @@ func (r Runner) runSingleRepo(url string) error {
 	cmd := exec.Command(r.ScriptPath)
 	cmd.Dir = tmpDir
 
-	reader, writer := io.Pipe()
+	writer := newLogger()
+	defer writer.Close()
 	cmd.Stdout = writer
 	cmd.Stderr = writer
+
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	err = sourceController.Commit(r.CommitMessage)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func newLogger() io.WriteCloser {
+	reader, writer := io.Pipe()
 
 	// Print each line that is outputted by the script
 	go func() {
@@ -162,15 +180,5 @@ func (r Runner) runSingleRepo(url string) error {
 		}
 	}()
 
-	err = cmd.Run()
-	if err != nil {
-		return err
-	}
-
-	err = sourceController.Commit(r.CommitMessage)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return writer
 }
