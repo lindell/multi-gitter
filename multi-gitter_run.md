@@ -1,6 +1,6 @@
 ## multi-gitter run
 
-Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.
+Clones multiple repostories, run a script in that directory, and creates a PR with those changes.
 
 ### Synopsis
 

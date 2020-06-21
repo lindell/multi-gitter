@@ -16,6 +16,6 @@ Multi gitter is a tool for making changes into multiple git repositories
 
 ### SEE ALSO
 
-* [multi-gitter run](multi-gitter_run.md)	 - Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.
-* [multi-gitter status](multi-gitter_status.md)	 - Get the status of pull requests
+* [multi-gitter run](multi-gitter_run.md)	 - Clones multiple repostories, run a script in that directory, and creates a PR with those changes.
+* [multi-gitter status](multi-gitter_status.md)	 - Get the status of pull requests.
 

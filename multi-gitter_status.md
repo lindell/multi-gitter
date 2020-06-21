@@ -1,6 +1,6 @@
 ## multi-gitter status
 
-Get the status of pull requests
+Get the status of pull requests.
 
 ### Synopsis
 
