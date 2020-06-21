@@ -7,6 +7,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/spf13/cobra"
+
 	"github.com/lindell/multi-gitter/cmd"
 )
 
@@ -19,6 +21,7 @@ type templateData struct {
 }
 
 type command struct {
+	TitleExtra  string
 	Name        string
 	Description string
 	Usage       string
@@ -29,11 +32,25 @@ func main() {
 
 	data.MainUsage = strings.TrimSpace(cmd.RootCmd.UsageString())
 
-	for _, c := range cmd.RootCmd.Commands() {
+	cmds := []struct {
+		titleExtra string
+		cmd        *cobra.Command
+	}{
+		{
+			titleExtra: "🏃",
+			cmd:        cmd.RunCmd,
+		},
+		{
+			titleExtra: "🔍",
+			cmd:        cmd.StatusCmd,
+		},
+	}
+	for _, c := range cmds {
 		data.Commands = append(data.Commands, command{
-			Name:        c.Name(),
-			Description: c.Long,
-			Usage:       strings.TrimSpace(c.UsageString()),
+			Name:        c.cmd.Name(),
+			TitleExtra:  c.titleExtra,
+			Description: c.cmd.Long,
+			Usage:       strings.TrimSpace(c.cmd.UsageString()),
 		})
 	}
 

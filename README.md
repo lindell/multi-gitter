@@ -29,7 +29,7 @@ Use "multi-gitter [command] --help" for more information about a command.
 ```
 
 
-### Usage of `run`
+### 🏃 Usage of `run`
 Run will clone down multiple repositories. For each of those repositories, the script will be run. If the script finished with a zero exit code, and the script resulted in file changes, a pull request will be created with.
 ```
 Usage:
@@ -50,7 +50,7 @@ Global Flags:
 ```
 
 
-### Usage of `status`
+### 🔍 Usage of `status`
 Get the status of all pull requests with a specified branch name in an organization.
 ```
 Usage:

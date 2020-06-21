@@ -18,7 +18,7 @@ The script can be both a shell script or a binary. If the script returns with a 
 ```
 
 {{range .Commands}}
-### Usage of `{{.Name}}`
+### {{.TitleExtra}} Usage of `{{.Name}}`
 {{.Description}}
 ```
 {{.Usage}}
