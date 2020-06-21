@@ -13,20 +13,9 @@ Multi-gitter is a tool that allows you to run a script or program for every repo
 The script can be both a shell script or a binary. If the script returns with a 0 exit code and has made changes to the directory, a PR will be created.
 
 ## Usage
-```
-Usage:
-  multi-gitter [command]
 
-Available Commands:
-  run         Run clones multiple repostories, run a script in that directory, and creates a PR with those changes.
-  status      Get the status of pull requests
-
-Flags:
-  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
-  -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
-
-Use "multi-gitter [command] --help" for more information about a command.
-```
+* [run](#-usage-of-run) Clones multiple repostories, run a script in that directory, and creates a PR with those changes.
+* [status](#-usage-of-status) Get the status of pull requests.
 
 
 ### 🏃 Usage of `run`

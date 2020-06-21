@@ -13,13 +13,12 @@ Multi-gitter is a tool that allows you to run a script or program for every repo
 The script can be both a shell script or a binary. If the script returns with a 0 exit code and has made changes to the directory, a PR will be created.
 
 ## Usage
-```
-{{.MainUsage}}
-```
+{{range .Commands}}
+* [{{ .Name }}](#-usage-of-{{ .Name }}) {{ .Short }}{{end}}
 
 {{range .Commands}}
 ### {{.TitleExtra}} Usage of `{{.Name}}`
-{{.Description}}
+{{.Long}}
 ```
 {{.Usage}}
 ```

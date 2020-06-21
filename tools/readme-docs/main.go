@@ -21,10 +21,11 @@ type templateData struct {
 }
 
 type command struct {
-	TitleExtra  string
-	Name        string
-	Description string
-	Usage       string
+	TitleExtra string
+	Name       string
+	Long       string
+	Short      string
+	Usage      string
 }
 
 func main() {
@@ -47,10 +48,11 @@ func main() {
 	}
 	for _, c := range cmds {
 		data.Commands = append(data.Commands, command{
-			Name:        c.cmd.Name(),
-			TitleExtra:  c.titleExtra,
-			Description: c.cmd.Long,
-			Usage:       strings.TrimSpace(c.cmd.UsageString()),
+			Name:       c.cmd.Name(),
+			TitleExtra: c.titleExtra,
+			Long:       c.cmd.Long,
+			Short:      c.cmd.Short,
+			Usage:      strings.TrimSpace(c.cmd.UsageString()),
 		})
 	}
 

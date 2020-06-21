@@ -14,7 +14,7 @@ import (
 // StatusCmd gets statuses of pull requests
 var StatusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Get the status of pull requests",
+	Short: "Get the status of pull requests.",
 	Long:  "Get the status of all pull requests with a specified branch name in an organization.",
 	Args:  cobra.NoArgs,
 	RunE:  status,
