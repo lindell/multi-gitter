@@ -1,20 +1,20 @@
-## multi-gitter status
+## multi-gitter merge
 
-Get the status of pull requests.
+Merge pull requests.
 
 ### Synopsis
 
-Get the status of all pull requests with a specified branch name in an organization.
+Merge pull requests with a specified branch name in an organization and with specified conditions.
 
 ```
-multi-gitter status [flags]
+multi-gitter merge [flags]
 ```
 
 ### Options
 
 ```
   -B, --branch string   The name of the branch where changes are committed. (default "multi-gitter-branch")
-  -h, --help            help for status
+  -h, --help            help for merge
   -o, --org string      The name of the GitHub organization.
 ```
 
