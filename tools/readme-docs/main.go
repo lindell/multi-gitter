@@ -42,6 +42,10 @@ func main() {
 			cmd:        cmd.RunCmd,
 		},
 		{
+			titleExtra: "🔀",
+			cmd:        cmd.MergeCmd,
+		},
+		{
 			titleExtra: "🔍",
 			cmd:        cmd.StatusCmd,
 		},

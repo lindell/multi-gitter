@@ -43,6 +43,9 @@ func (s PullRequestStatus) String() string {
 
 // PullRequest represents a pull request
 type PullRequest struct {
-	RepoName string
-	Status   PullRequestStatus
+	OwnerName  string
+	RepoName   string
+	BranchName string
+	Number     int
+	Status     PullRequestStatus
 }

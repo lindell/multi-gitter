@@ -15,6 +15,7 @@ The script can be both a shell script or a binary. If the script returns with a 
 ## Usage
 
 * [run](#-usage-of-run) Clones multiple repostories, run a script in that directory, and creates a PR with those changes.
+* [merge](#-usage-of-merge) Merge pull requests.
 * [status](#-usage-of-status) Get the status of pull requests.
 
 
@@ -34,7 +35,23 @@ Flags:
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
 
 Global Flags:
-  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
+  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
+  -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
+```
+
+
+### 🔀 Usage of `merge`
+Merge pull requests with a specified branch name in an organization and with specified conditions.
+```
+Usage:
+  multi-gitter merge [flags]
+
+Flags:
+  -B, --branch string   The name of the branch where changes are committed. (default "multi-gitter-branch")
+  -o, --org string      The name of the GitHub organization.
+
+Global Flags:
+  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
   -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
 ```
 
@@ -50,7 +67,7 @@ Flags:
   -o, --org string      The name of the GitHub organization.
 
 Global Flags:
-  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. (default "https://api.github.com/")
+  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
   -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
 ```
 

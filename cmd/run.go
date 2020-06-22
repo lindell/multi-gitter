@@ -47,7 +47,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	programPath := flag.Arg(0)
 
-	if token != "" {
+	if token == "" {
 		if ght := os.Getenv("GITHUB_TOKEN"); ght != "" {
 			token = ght
 		}
