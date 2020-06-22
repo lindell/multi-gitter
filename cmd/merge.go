@@ -11,21 +11,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// StatusCmd gets statuses of pull requests
-var StatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Get the status of pull requests.",
-	Long:  "Get the status of all pull requests with a specified branch name in an organization.",
+// MergeCmd merges pull requests
+var MergeCmd = &cobra.Command{
+	Use:   "merge",
+	Short: "Merge pull requests.",
+	Long:  "Merge pull requests with a specified branch name in an organization and with specified conditions.",
 	Args:  cobra.NoArgs,
-	RunE:  status,
+	RunE:  merge,
 }
 
 func init() {
-	StatusCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	StatusCmd.Flags().StringP("org", "o", "", "The name of the GitHub organization.")
+	MergeCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	MergeCmd.Flags().StringP("org", "o", "", "The name of the GitHub organization.")
 }
 
-func status(cmd *cobra.Command, args []string) error {
+func merge(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
 	ghBaseURL, _ := flag.GetString("gh-base-url")
@@ -52,14 +52,14 @@ func status(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statuser := multigitter.Statuser{
+	statuser := multigitter.Merger{
 		VersionController: vc,
 
 		FeatureBranch: branchName,
 		OrgName:       org,
 	}
 
-	err = statuser.Statuses(context.Background())
+	err = statuser.Merge(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

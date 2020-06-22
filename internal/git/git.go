@@ -28,10 +28,26 @@ func (g Git) Clone() error {
 	// Set the token as https://TOKEN@url
 	u.User = url.User(g.Token)
 
-	_, err = git.PlainClone(g.Directory, false, &git.CloneOptions{
+	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
 		URL:        u.String(),
 		RemoteName: "origin",
 	})
+	if err != nil {
+		return err
+	}
+
+	w, err := r.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
+		Create: true,
+	})
+	if err != nil {
+		return err
+	}
 
 	return err
 }
@@ -58,14 +74,6 @@ func (g Git) Commit(commitMessage string) error {
 	}
 
 	_, err = w.Add(".")
-	if err != nil {
-		return err
-	}
-
-	err = w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
-		Create: true,
-	})
 	if err != nil {
 		return err
 	}

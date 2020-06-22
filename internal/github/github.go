@@ -137,6 +137,9 @@ func (g Github) createPullRequest(ctx context.Context, repo repository, newPR do
 }
 
 func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.NewPullRequest, createdPR pullRequest) error {
+	if len(newPR.Reviewers) == 0 {
+		return nil
+	}
 	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.OwnerName, repo.Name, createdPR.Number, github.ReviewersRequest{
 		Reviewers: newPR.Reviewers,
 	})
@@ -184,12 +187,12 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName 
 
 		// Determine the status of the pr
 		var status domain.PullRequestStatus
-		if pr.GetMergeCommitSHA() != "" {
+		if pr.MergedAt != nil {
 			status = domain.PullRequestStatusMerged
 		} else if pr.ClosedAt != nil {
 			status = domain.PullRequestStatusClosed
 		} else {
-			combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, orgName, r.GetName(), *pr.GetHead().SHA, nil)
+			combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, orgName, r.GetName(), pr.GetHead().GetSHA(), nil)
 			if err != nil {
 				return nil, err
 			}
@@ -202,18 +205,30 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName 
 					status = domain.PullRequestStatusPending
 				case "success":
 					status = domain.PullRequestStatusSuccess
-				case "failure":
+				case "failure", "error":
 					status = domain.PullRequestStatusError
 				}
 			}
 		}
 
 		prStatuses = append(prStatuses, domain.PullRequest{
-			RepoName: r.GetName(),
-			Status:   status,
+			OwnerName:  r.GetOwner().GetLogin(),
+			RepoName:   r.GetName(),
+			BranchName: pr.GetHead().GetRef(),
+			Number:     pr.GetNumber(),
+			Status:     status,
 		})
-
 	}
 
 	return prStatuses, nil
+}
+
+func (g Github) MergePullRequest(ctx context.Context, pr domain.PullRequest) error {
+	_, _, err := g.ghClient.PullRequests.Merge(ctx, pr.OwnerName, pr.RepoName, pr.Number, "", nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = g.ghClient.Git.DeleteRef(ctx, pr.OwnerName, pr.RepoName, fmt.Sprintf("heads/%s", pr.BranchName))
+	return err
 }
