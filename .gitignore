@@ -17,3 +17,5 @@ vendor/
 main
 
 tmp-docs/
+
+dist/
