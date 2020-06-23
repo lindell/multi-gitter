@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
-	"os"
 
-	"github.com/lindell/multi-gitter/internal/github"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
 )
@@ -28,26 +26,14 @@ func init() {
 func merge(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
-	ghBaseURL, _ := flag.GetString("gh-base-url")
-	token, _ := flag.GetString("token")
 	branchName, _ := flag.GetString("branch")
 	org, _ := flag.GetString("org")
-
-	if token == "" {
-		if ght := os.Getenv("GITHUB_TOKEN"); ght != "" {
-			token = ght
-		}
-	}
-
-	if token == "" {
-		return errors.New("either the --token flag or the GITHUB_TOKEN environment variable has to be set")
-	}
 
 	if org == "" {
 		return errors.New("no organization set")
 	}
 
-	vc, err := github.New(token, ghBaseURL)
+	vc, err := getVersionController(flag)
 	if err != nil {
 		return err
 	}
