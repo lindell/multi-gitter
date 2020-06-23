@@ -38,7 +38,7 @@ func (s PullRequestStatus) String() string {
 	case PullRequestStatusClosed:
 		return "Closed"
 	}
-	return "Unkown"
+	return "Unknown"
 }
 
 // PullRequest represents a pull request
