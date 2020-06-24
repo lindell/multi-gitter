@@ -1,5 +1,5 @@
 <h1 align="center">
-  🛠 multi-gitter
+  <img alt="" src="docs/img/logo.svg" height="80" />
 </h1>
 
 <div align="center">
@@ -17,7 +17,7 @@ The script can be both a shell script or a binary. If the script returns with a 
 * [{{ .Name }}](#-usage-of-{{ .Name }}) {{ .Short }}{{end}}
 
 {{range .Commands}}
-### {{.TitleExtra}} Usage of `{{.Name}}`
+### <img alt="{{.Name}}" src="{{.ImageIcon}}" height="40" valign="middle" /> Usage of `{{.Name}}`
 {{.Long}}
 ```
 {{.Usage}}

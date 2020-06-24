@@ -1,5 +1,5 @@
 <h1 align="center">
-  🛠 multi-gitter
+  <img alt="" src="docs/img/logo.svg" height="80" />
 </h1>
 
 <div align="center">
@@ -19,7 +19,7 @@ The script can be both a shell script or a binary. If the script returns with a 
 * [status](#-usage-of-status) Get the status of pull requests.
 
 
-### 🏃 Usage of `run`
+### <img alt="run" src="docs/img/fa/rabbit-fast.svg" height="40" valign="middle" /> Usage of `run`
 Run will clone down multiple repositories. For each of those repositories, the script will be run. If the script finished with a zero exit code, and the script resulted in file changes, a pull request will be created with.
 ```
 Usage:
@@ -40,7 +40,7 @@ Global Flags:
 ```
 
 
-### 🔀 Usage of `merge`
+### <img alt="merge" src="docs/img/fa/code-merge.svg" height="40" valign="middle" /> Usage of `merge`
 Merge pull requests with a specified branch name in an organization and with specified conditions.
 ```
 Usage:
@@ -56,7 +56,7 @@ Global Flags:
 ```
 
 
-### 🔍 Usage of `status`
+### <img alt="status" src="docs/img/fa/tasks.svg" height="40" valign="middle" /> Usage of `status`
 Get the status of all pull requests with a specified branch name in an organization.
 ```
 Usage:

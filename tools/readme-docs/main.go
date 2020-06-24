@@ -21,11 +21,11 @@ type templateData struct {
 }
 
 type command struct {
-	TitleExtra string
-	Name       string
-	Long       string
-	Short      string
-	Usage      string
+	ImageIcon string
+	Name      string
+	Long      string
+	Short     string
+	Usage     string
 }
 
 func main() {
@@ -34,29 +34,29 @@ func main() {
 	data.MainUsage = strings.TrimSpace(cmd.RootCmd.UsageString())
 
 	cmds := []struct {
-		titleExtra string
-		cmd        *cobra.Command
+		imgIcon string
+		cmd     *cobra.Command
 	}{
 		{
-			titleExtra: "🏃",
-			cmd:        cmd.RunCmd,
+			imgIcon: "docs/img/fa/rabbit-fast.svg",
+			cmd:     cmd.RunCmd,
 		},
 		{
-			titleExtra: "🔀",
-			cmd:        cmd.MergeCmd,
+			imgIcon: "docs/img/fa/code-merge.svg",
+			cmd:     cmd.MergeCmd,
 		},
 		{
-			titleExtra: "🔍",
-			cmd:        cmd.StatusCmd,
+			imgIcon: "docs/img/fa/tasks.svg",
+			cmd:     cmd.StatusCmd,
 		},
 	}
 	for _, c := range cmds {
 		data.Commands = append(data.Commands, command{
-			Name:       c.cmd.Name(),
-			TitleExtra: c.titleExtra,
-			Long:       c.cmd.Long,
-			Short:      c.cmd.Short,
-			Usage:      strings.TrimSpace(c.cmd.UsageString()),
+			Name:      c.cmd.Name(),
+			ImageIcon: c.imgIcon,
+			Long:      c.cmd.Long,
+			Short:     c.cmd.Short,
+			Usage:     strings.TrimSpace(c.cmd.UsageString()),
 		})
 	}
 
