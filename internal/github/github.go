@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v32/github"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
 	"github.com/lindell/multi-gitter/internal/domain"
@@ -89,7 +90,6 @@ func (g Github) getRepositories(ctx context.Context, orgName string, page int) (
 
 // CreatePullRequest creates a pull request
 func (g Github) CreatePullRequest(ctx context.Context, repository domain.Repository, newPR domain.NewPullRequest) error {
-
 	pr, err := g.createPullRequest(ctx, repository, newPR)
 	if err != nil {
 		return err
@@ -152,6 +152,8 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName 
 
 	prStatuses := []domain.PullRequest{}
 	for _, r := range repos {
+		log := log.WithField("repo", fmt.Sprintf("%s/%s", r.GetOwner().GetLogin(), r.GetName()))
+		log.Debug("Fetching latest pull request")
 		prs, _, err := g.ghClient.PullRequests.List(ctx, orgName, r.GetName(), &github.PullRequestListOptions{
 			Head:      fmt.Sprintf("%s:%s", orgName, branchName),
 			State:     "all",
@@ -175,6 +177,7 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName 
 		} else if pr.ClosedAt != nil {
 			status = domain.PullRequestStatusClosed
 		} else {
+			log.Debug("Fetching the combined status of the pull request")
 			combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, orgName, r.GetName(), pr.GetHead().GetSHA(), nil)
 			if err != nil {
 				return nil, err

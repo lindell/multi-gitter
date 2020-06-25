@@ -18,7 +18,7 @@ type Git struct {
 	Token     string
 }
 
-// Clone clones a repository
+// Clone a repository
 func (g Git) Clone() error {
 	u, err := url.Parse(g.Repo)
 	if err != nil {
@@ -52,7 +52,7 @@ func (g Git) Clone() error {
 	return err
 }
 
-// Commit commits and pushes changes
+// Commit and push if any changes has been made to the directory
 func (g Git) Commit(commitMessage string) error {
 	r, err := git.PlainOpen(g.Directory)
 	if err != nil {

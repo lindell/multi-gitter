@@ -26,7 +26,7 @@ var RootCmd = &cobra.Command{
 func init() {
 	RootCmd.PersistentFlags().StringP("gh-base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
 	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.")
-	RootCmd.PersistentFlags().StringP("log-level", "L", "info", "The level of logging that should be made. Available values: debug, info, error")
+	RootCmd.PersistentFlags().StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
 
 	RootCmd.AddCommand(RunCmd)
 	RootCmd.AddCommand(StatusCmd)
