@@ -206,6 +206,7 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName 
 	return prStatuses, nil
 }
 
+// MergePullRequest merges a pull request
 func (g Github) MergePullRequest(ctx context.Context, pr domain.PullRequest) error {
 	_, _, err := g.ghClient.PullRequests.Merge(ctx, pr.OwnerName, pr.RepoName, pr.Number, "", nil)
 	if err != nil {

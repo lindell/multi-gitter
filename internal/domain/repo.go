@@ -10,6 +10,7 @@ type Repository struct {
 	DefaultBranch string
 }
 
+// FullName returns the full repository name including the owner
 func (r Repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.OwnerName, r.Name)
 }

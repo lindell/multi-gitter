@@ -52,6 +52,7 @@ type PullRequest struct {
 	Status     PullRequestStatus
 }
 
+// FullRepoName returns the full repository name including the owner
 func (p PullRequest) FullRepoName() string {
 	return fmt.Sprintf("%s/%s", p.OwnerName, p.RepoName)
 }
