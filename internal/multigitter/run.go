@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"os"
 	"os/exec"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/lindell/multi-gitter/internal/git"
@@ -46,7 +47,7 @@ func (r Runner) Run(ctx context.Context) error {
 		return err
 	}
 
-	log.Printf("Running on %d repositories\n", len(repos))
+	log.Infof("Running on %d repositories", len(repos))
 
 	exitCodeRepos := map[int][]domain.Repository{}
 	noChangeRepos := []domain.Repository{}
@@ -57,21 +58,21 @@ func (r Runner) Run(ctx context.Context) error {
 		for exitCode := range exitCodeRepos {
 			exitInfo += fmt.Sprintf("Repositories with exit code %d:\n", exitCode)
 			for _, repo := range exitCodeRepos[exitCode] {
-				exitInfo += fmt.Sprintf("  %s\n", repo.GetURL())
+				exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
 			}
 		}
 
 		if len(noChangeRepos) > 0 {
 			exitInfo += "Repositories where nothing was changed:\n"
 			for _, repo := range noChangeRepos {
-				exitInfo += fmt.Sprintf("  %s\n", repo.GetURL())
+				exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
 			}
 		}
 
 		if len(successRepos) > 0 {
 			exitInfo += "Repositories with a successful run:\n"
 			for _, repo := range successRepos {
-				exitInfo += fmt.Sprintf("  %s\n", repo.GetURL())
+				exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
 			}
 		}
 
@@ -81,25 +82,27 @@ func (r Runner) Run(ctx context.Context) error {
 	}()
 
 	for _, repo := range repos {
-		log.Printf("Cloning and running script on: %s\n", repo.GetURL())
-		err := r.runSingleRepo(repo.GetURL())
+		logger := log.WithField("repo", repo.FullName())
+		logger.Info("Cloning and running script")
+		err := r.runSingleRepo(repo.URL)
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			log.Printf("Got exit code %d when running %s\n", exitErr.ExitCode(), repo.GetURL())
+			logger.Infof("Got exit code %d", exitErr.ExitCode())
 			exitCodeRepos[exitErr.ExitCode()] = append(exitCodeRepos[exitErr.ExitCode()], repo)
 			continue
 		} else if err == domain.NoChangeError {
-			log.Printf("No change done on the repo by the script when running: %s\n", repo.GetURL())
+			logger.Info("No change done on the repo by the script")
 			noChangeRepos = append(noChangeRepos, repo)
 			continue
 		} else if err != nil {
 			return err
 		}
 
+		logger.Info("Change done, creating pull request")
 		err = r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
 			Title:     r.PullRequestTitle,
 			Body:      r.PullRequestBody,
 			Head:      r.FeatureBranch,
-			Base:      repo.GetBranch(),
+			Base:      repo.DefaultBranch,
 			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 		})
 		if err != nil {
@@ -173,7 +176,7 @@ func newLogger() io.WriteCloser {
 		for {
 			line, err := buf.ReadString('\n')
 			if line != "" {
-				log.Printf("Script output: %s", line)
+				log.Infof("Script output: %s", line)
 			}
 			if err != nil {
 				return

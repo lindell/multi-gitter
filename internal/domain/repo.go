@@ -1,7 +1,15 @@
 package domain
 
-// Repository is an interface with generic methods for any repository
-type Repository interface {
-	GetURL() string
-	GetBranch() string
+import "fmt"
+
+// Repository contains all information about a git repository
+type Repository struct {
+	URL           string
+	Name          string
+	OwnerName     string
+	DefaultBranch string
+}
+
+func (r Repository) FullName() string {
+	return fmt.Sprintf("%s/%s", r.OwnerName, r.Name)
 }

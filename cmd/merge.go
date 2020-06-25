@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
@@ -47,7 +46,7 @@ func merge(cmd *cobra.Command, args []string) error {
 
 	err = statuser.Merge(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	return nil

@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/google/go-github/v32/github"
@@ -18,6 +17,9 @@ func New(token, baseURL string) (*Github, error) {
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
+	tc.Transport = loggingRoundTripper{
+		next: tc.Transport,
+	}
 
 	var client *github.Client
 	if baseURL != "" {
@@ -43,21 +45,6 @@ type Github struct {
 type pullRequest struct {
 	ID     int64 `json:"id"`
 	Number int   `json:"number"`
-}
-
-type repository struct {
-	SSH           string
-	Name          string
-	OwnerName     string
-	DefaultBranch string
-}
-
-func (r repository) GetURL() string {
-	return r.SSH
-}
-
-func (r repository) GetBranch() string {
-	return r.DefaultBranch
 }
 
 // GetRepositories fetches repositories from and organization
@@ -89,8 +76,8 @@ func (g Github) getRepositories(ctx context.Context, orgName string, page int) (
 	repos := make([]domain.Repository, 0, len(rr))
 	for _, r := range rr {
 		if !r.GetArchived() && !r.GetDisabled() {
-			repos = append(repos, repository{
-				SSH:           r.GetCloneURL(),
+			repos = append(repos, domain.Repository{
+				URL:           r.GetCloneURL(),
 				Name:          r.GetName(),
 				OwnerName:     r.GetOwner().GetLogin(),
 				DefaultBranch: r.GetDefaultBranch(),
@@ -101,11 +88,7 @@ func (g Github) getRepositories(ctx context.Context, orgName string, page int) (
 }
 
 // CreatePullRequest creates a pull request
-func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error {
-	repository, ok := repo.(repository)
-	if !ok {
-		return errors.New("the repository needs to originate from this package")
-	}
+func (g Github) CreatePullRequest(ctx context.Context, repository domain.Repository, newPR domain.NewPullRequest) error {
 
 	pr, err := g.createPullRequest(ctx, repository, newPR)
 	if err != nil {
@@ -119,7 +102,7 @@ func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, n
 	return nil
 }
 
-func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (pullRequest, error) {
+func (g Github) createPullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (pullRequest, error) {
 	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.OwnerName, repo.Name, &github.NewPullRequest{
 		Title: &newPR.Title,
 		Body:  &newPR.Body,
@@ -136,7 +119,7 @@ func (g Github) createPullRequest(ctx context.Context, repo repository, newPR do
 	}, nil
 }
 
-func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.NewPullRequest, createdPR pullRequest) error {
+func (g Github) addReviewers(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest, createdPR pullRequest) error {
 	if len(newPR.Reviewers) == 0 {
 		return nil
 	}
