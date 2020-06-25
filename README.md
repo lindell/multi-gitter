@@ -36,7 +36,7 @@ Flags:
 
 Global Flags:
   -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
-  -L, --log-level string     The level of logging that should be made. Available values: debug, info, error (default "info")
+  -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
 ```
 
@@ -53,7 +53,7 @@ Flags:
 
 Global Flags:
   -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
-  -L, --log-level string     The level of logging that should be made. Available values: debug, info, error (default "info")
+  -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
 ```
 
@@ -70,7 +70,7 @@ Flags:
 
 Global Flags:
   -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
-  -L, --log-level string     The level of logging that should be made. Available values: debug, info, error (default "info")
+  -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -T, --token string         The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.
 ```
 
