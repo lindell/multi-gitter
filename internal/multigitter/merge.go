@@ -3,6 +3,8 @@ package multigitter
 import (
 	"context"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
@@ -28,7 +30,10 @@ func (s Merger) Merge(ctx context.Context) error {
 		}
 	}
 
+	log.Infof("Merging %d pull requests", len(successPrs))
+
 	for _, pr := range successPrs {
+		log.WithField("repo", pr.FullRepoName()).WithField("pr-nr", pr.Number).Infof("Merging")
 		err := s.VersionController.MergePullRequest(ctx, pr)
 		if err != nil {
 			return err

@@ -1,5 +1,7 @@
 package domain
 
+import "fmt"
+
 // NewPullRequest is the data needed to create a new pull request
 type NewPullRequest struct {
 	Title string
@@ -48,4 +50,8 @@ type PullRequest struct {
 	BranchName string
 	Number     int
 	Status     PullRequestStatus
+}
+
+func (p PullRequest) FullRepoName() string {
+	return fmt.Sprintf("%s/%s", p.OwnerName, p.RepoName)
 }
