@@ -78,7 +78,7 @@ func (g *Git) Commit(commitMessage string) error {
 		return err
 	}
 
-	// Get the current hash to be able to diff it with the commited changes later
+	// Get the current hash to be able to diff it with the committed changes later
 	oldHead, err := g.repo.Head()
 	if err != nil {
 		return err
@@ -138,7 +138,7 @@ func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
 	return nil
 }
 
-// Push the commited changes to the remote
+// Push the committed changes to the remote
 func (g *Git) Push() error {
 	return g.repo.Push(&git.PushOptions{})
 }
