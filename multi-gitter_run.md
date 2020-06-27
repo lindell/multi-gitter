@@ -15,6 +15,7 @@ multi-gitter run [script path] [flags]
 ```
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
+  -d, --dry-run                 Run without pushing changes or creating pull requests
   -h, --help                    help for run
   -R, --max-reviewers int       If this value is set, reviewers will be randomized
   -o, --org string              The name of the GitHub organization.
