@@ -28,6 +28,7 @@ func init() {
 	RunCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
 	RunCmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
 	RunCmd.Flags().IntP("max-reviewers", "R", 0, "If this value is set, reviewers will be randomized")
+	RunCmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -40,6 +41,7 @@ func run(cmd *cobra.Command, args []string) error {
 	commitMessage, _ := flag.GetString("commit-message")
 	reviewers, _ := flag.GetStringSlice("reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
+	dryRun, _ := flag.GetBool("dry-run")
 
 	token, err := getToken(flag)
 	if err != nil {
@@ -91,6 +93,7 @@ func run(cmd *cobra.Command, args []string) error {
 		PullRequestBody:  prBody,
 		Reviewers:        reviewers,
 		MaxReviewers:     maxReviewers,
+		DryRun:           dryRun,
 	}
 
 	err = runner.Run(context.Background())

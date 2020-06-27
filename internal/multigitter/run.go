@@ -38,6 +38,7 @@ type Runner struct {
 	PullRequestBody  string
 	Reviewers        []string
 	MaxReviewers     int // If set to zero, all reviewers will be used
+	DryRun           bool
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
@@ -83,8 +84,7 @@ func (r Runner) Run(ctx context.Context) error {
 
 	for _, repo := range repos {
 		logger := log.WithField("repo", repo.FullName())
-		logger.Info("Cloning and running script")
-		err := r.runSingleRepo(repo.URL)
+		err := r.runSingleRepo(ctx, repo)
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			logger.Infof("Got exit code %d", exitErr.ExitCode())
 			exitCodeRepos[exitErr.ExitCode()] = append(exitCodeRepos[exitErr.ExitCode()], repo)
@@ -94,18 +94,6 @@ func (r Runner) Run(ctx context.Context) error {
 			noChangeRepos = append(noChangeRepos, repo)
 			continue
 		} else if err != nil {
-			return err
-		}
-
-		logger.Info("Change done, creating pull request")
-		err = r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
-			Title:     r.PullRequestTitle,
-			Body:      r.PullRequestBody,
-			Head:      r.FeatureBranch,
-			Base:      repo.DefaultBranch,
-			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
-		})
-		if err != nil {
 			return err
 		}
 
@@ -125,16 +113,19 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r Runner) runSingleRepo(url string) error {
+func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error {
+	logger := log.WithField("repo", repo.FullName())
+	logger.Info("Cloning and running script")
+
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-changer-")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(tmpDir)
 
-	sourceController := git.Git{
+	sourceController := &git.Git{
 		Directory: tmpDir,
-		Repo:      url,
+		Repo:      repo.URL,
 		NewBranch: r.FeatureBranch,
 		Token:     r.Token,
 	}
@@ -159,7 +150,30 @@ func (r Runner) runSingleRepo(url string) error {
 		return err
 	}
 
+	if changed, err := sourceController.Changes(); err != nil {
+		return err
+	} else if !changed {
+		return domain.NoChangeError
+	}
+
+	if r.DryRun {
+		logger.Info("Skipping pushing changes because of dry run")
+		return nil
+	}
+
 	err = sourceController.Commit(r.CommitMessage)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Change done, creating pull request")
+	err = r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
+		Title:     r.PullRequestTitle,
+		Body:      r.PullRequestBody,
+		Head:      r.FeatureBranch,
+		Base:      repo.DefaultBranch,
+		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
+	})
 	if err != nil {
 		return err
 	}

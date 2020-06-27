@@ -5,8 +5,6 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-
-	"github.com/lindell/multi-gitter/internal/domain"
 )
 
 // Git is an implementation of git that executes git as a command
@@ -16,10 +14,12 @@ type Git struct {
 	Repo      string // The "url" to the repo, any format can be used as long as it's pushable
 	NewBranch string // The name of the new branch that new changes will be pushed to
 	Token     string
+
+	repo *git.Repository // The repository after the clone has been made
 }
 
 // Clone a repository
-func (g Git) Clone() error {
+func (g *Git) Clone() error {
 	u, err := url.Parse(g.Repo)
 	if err != nil {
 		return err
@@ -35,6 +35,7 @@ func (g Git) Clone() error {
 	if err != nil {
 		return err
 	}
+	g.repo = r
 
 	w, err := r.Worktree()
 	if err != nil {
@@ -52,25 +53,26 @@ func (g Git) Clone() error {
 	return err
 }
 
-// Commit and push if any changes has been made to the directory
-func (g Git) Commit(commitMessage string) error {
-	r, err := git.PlainOpen(g.Directory)
+// Changes detect if any changes has been made in the directory
+func (g *Git) Changes() (bool, error) {
+	w, err := g.repo.Worktree()
 	if err != nil {
-		return err
-	}
-
-	w, err := r.Worktree()
-	if err != nil {
-		return err
+		return false, err
 	}
 
 	status, err := w.Status()
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	if status.IsClean() {
-		return domain.NoChangeError
+	return !status.IsClean(), nil
+}
+
+// Commit and push all changes
+func (g *Git) Commit(commitMessage string) error {
+	w, err := g.repo.Worktree()
+	if err != nil {
+		return err
 	}
 
 	_, err = w.Add(".")
@@ -83,7 +85,7 @@ func (g Git) Commit(commitMessage string) error {
 		return err
 	}
 
-	err = r.Push(&git.PushOptions{})
+	err = g.repo.Push(&git.PushOptions{})
 	if err != nil {
 		return err
 	}
