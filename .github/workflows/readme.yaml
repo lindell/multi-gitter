@@ -29,7 +29,7 @@ jobs:
           git config user.email "johan@lindell.me"
           git config user.name "Johan Lindell"
           git add README.md
-          git commit -m "Updated README"
+          git commit -m "docs: updated readme"
 
       - name: Push changes
         if: ${{ success() }}
