@@ -138,6 +138,7 @@ func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
 	return nil
 }
 
+// Push the commited changes to the remote
 func (g *Git) Push() error {
 	return g.repo.Push(&git.PushOptions{})
 }
