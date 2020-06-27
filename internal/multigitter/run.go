@@ -156,12 +156,17 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		return domain.NoChangeError
 	}
 
+	err = sourceController.Commit(r.CommitMessage)
+	if err != nil {
+		return err
+	}
+
 	if r.DryRun {
 		logger.Info("Skipping pushing changes because of dry run")
 		return nil
 	}
 
-	err = sourceController.Commit(r.CommitMessage)
+	err = sourceController.Push()
 	if err != nil {
 		return err
 	}

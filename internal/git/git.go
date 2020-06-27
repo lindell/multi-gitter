@@ -1,10 +1,12 @@
 package git
 
 import (
+	"bytes"
 	"net/url"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	log "github.com/sirupsen/logrus"
 )
 
 // Git is an implementation of git that executes git as a command
@@ -37,19 +39,6 @@ func (g *Git) Clone() error {
 	}
 	g.repo = r
 
-	w, err := r.Worktree()
-	if err != nil {
-		return err
-	}
-
-	err = w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
-		Create: true,
-	})
-	if err != nil {
-		return err
-	}
-
 	return err
 }
 
@@ -75,20 +64,80 @@ func (g *Git) Commit(commitMessage string) error {
 		return err
 	}
 
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
+		Create: true,
+		Keep:   true,
+	})
+	if err != nil {
+		return err
+	}
+
 	_, err = w.Add(".")
 	if err != nil {
 		return err
 	}
 
-	_, err = w.Commit(commitMessage, &git.CommitOptions{})
+	// Get the current hash to be able to diff it with the commited changes later
+	oldHead, err := g.repo.Head()
+	if err != nil {
+		return err
+	}
+	oldHash := oldHead.Hash()
+
+	hash, err := w.Commit(commitMessage, &git.CommitOptions{})
 	if err != nil {
 		return err
 	}
 
-	err = g.repo.Push(&git.PushOptions{})
+	commit, err := g.repo.CommitObject(hash)
 	if err != nil {
 		return err
 	}
+
+	_ = g.logDiff(oldHash, commit.Hash)
 
 	return nil
+}
+
+func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
+	if !log.IsLevelEnabled(log.GetLevel()) {
+		return nil
+	}
+
+	aCommit, err := g.repo.CommitObject(aHash)
+	if err != nil {
+		return err
+	}
+	aTree, err := aCommit.Tree()
+	if err != nil {
+		return err
+	}
+
+	bCommit, err := g.repo.CommitObject(bHash)
+	if err != nil {
+		return err
+	}
+	bTree, err := bCommit.Tree()
+	if err != nil {
+		return err
+	}
+
+	patch, err := aTree.Patch(bTree)
+	if err != nil {
+		return err
+	}
+
+	buf := &bytes.Buffer{}
+	err = patch.Encode(buf)
+	if err != nil {
+		return err
+	}
+	log.Debug(buf.String())
+
+	return nil
+}
+
+func (g *Git) Push() error {
+	return g.repo.Push(&git.PushOptions{})
 }
