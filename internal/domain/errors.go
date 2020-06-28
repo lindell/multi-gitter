@@ -9,6 +9,7 @@ func (e Error) Error() string {
 
 // Constant errors
 const (
-	NoChangeError Error = "no data was changed"
-	ExitCodeError Error = "the program exited with a non zero exit code"
+	NoChangeError    Error = "no data was changed"
+	ExitCodeError    Error = "the program exited with a non zero exit code"
+	BranchExistError Error = "the new branch does already exist"
 )

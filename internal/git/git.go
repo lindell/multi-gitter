@@ -2,6 +2,7 @@ package git
 
 import (
 	"bytes"
+	"fmt"
 	"net/url"
 
 	git "github.com/go-git/go-git/v5"
@@ -136,6 +137,17 @@ func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
 	log.Debug(buf.String())
 
 	return nil
+}
+
+// BranchExist checks if the new branch exists
+func (g *Git) BranchExist() (bool, error) {
+	_, err := g.repo.Reference(plumbing.ReferenceName(fmt.Sprintf("refs/remotes/origin/%s", g.NewBranch)), false)
+	if err == plumbing.ErrReferenceNotFound {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // Push the committed changes to the remote
