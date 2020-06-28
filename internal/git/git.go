@@ -34,6 +34,7 @@ func (g *Git) Clone() error {
 	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
 		URL:        u.String(),
 		RemoteName: "origin",
+		Depth:      10,
 	})
 	if err != nil {
 		return err
