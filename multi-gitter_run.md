@@ -4,7 +4,11 @@ Clones multiple repostories, run a script in that directory, and creates a PR wi
 
 ### Synopsis
 
-Run will clone down multiple repositories. For each of those repositories, the script will be run. If the script finished with a zero exit code, and the script resulted in file changes, a pull request will be created with.
+
+This command will clone down multiple repositories. For each of those repositories, the script will be run in the context of that repository. If the script finished with a zero exit code, and the script resulted in file changes, a pull request will be created with.
+
+The environment variable REPOSITORY_NAME will be set to the name of the repository currently being executed by the script.
+
 
 ```
 multi-gitter run [script path] [flags]
