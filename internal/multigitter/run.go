@@ -114,6 +114,9 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 	// If the command return a non zero exit code, abort.
 	cmd := exec.Command(r.ScriptPath)
 	cmd.Dir = tmpDir
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("REPOSITORY_NAME=%s", repo.Name),
+	)
 
 	writer := newLogger()
 	defer writer.Close()
