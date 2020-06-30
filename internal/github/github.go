@@ -48,6 +48,7 @@ type Github struct {
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
 	Organizations []string
+	Users         []string
 }
 
 type pullRequest struct {
@@ -88,6 +89,14 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 		allRepos = append(allRepos, repos...)
 	}
 
+	for _, user := range g.Users {
+		repos, err := g.getUserRepositories(ctx, user)
+		if err != nil {
+			return nil, err
+		}
+		allRepos = append(allRepos, repos...)
+	}
+
 	return allRepos, nil
 }
 
@@ -96,6 +105,27 @@ func (g Github) getOrganizationRepositories(ctx context.Context, orgName string)
 	var repos []*github.Repository
 	for {
 		rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
+			ListOptions: github.ListOptions{
+				Page:    1,
+				PerPage: 100,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, rr...)
+		if len(rr) != 100 {
+			break
+		}
+	}
+
+	return repos, nil
+}
+
+func (g Github) getUserRepositories(ctx context.Context, user string) ([]*github.Repository, error) {
+	var repos []*github.Repository
+	for {
+		rr, _, err := g.ghClient.Repositories.List(ctx, user, &github.RepositoryListOptions{
 			ListOptions: github.ListOptions{
 				Page:    1,
 				PerPage: 100,
