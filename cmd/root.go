@@ -31,6 +31,7 @@ func init() {
 	RootCmd.AddCommand(RunCmd)
 	RootCmd.AddCommand(StatusCmd)
 	RootCmd.AddCommand(MergeCmd)
+	RootCmd.AddCommand(VersionCmd)
 
 	rand.Seed(time.Now().UTC().UnixNano())
 }
