@@ -13,12 +13,11 @@ type Merger struct {
 	VersionController VersionController
 
 	FeatureBranch string
-	OrgName       string
 }
 
 // Merge merges pull requests in an organization
 func (s Merger) Merge(ctx context.Context) error {
-	prs, err := s.VersionController.GetPullRequestStatuses(ctx, s.OrgName, s.FeatureBranch)
+	prs, err := s.VersionController.GetPullRequestStatuses(ctx, s.FeatureBranch)
 	if err != nil {
 		return err
 	}

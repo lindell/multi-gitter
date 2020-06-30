@@ -28,7 +28,6 @@ var RunCmd = &cobra.Command{
 
 func init() {
 	RunCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	RunCmd.Flags().StringP("org", "o", "", "The name of the GitHub organization.")
 	RunCmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
 	RunCmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
 	RunCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
@@ -41,7 +40,6 @@ func run(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
 	branchName, _ := flag.GetString("branch")
-	org, _ := flag.GetString("org")
 	prTitle, _ := flag.GetString("pr-title")
 	prBody, _ := flag.GetString("pr-body")
 	commitMessage, _ := flag.GetString("commit-message")
@@ -55,10 +53,6 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	programPath := flag.Arg(0)
-
-	if org == "" {
-		return errors.New("no organization set")
-	}
 
 	// Set commit message based on pr title and body or the reverse
 	if commitMessage == "" && prTitle == "" {
@@ -93,7 +87,6 @@ func run(cmd *cobra.Command, args []string) error {
 
 		VersionController: vc,
 
-		OrgName:          org,
 		CommitMessage:    commitMessage,
 		PullRequestTitle: prTitle,
 		PullRequestBody:  prBody,
