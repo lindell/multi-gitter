@@ -18,9 +18,9 @@ import (
 
 // VersionController fetches repositories
 type VersionController interface {
-	GetRepositories(ctx context.Context, orgName string) ([]domain.Repository, error)
+	GetRepositories(ctx context.Context) ([]domain.Repository, error)
 	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error
-	GetPullRequestStatuses(ctx context.Context, orgName, branchName string) ([]domain.PullRequest, error)
+	GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
 }
 
@@ -32,7 +32,6 @@ type Runner struct {
 	FeatureBranch string
 	Token         string
 
-	OrgName          string
 	CommitMessage    string
 	PullRequestTitle string
 	PullRequestBody  string
@@ -43,7 +42,7 @@ type Runner struct {
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run(ctx context.Context) error {
-	repos, err := r.VersionController.GetRepositories(ctx, r.OrgName)
+	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
 		return err
 	}

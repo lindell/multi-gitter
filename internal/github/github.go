@@ -12,7 +12,7 @@ import (
 )
 
 // New create a new Github client
-func New(token, baseURL string) (*Github, error) {
+func New(token, baseURL string, repoListing RepositoryListing) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -34,13 +34,20 @@ func New(token, baseURL string) (*Github, error) {
 	}
 
 	return &Github{
-		ghClient: client,
+		RepositoryListing: repoListing,
+		ghClient:          client,
 	}, nil
 }
 
 // Github contain github configuration
 type Github struct {
+	RepositoryListing
 	ghClient *github.Client
+}
+
+// RepositoryListing contains information about which repositories that should be fetched
+type RepositoryListing struct {
+	Organizations []string
 }
 
 type pullRequest struct {
@@ -49,33 +56,14 @@ type pullRequest struct {
 }
 
 // GetRepositories fetches repositories from and organization
-func (g Github) GetRepositories(ctx context.Context, orgName string) ([]domain.Repository, error) {
-	allRepos := []domain.Repository{}
-	for i := 1; ; i++ {
-		repos, err := g.getRepositories(ctx, orgName, i)
-		if err != nil {
-			return nil, err
-		} else if len(repos) == 0 {
-			break
-		}
-		allRepos = append(allRepos, repos...)
-	}
-	return allRepos, nil
-}
-
-func (g Github) getRepositories(ctx context.Context, orgName string, page int) ([]domain.Repository, error) {
-	rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
-		ListOptions: github.ListOptions{
-			Page:    page,
-			PerPage: 100,
-		},
-	})
+func (g Github) GetRepositories(ctx context.Context) ([]domain.Repository, error) {
+	allRepos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	repos := make([]domain.Repository, 0, len(rr))
-	for _, r := range rr {
+	repos := make([]domain.Repository, 0, len(allRepos))
+	for _, r := range allRepos {
 		if !r.GetArchived() && !r.GetDisabled() {
 			repos = append(repos, domain.Repository{
 				URL:           r.GetCloneURL(),
@@ -85,6 +73,43 @@ func (g Github) getRepositories(ctx context.Context, orgName string, page int) (
 			})
 		}
 	}
+
+	return repos, nil
+}
+
+func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
+	allRepos := []*github.Repository{}
+
+	for _, org := range g.Organizations {
+		repos, err := g.getOrganizationRepositories(ctx, org)
+		if err != nil {
+			return nil, err
+		}
+		allRepos = append(allRepos, repos...)
+	}
+
+	return allRepos, nil
+}
+
+// GetRepositories fetches repositories from and organization
+func (g Github) getOrganizationRepositories(ctx context.Context, orgName string) ([]*github.Repository, error) {
+	var repos []*github.Repository
+	for {
+		rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
+			ListOptions: github.ListOptions{
+				Page:    1,
+				PerPage: 100,
+			},
+		})
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, rr...)
+		if len(rr) != 100 {
+			break
+		}
+	}
+
 	return repos, nil
 }
 
@@ -130,32 +155,22 @@ func (g Github) addReviewers(ctx context.Context, repo domain.Repository, newPR 
 }
 
 // GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch name in an organization
-func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName string) ([]domain.PullRequest, error) {
+func (g Github) GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
 	// TODO: If this is implemented with the GitHub v4 graphql api, it would be much faster
 
-	var repos []*github.Repository
-	for {
-		rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
-			ListOptions: github.ListOptions{
-				Page:    1,
-				PerPage: 100,
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-		repos = append(repos, rr...)
-		if len(rr) != 100 {
-			break
-		}
+	repos, err := g.getRepositories(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	prStatuses := []domain.PullRequest{}
 	for _, r := range repos {
-		log := log.WithField("repo", fmt.Sprintf("%s/%s", r.GetOwner().GetLogin(), r.GetName()))
+		repoOwner := r.GetOwner().GetLogin()
+		repoName := r.GetName()
+		log := log.WithField("repo", fmt.Sprintf("%s/%s", repoOwner, repoName))
 		log.Debug("Fetching latest pull request")
-		prs, _, err := g.ghClient.PullRequests.List(ctx, orgName, r.GetName(), &github.PullRequestListOptions{
-			Head:      fmt.Sprintf("%s:%s", orgName, branchName),
+		prs, _, err := g.ghClient.PullRequests.List(ctx, repoOwner, repoName, &github.PullRequestListOptions{
+			Head:      fmt.Sprintf("%s:%s", repoOwner, branchName),
 			State:     "all",
 			Direction: "desc",
 			ListOptions: github.ListOptions{
@@ -178,7 +193,7 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName 
 			status = domain.PullRequestStatusClosed
 		} else {
 			log.Debug("Fetching the combined status of the pull request")
-			combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, orgName, r.GetName(), pr.GetHead().GetSHA(), nil)
+			combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, repoOwner, repoName, pr.GetHead().GetSHA(), nil)
 			if err != nil {
 				return nil, err
 			}
@@ -198,8 +213,8 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, orgName, branchName 
 		}
 
 		prStatuses = append(prStatuses, domain.PullRequest{
-			OwnerName:  r.GetOwner().GetLogin(),
-			RepoName:   r.GetName(),
+			OwnerName:  repoOwner,
+			RepoName:   repoName,
 			BranchName: pr.GetHead().GetRef(),
 			Number:     pr.GetNumber(),
 			Status:     status,

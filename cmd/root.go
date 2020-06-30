@@ -27,6 +27,7 @@ func init() {
 	RootCmd.PersistentFlags().StringP("gh-base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
 	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.")
 	RootCmd.PersistentFlags().StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
+	RootCmd.PersistentFlags().StringSliceP("org", "o", nil, "The name of the GitHub organization.")
 
 	RootCmd.AddCommand(RunCmd)
 	RootCmd.AddCommand(StatusCmd)
@@ -49,13 +50,20 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 
 func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, error) {
 	ghBaseURL, _ := flag.GetString("gh-base-url")
+	orgs, _ := flag.GetStringSlice("org")
+
+	if len(orgs) == 0 {
+		return nil, errors.New("no organization set")
+	}
 
 	token, err := getToken(flag)
 	if err != nil {
 		return nil, err
 	}
 
-	vc, err := github.New(token, ghBaseURL)
+	vc, err := github.New(token, ghBaseURL, github.RepositoryListing{
+		Organizations: orgs,
+	})
 	if err != nil {
 		return nil, err
 	}
