@@ -103,10 +103,11 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 // GetRepositories fetches repositories from and organization
 func (g Github) getOrganizationRepositories(ctx context.Context, orgName string) ([]*github.Repository, error) {
 	var repos []*github.Repository
+	i := 1
 	for {
 		rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
 			ListOptions: github.ListOptions{
-				Page:    1,
+				Page:    i,
 				PerPage: 100,
 			},
 		})
@@ -117,6 +118,7 @@ func (g Github) getOrganizationRepositories(ctx context.Context, orgName string)
 		if len(rr) != 100 {
 			break
 		}
+		i++
 	}
 
 	return repos, nil
@@ -124,10 +126,11 @@ func (g Github) getOrganizationRepositories(ctx context.Context, orgName string)
 
 func (g Github) getUserRepositories(ctx context.Context, user string) ([]*github.Repository, error) {
 	var repos []*github.Repository
+	i := 1
 	for {
 		rr, _, err := g.ghClient.Repositories.List(ctx, user, &github.RepositoryListOptions{
 			ListOptions: github.ListOptions{
-				Page:    1,
+				Page:    i,
 				PerPage: 100,
 			},
 		})
@@ -138,6 +141,7 @@ func (g Github) getUserRepositories(ctx context.Context, user string) ([]*github
 		if len(rr) != 100 {
 			break
 		}
+		i++
 	}
 
 	return repos, nil
