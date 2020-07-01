@@ -65,7 +65,8 @@ func (g Github) GetRepositories(ctx context.Context) ([]domain.Repository, error
 
 	repos := make([]domain.Repository, 0, len(allRepos))
 	for _, r := range allRepos {
-		if !r.GetArchived() && !r.GetDisabled() {
+		permissions := r.GetPermissions()
+		if !r.GetArchived() && !r.GetDisabled() && permissions["pull"] && permissions["push"] {
 			repos = append(repos, domain.Repository{
 				URL:           r.GetCloneURL(),
 				Name:          r.GetName(),
