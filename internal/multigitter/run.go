@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -57,15 +58,12 @@ func (r Runner) Run(ctx context.Context) error {
 		err := r.runSingleRepo(ctx, repo)
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			logger.Infof("Got exit code %d", exitErr.ExitCode())
-			rc.exitCodeRepos[exitErr.ExitCode()] = append(rc.exitCodeRepos[exitErr.ExitCode()], repo)
+			rc.addError(exitErr, repo)
 			continue
-		} else if err == domain.NoChangeError {
-			logger.Info("No change done on the repo by the script")
-			rc.noChangeRepos = append(rc.noChangeRepos, repo)
-			continue
-		} else if err == domain.BranchExistError {
-			logger.Info("Branch already exist")
-			rc.existingBranchRepos = append(rc.existingBranchRepos, repo)
+		} else if err == domain.NoChangeError ||
+			err == domain.BranchExistError {
+			logger.Info(err)
+			rc.addError(err, repo)
 			continue
 		} else if err != nil {
 			return err
@@ -191,37 +189,27 @@ func newLogger() io.WriteCloser {
 }
 
 type repoCounter struct {
-	exitCodeRepos       map[int][]domain.Repository
-	noChangeRepos       []domain.Repository
-	successRepos        []domain.Repository
-	existingBranchRepos []domain.Repository
+	successRepos      []domain.Repository
+	errorRepositories map[string][]domain.Repository
 }
 
 func newRepoCounter() *repoCounter {
 	return &repoCounter{
-		exitCodeRepos: map[int][]domain.Repository{},
+		errorRepositories: map[string][]domain.Repository{},
 	}
+}
+
+func (r *repoCounter) addError(err error, repo domain.Repository) {
+	msg := err.Error()
+	r.errorRepositories[msg] = append(r.errorRepositories[msg], repo)
 }
 
 func (r *repoCounter) printRepos() {
 	var exitInfo string
-	for exitCode := range r.exitCodeRepos {
-		exitInfo += fmt.Sprintf("Repositories with exit code %d:\n", exitCode)
-		for _, repo := range r.exitCodeRepos[exitCode] {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
-		}
-	}
 
-	if len(r.noChangeRepos) > 0 {
-		exitInfo += "Repositories where nothing was changed:\n"
-		for _, repo := range r.noChangeRepos {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
-		}
-	}
-
-	if len(r.existingBranchRepos) > 0 {
-		exitInfo += "Repositories where the new branch already existed:\n"
-		for _, repo := range r.existingBranchRepos {
+	for errMsg := range r.errorRepositories {
+		exitInfo += fmt.Sprintf("%s:\n", strings.ToUpper(errMsg[0:1])+errMsg[1:])
+		for _, repo := range r.errorRepositories[errMsg] {
 			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
 		}
 	}
