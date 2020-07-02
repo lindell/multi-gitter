@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/google/go-github/v32/github"
 	log "github.com/sirupsen/logrus"
@@ -97,6 +98,19 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 		}
 		allRepos = append(allRepos, repos...)
 	}
+
+	// Remove duplicate repos
+	repoMap := map[string]*github.Repository{}
+	for _, repo := range allRepos {
+		repoMap[repo.GetFullName()] = repo
+	}
+	allRepos = make([]*github.Repository, 0, len(repoMap))
+	for _, repo := range repoMap {
+		allRepos = append(allRepos, repo)
+	}
+	sort.Slice(allRepos, func(i, j int) bool {
+		return allRepos[i].GetCreatedAt().Before(allRepos[j].GetCreatedAt().Time)
+	})
 
 	return allRepos, nil
 }
