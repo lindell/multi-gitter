@@ -56,17 +56,10 @@ func (r Runner) Run(ctx context.Context) error {
 	for _, repo := range repos {
 		logger := log.WithField("repo", repo.FullName())
 		err := r.runSingleRepo(ctx, repo)
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			logger.Infof("Got exit code %d", exitErr.ExitCode())
-			rc.addError(exitErr, repo)
-			continue
-		} else if err == domain.NoChangeError ||
-			err == domain.BranchExistError {
+		if err != nil {
 			logger.Info(err)
 			rc.addError(err, repo)
 			continue
-		} else if err != nil {
-			return err
 		}
 
 		rc.successRepos = append(rc.successRepos, repo)
