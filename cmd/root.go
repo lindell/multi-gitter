@@ -29,6 +29,7 @@ func init() {
 	RootCmd.PersistentFlags().StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
 	RootCmd.PersistentFlags().StringSliceP("org", "o", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	RootCmd.PersistentFlags().StringSliceP("user", "u", nil, "The name of a GitHub user. All repositories owned by that user will be used.")
+	RootCmd.PersistentFlags().StringSliceP("repo", "R", nil, "The name, including owner of a repository in the format \"ownerName/repoName\"")
 
 	RootCmd.AddCommand(RunCmd)
 	RootCmd.AddCommand(StatusCmd)
@@ -53,8 +54,9 @@ func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, er
 	ghBaseURL, _ := flag.GetString("gh-base-url")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
+	repos, _ := flag.GetStringSlice("repo")
 
-	if len(orgs) == 0 && len(users) == 0 {
+	if len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization or user set")
 	}
 
@@ -63,9 +65,18 @@ func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, er
 		return nil, err
 	}
 
+	repoRefs := make([]github.RepositoryReference, len(repos))
+	for i := range repos {
+		repoRefs[i], err = github.ParseRepositoryReference(repos[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	vc, err := github.New(token, ghBaseURL, github.RepositoryListing{
 		Organizations: orgs,
 		Users:         users,
+		Repositories:  repoRefs,
 	})
 	if err != nil {
 		return nil, err

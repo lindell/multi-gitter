@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/google/go-github/v32/github"
 	log "github.com/sirupsen/logrus"
@@ -50,6 +51,25 @@ type Github struct {
 type RepositoryListing struct {
 	Organizations []string
 	Users         []string
+	Repositories  []RepositoryReference
+}
+
+// RepositoryReference contains information to be able to reference a repository
+type RepositoryReference struct {
+	OwnerName string
+	Name      string
+}
+
+// ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
+func ParseRepositoryReference(val string) (RepositoryReference, error) {
+	split := strings.Split(val, "/")
+	if len(split) != 2 {
+		return RepositoryReference{}, fmt.Errorf("could not parse repository reference: %s", val)
+	}
+	return RepositoryReference{
+		OwnerName: split[0],
+		Name:      split[1],
+	}, nil
 }
 
 type pullRequest struct {
@@ -97,6 +117,14 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 			return nil, err
 		}
 		allRepos = append(allRepos, repos...)
+	}
+
+	for _, repoRef := range g.Repositories {
+		repo, err := g.getRepository(ctx, repoRef)
+		if err != nil {
+			return nil, err
+		}
+		allRepos = append(allRepos, repo)
 	}
 
 	// Remove duplicate repos
@@ -160,6 +188,14 @@ func (g Github) getUserRepositories(ctx context.Context, user string) ([]*github
 	}
 
 	return repos, nil
+}
+
+func (g Github) getRepository(ctx context.Context, repoRef RepositoryReference) (*github.Repository, error) {
+	repo, _, err := g.ghClient.Repositories.Get(ctx, repoRef.OwnerName, repoRef.Name)
+	if err != nil {
+		return nil, err
+	}
+	return repo, nil
 }
 
 // CreatePullRequest creates a pull request

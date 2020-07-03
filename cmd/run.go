@@ -32,7 +32,7 @@ func init() {
 	RunCmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
 	RunCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
 	RunCmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
-	RunCmd.Flags().IntP("max-reviewers", "R", 0, "If this value is set, reviewers will be randomized")
+	RunCmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized")
 	RunCmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
 }
 
