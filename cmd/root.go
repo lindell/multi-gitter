@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/lindell/multi-gitter/internal/github"
+	"github.com/lindell/multi-gitter/internal/gitlab"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 
 	log "github.com/sirupsen/logrus"
@@ -25,11 +26,13 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.PersistentFlags().StringP("gh-base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
-	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub personal access token. Can also be set using the GITHUB_TOKEN environment variable.")
+	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
 	RootCmd.PersistentFlags().StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
 	RootCmd.PersistentFlags().StringSliceP("org", "o", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
-	RootCmd.PersistentFlags().StringSliceP("user", "u", nil, "The name of a GitHub user. All repositories owned by that user will be used.")
+	RootCmd.PersistentFlags().StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
+	RootCmd.PersistentFlags().StringSliceP("user", "u", nil, "The name of a user. All repositories owned by that user will be used.")
 	RootCmd.PersistentFlags().StringSliceP("repo", "R", nil, "The name, including owner of a repository in the format \"ownerName/repoName\"")
+	RootCmd.PersistentFlags().StringP("platform", "P", "github", "The platform that is used. Available values: github, gitlab")
 
 	RootCmd.AddCommand(RunCmd)
 	RootCmd.AddCommand(StatusCmd)
@@ -51,6 +54,18 @@ func persistentPreRun(cmd *cobra.Command, args []string) error {
 }
 
 func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, error) {
+	platform, _ := flag.GetString("platform")
+	switch platform {
+	default:
+		return nil, fmt.Errorf("unknown platform: %s", platform)
+	case "github":
+		return createGithubClient(flag)
+	case "gitlab":
+		return createGitlabClient(flag)
+	}
+}
+
+func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
 	ghBaseURL, _ := flag.GetString("gh-base-url")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
@@ -85,11 +100,31 @@ func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, er
 	return vc, nil
 }
 
+func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
+	groups, _ := flag.GetStringSlice("group")
+
+	token, err := getToken(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	vc, err := gitlab.New(token, "", gitlab.RepositoryListing{
+		Groups: groups,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return vc, nil
+}
+
 func getToken(flag *flag.FlagSet) (string, error) {
 	token, _ := flag.GetString("token")
 
 	if token == "" {
 		if ght := os.Getenv("GITHUB_TOKEN"); ght != "" {
+			token = ght
+		} else if ght := os.Getenv("GITLAB_TOKEN"); ght != "" {
 			token = ght
 		}
 	}
