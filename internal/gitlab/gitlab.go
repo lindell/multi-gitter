@@ -136,13 +136,43 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 		allProjects = append(allProjects, projects...)
 	}
 
+	for _, user := range g.Users {
+		projects, err := g.getUserProjects(ctx, user)
+		if err != nil {
+			return nil, err
+		}
+		allProjects = append(allProjects, projects...)
+	}
+
 	return allProjects, nil
 }
 
 func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*gitlab.Project, error) {
 	var allProjects []*gitlab.Project
-	for i := 0; ; i++ {
+	for i := 1; ; i++ {
 		projects, _, err := g.glClient.Groups.ListGroupProjects(groupName, &gitlab.ListGroupProjectsOptions{
+			ListOptions: gitlab.ListOptions{
+				PerPage: 100,
+				Page:    i,
+			},
+		}, gitlab.WithContext(ctx))
+		if err != nil {
+			return nil, err
+		}
+
+		allProjects = append(allProjects, projects...)
+
+		if len(projects) < 100 {
+			break
+		}
+	}
+	return allProjects, nil
+}
+
+func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitlab.Project, error) {
+	var allProjects []*gitlab.Project
+	for i := 1; ; i++ {
+		projects, _, err := g.glClient.Projects.ListUserProjects(username, &gitlab.ListProjectsOptions{
 			ListOptions: gitlab.ListOptions{
 				PerPage: 100,
 				Page:    i,
@@ -241,7 +271,7 @@ func (g *Gitlab) getPullRequestInfo(ctx context.Context, branchName string, proj
 	}
 
 	if len(mrs) == 0 {
-		return domain.PullRequestStatusUnknown, mrs[0].IID, nil
+		return domain.PullRequestStatusUnknown, 0, nil
 	}
 
 	mr, _, err := g.glClient.MergeRequests.GetMergeRequest(project.ID, mrs[0].IID, nil, gitlab.WithContext(ctx))
