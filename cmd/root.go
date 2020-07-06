@@ -102,6 +102,7 @@ func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 
 func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
 	groups, _ := flag.GetStringSlice("group")
+	users, _ := flag.GetStringSlice("user")
 
 	token, err := getToken(flag)
 	if err != nil {
@@ -110,6 +111,7 @@ func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 
 	vc, err := gitlab.New(token, "", gitlab.RepositoryListing{
 		Groups: groups,
+		Users:  users,
 	})
 	if err != nil {
 		return nil, err
