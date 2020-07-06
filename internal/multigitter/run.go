@@ -90,9 +90,8 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 
 	sourceController := &git.Git{
 		Directory: tmpDir,
-		Repo:      repo.URL,
+		Repo:      repo.URL(r.Token),
 		NewBranch: r.FeatureBranch,
-		Token:     r.Token,
 	}
 
 	err = sourceController.Clone()
@@ -105,7 +104,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 	cmd := exec.Command(r.ScriptPath)
 	cmd.Dir = tmpDir
 	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("REPOSITORY_NAME=%s", repo.Name),
+		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
 	)
 
 	writer := newLogger()
@@ -151,7 +150,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
-		Base:      repo.DefaultBranch,
+		Base:      repo.DefaultBranch(),
 		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 	})
 	if err != nil {
