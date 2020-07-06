@@ -20,7 +20,7 @@ func (s Statuser) Statuses(ctx context.Context) error {
 	}
 
 	for _, pr := range prs {
-		fmt.Printf("%s #%d: %s\n", pr.FullRepoName(), pr.Number, pr.Status)
+		fmt.Printf("%s: %s\n", pr.String(), pr.Status())
 	}
 
 	return nil
