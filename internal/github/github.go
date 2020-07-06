@@ -3,6 +3,7 @@ package github
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 
@@ -60,6 +61,27 @@ type RepositoryReference struct {
 	Name      string
 }
 
+type repository struct {
+	url           url.URL
+	name          string
+	ownerName     string
+	defaultBranch string
+}
+
+func (r repository) URL(token string) string {
+	// Set the token as https://TOKEN@url
+	r.url.User = url.User(token)
+	return r.url.String()
+}
+
+func (r repository) DefaultBranch() string {
+	return r.defaultBranch
+}
+
+func (r repository) FullName() string {
+	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
+}
+
 // ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
 func ParseRepositoryReference(val string) (RepositoryReference, error) {
 	split := strings.Split(val, "/")
@@ -88,11 +110,16 @@ func (g Github) GetRepositories(ctx context.Context) ([]domain.Repository, error
 	for _, r := range allRepos {
 		permissions := r.GetPermissions()
 		if !r.GetArchived() && !r.GetDisabled() && permissions["pull"] && permissions["push"] {
-			repos = append(repos, domain.Repository{
-				URL:           r.GetCloneURL(),
-				Name:          r.GetName(),
-				OwnerName:     r.GetOwner().GetLogin(),
-				DefaultBranch: r.GetDefaultBranch(),
+			u, err := url.Parse(r.GetCloneURL())
+			if err != nil {
+				return nil, err // TODO: better error
+			}
+
+			repos = append(repos, repository{
+				url:           *u,
+				name:          r.GetName(),
+				ownerName:     r.GetOwner().GetLogin(),
+				defaultBranch: r.GetDefaultBranch(),
 			})
 		}
 	}
@@ -199,21 +226,23 @@ func (g Github) getRepository(ctx context.Context, repoRef RepositoryReference) 
 }
 
 // CreatePullRequest creates a pull request
-func (g Github) CreatePullRequest(ctx context.Context, repository domain.Repository, newPR domain.NewPullRequest) error {
-	pr, err := g.createPullRequest(ctx, repository, newPR)
+func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error {
+	r := repo.(repository)
+
+	pr, err := g.createPullRequest(ctx, r, newPR)
 	if err != nil {
 		return err
 	}
 
-	if err := g.addReviewers(ctx, repository, newPR, pr); err != nil {
+	if err := g.addReviewers(ctx, r, newPR, pr); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (g Github) createPullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (pullRequest, error) {
-	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.OwnerName, repo.Name, &github.NewPullRequest{
+func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (pullRequest, error) {
+	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
 		Title: &newPR.Title,
 		Body:  &newPR.Body,
 		Head:  &newPR.Head,
@@ -229,11 +258,11 @@ func (g Github) createPullRequest(ctx context.Context, repo domain.Repository, n
 	}, nil
 }
 
-func (g Github) addReviewers(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest, createdPR pullRequest) error {
+func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.NewPullRequest, createdPR pullRequest) error {
 	if len(newPR.Reviewers) == 0 {
 		return nil
 	}
-	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.OwnerName, repo.Name, createdPR.Number, github.ReviewersRequest{
+	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.Number, github.ReviewersRequest{
 		Reviewers: newPR.Reviewers,
 	})
 	return err

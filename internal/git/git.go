@@ -16,7 +16,6 @@ type Git struct {
 	Directory string // The (temporary) directory that should be worked within
 	Repo      string // The "url" to the repo, any format can be used as long as it's pushable
 	NewBranch string // The name of the new branch that new changes will be pushed to
-	Token     string
 
 	repo *git.Repository // The repository after the clone has been made
 }
@@ -27,9 +26,6 @@ func (g *Git) Clone() error {
 	if err != nil {
 		return err
 	}
-
-	// Set the token as https://TOKEN@url
-	u.User = url.User(g.Token)
 
 	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
 		URL:        u.String(),
