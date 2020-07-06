@@ -24,7 +24,7 @@ func (s Merger) Merge(ctx context.Context) error {
 
 	successPrs := make([]domain.PullRequest, 0, len(prs))
 	for _, pr := range prs {
-		if pr.Status == domain.PullRequestStatusSuccess {
+		if pr.Status() == domain.PullRequestStatusSuccess {
 			successPrs = append(successPrs, pr)
 		}
 	}
@@ -32,7 +32,7 @@ func (s Merger) Merge(ctx context.Context) error {
 	log.Infof("Merging %d pull requests", len(successPrs))
 
 	for _, pr := range successPrs {
-		log.WithField("repo", pr.FullRepoName()).WithField("pr-nr", pr.Number).Infof("Merging")
+		log.WithField("repo", pr.String()).Infof("Merging")
 		err := s.VersionController.MergePullRequest(ctx, pr)
 		if err != nil {
 			return err

@@ -82,6 +82,22 @@ func (r repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
 }
 
+type pullRequest struct {
+	ownerName  string
+	repoName   string
+	branchName string
+	number     int
+	status     domain.PullRequestStatus
+}
+
+func (pr pullRequest) String() string {
+	return fmt.Sprintf("%s/%s #%d", pr.ownerName, pr.repoName, pr.number)
+}
+
+func (pr pullRequest) Status() domain.PullRequestStatus {
+	return pr.status
+}
+
 // ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
 func ParseRepositoryReference(val string) (RepositoryReference, error) {
 	split := strings.Split(val, "/")
@@ -92,11 +108,6 @@ func ParseRepositoryReference(val string) (RepositoryReference, error) {
 		OwnerName: split[0],
 		Name:      split[1],
 	}, nil
-}
-
-type pullRequest struct {
-	ID     int64 `json:"id"`
-	Number int   `json:"number"`
 }
 
 // GetRepositories fetches repositories from and organization
@@ -241,7 +252,7 @@ func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, n
 	return nil
 }
 
-func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (pullRequest, error) {
+func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (*github.PullRequest, error) {
 	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
 		Title: &newPR.Title,
 		Body:  &newPR.Body,
@@ -249,20 +260,17 @@ func (g Github) createPullRequest(ctx context.Context, repo repository, newPR do
 		Base:  &newPR.Base,
 	})
 	if err != nil {
-		return pullRequest{}, err
+		return nil, err
 	}
 
-	return pullRequest{
-		ID:     pr.GetID(),
-		Number: pr.GetNumber(),
-	}, nil
+	return pr, nil
 }
 
-func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.NewPullRequest, createdPR pullRequest) error {
+func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.NewPullRequest, createdPR *github.PullRequest) error {
 	if len(newPR.Reviewers) == 0 {
 		return nil
 	}
-	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.Number, github.ReviewersRequest{
+	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
 		Reviewers: newPR.Reviewers,
 	})
 	return err
@@ -326,12 +334,12 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, branchName string) (
 			}
 		}
 
-		prStatuses = append(prStatuses, domain.PullRequest{
-			OwnerName:  repoOwner,
-			RepoName:   repoName,
-			BranchName: pr.GetHead().GetRef(),
-			Number:     pr.GetNumber(),
-			Status:     status,
+		prStatuses = append(prStatuses, pullRequest{
+			ownerName:  repoOwner,
+			repoName:   repoName,
+			branchName: pr.GetHead().GetRef(),
+			number:     pr.GetNumber(),
+			status:     status,
 		})
 	}
 
@@ -339,12 +347,14 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, branchName string) (
 }
 
 // MergePullRequest merges a pull request
-func (g Github) MergePullRequest(ctx context.Context, pr domain.PullRequest) error {
-	_, _, err := g.ghClient.PullRequests.Merge(ctx, pr.OwnerName, pr.RepoName, pr.Number, "", nil)
+func (g Github) MergePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
+	pr := pullReq.(pullRequest)
+
+	_, _, err := g.ghClient.PullRequests.Merge(ctx, pr.ownerName, pr.repoName, pr.number, "", nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = g.ghClient.Git.DeleteRef(ctx, pr.OwnerName, pr.RepoName, fmt.Sprintf("heads/%s", pr.BranchName))
+	_, err = g.ghClient.Git.DeleteRef(ctx, pr.ownerName, pr.repoName, fmt.Sprintf("heads/%s", pr.branchName))
 	return err
 }
