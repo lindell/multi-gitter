@@ -110,7 +110,7 @@ func ParseRepositoryReference(val string) (RepositoryReference, error) {
 	}, nil
 }
 
-// GetRepositories fetches repositories from and organization
+// GetRepositories fetches repositories from all sources (orgs/user/specific repo)
 func (g Github) GetRepositories(ctx context.Context) ([]domain.Repository, error) {
 	allRepos, err := g.getRepositories(ctx)
 	if err != nil {
@@ -181,7 +181,6 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 	return allRepos, nil
 }
 
-// GetRepositories fetches repositories from and organization
 func (g Github) getOrganizationRepositories(ctx context.Context, orgName string) ([]*github.Repository, error) {
 	var repos []*github.Repository
 	i := 1
@@ -276,7 +275,7 @@ func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.
 	return err
 }
 
-// GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch name in an organization
+// GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch
 func (g Github) GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
 	// TODO: If this is implemented with the GitHub v4 graphql api, it would be much faster
 

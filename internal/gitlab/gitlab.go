@@ -100,7 +100,7 @@ func (pr pullRequest) Status() domain.PullRequestStatus {
 	return pr.status
 }
 
-// GetRepositories fetches repositories from and organization
+// GetRepositories fetches repositories from all sources (groups/user/specific project)
 func (g *Gitlab) GetRepositories(ctx context.Context) ([]domain.Repository, error) {
 	allProjects, err := g.getProjects(ctx)
 	if err != nil {
@@ -266,7 +266,7 @@ func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, err
 	return userIDs, nil
 }
 
-// GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch name in an organization
+// GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch
 func (g *Gitlab) GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
 	projects, err := g.getProjects(ctx)
 	if err != nil {
