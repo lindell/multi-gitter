@@ -31,8 +31,8 @@ func init() {
 	RootCmd.PersistentFlags().StringSliceP("org", "o", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	RootCmd.PersistentFlags().StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	RootCmd.PersistentFlags().StringSliceP("user", "u", nil, "The name of a user. All repositories owned by that user will be used.")
-	RootCmd.PersistentFlags().StringSliceP("repo", "R", nil, "The name, including owner of a repository in the format \"ownerName/repoName\"")
-	RootCmd.PersistentFlags().StringSliceP("project", "p", nil, "The name, including owner of a project in the format \"ownerName/repoName\"")
+	RootCmd.PersistentFlags().StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\"")
+	RootCmd.PersistentFlags().StringSliceP("project", "p", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
 	RootCmd.PersistentFlags().StringP("platform", "P", "github", "The platform that is used. Available values: github, gitlab")
 
 	RootCmd.AddCommand(RunCmd)
