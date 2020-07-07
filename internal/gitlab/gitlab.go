@@ -3,6 +3,7 @@ package gitlab
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 
 	"github.com/lindell/multi-gitter/internal/domain"
+	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 )
 
 // New create a new Gitlab client
@@ -18,6 +20,10 @@ func New(token, baseURL string, repoListing RepositoryListing) (*Gitlab, error) 
 	if baseURL != "" {
 		options = append(options, gitlab.WithBaseURL(baseURL))
 	}
+
+	options = append(options, gitlab.WithHTTPClient(&http.Client{
+		Transport: internalHTTP.LoggingRoundTripper{},
+	}))
 
 	client, err := gitlab.NewClient(token, options...)
 	if err != nil {

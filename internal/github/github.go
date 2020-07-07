@@ -12,6 +12,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/http"
 )
 
 // New create a new Github client
@@ -21,8 +22,8 @@ func New(token, baseURL string, repoListing RepositoryListing) (*Github, error) 
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	tc.Transport = loggingRoundTripper{
-		next: tc.Transport,
+	tc.Transport = http.LoggingRoundTripper{
+		Next: tc.Transport,
 	}
 
 	var client *github.Client

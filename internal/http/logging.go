@@ -1,4 +1,4 @@
-package github
+package http
 
 import (
 	"net/http"
@@ -8,15 +8,24 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type loggingRoundTripper struct {
-	next http.RoundTripper
+// LoggingRoundTripper logs a request-response
+type LoggingRoundTripper struct {
+	Next http.RoundTripper
 }
 
-func (l loggingRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+// RoundTrip logs a request-response
+func (l LoggingRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	req, _ := httputil.DumpRequestOut(r, true)
 
+	var roundTripper http.RoundTripper
+	if l.Next != nil {
+		roundTripper = l.Next
+	} else {
+		roundTripper = http.DefaultTransport
+	}
+
 	start := time.Now()
-	resp, err := l.next.RoundTrip(r)
+	resp, err := roundTripper.RoundTrip(r)
 	took := time.Since(start)
 
 	var res []byte
