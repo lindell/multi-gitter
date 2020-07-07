@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/xanzy/go-gitlab"
@@ -37,24 +38,24 @@ type Gitlab struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	Groups       []string
-	Users        []string
-	Repositories []RepositoryReference
+	Groups   []string
+	Users    []string
+	Projects []ProjectReference
 }
 
-// RepositoryReference contains information to be able to reference a repository
-type RepositoryReference struct {
+// ProjectReference contains information to be able to reference a repository
+type ProjectReference struct {
 	OwnerName string
 	Name      string
 }
 
-// ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
-func ParseRepositoryReference(val string) (RepositoryReference, error) {
+// ParseProjectReference parses a repository reference from the format "ownerName/repoName"
+func ParseProjectReference(val string) (ProjectReference, error) {
 	split := strings.Split(val, "/")
 	if len(split) != 2 {
-		return RepositoryReference{}, fmt.Errorf("could not parse repository reference: %s", val)
+		return ProjectReference{}, fmt.Errorf("could not parse repository reference: %s", val)
 	}
-	return RepositoryReference{
+	return ProjectReference{
 		OwnerName: split[0],
 		Name:      split[1],
 	}, nil
@@ -144,6 +145,27 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 		allProjects = append(allProjects, projects...)
 	}
 
+	for _, project := range g.Projects {
+		project, err := g.getProject(ctx, project)
+		if err != nil {
+			return nil, err
+		}
+		allProjects = append(allProjects, project)
+	}
+
+	// Remove duplicate projects
+	projectMap := map[int]*gitlab.Project{}
+	for _, proj := range allProjects {
+		projectMap[proj.ID] = proj
+	}
+	allProjects = make([]*gitlab.Project, 0, len(projectMap))
+	for _, proj := range projectMap {
+		allProjects = append(allProjects, proj)
+	}
+	sort.Slice(allProjects, func(i, j int) bool {
+		return allProjects[i].ID < allProjects[j].ID
+	})
+
 	return allProjects, nil
 }
 
@@ -167,6 +189,18 @@ func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*git
 		}
 	}
 	return allProjects, nil
+}
+
+func (g *Gitlab) getProject(ctx context.Context, projRef ProjectReference) (*gitlab.Project, error) {
+	project, _, err := g.glClient.Projects.GetProject(
+		fmt.Sprintf("%s/%s", projRef.OwnerName, projRef.Name),
+		nil,
+		gitlab.WithContext(ctx),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return project, err
 }
 
 func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitlab.Project, error) {

@@ -32,6 +32,7 @@ func init() {
 	RootCmd.PersistentFlags().StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	RootCmd.PersistentFlags().StringSliceP("user", "u", nil, "The name of a user. All repositories owned by that user will be used.")
 	RootCmd.PersistentFlags().StringSliceP("repo", "R", nil, "The name, including owner of a repository in the format \"ownerName/repoName\"")
+	RootCmd.PersistentFlags().StringSliceP("project", "p", nil, "The name, including owner of a project in the format \"ownerName/repoName\"")
 	RootCmd.PersistentFlags().StringP("platform", "P", "github", "The platform that is used. Available values: github, gitlab")
 
 	RootCmd.AddCommand(RunCmd)
@@ -103,15 +104,25 @@ func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
 	groups, _ := flag.GetStringSlice("group")
 	users, _ := flag.GetStringSlice("user")
+	projects, _ := flag.GetStringSlice("project")
 
 	token, err := getToken(flag)
 	if err != nil {
 		return nil, err
 	}
 
+	projRefs := make([]gitlab.ProjectReference, len(projects))
+	for i := range projects {
+		projRefs[i], err = gitlab.ParseProjectReference(projects[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	vc, err := gitlab.New(token, "", gitlab.RepositoryListing{
-		Groups: groups,
-		Users:  users,
+		Groups:   groups,
+		Users:    users,
+		Projects: projRefs,
 	})
 	if err != nil {
 		return nil, err
