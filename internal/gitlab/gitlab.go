@@ -301,7 +301,7 @@ func (g *Gitlab) getPullRequestInfo(ctx context.Context, branchName string, proj
 		SourceBranch: &branchName,
 	}, gitlab.WithContext(ctx))
 	if err != nil {
-		return domain.PullRequestStatusUnknown, mrs[0].IID, err
+		return domain.PullRequestStatusUnknown, 0, err
 	}
 
 	if len(mrs) == 0 {
