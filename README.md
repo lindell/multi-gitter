@@ -8,9 +8,9 @@
 </div>
 <br>
 
-Multi-gitter is a tool that allows you to run a script or program for every repository in a GitHub organisation that will then be committed and a PR will be created.
+multi-gitter is a tool that allows you to run a script or program for multiple repositories. Changes done by the script will be made as a pull request or similar and can then be merged manually by the set reviewers, or automatically by multi-gitter when CI pipelines has completed successfully.
 
-The script can be both a shell script or a binary. If the script returns with a 0 exit code and has made changes to the directory, a PR will be created.
+multi-gitter currently supports GitHub and GitLab where you can run the script on all repositories in an organization, group, user or specify individual repositories. For each repository, the script will run in the context of the root folder, and if any changes is done to the filesystem together with an exit code of 0, the changes will be committed and pushed as a pull/merge request.
 
 ## Usage
 
