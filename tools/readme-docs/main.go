@@ -2,8 +2,11 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"log"
+	"path"
+	"regexp"
 	"strings"
 	"text/template"
 
@@ -16,8 +19,9 @@ const templatePath = "./docs/README.template.md"
 const resultingPath = "./README.md"
 
 type templateData struct {
-	MainUsage string
-	Commands  []command
+	MainUsage         string
+	Commands          []command
+	ExampleCategories []exampleCategory
 }
 
 type command struct {
@@ -28,11 +32,23 @@ type command struct {
 	Usage     string
 }
 
+type exampleCategory struct {
+	Name     string
+	Examples []example
+}
+
+type example struct {
+	Title string
+	Body  string
+}
+
 func main() {
 	data := templateData{}
 
+	// Main usage
 	data.MainUsage = strings.TrimSpace(cmd.RootCmd.UsageString())
 
+	// All commands
 	cmds := []struct {
 		imgIcon string
 		cmd     *cobra.Command
@@ -60,6 +76,12 @@ func main() {
 		})
 	}
 
+	var err error
+	data.ExampleCategories, err = readExamples()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		log.Fatal(err)
@@ -75,4 +97,52 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+var titleRegex = regexp.MustCompile("# ?Title: ([^\n]+)[\n\r]+")
+
+func readExamples() ([]exampleCategory, error) {
+	categories := []exampleCategory{}
+
+	examplesDir := "./examples"
+	files, err := ioutil.ReadDir(examplesDir)
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range files {
+		if !f.IsDir() {
+			continue
+		}
+
+		var examples []example
+		categoryDir := path.Join(examplesDir, f.Name())
+		exampleFiles, err := ioutil.ReadDir(categoryDir)
+		if err != nil {
+			return nil, err
+		}
+		for _, e := range exampleFiles {
+			b, err := ioutil.ReadFile(path.Join(categoryDir, e.Name()))
+			if err != nil {
+				return nil, err
+			}
+
+			matches := titleRegex.FindSubmatch(b)
+			if matches == nil {
+				return nil, errors.New("could not find title")
+			}
+
+			examples = append(examples, example{
+				Title: string(matches[1]),
+				Body:  strings.TrimSpace(string(titleRegex.ReplaceAll(b, nil))),
+			})
+		}
+
+		category := &exampleCategory{
+			Name:     f.Name(),
+			Examples: examples,
+		}
+		categories = append(categories, *category)
+	}
+
+	return categories, nil
 }

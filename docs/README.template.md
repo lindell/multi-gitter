@@ -25,15 +25,14 @@ multi-gitter currently supports GitHub and GitLab where you can run the script o
 
 {{end}}
 
-## Example script
-
+## Example scripts
+{{range .ExampleCategories}}
+### {{.Name}}
+{{range .Examples}}
+<details>
+  <summary>{{.Title}}</summary>
 ```bash
-#!/bin/bash
-
-FILE="README.md"
-if [ ! -f "$FILE" ]; then
-    exit 1
-fi
-
-echo "Some extra text" >> README.md
+{{.Body}}
 ```
+</details>
+{{end}}{{end}}

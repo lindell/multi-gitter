@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path"
 	"strings"
@@ -97,7 +98,8 @@ func run(cmd *cobra.Command, args []string) error {
 
 	err = runner.Run(context.Background())
 	if err != nil {
-		return err
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	return nil

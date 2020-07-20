@@ -96,15 +96,78 @@ Global Flags:
 
 
 
-## Example script
+## Example scripts
 
+### general
+
+<details>
+  <summary>Replace text in all files</summary>
 ```bash
 #!/bin/bash
 
-FILE="README.md"
-if [ ! -f "$FILE" ]; then
+# Assuming you are using gnu sed, if you are running this on a mac, please see https://stackoverflow.com/questions/4247068/sed-command-with-i-option-failing-on-mac-but-works-on-linux
+
+find ./ -type f -exec sed -i -e 's/apple/orange/g' {} \;
+```
+</details>
+
+### go
+
+<details>
+  <summary>Fix linting problems in all your go repositories</summary>
+```bash
+#!/bin/bash
+
+golangci-lint run ./... --fix
+```
+</details>
+
+<details>
+  <summary>Updates a go module to a new (patch/minor) version</summary>
+```bash
+#!/bin/bash
+
+### Change these values ###
+MODULE=github.com/go-git/go-git/v5
+VERSION=v5.1.0
+
+# Check if the module already exist, abort if it does not
+go list -m $MODULE &> /dev/null
+status_code=$?
+if [ $status_code -ne 0 ]; then
+    echo "Module \"$MODULE\" does not exist"
     exit 1
 fi
 
-echo "Some extra text" >> README.md
+go get $MODULE@$VERSION
 ```
+</details>
+
+### node
+
+<details>
+  <summary>Updates a npm dependency if it does exist</summary>
+```bash
+#!/bin/bash
+
+### Change these values ###
+PACKAGE=webpack
+VERSION=4.43.0
+
+if [ ! -f "package.json" ]; then
+    echo "package.json does not exist"
+    exit 1
+fi
+
+# Check if the package already exist (without having to install all packages first), abort if it does not
+current_version=`jq ".dependencies[\"$PACKAGE\"]" package.json`
+if [ "$current_version" == "null" ];
+then
+    echo "Package \"$PACKAGE\" does not exist"
+    exit 2
+fi
+
+npm install --save $PACKAGE@$VERSION
+```
+</details>
+
