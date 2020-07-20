@@ -31,6 +31,7 @@ multi-gitter currently supports GitHub and GitLab where you can run the script o
 {{range .Examples}}
 <details>
   <summary>{{.Title}}</summary>
+
 ```bash
 {{.Body}}
 ```

@@ -102,6 +102,7 @@ Global Flags:
 
 <details>
   <summary>Replace text in all files</summary>
+
 ```bash
 #!/bin/bash
 
@@ -115,6 +116,7 @@ find ./ -type f -exec sed -i -e 's/apple/orange/g' {} \;
 
 <details>
   <summary>Fix linting problems in all your go repositories</summary>
+
 ```bash
 #!/bin/bash
 
@@ -124,6 +126,7 @@ golangci-lint run ./... --fix
 
 <details>
   <summary>Updates a go module to a new (patch/minor) version</summary>
+
 ```bash
 #!/bin/bash
 
@@ -147,6 +150,7 @@ go get $MODULE@$VERSION
 
 <details>
   <summary>Updates a npm dependency if it does exist</summary>
+
 ```bash
 #!/bin/bash
 
