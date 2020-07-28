@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/lindell/multi-gitter/internal/domain"
+
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
 )
@@ -35,6 +37,8 @@ func init() {
 	RunCmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
 	RunCmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized")
 	RunCmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
+	RunCmd.Flags().StringP("author-name", "", "", "If set, this fields will be used as the name of the committer")
+	RunCmd.Flags().StringP("author-email", "", "", "If set, this fields will be used as the email of the committer")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -47,6 +51,8 @@ func run(cmd *cobra.Command, args []string) error {
 	reviewers, _ := flag.GetStringSlice("reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
 	dryRun, _ := flag.GetBool("dry-run")
+	authorName, _ := flag.GetString("author-name")
+	authorEmail, _ := flag.GetString("author-email")
 
 	token, err := getToken(flag)
 	if err != nil {
@@ -68,6 +74,18 @@ func run(cmd *cobra.Command, args []string) error {
 		prTitle = split[0]
 		if prBody == "" && len(split) == 2 {
 			prBody = split[2]
+		}
+	}
+
+	// Parse commit author data
+	var commitAuthor *domain.CommitAuthor
+	if authorName != "" || authorEmail != "" {
+		if authorName == "" || authorEmail == "" {
+			return errors.New("both author-name and author-email has to be set if the other is set")
+		}
+		commitAuthor = &domain.CommitAuthor{
+			Name:  authorName,
+			Email: authorEmail,
 		}
 	}
 
@@ -94,6 +112,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Reviewers:        reviewers,
 		MaxReviewers:     maxReviewers,
 		DryRun:           dryRun,
+		CommitAuthor:     commitAuthor,
 	}
 
 	err = runner.Run(context.Background())
