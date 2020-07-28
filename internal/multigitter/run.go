@@ -25,7 +25,7 @@ type VersionController interface {
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
 }
 
-// Runner conains fields to be able to do the run
+// Runner contains fields to be able to do the run
 type Runner struct {
 	VersionController VersionController
 
@@ -39,6 +39,7 @@ type Runner struct {
 	Reviewers        []string
 	MaxReviewers     int // If set to zero, all reviewers will be used
 	DryRun           bool
+	CommitAuthor     *domain.CommitAuthor
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
@@ -89,9 +90,10 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 	defer os.RemoveAll(tmpDir)
 
 	sourceController := &git.Git{
-		Directory: tmpDir,
-		Repo:      repo.URL(r.Token),
-		NewBranch: r.FeatureBranch,
+		Directory:    tmpDir,
+		Repo:         repo.URL(r.Token),
+		NewBranch:    r.FeatureBranch,
+		CommitAuthor: r.CommitAuthor,
 	}
 
 	err = sourceController.Clone()

@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"net/url"
+	"time"
+
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/lindell/multi-gitter/internal/domain"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -16,6 +20,8 @@ type Git struct {
 	Directory string // The (temporary) directory that should be worked within
 	Repo      string // The "url" to the repo, any format can be used as long as it's pushable
 	NewBranch string // The name of the new branch that new changes will be pushed to
+
+	CommitAuthor *domain.CommitAuthor // The author data is used when making commits, if the field is not set, the git configuration will be used
 
 	repo *git.Repository // The repository after the clone has been made
 }
@@ -83,7 +89,18 @@ func (g *Git) Commit(commitMessage string) error {
 	}
 	oldHash := oldHead.Hash()
 
-	hash, err := w.Commit(commitMessage, &git.CommitOptions{})
+	var author *object.Signature
+	if g.CommitAuthor != nil {
+		author = &object.Signature{
+			Name:  g.CommitAuthor.Name,
+			Email: g.CommitAuthor.Email,
+			When:  time.Now(),
+		}
+	}
+
+	hash, err := w.Commit(commitMessage, &git.CommitOptions{
+		Author: author,
+	})
 	if err != nil {
 		return err
 	}
