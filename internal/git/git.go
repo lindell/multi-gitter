@@ -46,6 +46,24 @@ func (g *Git) Clone() error {
 	return err
 }
 
+// ChangeBranch changes the branch
+func (g *Git) ChangeBranch() error {
+	w, err := g.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
+		Create: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Changes detect if any changes has been made in the directory
 func (g *Git) Changes() (bool, error) {
 	w, err := g.repo.Worktree()
@@ -64,15 +82,6 @@ func (g *Git) Changes() (bool, error) {
 // Commit and push all changes
 func (g *Git) Commit(commitMessage string) error {
 	w, err := g.repo.Worktree()
-	if err != nil {
-		return err
-	}
-
-	err = w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
-		Create: true,
-		Keep:   true,
-	})
 	if err != nil {
 		return err
 	}

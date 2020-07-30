@@ -101,6 +101,18 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		return err
 	}
 
+	branchExist, err := sourceController.BranchExist()
+	if err != nil {
+		return err
+	} else if branchExist {
+		return domain.BranchExistError
+	}
+
+	err = sourceController.ChangeBranch()
+	if err != nil {
+		return err
+	}
+
 	// Run the command that might or might not change the content of the repo
 	// If the command return a non zero exit code, abort.
 	cmd := exec.Command(r.ScriptPath)
@@ -123,13 +135,6 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		return err
 	} else if !changed {
 		return domain.NoChangeError
-	}
-
-	branchExist, err := sourceController.BranchExist()
-	if err != nil {
-		return err
-	} else if branchExist {
-		return domain.BranchExistError
 	}
 
 	err = sourceController.Commit(r.CommitMessage)
