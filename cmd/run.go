@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -59,7 +60,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	programPath := flag.Arg(0)
+	command := flag.Arg(0)
 
 	// Set commit message based on pr title and body or the reverse
 	if commitMessage == "" && prTitle == "" {
@@ -99,8 +100,22 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	parsedCommand, err := parseCommandLine(command)
+	if err != nil {
+		return fmt.Errorf("could not parse command: %s", err)
+	}
+	executablePath, err := exec.LookPath(parsedCommand[0])
+	if err != nil {
+		return fmt.Errorf("could not find executable %s", parsedCommand[0])
+	}
+	// Executable needs to be defined with an absolute path since it will be run within the context of repositories
+	if !path.IsAbs(executablePath) {
+		executablePath = path.Join(workingDir, executablePath)
+	}
+
 	runner := multigitter.Runner{
-		ScriptPath:    path.Join(workingDir, programPath),
+		ScriptPath:    executablePath,
+		Arguments:     parsedCommand[1:],
 		FeatureBranch: branchName,
 		Token:         token,
 
@@ -122,4 +137,70 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// https://stackoverflow.com/a/46973603
+func parseCommandLine(command string) ([]string, error) {
+	var args []string
+	state := "start"
+	current := ""
+	quote := "\""
+	escapeNext := true
+	for i := 0; i < len(command); i++ {
+		c := command[i]
+
+		if state == "quotes" {
+			if string(c) != quote {
+				current += string(c)
+			} else {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			}
+			continue
+		}
+
+		if escapeNext {
+			current += string(c)
+			escapeNext = false
+			continue
+		}
+
+		if c == '\\' {
+			escapeNext = true
+			continue
+		}
+
+		if c == '"' || c == '\'' {
+			state = "quotes"
+			quote = string(c)
+			continue
+		}
+
+		if state == "arg" {
+			if c == ' ' || c == '\t' {
+				args = append(args, current)
+				current = ""
+				state = "start"
+			} else {
+				current += string(c)
+			}
+			continue
+		}
+
+		if c != ' ' && c != '\t' {
+			state = "arg"
+			current += string(c)
+		}
+	}
+
+	if state == "quotes" {
+		return []string{}, fmt.Errorf("unclosed quote in command line: %s", command)
+	}
+
+	if current != "" {
+		args = append(args, current)
+	}
+
+	return args, nil
 }
