@@ -30,6 +30,7 @@ type Runner struct {
 	VersionController VersionController
 
 	ScriptPath    string // Must be absolute path
+	Arguments     []string
 	FeatureBranch string
 	Token         string
 
@@ -115,7 +116,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 
 	// Run the command that might or might not change the content of the repo
 	// If the command return a non zero exit code, abort.
-	cmd := exec.Command(r.ScriptPath)
+	cmd := exec.Command(r.ScriptPath, r.Arguments...)
 	cmd.Dir = tmpDir
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
