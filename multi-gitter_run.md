@@ -21,6 +21,7 @@ multi-gitter run [script path] [flags]
       --author-name string      If set, this fields will be used as the name of the committer
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
+  -C, --concurrent int          The maximum number of concurrent runs (default 1)
   -d, --dry-run                 Run without pushing changes or creating pull requests
   -h, --help                    help for run
   -M, --max-reviewers int       If this value is set, reviewers will be randomized
