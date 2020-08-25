@@ -37,6 +37,7 @@ func init() {
 	RunCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
 	RunCmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
 	RunCmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized")
+	RunCmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
 	RunCmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
 	RunCmd.Flags().StringP("author-name", "", "", "If set, this fields will be used as the name of the committer")
 	RunCmd.Flags().StringP("author-email", "", "", "If set, this fields will be used as the email of the committer")
@@ -51,6 +52,7 @@ func run(cmd *cobra.Command, args []string) error {
 	commitMessage, _ := flag.GetString("commit-message")
 	reviewers, _ := flag.GetStringSlice("reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
+	concurrent, _ := flag.GetInt("concurrent")
 	dryRun, _ := flag.GetBool("dry-run")
 	authorName, _ := flag.GetString("author-name")
 	authorEmail, _ := flag.GetString("author-email")
@@ -61,6 +63,10 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	command := flag.Arg(0)
+
+	if concurrent < 1 {
+		return errors.New("concurrent runs can't be less than one")
+	}
 
 	// Set commit message based on pr title and body or the reverse
 	if commitMessage == "" && prTitle == "" {
@@ -128,6 +134,8 @@ func run(cmd *cobra.Command, args []string) error {
 		MaxReviewers:     maxReviewers,
 		DryRun:           dryRun,
 		CommitAuthor:     commitAuthor,
+
+		Concurrent: concurrent,
 	}
 
 	err = runner.Run(context.Background())

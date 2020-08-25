@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
@@ -41,6 +42,8 @@ type Runner struct {
 	MaxReviewers     int // If set to zero, all reviewers will be used
 	DryRun           bool
 	CommitAuthor     *domain.CommitAuthor
+
+	Concurrent int
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
@@ -55,19 +58,34 @@ func (r Runner) Run(ctx context.Context) error {
 
 	log.Infof("Running on %d repositories", len(repos))
 
-	for _, repo := range repos {
-		logger := log.WithField("repo", repo.FullName())
-		err := r.runSingleRepo(ctx, repo)
+	runInParallel(func(i int) {
+		logger := log.WithField("repo", repos[i].FullName())
+		err := r.runSingleRepo(ctx, repos[i])
 		if err != nil {
 			logger.Info(err)
-			rc.addError(err, repo)
-			continue
+			rc.addError(err, repos[i])
+			return
 		}
 
-		rc.successRepos = append(rc.successRepos, repo)
-	}
+		rc.successRepositories = append(rc.successRepositories, repos[i])
+	}, len(repos), r.Concurrent)
 
 	return nil
+}
+
+func runInParallel(fun func(i int), total int, maxConcurrent int) {
+	concurrentGoroutines := make(chan struct{}, maxConcurrent)
+	var wg sync.WaitGroup
+	wg.Add(total)
+	for i := 0; i < total; i++ {
+		concurrentGoroutines <- struct{}{}
+		go func(i int) {
+			defer wg.Done()
+			fun(i)
+			<-concurrentGoroutines
+		}(i)
+	}
+	wg.Wait()
 }
 
 func getReviewers(reviewers []string, maxReviewers int) []string {
@@ -189,8 +207,9 @@ func newLogger() io.WriteCloser {
 }
 
 type repoCounter struct {
-	successRepos      []domain.Repository
-	errorRepositories map[string][]domain.Repository
+	successRepositories []domain.Repository
+	errorRepositories   map[string][]domain.Repository
+	lock                sync.RWMutex
 }
 
 func newRepoCounter() *repoCounter {
@@ -200,11 +219,24 @@ func newRepoCounter() *repoCounter {
 }
 
 func (r *repoCounter) addError(err error, repo domain.Repository) {
+	defer r.lock.Unlock()
+	r.lock.Lock()
+
 	msg := err.Error()
 	r.errorRepositories[msg] = append(r.errorRepositories[msg], repo)
 }
 
+func (r *repoCounter) addSuccess(repo domain.Repository) {
+	defer r.lock.Unlock()
+	r.lock.Lock()
+
+	r.successRepositories = append(r.successRepositories, repo)
+}
+
 func (r *repoCounter) printRepos() {
+	defer r.lock.RUnlock()
+	r.lock.RLock()
+
 	var exitInfo string
 
 	for errMsg := range r.errorRepositories {
@@ -214,9 +246,9 @@ func (r *repoCounter) printRepos() {
 		}
 	}
 
-	if len(r.successRepos) > 0 {
+	if len(r.successRepositories) > 0 {
 		exitInfo += "Repositories with a successful run:\n"
-		for _, repo := range r.successRepos {
+		for _, repo := range r.successRepositories {
 			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
 		}
 	}
