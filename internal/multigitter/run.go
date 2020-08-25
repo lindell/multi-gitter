@@ -3,6 +3,7 @@ package multigitter
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -46,6 +47,8 @@ type Runner struct {
 	Concurrent int
 }
 
+var errAborted = errors.New("run was never started because of aborted execution")
+
 // Run runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
@@ -62,7 +65,9 @@ func (r Runner) Run(ctx context.Context) error {
 		logger := log.WithField("repo", repos[i].FullName())
 		err := r.runSingleRepo(ctx, repos[i])
 		if err != nil {
-			logger.Info(err)
+			if err != errAborted {
+				logger.Info(err)
+			}
 			rc.addError(err, repos[i])
 			return
 		}
@@ -99,6 +104,10 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 }
 
 func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error {
+	if ctx.Err() != nil {
+		return errAborted
+	}
+
 	logger := log.WithField("repo", repo.FullName())
 	logger.Info("Cloning and running script")
 

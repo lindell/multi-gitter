@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 
@@ -119,6 +121,18 @@ func run(cmd *cobra.Command, args []string) error {
 		executablePath = path.Join(workingDir, executablePath)
 	}
 
+	// Set up signal listening to cancel the context and let started runs finish gracefully
+	ctx, cancel := context.WithCancel(context.Background())
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Println("Finishing up ongoing runs. Press CTRL+C again to abort now.")
+		cancel()
+		<-c
+		os.Exit(1)
+	}()
+
 	runner := multigitter.Runner{
 		ScriptPath:    executablePath,
 		Arguments:     parsedCommand[1:],
@@ -138,7 +152,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Concurrent: concurrent,
 	}
 
-	err = runner.Run(context.Background())
+	err = runner.Run(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
