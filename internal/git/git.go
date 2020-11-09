@@ -19,9 +19,6 @@ import (
 type Git struct {
 	Directory string // The (temporary) directory that should be worked within
 	Repo      string // The "url" to the repo, any format can be used as long as it's pushable
-	NewBranch string // The name of the new branch that new changes will be pushed to
-
-	CommitAuthor *domain.CommitAuthor // The author data is used when making commits, if the field is not set, the git configuration will be used
 
 	repo *git.Repository // The repository after the clone has been made
 }
@@ -47,14 +44,14 @@ func (g *Git) Clone() error {
 }
 
 // ChangeBranch changes the branch
-func (g *Git) ChangeBranch() error {
+func (g *Git) ChangeBranch(branchName string) error {
 	w, err := g.repo.Worktree()
 	if err != nil {
 		return err
 	}
 
 	err = w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.NewBranchReferenceName(g.NewBranch),
+		Branch: plumbing.NewBranchReferenceName(branchName),
 		Create: true,
 	})
 	if err != nil {
@@ -80,7 +77,7 @@ func (g *Git) Changes() (bool, error) {
 }
 
 // Commit and push all changes
-func (g *Git) Commit(commitMessage string) error {
+func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error {
 	w, err := g.repo.Worktree()
 	if err != nil {
 		return err
@@ -99,10 +96,10 @@ func (g *Git) Commit(commitMessage string) error {
 	oldHash := oldHead.Hash()
 
 	var author *object.Signature
-	if g.CommitAuthor != nil {
+	if commitAuthor != nil {
 		author = &object.Signature{
-			Name:  g.CommitAuthor.Name,
-			Email: g.CommitAuthor.Email,
+			Name:  commitAuthor.Name,
+			Email: commitAuthor.Email,
 			When:  time.Now(),
 		}
 	}
@@ -163,8 +160,8 @@ func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
 }
 
 // BranchExist checks if the new branch exists
-func (g *Git) BranchExist() (bool, error) {
-	_, err := g.repo.Reference(plumbing.ReferenceName(fmt.Sprintf("refs/remotes/origin/%s", g.NewBranch)), false)
+func (g *Git) BranchExist(branchName string) (bool, error) {
+	_, err := g.repo.Reference(plumbing.ReferenceName(fmt.Sprintf("refs/remotes/origin/%s", branchName)), false)
 	if err == plumbing.ErrReferenceNotFound {
 		return false, nil
 	} else if err != nil {

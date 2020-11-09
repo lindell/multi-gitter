@@ -1,22 +1,21 @@
 package multigitter
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/multigitter/logger"
+	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 )
 
 // VersionController fetches repositories
@@ -56,8 +55,12 @@ func (r Runner) Run(ctx context.Context) error {
 		return err
 	}
 
-	rc := newRepoCounter()
-	defer rc.printRepos()
+	rc := repocounter.NewCounter()
+	defer func() {
+		if info := rc.Info(); info != "" {
+			fmt.Print(info)
+		}
+	}()
 
 	log.Infof("Running on %d repositories", len(repos))
 
@@ -68,11 +71,11 @@ func (r Runner) Run(ctx context.Context) error {
 			if err != errAborted {
 				logger.Info(err)
 			}
-			rc.addError(err, repos[i])
+			rc.AddError(err, repos[i])
 			return
 		}
 
-		rc.successRepositories = append(rc.successRepositories, repos[i])
+		rc.AddSuccess(repos[i])
 	}, len(repos), r.Concurrent)
 
 	return nil
@@ -108,8 +111,8 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		return errAborted
 	}
 
-	logger := log.WithField("repo", repo.FullName())
-	logger.Info("Cloning and running script")
+	log := log.WithField("repo", repo.FullName())
+	log.Info("Cloning and running script")
 
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-changer-")
 	if err != nil {
@@ -118,10 +121,8 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 	defer os.RemoveAll(tmpDir)
 
 	sourceController := &git.Git{
-		Directory:    tmpDir,
-		Repo:         repo.URL(r.Token),
-		NewBranch:    r.FeatureBranch,
-		CommitAuthor: r.CommitAuthor,
+		Directory: tmpDir,
+		Repo:      repo.URL(r.Token),
 	}
 
 	err = sourceController.Clone()
@@ -129,14 +130,14 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		return err
 	}
 
-	branchExist, err := sourceController.BranchExist()
+	branchExist, err := sourceController.BranchExist(r.FeatureBranch)
 	if err != nil {
 		return err
 	} else if branchExist {
 		return domain.BranchExistError
 	}
 
-	err = sourceController.ChangeBranch()
+	err = sourceController.ChangeBranch(r.FeatureBranch)
 	if err != nil {
 		return err
 	}
@@ -149,7 +150,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
 	)
 
-	writer := newLogger()
+	writer := logger.NewLogger(log)
 	defer writer.Close()
 	cmd.Stdout = writer
 	cmd.Stderr = writer
@@ -165,13 +166,13 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		return domain.NoChangeError
 	}
 
-	err = sourceController.Commit(r.CommitMessage)
+	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
 	if err != nil {
 		return err
 	}
 
 	if r.DryRun {
-		logger.Info("Skipping pushing changes because of dry run")
+		log.Info("Skipping pushing changes because of dry run")
 		return nil
 	}
 
@@ -180,7 +181,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		return err
 	}
 
-	logger.Info("Change done, creating pull request")
+	log.Info("Change done, creating pull request")
 	err = r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
@@ -193,76 +194,4 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 	}
 
 	return nil
-}
-
-func newLogger() io.WriteCloser {
-	reader, writer := io.Pipe()
-
-	// Print each line that is outputted by the script
-	go func() {
-		buf := bufio.NewReader(reader)
-		for {
-			line, err := buf.ReadString('\n')
-			if line != "" {
-				log.Infof("Script output: %s", line)
-			}
-			if err != nil {
-				return
-			}
-		}
-	}()
-
-	return writer
-}
-
-type repoCounter struct {
-	successRepositories []domain.Repository
-	errorRepositories   map[string][]domain.Repository
-	lock                sync.RWMutex
-}
-
-func newRepoCounter() *repoCounter {
-	return &repoCounter{
-		errorRepositories: map[string][]domain.Repository{},
-	}
-}
-
-func (r *repoCounter) addError(err error, repo domain.Repository) {
-	defer r.lock.Unlock()
-	r.lock.Lock()
-
-	msg := err.Error()
-	r.errorRepositories[msg] = append(r.errorRepositories[msg], repo)
-}
-
-func (r *repoCounter) addSuccess(repo domain.Repository) {
-	defer r.lock.Unlock()
-	r.lock.Lock()
-
-	r.successRepositories = append(r.successRepositories, repo)
-}
-
-func (r *repoCounter) printRepos() {
-	defer r.lock.RUnlock()
-	r.lock.RLock()
-
-	var exitInfo string
-
-	for errMsg := range r.errorRepositories {
-		exitInfo += fmt.Sprintf("%s:\n", strings.ToUpper(errMsg[0:1])+errMsg[1:])
-		for _, repo := range r.errorRepositories[errMsg] {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
-		}
-	}
-
-	if len(r.successRepositories) > 0 {
-		exitInfo += "Repositories with a successful run:\n"
-		for _, repo := range r.successRepositories {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
-		}
-	}
-
-	if exitInfo != "" {
-		fmt.Print(exitInfo)
-	}
 }
