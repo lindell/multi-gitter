@@ -13,15 +13,11 @@ multi-gitter status [flags]
 ### Options
 
 ```
-  -B, --branch string   The name of the branch where changes are committed. (default "multi-gitter-branch")
-  -h, --help            help for status
-```
-
-### Options inherited from parent commands
-
-```
+  -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
   -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
+  -h, --help                 help for status
+      --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
   -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -o, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
   -P, --platform string      The platform that is used. Available values: github, gitlab (default "github")

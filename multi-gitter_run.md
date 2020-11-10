@@ -1,6 +1,6 @@
 ## multi-gitter run
 
-Clones multiple repostories, run a script in that directory, and creates a PR with those changes.
+Clones multiple repositories, run a script in that directory, and creates a PR with those changes.
 
 ### Synopsis
 
@@ -23,25 +23,21 @@ multi-gitter run [script path] [flags]
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
   -C, --concurrent int          The maximum number of concurrent runs (default 1)
   -d, --dry-run                 Run without pushing changes or creating pull requests
+  -g, --gh-base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
+  -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                    help for run
+      --log-file string         The file where all logs should be printed to. "-" means stdout (default "-")
+  -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -M, --max-reviewers int       If this value is set, reviewers will be randomized
+  -o, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
+  -P, --platform string         The platform that is used. Available values: github, gitlab (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
+  -p, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName"
+  -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName"
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
-```
-
-### Options inherited from parent commands
-
-```
-  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
-  -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
-  -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
-  -o, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
-  -P, --platform string      The platform that is used. Available values: github, gitlab (default "github")
-  -p, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName"
-  -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName"
-  -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
-  -u, --user strings         The name of a user. All repositories owned by that user will be used.
+  -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -u, --user strings            The name of a user. All repositories owned by that user will be used.
 ```
 
 ### SEE ALSO
