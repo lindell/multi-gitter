@@ -25,11 +25,12 @@ The environment variable REPOSITORY_NAME will be set to the name of the reposito
 
 // RunCmd is the main command that runs a script for multiple repositories and creates PRs with the changes made
 var RunCmd = &cobra.Command{
-	Use:   "run [script path]",
-	Short: "Clones multiple repostories, run a script in that directory, and creates a PR with those changes.",
-	Long:  runHelp,
-	Args:  cobra.ExactArgs(1),
-	RunE:  run,
+	Use:     "run [script path]",
+	Short:   "Clones multiple repositories, run a script in that directory, and creates a PR with those changes.",
+	Long:    runHelp,
+	Args:    cobra.ExactArgs(1),
+	PreRunE: logFlagInit,
+	RunE:    run,
 }
 
 func init() {
@@ -43,6 +44,8 @@ func init() {
 	RunCmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
 	RunCmd.Flags().StringP("author-name", "", "", "If set, this fields will be used as the name of the committer")
 	RunCmd.Flags().StringP("author-email", "", "", "If set, this fields will be used as the email of the committer")
+	RunCmd.Flags().AddFlagSet(platformFlags())
+	RunCmd.Flags().AddFlagSet(logFlags("-"))
 }
 
 func run(cmd *cobra.Command, args []string) error {

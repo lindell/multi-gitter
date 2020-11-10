@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/gitlab"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -19,22 +19,11 @@ import (
 
 // RootCmd is the root command containing all subcommands
 var RootCmd = &cobra.Command{
-	Use:               "multi-gitter",
-	Short:             "Multi gitter is a tool for making changes into multiple git repositories",
-	PersistentPreRunE: persistentPreRun,
+	Use:   "multi-gitter",
+	Short: "Multi gitter is a tool for making changes into multiple git repositories",
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringP("gh-base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
-	RootCmd.PersistentFlags().StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
-	RootCmd.PersistentFlags().StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
-	RootCmd.PersistentFlags().StringSliceP("org", "o", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
-	RootCmd.PersistentFlags().StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
-	RootCmd.PersistentFlags().StringSliceP("user", "u", nil, "The name of a user. All repositories owned by that user will be used.")
-	RootCmd.PersistentFlags().StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\"")
-	RootCmd.PersistentFlags().StringSliceP("project", "p", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
-	RootCmd.PersistentFlags().StringP("platform", "P", "github", "The platform that is used. Available values: github, gitlab")
-
 	RootCmd.AddCommand(RunCmd)
 	RootCmd.AddCommand(StatusCmd)
 	RootCmd.AddCommand(MergeCmd)
@@ -43,13 +32,51 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-func persistentPreRun(cmd *cobra.Command, args []string) error {
+func platformFlags() *flag.FlagSet {
+	flags := flag.NewFlagSet("platform", flag.ExitOnError)
+
+	flags.StringP("gh-base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
+	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
+
+	flags.StringSliceP("org", "o", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
+	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
+	flags.StringSliceP("user", "u", nil, "The name of a user. All repositories owned by that user will be used.")
+	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\"")
+	flags.StringSliceP("project", "p", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
+	flags.StringP("platform", "P", "github", "The platform that is used. Available values: github, gitlab")
+
+	return flags
+}
+
+func logFlags(logFile string) *flag.FlagSet {
+	flags := flag.NewFlagSet("log", flag.ExitOnError)
+
+	flags.StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
+	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout`)
+
+	return flags
+}
+
+func logFlagInit(cmd *cobra.Command, args []string) error {
+	// Parse and set log level
 	strLevel, _ := cmd.Flags().GetString("log-level")
 	logLevel, err := log.ParseLevel(strLevel)
 	if err != nil {
 		return fmt.Errorf("invalid log-level: %s", strLevel)
 	}
 	log.SetLevel(logLevel)
+
+	// Set the output (file)
+	strFile, _ := cmd.Flags().GetString("log-file")
+	if strFile == "" {
+		log.SetOutput(nopWriter{})
+	} else if strFile != "-" {
+		file, err := os.Create(strFile)
+		if err != nil {
+			return errors.Wrapf(err, "could not open log-file %s", strFile)
+		}
+		log.SetOutput(file)
+	}
 
 	return nil
 }
@@ -147,4 +174,11 @@ func getToken(flag *flag.FlagSet) (string, error) {
 	}
 
 	return token, nil
+}
+
+// nopWriter is a writer that does nothing
+type nopWriter struct{}
+
+func (nw nopWriter) Write(bb []byte) (int, error) {
+	return len(bb), nil
 }

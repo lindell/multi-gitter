@@ -9,15 +9,18 @@ import (
 
 // StatusCmd gets statuses of pull requests
 var StatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Get the status of pull requests.",
-	Long:  "Get the status of all pull requests with a specified branch name in an organization.",
-	Args:  cobra.NoArgs,
-	RunE:  status,
+	Use:     "status",
+	Short:   "Get the status of pull requests.",
+	Long:    "Get the status of all pull requests with a specified branch name in an organization.",
+	Args:    cobra.NoArgs,
+	PreRunE: logFlagInit,
+	RunE:    status,
 }
 
 func init() {
 	StatusCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	StatusCmd.Flags().AddFlagSet(platformFlags())
+	StatusCmd.Flags().AddFlagSet(logFlags("-"))
 }
 
 func status(cmd *cobra.Command, args []string) error {

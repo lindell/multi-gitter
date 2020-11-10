@@ -58,7 +58,7 @@ func (r Runner) Run(ctx context.Context) error {
 	rc := repocounter.NewCounter()
 	defer func() {
 		if info := rc.Info(); info != "" {
-			fmt.Print(info)
+			fmt.Fprint(log.StandardLogger().Out, info)
 		}
 	}()
 

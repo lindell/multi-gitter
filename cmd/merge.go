@@ -9,15 +9,18 @@ import (
 
 // MergeCmd merges pull requests
 var MergeCmd = &cobra.Command{
-	Use:   "merge",
-	Short: "Merge pull requests.",
-	Long:  "Merge pull requests with a specified branch name in an organization and with specified conditions.",
-	Args:  cobra.NoArgs,
-	RunE:  merge,
+	Use:     "merge",
+	Short:   "Merge pull requests.",
+	Long:    "Merge pull requests with a specified branch name in an organization and with specified conditions.",
+	Args:    cobra.NoArgs,
+	PreRunE: logFlagInit,
+	RunE:    merge,
 }
 
 func init() {
 	MergeCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	MergeCmd.Flags().AddFlagSet(platformFlags())
+	MergeCmd.Flags().AddFlagSet(logFlags("-"))
 }
 
 func merge(cmd *cobra.Command, args []string) error {
