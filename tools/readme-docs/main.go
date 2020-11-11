@@ -65,6 +65,10 @@ func main() {
 			imgIcon: "docs/img/fa/tasks.svg",
 			cmd:     cmd.StatusCmd,
 		},
+		{
+			imgIcon: "docs/img/fa/print.svg",
+			cmd:     cmd.PrintCmd,
+		},
 	}
 	for _, c := range cmds {
 		data.Commands = append(data.Commands, command{
