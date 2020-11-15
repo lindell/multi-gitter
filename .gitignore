@@ -19,3 +19,5 @@ main
 tmp-docs/
 
 dist/
+
+coverage/

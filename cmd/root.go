@@ -18,18 +18,22 @@ import (
 )
 
 // RootCmd is the root command containing all subcommands
-var RootCmd = &cobra.Command{
-	Use:   "multi-gitter",
-	Short: "Multi gitter is a tool for making changes into multiple git repositories",
+func RootCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "multi-gitter",
+		Short: "Multi gitter is a tool for making changes into multiple git repositories",
+	}
+
+	cmd.AddCommand(RunCmd())
+	cmd.AddCommand(StatusCmd())
+	cmd.AddCommand(MergeCmd())
+	cmd.AddCommand(PrintCmd())
+	cmd.AddCommand(VersionCmd())
+
+	return cmd
 }
 
 func init() {
-	RootCmd.AddCommand(RunCmd)
-	RootCmd.AddCommand(StatusCmd)
-	RootCmd.AddCommand(MergeCmd)
-	RootCmd.AddCommand(PrintCmd)
-	RootCmd.AddCommand(VersionCmd)
-
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
@@ -82,7 +86,15 @@ func logFlagInit(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// OverrideVersionController can be set to force a specific version controller to be used
+// This is used to override the version controller with a mock, to be used during testing
+var OverrideVersionController multigitter.VersionController = nil
+
 func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, error) {
+	if OverrideVersionController != nil {
+		return OverrideVersionController, nil
+	}
+
 	platform, _ := flag.GetString("platform")
 	switch platform {
 	default:
@@ -160,6 +172,10 @@ func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 }
 
 func getToken(flag *flag.FlagSet) (string, error) {
+	if OverrideVersionController != nil {
+		return "", nil
+	}
+
 	token, _ := flag.GetString("token")
 
 	if token == "" {
