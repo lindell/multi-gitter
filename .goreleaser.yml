@@ -16,8 +16,6 @@ builds:
     ignore:
       - goos: darwin
         goarch: arm
-      - goos: darwin
-        goarch: arm64
 archives:
   - replacements:
       darwin: Darwin
