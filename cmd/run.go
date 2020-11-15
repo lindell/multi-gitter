@@ -24,28 +24,30 @@ The environment variable REPOSITORY_NAME will be set to the name of the reposito
 `
 
 // RunCmd is the main command that runs a script for multiple repositories and creates PRs with the changes made
-var RunCmd = &cobra.Command{
-	Use:     "run [script path]",
-	Short:   "Clones multiple repositories, run a script in that directory, and creates a PR with those changes.",
-	Long:    runHelp,
-	Args:    cobra.ExactArgs(1),
-	PreRunE: logFlagInit,
-	RunE:    run,
-}
+func RunCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "run [script path]",
+		Short:   "Clones multiple repositories, run a script in that directory, and creates a PR with those changes.",
+		Long:    runHelp,
+		Args:    cobra.ExactArgs(1),
+		PreRunE: logFlagInit,
+		RunE:    run,
+	}
 
-func init() {
-	RunCmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	RunCmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
-	RunCmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
-	RunCmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
-	RunCmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
-	RunCmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized")
-	RunCmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
-	RunCmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
-	RunCmd.Flags().StringP("author-name", "", "", "If set, this fields will be used as the name of the committer")
-	RunCmd.Flags().StringP("author-email", "", "", "If set, this fields will be used as the email of the committer")
-	RunCmd.Flags().AddFlagSet(platformFlags())
-	RunCmd.Flags().AddFlagSet(logFlags("-"))
+	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	cmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
+	cmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
+	cmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
+	cmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
+	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized")
+	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
+	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
+	cmd.Flags().StringP("author-name", "", "", "If set, this fields will be used as the name of the committer")
+	cmd.Flags().StringP("author-email", "", "", "If set, this fields will be used as the email of the committer")
+	cmd.Flags().AddFlagSet(platformFlags())
+	cmd.Flags().AddFlagSet(logFlags("-"))
+
+	return cmd
 }
 
 func run(cmd *cobra.Command, args []string) error {

@@ -22,21 +22,23 @@ The environment variable REPOSITORY_NAME will be set to the name of the reposito
 `
 
 // PrintCmd is the main command that runs a script for multiple repositories and print the output of each run
-var PrintCmd = &cobra.Command{
-	Use:     "print [script path]",
-	Short:   "Clones multiple repositories, run a script in that directory, and prints the output of each run.",
-	Long:    printHelp,
-	Args:    cobra.ExactArgs(1),
-	PreRunE: logFlagInit,
-	RunE:    print,
-}
+func PrintCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "print [script path]",
+		Short:   "Clones multiple repositories, run a script in that directory, and prints the output of each run.",
+		Long:    printHelp,
+		Args:    cobra.ExactArgs(1),
+		PreRunE: logFlagInit,
+		RunE:    print,
+	}
 
-func init() {
-	PrintCmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
-	PrintCmd.Flags().StringP("output", "O", "-", `The file that the output of the script should be outputted to. "-" means stdout`)
-	PrintCmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr`)
-	PrintCmd.Flags().AddFlagSet(platformFlags())
-	PrintCmd.Flags().AddFlagSet(logFlags(""))
+	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
+	cmd.Flags().StringP("output", "O", "-", `The file that the output of the script should be outputted to. "-" means stdout`)
+	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr`)
+	cmd.Flags().AddFlagSet(platformFlags())
+	cmd.Flags().AddFlagSet(logFlags(""))
+
+	return cmd
 }
 
 func print(cmd *cobra.Command, args []string) error {

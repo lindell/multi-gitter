@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path"
@@ -46,7 +47,9 @@ func main() {
 	data := templateData{}
 
 	// Main usage
-	data.MainUsage = strings.TrimSpace(cmd.RootCmd.UsageString())
+	data.MainUsage = strings.TrimSpace(cmd.RootCmd().UsageString())
+
+	subCommands := cmd.RootCmd().Commands()
 
 	// All commands
 	cmds := []struct {
@@ -55,19 +58,19 @@ func main() {
 	}{
 		{
 			imgIcon: "docs/img/fa/rabbit-fast.svg",
-			cmd:     cmd.RunCmd,
+			cmd:     commandByName(subCommands, "run"),
 		},
 		{
 			imgIcon: "docs/img/fa/code-merge.svg",
-			cmd:     cmd.MergeCmd,
+			cmd:     commandByName(subCommands, "merge"),
 		},
 		{
 			imgIcon: "docs/img/fa/tasks.svg",
-			cmd:     cmd.StatusCmd,
+			cmd:     commandByName(subCommands, "status"),
 		},
 		{
 			imgIcon: "docs/img/fa/print.svg",
-			cmd:     cmd.PrintCmd,
+			cmd:     commandByName(subCommands, "print"),
 		},
 	}
 	for _, c := range cmds {
@@ -101,6 +104,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func commandByName(cmds []*cobra.Command, name string) *cobra.Command {
+	for _, command := range cmds {
+		if command.Name() == name {
+			return command
+		}
+	}
+	panic(fmt.Sprintf(`could not find command "%s"`, name))
 }
 
 var titleRegex = regexp.MustCompile("# ?Title: ([^\n]+)[\n\r]+")

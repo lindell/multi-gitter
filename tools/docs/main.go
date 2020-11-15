@@ -17,8 +17,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cmd.RootCmd.DisableAutoGenTag = true
-	err = doc.GenMarkdownTree(cmd.RootCmd, genDir)
+	rootCmd := cmd.RootCmd()
+	rootCmd.DisableAutoGenTag = true
+	err = doc.GenMarkdownTree(rootCmd, genDir)
 	if err != nil {
 		log.Fatal(err)
 	}
