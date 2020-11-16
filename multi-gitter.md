@@ -2,10 +2,6 @@
 
 Multi gitter is a tool for making changes into multiple git repositories
 
-### Synopsis
-
-Multi gitter is a tool for making changes into multiple git repositories
-
 ### Options
 
 ```
