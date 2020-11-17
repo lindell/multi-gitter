@@ -69,6 +69,10 @@ func main() {
 			cmd:     commandByName(subCommands, "status"),
 		},
 		{
+			imgIcon: "docs/img/fa/times-hexagon.svg",
+			cmd:     commandByName(subCommands, "close"),
+		},
+		{
 			imgIcon: "docs/img/fa/print.svg",
 			cmd:     commandByName(subCommands, "print"),
 		},

@@ -361,3 +361,18 @@ func (g Github) MergePullRequest(ctx context.Context, pullReq domain.PullRequest
 	_, err = g.ghClient.Git.DeleteRef(ctx, pr.ownerName, pr.repoName, fmt.Sprintf("heads/%s", pr.branchName))
 	return err
 }
+
+// ClosePullRequest closes a pull request
+func (g Github) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
+	pr := pullReq.(pullRequest)
+
+	_, _, err := g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
+		State: &[]string{"closed"}[0],
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = g.ghClient.Git.DeleteRef(ctx, pr.ownerName, pr.repoName, fmt.Sprintf("heads/%s", pr.branchName))
+	return err
+}

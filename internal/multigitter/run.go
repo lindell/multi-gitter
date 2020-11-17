@@ -24,6 +24,7 @@ type VersionController interface {
 	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error
 	GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
+	ClosePullRequest(ctx context.Context, pr domain.PullRequest) error
 }
 
 // Runner contains fields to be able to do the run

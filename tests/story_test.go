@@ -127,4 +127,41 @@ Repositories with a successful run:
 	afterMergeStatusLogData, err := ioutil.ReadFile(afterMergeStatusLogFile)
 	require.NoError(t, err)
 	assert.Equal(t, "should-change/XX: Merged\nshould-change-2/XX: Pending\n", string(afterMergeStatusLogData))
+
+	//
+	// Close
+	//
+	closeLogFile := path.Join(tmpDir, "close-log.txt")
+
+	command = cmd.RootCmd()
+	command.SetArgs([]string{"close",
+		"--log-file", closeLogFile,
+		"-B", "custom-branch-name",
+	})
+	err = command.Execute()
+	assert.NoError(t, err)
+
+	// Verify that the output was correct
+	closeLogData, err := ioutil.ReadFile(closeLogFile)
+	require.NoError(t, err)
+	assert.Contains(t, string(closeLogData), "Closing 1 pull request")
+	assert.Contains(t, string(closeLogData), "Closing repo=should-change-2/XX")
+
+	//
+	// After Close Status
+	//
+	afterCloseStatusLogFile := path.Join(tmpDir, "after-close-status-log.txt")
+
+	command = cmd.RootCmd()
+	command.SetArgs([]string{"status",
+		"--log-file", afterCloseStatusLogFile,
+		"-B", "custom-branch-name",
+	})
+	err = command.Execute()
+	assert.NoError(t, err)
+
+	// Verify that the output was correct
+	afterCloseStatusLogData, err := ioutil.ReadFile(afterCloseStatusLogFile)
+	require.NoError(t, err)
+	assert.Equal(t, "should-change/XX: Merged\nshould-change-2/XX: Closed\n", string(afterCloseStatusLogData))
 }
