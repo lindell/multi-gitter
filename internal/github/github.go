@@ -173,6 +173,9 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 	}
 	allRepos = make([]*github.Repository, 0, len(repoMap))
 	for _, repo := range repoMap {
+		if repo.GetArchived() || repo.GetDisabled() {
+			continue
+		}
 		allRepos = append(allRepos, repo)
 	}
 	sort.Slice(allRepos, func(i, j int) bool {
