@@ -48,12 +48,24 @@ func (vc *VersionController) GetPullRequestStatuses(ctx context.Context, branchN
 	return ret, nil
 }
 
-// MergePullRequest sets the status of a mock pull requests to merged for
+// MergePullRequest sets the status of a mock pull requests to merged
 func (vc *VersionController) MergePullRequest(ctx context.Context, pr domain.PullRequest) error {
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.Name == pullRequest.Repository.Name {
 			vc.PullRequests[i].PRStatus = domain.PullRequestStatusMerged
+			return nil
+		}
+	}
+	return errors.New("could not find pull request")
+}
+
+// ClosePullRequest sets the status of a mock pull requests to closed
+func (vc *VersionController) ClosePullRequest(ctx context.Context, pr domain.PullRequest) error {
+	pullRequest := pr.(PullRequest)
+	for i := range vc.PullRequests {
+		if vc.PullRequests[i].Repository.Name == pullRequest.Repository.Name {
+			vc.PullRequests[i].PRStatus = domain.PullRequestStatusClosed
 			return nil
 		}
 	}

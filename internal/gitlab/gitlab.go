@@ -347,3 +347,20 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq domain.PullReques
 
 	return nil
 }
+
+// ClosePullRequest closes a pull request
+func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
+	pr := pullReq.(pullRequest)
+
+	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.pid, pr.iid, gitlab.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	_, err = g.glClient.Branches.DeleteBranch(pr.pid, pr.branchName, gitlab.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
