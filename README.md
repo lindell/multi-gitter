@@ -60,6 +60,7 @@ go get github.com/lindell/multi-gitter
 * [run](#-usage-of-run) Clones multiple repositories, run a script in that directory, and creates a PR with those changes.
 * [merge](#-usage-of-merge) Merge pull requests.
 * [status](#-usage-of-status) Get the status of pull requests.
+* [close](#-usage-of-close) Close pull requests.
 * [print](#-usage-of-print) Clones multiple repositories, run a script in that directory, and prints the output of each run.
 
 
@@ -123,6 +124,27 @@ Get the status of all pull requests with a specified branch name in an organizat
 ```
 Usage:
   multi-gitter status [flags]
+
+Flags:
+  -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
+  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
+  -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
+      --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
+  -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
+  -o, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
+  -P, --platform string      The platform that is used. Available values: github, gitlab (default "github")
+  -p, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName"
+  -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName"
+  -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -u, --user strings         The name of a user. All repositories owned by that user will be used.
+```
+
+
+### <img alt="close" src="docs/img/fa/times-hexagon.svg" height="40" valign="middle" /> Usage of `close`
+Close pull requests with a specified branch name in an organization and with specified conditions.
+```
+Usage:
+  multi-gitter close [flags]
 
 Flags:
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
