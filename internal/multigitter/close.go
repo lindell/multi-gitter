@@ -14,6 +14,7 @@ type Closer struct {
 	FeatureBranch string
 }
 
+// Close closes pull requests
 func (s Closer) Close(ctx context.Context) error {
 	prs, err := s.VersionController.GetPullRequestStatuses(ctx, s.FeatureBranch)
 	if err != nil {
