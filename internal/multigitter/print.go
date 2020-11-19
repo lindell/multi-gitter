@@ -29,7 +29,8 @@ type Printer struct {
 	Concurrent int
 }
 
-func (r Printer) Output(ctx context.Context) error {
+// Print runs a script for multiple repositories and print the output of each run
+func (r Printer) Print(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
 		return err

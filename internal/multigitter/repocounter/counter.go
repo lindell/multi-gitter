@@ -15,6 +15,7 @@ type Counter struct {
 	lock                sync.RWMutex
 }
 
+// NewCounter create a new repo counter
 func NewCounter() *Counter {
 	return &Counter{
 		errorRepositories: map[string][]domain.Repository{},

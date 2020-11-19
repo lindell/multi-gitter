@@ -127,7 +127,7 @@ func print(cmd *cobra.Command, args []string) error {
 		Concurrent: concurrent,
 	}
 
-	err = printer.Output(ctx)
+	err = printer.Print(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
