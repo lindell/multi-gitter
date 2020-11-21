@@ -32,11 +32,13 @@ func TestPrint(t *testing.T) {
 
 	runLogFile := path.Join(tmpDir, "print-log.txt")
 	outFile := path.Join(tmpDir, "out.txt")
+	errOutFile := path.Join(tmpDir, "err-out.txt")
 
 	command := cmd.RootCmd()
 	command.SetArgs([]string{"print",
 		"--log-file", runLogFile,
 		"--output", outFile,
+		"--error-output", errOutFile,
 		fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/printer/main.go")),
 	})
 	err = command.Execute()
@@ -46,4 +48,9 @@ func TestPrint(t *testing.T) {
 	outData, err := ioutil.ReadFile(outFile)
 	require.NoError(t, err)
 	assert.Equal(t, "i like apples\ni like my apple\ni like oranges\n", string(outData))
+
+	// Verify that the error output was correct
+	errOutData, err := ioutil.ReadFile(errOutFile)
+	require.NoError(t, err)
+	assert.Equal(t, "I LIKE APPLES\nI LIKE MY APPLE\nI LIKE ORANGES\n", string(errOutData))
 }

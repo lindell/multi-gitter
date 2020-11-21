@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"time"
@@ -215,4 +216,21 @@ type nopWriter struct{}
 
 func (nw nopWriter) Write(bb []byte) (int, error) {
 	return len(bb), nil
+}
+
+type nopCloser struct {
+	io.Writer
+}
+
+func (nopCloser) Close() error { return nil }
+
+func fileOutput(value string, std io.Writer) (io.WriteCloser, error) {
+	if value != "-" {
+		file, err := os.Create(value)
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not open file %s", value)
+		}
+		return file, nil
+	}
+	return nopCloser{std}, nil
 }

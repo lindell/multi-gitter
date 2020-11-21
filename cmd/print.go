@@ -45,8 +45,8 @@ func print(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
 	concurrent, _ := flag.GetInt("concurrent")
-	output, _ := flag.GetString("output")
-	errorOutput, _ := flag.GetString("error-output")
+	strOutput, _ := flag.GetString("output")
+	strErrOutput, _ := flag.GetString("error-output")
 
 	token, err := getToken(flag)
 	if err != nil {
@@ -59,24 +59,14 @@ func print(cmd *cobra.Command, args []string) error {
 		return errors.New("concurrent runs can't be less than one")
 	}
 
-	stdOut := os.Stdout
-	if output != "-" {
-		file, err := os.Create(output)
-		if err != nil {
-			return errors.Wrapf(err, "could not open file %s", output)
-		}
-		defer file.Close()
-		stdOut = file
+	output, err := fileOutput(strOutput, os.Stdout)
+	if err != nil {
+		return err
 	}
 
-	stdErr := os.Stderr
-	if errorOutput != "-" {
-		file, err := os.Create(errorOutput)
-		if err != nil {
-			return errors.Wrapf(err, "could not open file %s", errorOutput)
-		}
-		defer file.Close()
-		stdErr = file
+	errOutput, err := fileOutput(strErrOutput, os.Stderr)
+	if err != nil {
+		return err
 	}
 
 	workingDir, err := os.Getwd()
@@ -121,8 +111,8 @@ func print(cmd *cobra.Command, args []string) error {
 
 		VersionController: vc,
 
-		Stdout: stdOut,
-		Stderr: stdErr,
+		Stdout: output,
+		Stderr: errOutput,
 
 		Concurrent: concurrent,
 	}
