@@ -58,6 +58,7 @@ func logFlags(logFile string) *flag.FlagSet {
 	flags := flag.NewFlagSet("log", flag.ExitOnError)
 
 	flags.StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
+	flags.StringP("log-format", "", "text", `The formating of the logs. Available values: text, json, json-pretty`)
 	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout`)
 
 	return flags
@@ -71,6 +72,21 @@ func logFlagInit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid log-level: %s", strLevel)
 	}
 	log.SetLevel(logLevel)
+
+	// Parse and set the log format
+	strFormat, _ := cmd.Flags().GetString("log-format")
+	switch strFormat {
+	case "text":
+		log.SetFormatter(&log.TextFormatter{})
+	case "json":
+		log.SetFormatter(&log.JSONFormatter{})
+	case "json-pretty":
+		log.SetFormatter(&log.JSONFormatter{
+			PrettyPrint: true,
+		})
+	default:
+		return fmt.Errorf(`unknown log-format "%s"`, strFormat)
+	}
 
 	// Set the output (file)
 	strFile, _ := cmd.Flags().GetString("log-file")
