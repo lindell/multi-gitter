@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 )
 
 const fileName = "test.txt"
@@ -14,4 +16,5 @@ func main() {
 	}
 
 	fmt.Println(string(data))
+	fmt.Fprintln(os.Stderr, strings.ToUpper(string(data)))
 }
