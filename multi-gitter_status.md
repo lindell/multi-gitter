@@ -18,6 +18,7 @@ multi-gitter status [flags]
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                 help for status
       --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
+      --log-format string    The formating of the logs. Available values: text, json, json-pretty (default "text")
   -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -o, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
   -P, --platform string      The platform that is used. Available values: github, gitlab (default "github")
