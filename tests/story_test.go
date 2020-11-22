@@ -23,6 +23,7 @@ func TestStory(t *testing.T) {
 	cmd.OverrideVersionController = vcMock
 
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-test-run-")
+	defer os.RemoveAll(tmpDir)
 	assert.NoError(t, err)
 
 	workingDir, err := os.Getwd()
@@ -35,11 +36,11 @@ func TestStory(t *testing.T) {
 	vcMock.AddRepository(changeRepo2)
 	vcMock.AddRepository(noChangeRepo)
 
-	runLogFile := path.Join(tmpDir, "run-log.txt")
+	runOutFile := path.Join(tmpDir, "run-log.txt")
 
 	command := cmd.RootCmd()
 	command.SetArgs([]string{"run",
-		"--log-file", runLogFile,
+		"--output", runOutFile,
 		"--author-name", "Test Author",
 		"--author-email", "test@example.com",
 		"-B", "custom-branch-name",
@@ -61,32 +62,32 @@ func TestStory(t *testing.T) {
 	assert.Equal(t, []byte("i like bananas"), data)
 
 	// Verify that the output was correct
-	runLogData, err := ioutil.ReadFile(runLogFile)
+	runOutData, err := ioutil.ReadFile(runOutFile)
 	require.NoError(t, err)
-	assert.Contains(t, string(runLogData), `
-No data was changed:
+	assert.Equal(t, string(runOutData), `No data was changed:
   should-not-change
 Repositories with a successful run:
   should-change
-  should-change-2`)
+  should-change-2
+`)
 
 	//
 	// Status
 	//
-	statusLogFile := path.Join(tmpDir, "status-log.txt")
+	statusOutFile := path.Join(tmpDir, "status-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"status",
-		"--log-file", statusLogFile,
+		"--output", statusOutFile,
 		"-B", "custom-branch-name",
 	})
 	err = command.Execute()
 	assert.NoError(t, err)
 
 	// Verify that the output was correct
-	statusLogData, err := ioutil.ReadFile(statusLogFile)
+	statusOutData, err := ioutil.ReadFile(statusOutFile)
 	require.NoError(t, err)
-	assert.Equal(t, "should-change/XX: Pending\nshould-change-2/XX: Pending\n", string(statusLogData))
+	assert.Equal(t, "should-change/XX: Pending\nshould-change-2/XX: Pending\n", string(statusOutData))
 
 	// One of the created PRs is set to succeeded
 	vcMock.SetPRStatus("should-change", "custom-branch-name", domain.PullRequestStatusSuccess)
@@ -113,20 +114,20 @@ Repositories with a successful run:
 	//
 	// After Merge Status
 	//
-	afterMergeStatusLogFile := path.Join(tmpDir, "after-merge-status-log.txt")
+	afterMergeStatusOutFile := path.Join(tmpDir, "after-merge-status-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"status",
-		"--log-file", afterMergeStatusLogFile,
+		"--output", afterMergeStatusOutFile,
 		"-B", "custom-branch-name",
 	})
 	err = command.Execute()
 	assert.NoError(t, err)
 
 	// Verify that the output was correct
-	afterMergeStatusLogData, err := ioutil.ReadFile(afterMergeStatusLogFile)
+	afterMergeStatusOutData, err := ioutil.ReadFile(afterMergeStatusOutFile)
 	require.NoError(t, err)
-	assert.Equal(t, "should-change/XX: Merged\nshould-change-2/XX: Pending\n", string(afterMergeStatusLogData))
+	assert.Equal(t, "should-change/XX: Merged\nshould-change-2/XX: Pending\n", string(afterMergeStatusOutData))
 
 	//
 	// Close
@@ -150,18 +151,18 @@ Repositories with a successful run:
 	//
 	// After Close Status
 	//
-	afterCloseStatusLogFile := path.Join(tmpDir, "after-close-status-log.txt")
+	afterCloseStatusOutFile := path.Join(tmpDir, "after-close-status-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"status",
-		"--log-file", afterCloseStatusLogFile,
+		"--output", afterCloseStatusOutFile,
 		"-B", "custom-branch-name",
 	})
 	err = command.Execute()
 	assert.NoError(t, err)
 
 	// Verify that the output was correct
-	afterCloseStatusLogData, err := ioutil.ReadFile(afterCloseStatusLogFile)
+	afterCloseStatusOutData, err := ioutil.ReadFile(afterCloseStatusOutFile)
 	require.NoError(t, err)
-	assert.Equal(t, "should-change/XX: Merged\nshould-change-2/XX: Closed\n", string(afterCloseStatusLogData))
+	assert.Equal(t, "should-change/XX: Merged\nshould-change-2/XX: Closed\n", string(afterCloseStatusOutData))
 }
