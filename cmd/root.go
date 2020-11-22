@@ -45,12 +45,13 @@ func platformFlags() *flag.FlagSet {
 	flags.StringP("gh-base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
 	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
 
-	flags.StringSliceP("org", "o", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
+	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
-	flags.StringSliceP("user", "u", nil, "The name of a user. All repositories owned by that user will be used.")
+	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\"")
-	flags.StringSliceP("project", "p", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
-	flags.StringP("platform", "P", "github", "The platform that is used. Available values: github, gitlab")
+	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
+
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab")
 
 	return flags
 }
@@ -102,6 +103,14 @@ func logFlagInit(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func outputFlag() *flag.FlagSet {
+	flags := flag.NewFlagSet("output", flag.ExitOnError)
+
+	flags.StringP("output", "o", "-", `The file that the output of the script should be outputted to. "-" means stdout`)
+
+	return flags
 }
 
 // OverrideVersionController can be set to force a specific version controller to be used

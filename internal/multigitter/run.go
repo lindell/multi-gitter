@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -36,6 +37,8 @@ type Runner struct {
 	FeatureBranch string
 	Token         string
 
+	Output io.Writer
+
 	CommitMessage    string
 	PullRequestTitle string
 	PullRequestBody  string
@@ -59,7 +62,7 @@ func (r Runner) Run(ctx context.Context) error {
 	rc := repocounter.NewCounter()
 	defer func() {
 		if info := rc.Info(); info != "" {
-			fmt.Fprint(log.StandardLogger().Out, info)
+			fmt.Fprint(r.Output, info)
 		}
 	}()
 

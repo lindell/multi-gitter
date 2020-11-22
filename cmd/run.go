@@ -46,6 +46,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringP("author-email", "", "", "If set, this fields will be used as the email of the committer")
 	cmd.Flags().AddFlagSet(platformFlags())
 	cmd.Flags().AddFlagSet(logFlags("-"))
+	cmd.Flags().AddFlagSet(outputFlag())
 
 	return cmd
 }
@@ -63,6 +64,7 @@ func run(cmd *cobra.Command, args []string) error {
 	dryRun, _ := flag.GetBool("dry-run")
 	authorName, _ := flag.GetString("author-name")
 	authorEmail, _ := flag.GetString("author-email")
+	strOutput, _ := flag.GetString("output")
 
 	token, err := getToken(flag)
 	if err != nil {
@@ -73,6 +75,11 @@ func run(cmd *cobra.Command, args []string) error {
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
+	}
+
+	output, err := fileOutput(strOutput, os.Stdout)
+	if err != nil {
+		return err
 	}
 
 	// Set commit message based on pr title and body or the reverse
@@ -143,6 +150,8 @@ func run(cmd *cobra.Command, args []string) error {
 		Arguments:     parsedCommand[1:],
 		FeatureBranch: branchName,
 		Token:         token,
+
+		Output: output,
 
 		VersionController: vc,
 

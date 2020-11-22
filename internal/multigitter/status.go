@@ -3,13 +3,14 @@ package multigitter
 import (
 	"context"
 	"fmt"
-
-	log "github.com/sirupsen/logrus"
+	"io"
 )
 
 // Statuser checks the statuses of pull requests
 type Statuser struct {
 	VersionController VersionController
+
+	Output io.Writer
 
 	FeatureBranch string
 }
@@ -22,7 +23,7 @@ func (s Statuser) Statuses(ctx context.Context) error {
 	}
 
 	for _, pr := range prs {
-		fmt.Fprintf(log.StandardLogger().Out, "%s: %s\n", pr.String(), pr.Status())
+		fmt.Fprintf(s.Output, "%s: %s\n", pr.String(), pr.Status())
 	}
 
 	return nil
