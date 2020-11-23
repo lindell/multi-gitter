@@ -21,21 +21,21 @@ It currently supports GitHub and GitLab where you can run it on all repositories
 
 ### Run with file
 ```bash
-$ multi-gitter run ./my-script.sh -o my-org -m "Commit message" -B branch-name
+$ multi-gitter run ./my-script.sh -O my-org -m "Commit message" -B branch-name
 ```
 
 ### Run code through interpreter
 If you are running an interpreted language or similar, it's important to specify the path as an absolute value (since the script will be run in the context of each repository). Using the `$PWD` variable helps with this.
 ```bash
-$ multi-gitter run "python $PWD/run.py" -o my-org -m "Commit message" -B branch-name
-$ multi-gitter run "node $PWD/script.js" -R repo1 -r repo2 -m "Commit message" -B branch-name
-$ multi-gitter run "go run $PWD/main.go" -u my-user -m "Commit message" -B branch-name
+$ multi-gitter run "python $PWD/run.py" -O my-org -m "Commit message" -B branch-name
+$ multi-gitter run "node $PWD/script.js" -R repo1 -R repo2 -m "Commit message" -B branch-name
+$ multi-gitter run "go run $PWD/main.go" -U my-user -m "Commit message" -B branch-name
 ```
 
 ### Test before live run
 You might want to test your changes before creating commits. The `--dry-run` provides an easy way to test without actually making any modifications. It works well with setting the log level to `debug` with `--log-level=debug` to also print the changes that would have been made.
 ```
-$ multi-gitter run ./script.sh --dry-run --log-level=debug -o my-org -m "Commit message" -B branch-name
+$ multi-gitter run ./script.sh --dry-run --log-level=debug -O my-org -m "Commit message" -B branch-name
 ```
 
 ## Install
