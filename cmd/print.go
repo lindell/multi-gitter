@@ -18,7 +18,7 @@ import (
 const printHelp = `
 This command will clone down multiple repositories. For each of those repositories, the script will be run in the context of that repository. The output of each script run in each repo will be printed, by default to stdout and stderr, but it can be configured to files as well.
 
-The environment variable REPOSITORY_NAME will be set to the name of the repository currently being executed by the script.
+The environment variable REPOSITORY will be set to the name of the repository currently being executed by the script.
 `
 
 // PrintCmd is the main command that runs a script for multiple repositories and print the output of each run
