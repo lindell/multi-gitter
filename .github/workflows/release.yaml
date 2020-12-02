@@ -1,23 +1,31 @@
 on:
   push:
-    tags:
-      - "*"
+    branches:
+      - master
 
-name: Release
-
+name: release
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/release-please-action@v2.7.0
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: simple
+          package-name: multi-gitter
+          changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false}]'
+
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+        if: ${{ steps.release.outputs.release_created }}
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: "^1.15.5"
+        if: ${{ steps.release.outputs.release_created }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
@@ -26,3 +34,4 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ steps.release.outputs.release_created }}
