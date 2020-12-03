@@ -1,5 +1,6 @@
 {
     "semanticCommitType": "dep",
+    "semanticCommitScope": "",
     "vulnerabilityAlerts": {
         "labels": [
             "security"
