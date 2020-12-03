@@ -20,7 +20,7 @@ jobs:
         run: go test ./... -coverpkg=$( go list ./... | grep -v /tests | grep -v /tools | paste -sd "," -) -coverprofile coverage/coverage.out
 
       - name: Coverage convert
-        uses: jandelgado/gcov2lcov-action@v1.0.5
+        uses: jandelgado/gcov2lcov-action@v1.0.8
         with:
           infile: coverage/coverage.out
           outfile: coverage/lcov.info
