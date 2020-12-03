@@ -9,6 +9,18 @@
             "security"
         ]
     },
+    "stabilityDays": 3,
+    "packageRules": [
+        {
+            "updateTypes": [
+                "minor",
+                "patch",
+                "pin",
+                "digest"
+            ],
+            "automerge": true
+        }
+    ],
     "prConcurrentLimit": 5,
     "prHourlyLimit": 3,
     "postUpdateOptions": [
