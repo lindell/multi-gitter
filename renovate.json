@@ -1,4 +1,7 @@
 {
+    "enabledManagers": [
+        "gomod"
+    ],
     "semanticCommitType": "dep",
     "semanticCommitScope": "",
     "vulnerabilityAlerts": {
