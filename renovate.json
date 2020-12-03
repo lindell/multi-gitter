@@ -1,0 +1,16 @@
+{
+    "semanticCommitType": "dep",
+    "vulnerabilityAlerts": {
+        "labels": [
+            "security"
+        ]
+    },
+    "prConcurrentLimit": 5,
+    "prHourlyLimit": 3,
+    "postUpdateOptions": [
+        "gomodTidy"
+    ],
+    "gomod": {
+        "enabled": true
+    }
+}
