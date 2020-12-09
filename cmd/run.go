@@ -35,6 +35,7 @@ func RunCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	cmd.Flags().StringP("base-branch", "", "", "The branch which the changes will be based on.")
 	cmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
 	cmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
 	cmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
@@ -55,6 +56,7 @@ func run(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
 	branchName, _ := flag.GetString("branch")
+	baseBranchName, _ := flag.GetString("base-branch")
 	prTitle, _ := flag.GetString("pr-title")
 	prBody, _ := flag.GetString("pr-body")
 	commitMessage, _ := flag.GetString("commit-message")
@@ -162,6 +164,7 @@ func run(cmd *cobra.Command, args []string) error {
 		MaxReviewers:     maxReviewers,
 		DryRun:           dryRun,
 		CommitAuthor:     commitAuthor,
+		BaseBranch:       baseBranchName,
 
 		Concurrent: concurrent,
 	}

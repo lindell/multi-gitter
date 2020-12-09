@@ -23,8 +23,10 @@ func TestTable(t *testing.T) {
 	assert.NoError(t, err)
 
 	tests := []struct {
-		name   string
-		vc     *vcmock.VersionController
+		name     string
+		vc       *vcmock.VersionController
+		vcCreate func(t *testing.T) *vcmock.VersionController // Can be used if advanced setup is needed for the vc
+
 		args   []string
 		verify func(t *testing.T, vcMock *vcmock.VersionController, outputs outputs)
 
@@ -59,6 +61,61 @@ func TestTable(t *testing.T) {
 `, outputs.out)
 			},
 		},
+
+		{
+			name: "failing base-branch",
+			vc: &vcmock.VersionController{
+				Repositories: []vcmock.Repository{
+					createRepo(t, "should-change", "i like apples"),
+				},
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--base-branch", "custom-base-branch",
+				"-m", "custom message",
+				fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/changer/main.go")),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, outputs outputs) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, outputs.logOut, `msg="couldn't find remote ref \"refs/heads/custom-base-branch\""`)
+			},
+		},
+
+		{
+			name: "success base-branch",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "should-change", "i like apples")
+				changeBranch(t, repo.Path, "custom-base-branch", true)
+				changeTestFile(t, repo.Path, "i like apple", "test change")
+				changeBranch(t, repo.Path, "master", false)
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--base-branch", "custom-base-branch",
+				"-m", "custom message",
+				fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/changer/main.go")),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, outputs outputs) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-base-branch", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+				assert.Equal(t, "i like banana", readTestFile(t, vcMock.Repositories[0].Path))
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -71,7 +128,13 @@ func TestTable(t *testing.T) {
 			require.NoError(t, err)
 			defer os.Remove(outFile.Name())
 
-			cmd.OverrideVersionController = test.vc
+			var vc *vcmock.VersionController
+			if test.vcCreate != nil {
+				vc = test.vcCreate(t)
+			} else {
+				vc = test.vc
+			}
+			cmd.OverrideVersionController = vc
 
 			command := cmd.RootCmd()
 			command.SetArgs(append(
@@ -92,7 +155,7 @@ func TestTable(t *testing.T) {
 			outData, err := ioutil.ReadAll(outFile)
 			assert.NoError(t, err)
 
-			test.verify(t, test.vc, outputs{
+			test.verify(t, vc, outputs{
 				logOut: string(logData),
 				out:    string(outData),
 			})

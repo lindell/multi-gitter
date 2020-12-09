@@ -2,7 +2,6 @@ package multigitter
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +10,7 @@ import (
 	"os/exec"
 	"sync"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/domain"
@@ -46,6 +46,7 @@ type Runner struct {
 	MaxReviewers     int // If set to zero, all reviewers will be used
 	DryRun           bool
 	CommitAuthor     *domain.CommitAuthor
+	BaseBranch       string // The base branch of the PR, use default branch if not set
 
 	Concurrent int
 }
@@ -129,15 +130,20 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		Repo:      repo.URL(r.Token),
 	}
 
-	err = sourceController.Clone()
+	baseBranch := r.BaseBranch
+	if baseBranch == "" {
+		baseBranch = repo.DefaultBranch()
+	}
+
+	err = sourceController.Clone(baseBranch)
 	if err != nil {
 		return err
 	}
 
-	branchExist, err := sourceController.BranchExist(r.FeatureBranch)
+	featureBranchExist, err := sourceController.BranchExist(r.FeatureBranch)
 	if err != nil {
 		return err
-	} else if branchExist {
+	} else if featureBranchExist {
 		return domain.BranchExistError
 	}
 
@@ -190,7 +196,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
-		Base:      repo.DefaultBranch(),
+		Base:      r.BaseBranch,
 		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 	})
 	if err != nil {
