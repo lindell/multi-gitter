@@ -15,8 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const fileName = "test.txt"
-
 // TestStory tests the common usecase: run, status, merge, status
 func TestStory(t *testing.T) {
 	vcMock := &vcmock.VersionController{}
@@ -56,7 +54,7 @@ func TestStory(t *testing.T) {
 	assert.Equal(t, []byte("i like apples"), data)
 
 	// Verify that the new branch is changed
-	changeBranch(t, changeRepo.Path, "custom-branch-name")
+	changeBranch(t, changeRepo.Path, "custom-branch-name", false)
 	data, err = ioutil.ReadFile(path.Join(changeRepo.Path, fileName))
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("i like bananas"), data)

@@ -81,7 +81,7 @@ func (r Printer) runSingleRepo(ctx context.Context, repo domain.Repository) erro
 		Repo:      repo.URL(r.Token),
 	}
 
-	err = sourceController.Clone()
+	err = sourceController.Clone(repo.DefaultBranch())
 	if err != nil {
 		return err
 	}

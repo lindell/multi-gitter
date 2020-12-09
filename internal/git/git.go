@@ -24,16 +24,18 @@ type Git struct {
 }
 
 // Clone a repository
-func (g *Git) Clone() error {
+func (g *Git) Clone(branchName string) error {
 	u, err := url.Parse(g.Repo)
 	if err != nil {
 		return err
 	}
 
 	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
-		URL:        u.String(),
-		RemoteName: "origin",
-		Depth:      10,
+		URL:           u.String(),
+		RemoteName:    "origin",
+		Depth:         10,
+		ReferenceName: plumbing.NewBranchReferenceName(branchName),
+		SingleBranch:  true,
 	})
 	if err != nil {
 		return err
