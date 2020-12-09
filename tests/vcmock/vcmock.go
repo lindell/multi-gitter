@@ -73,8 +73,8 @@ func (vc *VersionController) ClosePullRequest(ctx context.Context, pr domain.Pul
 }
 
 // AddRepository adds a repository to the mock
-func (vc *VersionController) AddRepository(repo Repository) {
-	vc.Repositories = append(vc.Repositories, repo)
+func (vc *VersionController) AddRepository(repo ...Repository) {
+	vc.Repositories = append(vc.Repositories, repo...)
 }
 
 // SetPRStatus sets the status of a pull request
