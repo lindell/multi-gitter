@@ -116,6 +116,51 @@ func TestTable(t *testing.T) {
 				assert.Equal(t, "i like banana", readTestFile(t, vcMock.Repositories[0].Path))
 			},
 		},
+
+		{
+			name: "reviewers",
+			vc: &vcmock.VersionController{
+				Repositories: []vcmock.Repository{
+					createRepo(t, "should-change", "i like apples"),
+				},
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-m", "custom message",
+				"-r", "reviewer1,reviewer2",
+				fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/changer/main.go")),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, outputs outputs) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Len(t, vcMock.PullRequests[0].Reviewers, 2)
+				assert.Contains(t, vcMock.PullRequests[0].Reviewers, "reviewer1")
+				assert.Contains(t, vcMock.PullRequests[0].Reviewers, "reviewer2")
+			},
+		},
+
+		{
+			name: "random reviewers",
+			vc: &vcmock.VersionController{
+				Repositories: []vcmock.Repository{
+					createRepo(t, "should-change", "i like apples"),
+				},
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-m", "custom message",
+				"-r", "reviewer1,reviewer2,reviewer3",
+				"--max-reviewers", "2",
+				fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/changer/main.go")),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, outputs outputs) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Len(t, vcMock.PullRequests[0].Reviewers, 2)
+			},
+		},
 	}
 
 	for _, test := range tests {
