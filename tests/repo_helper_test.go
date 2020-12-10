@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -80,6 +81,19 @@ func changeBranch(t *testing.T, path string, branchName string, create bool) {
 		Create: create,
 	})
 	assert.NoError(t, err)
+}
+
+func branchExist(t *testing.T, path string, branchName string) bool {
+	repo, err := git.PlainOpen(path)
+	assert.NoError(t, err)
+
+	_, err = repo.Reference(plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", branchName)), false)
+	if err == plumbing.ErrReferenceNotFound {
+		return false
+	}
+	assert.NoError(t, err)
+
+	return true
 }
 
 func changeTestFile(t *testing.T, basePath string, content string, commitMessage string) {
