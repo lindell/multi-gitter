@@ -19,6 +19,7 @@ multi-gitter run [script path] [flags]
 ```
       --author-email string     If set, this fields will be used as the email of the committer
       --author-name string      If set, this fields will be used as the name of the committer
+      --base-branch string      The branch which the changes will be based on.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
   -C, --concurrent int          The maximum number of concurrent runs (default 1)
