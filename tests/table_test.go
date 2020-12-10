@@ -161,6 +161,29 @@ func TestTable(t *testing.T) {
 				assert.Len(t, vcMock.PullRequests[0].Reviewers, 2)
 			},
 		},
+
+		{
+			name: "dry run",
+			vc: &vcmock.VersionController{
+				Repositories: []vcmock.Repository{
+					createRepo(t, "should-change", "i like apples"),
+				},
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-m", "custom message",
+				"-B", "custom-branch-name",
+				"--dry-run",
+				fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/changer/main.go")),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, outputs outputs) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.True(t, branchExist(t, vcMock.Repositories[0].Path, "master"))
+				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
+			},
+		},
 	}
 
 	for _, test := range tests {
