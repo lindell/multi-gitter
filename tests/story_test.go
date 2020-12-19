@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -24,9 +23,6 @@ func TestStory(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 	assert.NoError(t, err)
 
-	workingDir, err := os.Getwd()
-	assert.NoError(t, err)
-
 	changeRepo := createRepo(t, "should-change", "i like apples")
 	changeRepo2 := createRepo(t, "should-change-2", "i like my apple")
 	noChangeRepo := createRepo(t, "should-not-change", "i like oranges")
@@ -43,7 +39,7 @@ func TestStory(t *testing.T) {
 		"--author-email", "test@example.com",
 		"-B", "custom-branch-name",
 		"-m", "test",
-		fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/changer/main.go")),
+		"scripts/changer/main",
 	})
 	err = command.Execute()
 	assert.NoError(t, err)

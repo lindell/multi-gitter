@@ -2,12 +2,22 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"io/ioutil"
+	"time"
 )
 
 const fileName = "test.txt"
 
 func main() {
+	duration := flag.String("sleep", "", "Time to sleep before running the script")
+	flag.Parse()
+
+	if *duration != "" {
+		d, _ := time.ParseDuration(*duration)
+		time.Sleep(d)
+	}
+
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		panic(err)
