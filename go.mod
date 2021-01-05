@@ -10,6 +10,6 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
-	github.com/xanzy/go-gitlab v0.40.2
+	github.com/xanzy/go-gitlab v0.41.0
 	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5
 )
