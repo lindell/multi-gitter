@@ -196,7 +196,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
-		Base:      r.BaseBranch,
+		Base:      baseBranch,
 		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 	})
 	if err != nil {
