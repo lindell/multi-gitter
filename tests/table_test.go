@@ -52,6 +52,7 @@ func TestTable(t *testing.T) {
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
 				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
 				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
 
 				assert.Contains(t, runData.logOut, "Running on 1 repositories")
