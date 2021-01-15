@@ -24,6 +24,8 @@ It currently supports GitHub and GitLab where you can run it on all repositories
 $ multi-gitter run ./my-script.sh -O my-org -m "Commit message" -B branch-name
 ```
 
+Make sure the script has execution permissions before running it (`chmod +x ./my-script.sh`)
+
 ### Run code through interpreter
 If you are running an interpreted language or similar, it's important to specify the path as an absolute value (since the script will be run in the context of each repository). Using the `$PWD` variable helps with this.
 ```bash
