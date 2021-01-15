@@ -142,7 +142,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 
 	featureBranchExist, err := sourceController.BranchExist(r.FeatureBranch)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not verify if branch already exist")
 	} else if featureBranchExist {
 		return domain.BranchExistError
 	}
@@ -188,7 +188,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 
 	err = sourceController.Push()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not push changes")
 	}
 
 	log.Info("Change done, creating pull request")

@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/pkg/errors"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -35,14 +36,13 @@ func (g *Git) Clone(branchName string) error {
 		RemoteName:    "origin",
 		Depth:         10,
 		ReferenceName: plumbing.NewBranchReferenceName(branchName),
-		SingleBranch:  true,
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not clone from the remote")
 	}
 	g.repo = r
 
-	return err
+	return nil
 }
 
 // ChangeBranch changes the branch

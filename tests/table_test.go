@@ -113,7 +113,7 @@ func TestTable(t *testing.T) {
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 0)
-				assert.Contains(t, runData.logOut, `msg="couldn't find remote ref \"refs/heads/custom-base-branch\""`)
+				assert.Contains(t, runData.logOut, `msg="could not clone from the remote: reference not found"`)
 			},
 		},
 
@@ -242,6 +242,41 @@ func TestTable(t *testing.T) {
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 6)
 				require.Less(t, runData.took.Milliseconds(), int64(600))
+			},
+		},
+
+		{
+			name: "existing head branch",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "already-existing-branch", "i like apples")
+				changeBranch(t, repo.Path, "custom-branch-name", true)
+				changeTestFile(t, repo.Path, "i like apple", "test change")
+				changeBranch(t, repo.Path, "master", false)
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+						createRepo(t, "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				path.Join(workingDir, "scripts/changer/main"),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Contains(t, runData.logOut, "Running on 2 repositories")
+				assert.Contains(t, runData.logOut, "Cloning and running script")
+
+				assert.Equal(t, `The new branch does already exist:
+  already-existing-branch
+Repositories with a successful run:
+  should-change
+`, runData.out)
 			},
 		},
 	}
