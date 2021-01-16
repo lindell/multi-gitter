@@ -113,7 +113,7 @@ func TestTable(t *testing.T) {
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 0)
-				assert.Contains(t, runData.logOut, `msg="could not clone from the remote: reference not found"`)
+				assert.Contains(t, runData.logOut, `msg="could not clone from the remote: couldn't find remote ref \"refs/heads/custom-base-branch\""`)
 			},
 		},
 
