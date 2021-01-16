@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/pkg/errors"
@@ -24,8 +25,10 @@ type Git struct {
 	repo *git.Repository // The repository after the clone has been made
 }
 
+const fetchDepth = 10
+
 // Clone a repository
-func (g *Git) Clone(branchName string) error {
+func (g *Git) Clone(baseName, headName string) error {
 	u, err := url.Parse(g.Repo)
 	if err != nil {
 		return err
@@ -34,12 +37,28 @@ func (g *Git) Clone(branchName string) error {
 	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
 		URL:           u.String(),
 		RemoteName:    "origin",
-		Depth:         10,
-		ReferenceName: plumbing.NewBranchReferenceName(branchName),
+		Depth:         fetchDepth,
+		ReferenceName: plumbing.NewBranchReferenceName(baseName),
+		SingleBranch:  true,
 	})
 	if err != nil {
 		return errors.Wrap(err, "could not clone from the remote")
 	}
+
+	if headName != "" {
+		err = r.Fetch(&git.FetchOptions{
+			RefSpecs: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/remotes/origin/%s", headName, headName)),
+			},
+			Depth: fetchDepth,
+		})
+		if err != nil {
+			if _, ok := err.(git.NoMatchingRefSpecError); !ok {
+				return err
+			}
+		}
+	}
+
 	g.repo = r
 
 	return nil

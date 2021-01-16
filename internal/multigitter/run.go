@@ -135,7 +135,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		baseBranch = repo.DefaultBranch()
 	}
 
-	err = sourceController.Clone(baseBranch)
+	err = sourceController.Clone(baseBranch, r.FeatureBranch)
 	if err != nil {
 		return err
 	}
