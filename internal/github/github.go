@@ -240,19 +240,24 @@ func (g Github) getRepository(ctx context.Context, repoRef RepositoryReference) 
 }
 
 // CreatePullRequest creates a pull request
-func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error {
+func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	r := repo.(repository)
 
 	pr, err := g.createPullRequest(ctx, r, newPR)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := g.addReviewers(ctx, r, newPR, pr); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return pullRequest{
+		ownerName:  pr.GetBase().GetUser().GetLogin(),
+		repoName:   pr.GetBase().GetRepo().GetName(),
+		branchName: pr.GetHead().GetRef(),
+		number:     pr.GetNumber(),
+	}, nil
 }
 
 func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (*github.PullRequest, error) {

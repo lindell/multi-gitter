@@ -5,12 +5,14 @@ package vcmock
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
 // VersionController is a mock of an version controller (Github/Gitlab/etc.)
 type VersionController struct {
+	PRNumber     int
 	Repositories []Repository
 	PullRequests []PullRequest
 }
@@ -25,16 +27,19 @@ func (vc *VersionController) GetRepositories(ctx context.Context) ([]domain.Repo
 }
 
 // CreatePullRequest stores a mock pull request
-func (vc *VersionController) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error {
+func (vc *VersionController) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	repository := repo.(Repository)
 
-	vc.PullRequests = append(vc.PullRequests, PullRequest{
+	vc.PRNumber = vc.PRNumber + 1
+	pr := PullRequest{
 		PRStatus:       domain.PullRequestStatusPending,
+		PRNumber:       vc.PRNumber,
 		Repository:     repository,
 		NewPullRequest: newPR,
-	})
+	}
+	vc.PullRequests = append(vc.PullRequests, pr)
 
-	return nil
+	return pr, nil
 }
 
 // GetPullRequestStatuses gets mock pull request statuses
@@ -89,6 +94,7 @@ func (vc *VersionController) SetPRStatus(repoName string, branchName string, new
 // PullRequest is a mock pr
 type PullRequest struct {
 	PRStatus domain.PullRequestStatus
+	PRNumber int
 	Merged   bool
 
 	Repository
@@ -102,7 +108,7 @@ func (pr PullRequest) Status() domain.PullRequestStatus {
 
 // String return a description of the pr
 func (pr PullRequest) String() string {
-	return pr.Repository.Name + "/XX"
+	return fmt.Sprintf("%s #%d", pr.Repository.Name, pr.PRNumber)
 }
 
 // Repository is a mock repository

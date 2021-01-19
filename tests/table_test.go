@@ -60,7 +60,7 @@ func TestTable(t *testing.T) {
 				assert.Contains(t, runData.logOut, "Change done, creating pull request")
 
 				assert.Equal(t, `Repositories with a successful run:
-  should-change
+  should-change #1
 `, runData.out)
 			},
 		},
@@ -90,7 +90,7 @@ func TestTable(t *testing.T) {
 				assert.Contains(t, runData.logOut, "Change done, creating pull request")
 
 				assert.Equal(t, `Repositories with a successful run:
-  should-change
+  should-change #1
 `, runData.out)
 			},
 		},
@@ -275,7 +275,7 @@ func TestTable(t *testing.T) {
 				assert.Equal(t, `The new branch does already exist:
   already-existing-branch
 Repositories with a successful run:
-  should-change
+  should-change #1
 `, runData.out)
 			},
 		},
