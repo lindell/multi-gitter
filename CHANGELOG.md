@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.16.5](https://www.github.com/lindell/multi-gitter/compare/v0.16.4...v0.16.5) (2021-01-19)
+
+
+### Bug Fixes
+
+* added the number of created pull requests ([#56](https://www.github.com/lindell/multi-gitter/issues/56)) ([d432430](https://www.github.com/lindell/multi-gitter/commit/d4324307441ffc74002e1cb4f5c08b83f45a2781))
+
 ### [0.16.4](https://www.github.com/lindell/multi-gitter/compare/v0.16.3...v0.16.4) (2021-01-16)
 
 
