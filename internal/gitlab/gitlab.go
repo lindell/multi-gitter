@@ -232,7 +232,7 @@ func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitla
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error {
+func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	r := repo.(repository)
 
 	// Convert from usernames to user ids
@@ -241,18 +241,28 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, 
 		var err error
 		assigneeIDs, err = g.getUserIDs(ctx, newPR.Reviewers)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	_, _, err := g.glClient.MergeRequests.CreateMergeRequest(r.pid, &gitlab.CreateMergeRequestOptions{
+	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(r.pid, &gitlab.CreateMergeRequestOptions{
 		Title:        &newPR.Title,
 		Description:  &newPR.Body,
 		SourceBranch: &newPR.Head,
 		TargetBranch: &newPR.Base,
 		AssigneeIDs:  assigneeIDs,
 	})
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return pullRequest{
+		repoName:   r.name,
+		ownerName:  r.ownerName,
+		pid:        r.pid,
+		branchName: newPR.Head,
+		iid:        mr.IID,
+	}, nil
 }
 
 func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, error) {

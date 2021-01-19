@@ -22,7 +22,7 @@ import (
 // VersionController fetches repositories
 type VersionController interface {
 	GetRepositories(ctx context.Context) ([]domain.Repository, error)
-	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) error
+	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error)
 	GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
 	ClosePullRequest(ctx context.Context, pr domain.PullRequest) error
@@ -53,6 +53,19 @@ type Runner struct {
 
 var errAborted = errors.New("run was never started because of aborted execution")
 
+type dryRunPullRequest struct {
+	status     domain.PullRequestStatus
+	Repository domain.Repository
+}
+
+func (pr dryRunPullRequest) Status() domain.PullRequestStatus {
+	return pr.status
+}
+
+func (pr dryRunPullRequest) String() string {
+	return fmt.Sprintf("%s #0", pr.Repository.FullName())
+}
+
 // Run runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
@@ -71,7 +84,7 @@ func (r Runner) Run(ctx context.Context) error {
 
 	runInParallel(func(i int) {
 		logger := log.WithField("repo", repos[i].FullName())
-		err := r.runSingleRepo(ctx, repos[i])
+		pr, err := r.runSingleRepo(ctx, repos[i])
 		if err != nil {
 			if err != errAborted {
 				logger.Info(err)
@@ -80,7 +93,7 @@ func (r Runner) Run(ctx context.Context) error {
 			return
 		}
 
-		rc.AddSuccess(repos[i])
+		rc.AddSuccessPullRequest(pr)
 	}, len(repos), r.Concurrent)
 
 	return nil
@@ -111,9 +124,9 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error {
+func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (domain.PullRequest, error) {
 	if ctx.Err() != nil {
-		return errAborted
+		return nil, errAborted
 	}
 
 	log := log.WithField("repo", repo.FullName())
@@ -121,7 +134,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-changer-")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer os.RemoveAll(tmpDir)
 
@@ -137,19 +150,19 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 
 	err = sourceController.Clone(baseBranch, r.FeatureBranch)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	featureBranchExist, err := sourceController.BranchExist(r.FeatureBranch)
 	if err != nil {
-		return errors.Wrap(err, "could not verify if branch already exist")
+		return nil, errors.Wrap(err, "could not verify if branch already exist")
 	} else if featureBranchExist {
-		return domain.BranchExistError
+		return nil, domain.BranchExistError
 	}
 
 	err = sourceController.ChangeBranch(r.FeatureBranch)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Run the command that might or might not change the content of the repo
@@ -167,32 +180,34 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 
 	err = cmd.Run()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if changed, err := sourceController.Changes(); err != nil {
-		return err
+		return nil, err
 	} else if !changed {
-		return domain.NoChangeError
+		return nil, domain.NoChangeError
 	}
 
 	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if r.DryRun {
 		log.Info("Skipping pushing changes because of dry run")
-		return nil
+		return dryRunPullRequest{
+			Repository: repo,
+		}, nil
 	}
 
 	err = sourceController.Push()
 	if err != nil {
-		return errors.Wrap(err, "could not push changes")
+		return nil, errors.Wrap(err, "could not push changes")
 	}
 
 	log.Info("Change done, creating pull request")
-	err = r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
+	pr, err := r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
@@ -200,8 +215,8 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) error
 		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return pr, nil
 }

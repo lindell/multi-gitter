@@ -10,6 +10,7 @@ import (
 
 // Counter keeps track of succeeded and failed repositories
 type Counter struct {
+	successPullRequests []domain.PullRequest
 	successRepositories []domain.Repository
 	errorRepositories   map[string][]domain.Repository
 	lock                sync.RWMutex
@@ -32,11 +33,19 @@ func (r *Counter) AddError(err error, repo domain.Repository) {
 }
 
 // AddSuccess adds a repository that succeeded
-func (r *Counter) AddSuccess(repo domain.Repository) {
+func (r *Counter) AddSuccessRepositories(repo domain.Repository) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
 	r.successRepositories = append(r.successRepositories, repo)
+}
+
+// AddSuccess adds a pullrequest that succeeded
+func (r *Counter) AddSuccessPullRequest(repo domain.PullRequest) {
+	defer r.lock.Unlock()
+	r.lock.Lock()
+
+	r.successPullRequests = append(r.successPullRequests, repo)
 }
 
 // Info returns a formated string about all repositories
@@ -50,6 +59,13 @@ func (r *Counter) Info() string {
 		exitInfo += fmt.Sprintf("%s:\n", strings.ToUpper(errMsg[0:1])+errMsg[1:])
 		for _, repo := range r.errorRepositories[errMsg] {
 			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
+		}
+	}
+
+	if len(r.successPullRequests) > 0 {
+		exitInfo += "Repositories with a successful run:\n"
+		for _, pr := range r.successPullRequests {
+			exitInfo += fmt.Sprintf("  %s\n", pr.String())
 		}
 	}
 

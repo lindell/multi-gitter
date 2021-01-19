@@ -31,7 +31,7 @@ func (s Closer) Close(ctx context.Context) error {
 	log.Infof("Closing %d pull requests", len(openPRs))
 
 	for _, pr := range openPRs {
-		log.WithField("repo", pr.String()).Infof("Closing")
+		log.WithField("pr", pr.String()).Infof("Closing")
 		err := s.VersionController.ClosePullRequest(ctx, pr)
 		if err != nil {
 			return err
