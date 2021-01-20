@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+
+	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
 // Statuser checks the statuses of pull requests
@@ -23,7 +25,11 @@ func (s Statuser) Statuses(ctx context.Context) error {
 	}
 
 	for _, pr := range prs {
-		fmt.Fprintf(s.Output, "%s: %s\n", pr.String(), pr.Status())
+		if urler, ok := pr.(urler); ok {
+			fmt.Fprintf(s.Output, "%s: %s\n", terminal.Link(pr.String(), urler.URL()), pr.Status())
+		} else {
+			fmt.Fprintf(s.Output, "%s: %s\n", pr.String(), pr.Status())
+		}
 	}
 
 	return nil

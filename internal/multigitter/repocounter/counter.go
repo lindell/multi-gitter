@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
 // Counter keeps track of succeeded and failed repositories
@@ -65,7 +66,11 @@ func (r *Counter) Info() string {
 	if len(r.successPullRequests) > 0 {
 		exitInfo += "Repositories with a successful run:\n"
 		for _, pr := range r.successPullRequests {
-			exitInfo += fmt.Sprintf("  %s\n", pr.String())
+			if urler, ok := pr.(urler); ok {
+				exitInfo += fmt.Sprintf("  %s\n", terminal.Link(pr.String(), urler.URL()))
+			} else {
+				exitInfo += fmt.Sprintf("  %s\n", pr.String())
+			}
 		}
 	}
 
@@ -77,4 +82,8 @@ func (r *Counter) Info() string {
 	}
 
 	return exitInfo
+}
+
+type urler interface {
+	URL() string
 }

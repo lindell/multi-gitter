@@ -88,6 +88,7 @@ type pullRequest struct {
 	repoName   string
 	branchName string
 	number     int
+	guiURL     string
 	status     domain.PullRequestStatus
 }
 
@@ -97,6 +98,10 @@ func (pr pullRequest) String() string {
 
 func (pr pullRequest) Status() domain.PullRequestStatus {
 	return pr.status
+}
+
+func (pr pullRequest) URL() string {
+	return pr.guiURL
 }
 
 // ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
@@ -257,6 +262,7 @@ func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, n
 		repoName:   pr.GetBase().GetRepo().GetName(),
 		branchName: pr.GetHead().GetRef(),
 		number:     pr.GetNumber(),
+		guiURL:     pr.GetHTMLURL(),
 	}, nil
 }
 
@@ -347,6 +353,7 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, branchName string) (
 			repoName:   repoName,
 			branchName: pr.GetHead().GetRef(),
 			number:     pr.GetNumber(),
+			guiURL:     pr.GetHTMLURL(),
 			status:     status,
 		})
 	}
