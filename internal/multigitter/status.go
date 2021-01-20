@@ -23,7 +23,11 @@ func (s Statuser) Statuses(ctx context.Context) error {
 	}
 
 	for _, pr := range prs {
-		fmt.Fprintf(s.Output, "%s: %s\n", pr.String(), pr.Status())
+		if urler, ok := pr.(urler); ok {
+			fmt.Fprintf(s.Output, "\x1B]8;;%s\a%s\x1B]8;;\a: %s\n", urler.URL(), pr.String(), pr.Status())
+		} else {
+			fmt.Fprintf(s.Output, "%s: %s\n", pr.String(), pr.Status())
+		}
 	}
 
 	return nil

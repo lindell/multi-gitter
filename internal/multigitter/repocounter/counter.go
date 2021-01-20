@@ -65,7 +65,11 @@ func (r *Counter) Info() string {
 	if len(r.successPullRequests) > 0 {
 		exitInfo += "Repositories with a successful run:\n"
 		for _, pr := range r.successPullRequests {
-			exitInfo += fmt.Sprintf("  %s\n", pr.String())
+			if urler, ok := pr.(urler); ok {
+				exitInfo += fmt.Sprintf("  \x1B]8;;%s\a%s\x1B]8;;\a\n", urler.URL(), pr.String())
+			} else {
+				exitInfo += fmt.Sprintf("  %s\n", pr.String())
+			}
 		}
 	}
 
@@ -77,4 +81,8 @@ func (r *Counter) Info() string {
 	}
 
 	return exitInfo
+}
+
+type urler interface {
+	URL() string
 }
