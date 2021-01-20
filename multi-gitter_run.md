@@ -24,6 +24,7 @@ multi-gitter run [script path] [flags]
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
   -C, --concurrent int          The maximum number of concurrent runs (default 1)
   -d, --dry-run                 Run without pushing changes or creating pull requests
+  -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
   -g, --gh-base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                    help for run
