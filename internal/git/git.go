@@ -19,13 +19,12 @@ import (
 // Git is an implementation of git that executes git as a command
 // This has drawbacks, but the big benefit is that the configuration probably already present can be reused
 type Git struct {
-	Directory string // The (temporary) directory that should be worked within
-	Repo      string // The "url" to the repo, any format can be used as long as it's pushable
+	Directory  string // The (temporary) directory that should be worked within
+	Repo       string // The "url" to the repo, any format can be used as long as it's pushable
+	FetchDepth int    // Limit fetching to the specified number of commits
 
 	repo *git.Repository // The repository after the clone has been made
 }
-
-const fetchDepth = 10
 
 // Clone a repository
 func (g *Git) Clone(baseName, headName string) error {
@@ -37,7 +36,7 @@ func (g *Git) Clone(baseName, headName string) error {
 	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
 		URL:           u.String(),
 		RemoteName:    "origin",
-		Depth:         fetchDepth,
+		Depth:         g.FetchDepth,
 		ReferenceName: plumbing.NewBranchReferenceName(baseName),
 		SingleBranch:  true,
 	})
@@ -50,7 +49,7 @@ func (g *Git) Clone(baseName, headName string) error {
 			RefSpecs: []config.RefSpec{
 				config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/remotes/origin/%s", headName, headName)),
 			},
-			Depth: fetchDepth,
+			Depth: g.FetchDepth,
 		})
 		if err != nil {
 			if _, ok := err.(git.NoMatchingRefSpecError); !ok {

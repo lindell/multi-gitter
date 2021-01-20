@@ -48,6 +48,7 @@ type Runner struct {
 	CommitAuthor     *domain.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 
+	FetchDepth int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent int
 }
 
@@ -139,8 +140,9 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	defer os.RemoveAll(tmpDir)
 
 	sourceController := &git.Git{
-		Directory: tmpDir,
-		Repo:      repo.URL(r.Token),
+		Directory:  tmpDir,
+		Repo:       repo.URL(r.Token),
+		FetchDepth: r.FetchDepth,
 	}
 
 	baseBranch := r.BaseBranch

@@ -26,6 +26,7 @@ type Printer struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
+	FetchDepth int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent int
 }
 
@@ -77,8 +78,9 @@ func (r Printer) runSingleRepo(ctx context.Context, repo domain.Repository) erro
 	defer os.RemoveAll(tmpDir)
 
 	sourceController := &git.Git{
-		Directory: tmpDir,
-		Repo:      repo.URL(r.Token),
+		Directory:  tmpDir,
+		Repo:       repo.URL(r.Token),
+		FetchDepth: r.FetchDepth,
 	}
 
 	err = sourceController.Clone(repo.DefaultBranch(), "")

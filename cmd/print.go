@@ -33,6 +33,7 @@ func PrintCmd() *cobra.Command {
 	}
 
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
+	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
 	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr`)
 	cmd.Flags().AddFlagSet(platformFlags())
 	cmd.Flags().AddFlagSet(logFlags(""))
@@ -45,6 +46,7 @@ func print(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
 	concurrent, _ := flag.GetInt("concurrent")
+	fetchDepth, _ := flag.GetInt("fetch-depth")
 	strOutput, _ := flag.GetString("output")
 	strErrOutput, _ := flag.GetString("error-output")
 
@@ -114,6 +116,7 @@ func print(cmd *cobra.Command, args []string) error {
 		Stdout: output,
 		Stderr: errOutput,
 
+		FetchDepth: fetchDepth,
 		Concurrent: concurrent,
 	}
 
