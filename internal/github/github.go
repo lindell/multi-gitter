@@ -377,7 +377,7 @@ func (g Github) MergePullRequest(ctx context.Context, pullReq domain.PullRequest
 	// Filter out all merge types to only the allowed ones, but keep the order of the ones left
 	mergeTypes := domain.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
 	if len(mergeTypes) == 0 {
-		return errors.New("none of the merge set merge types was permitted")
+		return errors.New("none of the configured merge types was permitted")
 	}
 
 	_, _, err = g.ghClient.PullRequests.Merge(ctx, pr.ownerName, pr.repoName, pr.number, "", &github.PullRequestOptions{
