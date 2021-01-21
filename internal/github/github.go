@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"sort"
@@ -16,7 +17,7 @@ import (
 )
 
 // New create a new Github client
-func New(token, baseURL string, repoListing RepositoryListing) (*Github, error) {
+func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []domain.MergeType) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
@@ -39,6 +40,7 @@ func New(token, baseURL string, repoListing RepositoryListing) (*Github, error) 
 
 	return &Github{
 		RepositoryListing: repoListing,
+		MergeTypes:        mergeTypes,
 		ghClient:          client,
 	}, nil
 }
@@ -46,7 +48,8 @@ func New(token, baseURL string, repoListing RepositoryListing) (*Github, error) 
 // Github contain github configuration
 type Github struct {
 	RepositoryListing
-	ghClient *github.Client
+	MergeTypes []domain.MergeType
+	ghClient   *github.Client
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -365,7 +368,21 @@ func (g Github) GetPullRequestStatuses(ctx context.Context, branchName string) (
 func (g Github) MergePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
-	_, _, err := g.ghClient.PullRequests.Merge(ctx, pr.ownerName, pr.repoName, pr.number, "", nil)
+	// We need to fetch the repo again since no AllowXMerge is present in listings of repositories
+	repo, _, err := g.ghClient.Repositories.Get(ctx, pr.ownerName, pr.repoName)
+	if err != nil {
+		return err
+	}
+
+	// Filter out all merge types to only the allowed ones, but keep the order of the ones left
+	mergeTypes := domain.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
+	if len(mergeTypes) == 0 {
+		return errors.New("none of the merge set merge types was permitted")
+	}
+
+	_, _, err = g.ghClient.PullRequests.Merge(ctx, pr.ownerName, pr.repoName, pr.number, "", &github.PullRequestOptions{
+		MergeMethod: mergeTypeGhName[mergeTypes[0]],
+	})
 	if err != nil {
 		return err
 	}

@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/lindell/multi-gitter/internal/github"
 	"github.com/lindell/multi-gitter/internal/gitlab"
 	"github.com/lindell/multi-gitter/internal/multigitter"
@@ -138,6 +139,7 @@ func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	mergeTypeStrs, _ := flag.GetStringSlice("merge-type") // Only used for the merge command
 
 	if len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization or user set")
@@ -156,11 +158,20 @@ func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 		}
 	}
 
+	// Convert all defined merge types (if any)
+	mergeTypes := make([]domain.MergeType, len(mergeTypeStrs))
+	for i, mt := range mergeTypeStrs {
+		mergeTypes[i], err = domain.ParseMergeType(mt)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	vc, err := github.New(token, ghBaseURL, github.RepositoryListing{
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
-	})
+	}, mergeTypes)
 	if err != nil {
 		return nil, err
 	}
