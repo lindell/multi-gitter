@@ -117,6 +117,7 @@ Flags:
       --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
       --log-format string    The formating of the logs. Available values: text, json, json-pretty (default "text")
   -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
+      --merge-type strings   The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
   -p, --platform string      The platform that is used. Available values: github, gitlab (default "github")
   -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName"
