@@ -57,6 +57,17 @@ You can also install from source with `go get`, this is not recommended for most
 go get github.com/lindell/multi-gitter
 ```
 
+## Token
+
+To use multi-gitter, a token that is allowed to list repositories and create pull requests is needed.
+
+### GitHub
+[How to generate a GitHub personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). Make sure to give to `repo` permissions.
+
+### GitLab
+
+[How to generate a GitLab personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html). Make sure to give to it the `api` permission.
+
 ## Usage
 {{range .Commands}}
 * [{{ .Name }}](#-usage-of-{{ .Name }}) {{ .Short }}{{end}}
