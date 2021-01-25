@@ -88,7 +88,7 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 <details>
   <summary>{{.Title}}</summary>
 
-```bash
+```{{.Type}}
 {{.Body}}
 ```
 </details>

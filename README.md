@@ -220,7 +220,7 @@ Flags:
 <details>
   <summary>Replace a file if it exist</summary>
 
-```bash
+```sh
 #!/bin/bash
 
 REPLACE_FILE=~/test/pull_request_template.md # The file that should replace the file in the repo, must be an absolute path
@@ -238,7 +238,7 @@ cp $REPLACE_FILE $FILE
 <details>
   <summary>Replace text in all files</summary>
 
-```bash
+```sh
 #!/bin/bash
 
 # Assuming you are using gnu sed, if you are running this on a mac, please see https://stackoverflow.com/questions/4247068/sed-command-with-i-option-failing-on-mac-but-works-on-linux
@@ -252,7 +252,7 @@ find ./ -type f -exec sed -i -e 's/apple/orange/g' {} \;
 <details>
   <summary>Fix linting problems in all your go repositories</summary>
 
-```bash
+```sh
 #!/bin/bash
 
 golangci-lint run ./... --fix
@@ -262,7 +262,7 @@ golangci-lint run ./... --fix
 <details>
   <summary>Updates a go module to a new (patch/minor) version</summary>
 
-```bash
+```sh
 #!/bin/bash
 
 ### Change these values ###
@@ -286,7 +286,7 @@ go get $MODULE@$VERSION
 <details>
   <summary>Updates a npm dependency if it does exist</summary>
 
-```bash
+```sh
 #!/bin/bash
 
 ### Change these values ###
@@ -307,6 +307,22 @@ then
 fi
 
 npm install --save $PACKAGE@$VERSION
+```
+</details>
+
+<details>
+  <summary>Simple replace using node</summary>
+
+```js
+const { readFile, writeFile } = require("fs").promises;
+
+async function replace() {
+  let data = await readFile("./README.md", "utf8");
+  data = data.replace("apple", "orange");
+  await writeFile("./README.md", data, "utf8");
+}
+
+replace();
 ```
 </details>
 

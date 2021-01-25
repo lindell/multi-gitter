@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
@@ -41,6 +42,7 @@ type exampleCategory struct {
 type example struct {
 	Title string
 	Body  string
+	Type  string
 }
 
 func main() {
@@ -119,7 +121,7 @@ func commandByName(cmds []*cobra.Command, name string) *cobra.Command {
 	panic(fmt.Sprintf(`could not find command "%s"`, name))
 }
 
-var titleRegex = regexp.MustCompile("# ?Title: ([^\n]+)[\n\r]+")
+var titleRegex = regexp.MustCompile("(#|//) ?Title: ([^\n]+)[\n\r]+")
 
 func readExamples() ([]exampleCategory, error) {
 	categories := []exampleCategory{}
@@ -152,8 +154,9 @@ func readExamples() ([]exampleCategory, error) {
 			}
 
 			examples = append(examples, example{
-				Title: string(matches[1]),
+				Title: string(matches[2]),
 				Body:  strings.TrimSpace(string(titleRegex.ReplaceAll(b, nil))),
+				Type:  filepath.Ext(e.Name())[1:],
 			})
 		}
 
