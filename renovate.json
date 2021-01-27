@@ -18,6 +18,14 @@
             ],
             "automerge": true,
             "automergeType": "branch"
+        },
+        {
+            "updateTypes": [
+                "digest"
+            ],
+            "schedule": [
+                "every 3 months on the first day of the month"
+            ]
         }
     ],
     "prConcurrentLimit": 5,
