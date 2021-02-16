@@ -43,7 +43,7 @@ func init() {
 func platformFlags() *flag.FlagSet {
 	flags := flag.NewFlagSet("platform", flag.ExitOnError)
 
-	flags.StringP("gh-base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.")
+	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)")
 	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
 
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
@@ -135,7 +135,7 @@ func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, er
 }
 
 func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
-	ghBaseURL, _ := flag.GetString("gh-base-url")
+	gitBaseURL, _ := flag.GetString("base-url")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
@@ -167,7 +167,7 @@ func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 		}
 	}
 
-	vc, err := github.New(token, ghBaseURL, github.RepositoryListing{
+	vc, err := github.New(token, gitBaseURL, github.RepositoryListing{
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
@@ -180,6 +180,7 @@ func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 }
 
 func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
+	gitBaseURL, _ := flag.GetString("base-url")
 	groups, _ := flag.GetStringSlice("group")
 	users, _ := flag.GetStringSlice("user")
 	projects, _ := flag.GetStringSlice("project")
@@ -197,7 +198,7 @@ func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 		}
 	}
 
-	vc, err := gitlab.New(token, "", gitlab.RepositoryListing{
+	vc, err := gitlab.New(token, gitBaseURL, gitlab.RepositoryListing{
 		Groups:   groups,
 		Users:    users,
 		Projects: projRefs,
