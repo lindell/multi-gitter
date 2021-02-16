@@ -13,8 +13,8 @@ multi-gitter merge [flags]
 ### Options
 
 ```
+  -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
-  -g, --gh-base-url string   Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used.
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                 help for merge
       --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
