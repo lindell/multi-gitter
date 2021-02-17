@@ -13,7 +13,7 @@ multi-gitter status [flags]
 ### Options
 
 ```
-  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
+  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                help for status

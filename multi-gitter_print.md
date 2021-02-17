@@ -17,7 +17,7 @@ multi-gitter print [script path] [flags]
 ### Options
 
 ```
-  -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
+  -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -C, --concurrent int        The maximum number of concurrent runs (default 1)
   -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr (default "-")
   -f, --fetch-depth int       Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
