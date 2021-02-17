@@ -67,6 +67,7 @@ get_binaries() {
   case "$PLATFORM" in
     darwin/386) BINARIES="multi-gitter" ;;
     darwin/amd64) BINARIES="multi-gitter" ;;
+    darwin/arm64) BINARIES="multi-gitter" ;;
     darwin/armv6) BINARIES="multi-gitter" ;;
     linux/386) BINARIES="multi-gitter" ;;
     linux/amd64) BINARIES="multi-gitter" ;;
