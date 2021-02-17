@@ -43,7 +43,7 @@ func init() {
 func platformFlags() *flag.FlagSet {
 	flags := flag.NewFlagSet("platform", flag.ExitOnError)
 
-	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)")
+	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.")
 	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
 
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
