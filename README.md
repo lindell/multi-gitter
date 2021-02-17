@@ -91,7 +91,7 @@ Flags:
       --author-email string     Email of the committer. If not set, the global git config setting will be used.
       --author-name string      Name of the committer. If not set, the global git config setting will be used.
       --base-branch string      The branch which the changes will be based on.
-  -g, --base-url string         Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
+  -g, --base-url string         Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
   -C, --concurrent int          The maximum number of concurrent runs (default 1)
@@ -122,7 +122,7 @@ Usage:
   multi-gitter merge [flags]
 
 Flags:
-  -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
+  -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
       --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
@@ -145,7 +145,7 @@ Usage:
   multi-gitter status [flags]
 
 Flags:
-  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
+  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --log-file string     The file where all logs should be printed to. "-" means stdout (default "-")
@@ -168,7 +168,7 @@ Usage:
   multi-gitter close [flags]
 
 Flags:
-  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
+  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --log-file string     The file where all logs should be printed to. "-" means stdout (default "-")
@@ -194,7 +194,7 @@ Usage:
   multi-gitter print [script path] [flags]
 
 Flags:
-  -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or self-managed gitlab url (https://gitlab.my-company.com)
+  -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -C, --concurrent int        The maximum number of concurrent runs (default 1)
   -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr (default "-")
   -f, --fetch-depth int       Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
