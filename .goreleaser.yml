@@ -28,7 +28,7 @@ archives:
       arm64: ARM64
     files:
       - README.md
-      - LICENSE.md
+      - LICENSE
       - completions/*
 checksum:
   name_template: "checksums.txt"
