@@ -25,7 +25,6 @@ archives:
       amd64: x86_64
       arm: ARM
       arm64: ARM64
-    format: binary
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -36,3 +35,17 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+brews:
+  - name: multi-gitter
+    tap:
+      owner: lindell
+      name: homebrew-multi-gitter
+    download_strategy: CurlDownloadStrategy.
+    goarm: 6
+    commit_author:
+      name: Johan Lindell
+      email: johan@lindell.me
+    description: "Update multiple repositories in bulk."
+    license: "MIT"
+    test: |
+      system "#{bin}/program version"
