@@ -33,5 +33,5 @@ jobs:
           version: latest
           args: release --rm-dist
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GENERAL_GITHUB_SECRET }} # The tokens needs access to another repo, so the secret.GITHUB_SECRET won't suffice
         if: ${{ steps.release.outputs.release_created }}
