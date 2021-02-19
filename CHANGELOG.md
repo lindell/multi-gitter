@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.21.1](https://www.github.com/lindell/multi-gitter/compare/v0.21.0...v0.21.1) (2021-02-19)
+
+
+### Bug Fixes
+
+* fixed license file in release ([506084f](https://www.github.com/lindell/multi-gitter/commit/506084fd8b17f42a3311524bc0dbcc29ce39c50b))
+
 ## [0.21.0](https://www.github.com/lindell/multi-gitter/compare/v0.20.5...v0.21.0) (2021-02-19)
 
 
