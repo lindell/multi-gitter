@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.20.5](https://www.github.com/lindell/multi-gitter/compare/v0.20.4...v0.20.5) (2021-02-19)
+
+
+### Miscellaneous
+
+* moved brew release to Formula folder ([d1ae864](https://www.github.com/lindell/multi-gitter/commit/d1ae8644cd2a4e6138b3f23d23e792509ff7b3ef))
+
 ### [0.20.4](https://www.github.com/lindell/multi-gitter/compare/v0.20.3...v0.20.4) (2021-02-19)
 
 
