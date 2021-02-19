@@ -44,9 +44,9 @@ parse_args() {
 execute() {
   tmpdir=$(mktemp -d)
   log_debug "downloading files into ${tmpdir}"
-  http_download "${tmpdir}/${FILENAME}" "${FILE_URL}"
+  http_download "${tmpdir}/${TARBALL}" "${FILE_URL}"
   http_download "${tmpdir}/${CHECKSUM}" "${CHECKSUM_URL}"
-  hash_sha256_verify "${tmpdir}/${FILENAME}" "${tmpdir}/${CHECKSUM}"
+  hash_sha256_verify "${tmpdir}/${TARBALL}" "${tmpdir}/${CHECKSUM}"
   srcdir="${tmpdir}"
   (cd "${tmpdir}" && untar "${TARBALL}")
   test ! -d "${BINDIR}" && install -d "${BINDIR}"
@@ -55,10 +55,10 @@ execute() {
       binexe="${binexe}.exe"
     fi
     if test -w "${BINDIR}/${binexe}"; then
-      install "${srcdir}/${FILENAME}" "${BINDIR}/${binexe}"
+      install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
     else
       log_info "not allowed to install binary without higher privilege"
-      sudo install "${srcdir}/${FILENAME}" "${BINDIR}/${binexe}"
+      sudo install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
     fi
     log_info "installed ${BINDIR}/${binexe}"
   done
@@ -367,7 +367,7 @@ PROJECT_NAME="multi-gitter"
 OWNER=lindell
 REPO="multi-gitter"
 BINARY=multi-gitter
-FORMAT=""
+FORMAT="tar.gz"
 OS=$(uname_os)
 ARCH=$(uname_arch)
 PREFIX="$OWNER/$REPO"
@@ -397,8 +397,8 @@ adjust_arch
 log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
 NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
-FILENAME=${NAME}${FORMAT}
-FILE_URL=${GITHUB_DOWNLOAD}/${TAG}/${FILENAME}
+TARBALL=${NAME}.${FORMAT}
+FILE_URL=${GITHUB_DOWNLOAD}/${TAG}/${TARBALL}
 CHECKSUM=checksums.txt
 CHECKSUM_URL=${GITHUB_DOWNLOAD}/${TAG}/${CHECKSUM}
 
