@@ -47,5 +47,6 @@ brews:
     description: "Update multiple repositories in bulk"
     homepage: https://github.com/lindell/multi-gitter
     license: "MIT"
+    folder: Formula
     test: |
       system "#{bin}/multi-gitter version"
