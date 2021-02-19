@@ -1,6 +1,7 @@
 before:
   hooks:
     - go mod download
+    - ./tools/completions.sh
 builds:
   - env:
       - CGO_ENABLED=0
@@ -25,6 +26,10 @@ archives:
       amd64: x86_64
       arm: ARM
       arm64: ARM64
+    files:
+      - README.md
+      - LICENSE.md
+      - completions/*
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -48,5 +53,10 @@ brews:
     homepage: https://github.com/lindell/multi-gitter
     license: "MIT"
     folder: Formula
+    install: |-
+      bin.install "multi-gitter"
+      bash_completion.install "completions/multi-gitter.bash" => "multi-gitter"
+      zsh_completion.install "completions/multi-gitter.zsh" => "_multi-gitter"
+      fish_completion.install "completions/multi-gitter.fish"
     test: |
       system "#{bin}/multi-gitter version"

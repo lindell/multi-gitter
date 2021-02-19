@@ -21,3 +21,5 @@ tmp-docs/
 dist/
 
 coverage/
+
+completions/
