@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.21.0](https://www.github.com/lindell/multi-gitter/compare/v0.20.5...v0.21.0) (2021-02-19)
+
+
+### Features
+
+* added shell completion command ([c5782a2](https://www.github.com/lindell/multi-gitter/commit/c5782a2e377ecfc071c82c1db0a775e45215a0cc))
+
 ### [0.20.5](https://www.github.com/lindell/multi-gitter/compare/v0.20.4...v0.20.5) (2021-02-19)
 
 
