@@ -40,7 +40,6 @@ brews:
     tap:
       owner: lindell
       name: homebrew-multi-gitter
-    download_strategy: CurlDownloadStrategy
     goarm: 6
     commit_author:
       name: Johan Lindell
