@@ -40,12 +40,13 @@ brews:
     tap:
       owner: lindell
       name: homebrew-multi-gitter
-    download_strategy: CurlDownloadStrategy.
+    download_strategy: CurlDownloadStrategy
     goarm: 6
     commit_author:
       name: Johan Lindell
       email: johan@lindell.me
-    description: "Update multiple repositories in bulk."
+    description: "Update multiple repositories in bulk"
+    homepage: https://github.com/lindell/multi-gitter
     license: "MIT"
     test: |
-      system "#{bin}/program version"
+      system "#{bin}/multi-gitter version"
