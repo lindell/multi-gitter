@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.21.2](https://www.github.com/lindell/multi-gitter/compare/v0.21.1...v0.21.2) (2021-02-20)
+
+
+### Dependencies
+
+* update module github.com/sirupsen/logrus to v1.8.0 ([8c132b4](https://www.github.com/lindell/multi-gitter/commit/8c132b410baef2812a5525727147eb11f939a870))
+
 ### [0.21.1](https://www.github.com/lindell/multi-gitter/compare/v0.21.0...v0.21.1) (2021-02-19)
 
 
