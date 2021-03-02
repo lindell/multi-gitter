@@ -40,6 +40,7 @@ multi-gitter run [script path] [flags]
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName"
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName"
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
+      --skip-pr                 Limit fetching to the specified number of commits. Set to 0 for no limit
   -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
 ```
