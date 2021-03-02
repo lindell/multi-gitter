@@ -281,7 +281,7 @@ Repositories with a successful run:
 		},
 
 		{
-			name: "direct-run",
+			name: "skip-pr",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				repo := createRepo(t, "should-change", "i like apples")
 
