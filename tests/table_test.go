@@ -319,6 +319,7 @@ Repositories with a successful run:
 				changeBranch(t, vcMock.Repositories[0].Path, "master", false)
 
 				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
+				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "multi-gitter-branch"))
 				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path))
 			},
 		},
