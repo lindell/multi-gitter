@@ -48,8 +48,9 @@ type Runner struct {
 	CommitAuthor     *domain.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 
-	FetchDepth int // Limit fetching to the specified number of commits. Set to 0 for no limit
-	Concurrent int
+	FetchDepth      int // Limit fetching to the specified number of commits. Set to 0 for no limit
+	Concurrent      int
+	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
@@ -94,7 +95,11 @@ func (r Runner) Run(ctx context.Context) error {
 			return
 		}
 
-		rc.AddSuccessPullRequest(pr)
+		if pr != nil {
+			rc.AddSuccessPullRequest(pr)
+		} else {
+			rc.AddSuccessRepositories(repos[i])
+		}
 	}, len(repos), r.Concurrent)
 
 	return nil
@@ -155,16 +160,19 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		return nil, err
 	}
 
-	featureBranchExist, err := sourceController.BranchExist(r.FeatureBranch)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not verify if branch already exist")
-	} else if featureBranchExist {
-		return nil, domain.BranchExistError
-	}
+	// Change the branch to the feature branch
+	if !r.SkipPullRequest {
+		featureBranchExist, err := sourceController.BranchExist(r.FeatureBranch)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not verify if branch already exist")
+		} else if featureBranchExist {
+			return nil, domain.BranchExistError
+		}
 
-	err = sourceController.ChangeBranch(r.FeatureBranch)
-	if err != nil {
-		return nil, err
+		err = sourceController.ChangeBranch(r.FeatureBranch)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Run the command that might or might not change the content of the repo
@@ -206,6 +214,10 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	err = sourceController.Push()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
+	}
+
+	if r.SkipPullRequest {
+		return nil, nil
 	}
 
 	log.Info("Change done, creating pull request")
