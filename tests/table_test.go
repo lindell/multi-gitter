@@ -279,6 +279,50 @@ Repositories with a successful run:
 `, runData.out)
 			},
 		},
+
+		{
+			name: "skip-pr",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "should-change", "i like apples")
+
+				// Change branch so that it's not the one we are expected to push to.
+				// If this can be avoided, it would be good.
+				changeBranch(t, repo.Path, "test", true)
+
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--skip-pr",
+				path.Join(workingDir, "scripts/changer/main"),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				fmt.Fprintln(os.Stderr, vcMock.Repositories[0].Path)
+
+				require.Len(t, vcMock.PullRequests, 0)
+
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+				assert.Contains(t, runData.logOut, "Cloning and running script")
+
+				assert.Equal(t, `Repositories with a successful run:
+  should-change
+`, runData.out)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "master", false)
+
+				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
+				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "multi-gitter-branch"))
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path))
+			},
+		},
 	}
 
 	for _, test := range tests {
