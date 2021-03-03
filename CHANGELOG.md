@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.22.0](https://www.github.com/lindell/multi-gitter/compare/v0.21.1...v0.22.0) (2021-03-03)
+
+
+### Features
+
+* added skip-pr flag ([#80](https://www.github.com/lindell/multi-gitter/issues/80)) ([c4b85ea](https://www.github.com/lindell/multi-gitter/commit/c4b85ea5606a361b13b0a6308f3cfea776f954ad))
+
+
+### Dependencies
+
+* update module github.com/sirupsen/logrus to v1.8.0 ([8c132b4](https://www.github.com/lindell/multi-gitter/commit/8c132b410baef2812a5525727147eb11f939a870))
+* update module github.com/xanzy/go-gitlab to v0.45.0 ([9e1bc9a](https://www.github.com/lindell/multi-gitter/commit/9e1bc9a163f151fddba8f24f44934111d7e9b810))
+
 ### [0.21.1](https://www.github.com/lindell/multi-gitter/compare/v0.21.0...v0.21.1) (2021-02-19)
 
 
