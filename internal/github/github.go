@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v33/github"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 

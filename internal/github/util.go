@@ -1,7 +1,7 @@
 package github
 
 import (
-	"github.com/google/go-github/v32/github"
+	"github.com/google/go-github/v33/github"
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
