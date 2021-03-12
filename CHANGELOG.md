@@ -1,5 +1,15 @@
 # Changelog
 
+### [0.22.1](https://www.github.com/lindell/multi-gitter/compare/v0.22.0...v0.22.1) (2021-03-12)
+
+
+### Dependencies
+
+* update module github.com/google/go-github/v32 to v33 ([#82](https://www.github.com/lindell/multi-gitter/issues/82)) ([1c48de3](https://www.github.com/lindell/multi-gitter/commit/1c48de3a81a64cbac6481b3260bdc3512e98a34f))
+* update module github.com/sirupsen/logrus to v1.8.1 ([31dad70](https://www.github.com/lindell/multi-gitter/commit/31dad70383ab5c6d742e393ad97c32c610f85c2b))
+* update module github.com/xanzy/go-gitlab to v0.46.0 ([f0a3503](https://www.github.com/lindell/multi-gitter/commit/f0a350323dcee32acf20265b5ebcedce2f1531b9))
+* update module github.com/xanzy/go-gitlab to v0.47.0 ([92a18a3](https://www.github.com/lindell/multi-gitter/commit/92a18a3fd27136b5a46c2de423c109d28ad9da71))
+
 ## [0.22.0](https://www.github.com/lindell/multi-gitter/compare/v0.21.1...v0.22.0) (2021-03-03)
 
 
