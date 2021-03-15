@@ -17,7 +17,18 @@
                 "patch"
             ],
             "automerge": true,
-            "automergeType": "branch"
+            "automergeType": "branch",
+            "schedule": [
+                "before 3am on the first day of the month"
+            ]
+        },
+        {
+            "updateTypes": [
+                "major"
+            ],
+            "schedule": [
+                "before 3am on the first day of the month"
+            ]
         },
         {
             "updateTypes": [
