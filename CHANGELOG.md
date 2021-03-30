@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.24.0](https://www.github.com/lindell/multi-gitter/compare/v0.23.1...v0.24.0) (2021-03-30)
+
+
+### Features
+
+* added static flag completion for enums ([#87](https://www.github.com/lindell/multi-gitter/issues/87)) ([586dd61](https://www.github.com/lindell/multi-gitter/commit/586dd616418affe1838b4ecfb5714458ffcafd0b))
+
 ### [0.23.1](https://www.github.com/lindell/multi-gitter/compare/v0.23.0...v0.23.1) (2021-03-30)
 
 
