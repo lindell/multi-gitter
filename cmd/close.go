@@ -20,7 +20,7 @@ func CloseCmd() *cobra.Command {
 
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
 	configurePlatform(cmd)
-	cmd.Flags().AddFlagSet(logFlags("-"))
+	configureLogging(cmd, "-")
 
 	return cmd
 }
