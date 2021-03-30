@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.23.0](https://www.github.com/lindell/multi-gitter/compare/v0.22.1...v0.23.0) (2021-03-30)
+
+
+### Features
+
+* added GitHub autocompletion ([#84](https://www.github.com/lindell/multi-gitter/issues/84)) ([5fee0c4](https://www.github.com/lindell/multi-gitter/commit/5fee0c4b88e802a8be4168f802b79a1701afd3a6))
+
 ### [0.22.1](https://www.github.com/lindell/multi-gitter/compare/v0.22.0...v0.22.1) (2021-03-12)
 
 
