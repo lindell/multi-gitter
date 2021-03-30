@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.23.1](https://www.github.com/lindell/multi-gitter/compare/v0.23.0...v0.23.1) (2021-03-30)
+
+
+### Bug Fixes
+
+* fixed brew test command ([fc243e8](https://www.github.com/lindell/multi-gitter/commit/fc243e8d7d94c9b1793eb7299a893ba2ba14794c))
+
 ## [0.23.0](https://www.github.com/lindell/multi-gitter/compare/v0.22.1...v0.23.0) (2021-03-30)
 
 
