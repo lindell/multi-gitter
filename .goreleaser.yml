@@ -59,4 +59,4 @@ brews:
       zsh_completion.install "completions/multi-gitter.zsh" => "_multi-gitter"
       fish_completion.install "completions/multi-gitter.fish"
     test: |
-      system "#{bin}/multi-gitter version"
+      system "#{bin}/multi-gitter", "version"
