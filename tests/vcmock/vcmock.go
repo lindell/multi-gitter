@@ -91,6 +91,21 @@ func (vc *VersionController) SetPRStatus(repoName string, branchName string, new
 	}
 }
 
+// GetAutocompleteOrganizations gets organizations for autocompletion
+func (vc *VersionController) GetAutocompleteOrganizations(ctx context.Context, str string) ([]string, error) {
+	return []string{"static-org", str}, nil
+}
+
+// GetAutocompleteUsers gets users for autocompletion
+func (vc *VersionController) GetAutocompleteUsers(ctx context.Context, str string) ([]string, error) {
+	return []string{"static-user", str}, nil
+}
+
+// GetAutocompleteRepositories gets repositories for autocompletion
+func (vc *VersionController) GetAutocompleteRepositories(ctx context.Context, str string) ([]string, error) {
+	return []string{"static-repo", str}, nil
+}
+
 // PullRequest is a mock pr
 type PullRequest struct {
 	PRStatus domain.PullRequestStatus
