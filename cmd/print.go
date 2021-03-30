@@ -36,7 +36,7 @@ func PrintCmd() *cobra.Command {
 	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
 	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr`)
 	configurePlatform(cmd)
-	cmd.Flags().AddFlagSet(logFlags(""))
+	configureLogging(cmd, "")
 	cmd.Flags().AddFlagSet(outputFlag())
 
 	return cmd

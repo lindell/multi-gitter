@@ -55,6 +55,9 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
 
 	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab")
+	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"github", "gitlab"}, cobra.ShellCompDirectiveDefault
+	})
 
 	// Autocompletion for organizations
 	_ = cmd.RegisterFlagCompletionFunc("org", func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -129,14 +132,20 @@ func configurePlatform(cmd *cobra.Command) {
 	})
 }
 
-func logFlags(logFile string) *flag.FlagSet {
-	flags := flag.NewFlagSet("log", flag.ExitOnError)
+func configureLogging(cmd *cobra.Command, logFile string) {
+	flags := cmd.Flags()
 
 	flags.StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
-	flags.StringP("log-format", "", "text", `The formating of the logs. Available values: text, json, json-pretty`)
-	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout`)
+	_ = cmd.RegisterFlagCompletionFunc("log-level", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"trace", "debug", "info", "error"}, cobra.ShellCompDirectiveDefault
+	})
 
-	return flags
+	flags.StringP("log-format", "", "text", `The formating of the logs. Available values: text, json, json-pretty`)
+	_ = cmd.RegisterFlagCompletionFunc("log-format", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"text", "json", "json-pretty"}, cobra.ShellCompDirectiveDefault
+	})
+
+	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout`)
 }
 
 func logFlagInit(cmd *cobra.Command, args []string) error {
