@@ -19,7 +19,7 @@ func CloseCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	cmd.Flags().AddFlagSet(platformFlags())
+	configurePlatform(cmd)
 	cmd.Flags().AddFlagSet(logFlags("-"))
 
 	return cmd
@@ -30,7 +30,7 @@ func close(cmd *cobra.Command, args []string) error {
 
 	branchName, _ := flag.GetString("branch")
 
-	vc, err := getVersionController(flag)
+	vc, err := getVersionController(flag, true)
 	if err != nil {
 		return err
 	}

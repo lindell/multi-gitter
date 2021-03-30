@@ -20,7 +20,7 @@ func MergeCmd() *cobra.Command {
 
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
 	cmd.Flags().StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"}, "The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.")
-	cmd.Flags().AddFlagSet(platformFlags())
+	configurePlatform(cmd)
 	cmd.Flags().AddFlagSet(logFlags("-"))
 
 	return cmd
@@ -31,7 +31,7 @@ func merge(cmd *cobra.Command, args []string) error {
 
 	branchName, _ := flag.GetString("branch")
 
-	vc, err := getVersionController(flag)
+	vc, err := getVersionController(flag, true)
 	if err != nil {
 		return err
 	}

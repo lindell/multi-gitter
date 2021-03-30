@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -17,6 +18,7 @@ import (
 type runData struct {
 	out    string
 	logOut string
+	cmdOut string
 	took   time.Duration
 }
 
@@ -323,6 +325,42 @@ Repositories with a successful run:
 				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path))
 			},
 		},
+
+		{
+			name: "autocomplete org",
+			vc:   &vcmock.VersionController{},
+			args: []string{
+				"__complete", "run",
+				"--org", "dynamic-org",
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "static-org\ndynamic-org\n:0\nCompletion ended with directive: ShellCompDirectiveDefault\n", runData.cmdOut)
+			},
+		},
+
+		{
+			name: "autocomplete user",
+			vc:   &vcmock.VersionController{},
+			args: []string{
+				"__complete", "run",
+				"--user", "dynamic-user",
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "static-user\ndynamic-user\n:0\nCompletion ended with directive: ShellCompDirectiveDefault\n", runData.cmdOut)
+			},
+		},
+
+		{
+			name: "autocomplete repo",
+			vc:   &vcmock.VersionController{},
+			args: []string{
+				"__complete", "run",
+				"--repo", "dynamic-repo",
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "static-repo\ndynamic-repo\n:0\nCompletion ended with directive: ShellCompDirectiveDefault\n", runData.cmdOut)
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -343,12 +381,17 @@ Repositories with a successful run:
 			}
 			cmd.OverrideVersionController = vc
 
-			command := cmd.RootCmd()
-			command.SetArgs(append(
-				test.args,
+			cobraBuf := &bytes.Buffer{}
+
+			staticArgs := []string{
 				"--log-file", logFile.Name(),
 				"--output", outFile.Name(),
-			))
+			}
+
+			command := cmd.RootCmd()
+			command.SetOut(cobraBuf)
+			command.SetErr(cobraBuf)
+			command.SetArgs(append(staticArgs, test.args...))
 			before := time.Now()
 			err = command.Execute()
 			took := time.Since(before)
@@ -367,6 +410,7 @@ Repositories with a successful run:
 			test.verify(t, vc, runData{
 				logOut: string(logData),
 				out:    string(outData),
+				cmdOut: cobraBuf.String(),
 				took:   took,
 			})
 		})

@@ -47,7 +47,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
-	cmd.Flags().AddFlagSet(platformFlags())
+	configurePlatform(cmd)
 	cmd.Flags().AddFlagSet(logFlags("-"))
 	cmd.Flags().AddFlagSet(outputFlag())
 
@@ -121,7 +121,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return errors.New("could not get the working directory")
 	}
 
-	vc, err := getVersionController(flag)
+	vc, err := getVersionController(flag, true)
 	if err != nil {
 		return err
 	}
