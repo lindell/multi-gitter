@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"math/rand"
@@ -41,8 +42,8 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-func platformFlags() *flag.FlagSet {
-	flags := flag.NewFlagSet("platform", flag.ExitOnError)
+func configurePlatform(cmd *cobra.Command) {
+	flags := cmd.Flags()
 
 	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.")
 	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
@@ -55,7 +56,77 @@ func platformFlags() *flag.FlagSet {
 
 	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab")
 
-	return flags
+	// Autocompletion for organizations
+	_ = cmd.RegisterFlagCompletionFunc("org", func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		vc, err := getVersionController(cmd.Flags(), false)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		type getOrger interface {
+			GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error)
+		}
+
+		g, ok := vc.(getOrger)
+		if !ok {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		orgs, err := g.GetAutocompleteOrganizations(cmd.Root().Context(), toComplete)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		return orgs, cobra.ShellCompDirectiveDefault
+	})
+
+	// Autocompletion for users
+	_ = cmd.RegisterFlagCompletionFunc("user", func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		vc, err := getVersionController(cmd.Flags(), false)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		type getUserser interface {
+			GetAutocompleteUsers(ctx context.Context, _ string) ([]string, error)
+		}
+
+		g, ok := vc.(getUserser)
+		if !ok {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		users, err := g.GetAutocompleteUsers(cmd.Root().Context(), toComplete)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		return users, cobra.ShellCompDirectiveDefault
+	})
+
+	// Autocompletion for repositories
+	_ = cmd.RegisterFlagCompletionFunc("repo", func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		vc, err := getVersionController(cmd.Flags(), false)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		type getRepositorieser interface {
+			GetAutocompleteRepositories(ctx context.Context, _ string) ([]string, error)
+		}
+
+		g, ok := vc.(getRepositorieser)
+		if !ok {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		users, err := g.GetAutocompleteRepositories(cmd.Root().Context(), toComplete)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		return users, cobra.ShellCompDirectiveDefault
+	})
 }
 
 func logFlags(logFile string) *flag.FlagSet {
@@ -119,7 +190,9 @@ func outputFlag() *flag.FlagSet {
 // This is used to override the version controller with a mock, to be used during testing
 var OverrideVersionController multigitter.VersionController = nil
 
-func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, error) {
+// getVersionController gets the complete version controller
+// the verifyFlags parameter can be set to false if a complete vc is not required (during autocompletion)
+func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
 	if OverrideVersionController != nil {
 		return OverrideVersionController, nil
 	}
@@ -129,21 +202,21 @@ func getVersionController(flag *flag.FlagSet) (multigitter.VersionController, er
 	default:
 		return nil, fmt.Errorf("unknown platform: %s", platform)
 	case "github":
-		return createGithubClient(flag)
+		return createGithubClient(flag, verifyFlags)
 	case "gitlab":
-		return createGitlabClient(flag)
+		return createGitlabClient(flag, verifyFlags)
 	}
 }
 
-func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
+func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
 	gitBaseURL, _ := flag.GetString("base-url")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
 	mergeTypeStrs, _ := flag.GetStringSlice("merge-type") // Only used for the merge command
 
-	if len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
-		return nil, errors.New("no organization or user set")
+	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
+		return nil, errors.New("no organization, user or repo set")
 	}
 
 	token, err := getToken(flag)
@@ -180,11 +253,15 @@ func createGithubClient(flag *flag.FlagSet) (multigitter.VersionController, erro
 	return vc, nil
 }
 
-func createGitlabClient(flag *flag.FlagSet) (multigitter.VersionController, error) {
+func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
 	gitBaseURL, _ := flag.GetString("base-url")
 	groups, _ := flag.GetStringSlice("group")
 	users, _ := flag.GetStringSlice("user")
 	projects, _ := flag.GetStringSlice("project")
+
+	if verifyFlags && len(groups) == 0 && len(users) == 0 && len(projects) == 0 {
+		return nil, errors.New("no group user or project set")
+	}
 
 	token, err := getToken(flag)
 	if err != nil {

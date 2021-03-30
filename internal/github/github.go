@@ -405,3 +405,61 @@ func (g Github) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 	_, err = g.ghClient.Git.DeleteRef(ctx, pr.ownerName, pr.repoName, fmt.Sprintf("heads/%s", pr.branchName))
 	return err
 }
+
+// GetAutocompleteOrganizations gets organizations for autocompletion
+func (g Github) GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error) {
+	orgs, _, err := g.ghClient.Organizations.List(ctx, "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]string, len(orgs))
+	for i, org := range orgs {
+		ret[i] = org.GetLogin()
+	}
+
+	return ret, nil
+}
+
+// GetAutocompleteUsers gets users for autocompletion
+func (g Github) GetAutocompleteUsers(ctx context.Context, str string) ([]string, error) {
+	users, _, err := g.ghClient.Search.Users(ctx, str, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]string, len(users.Users))
+	for i, user := range users.Users {
+		ret[i] = user.GetLogin()
+	}
+
+	return ret, nil
+}
+
+// GetAutocompleteRepositories gets repositories for autocompletion
+func (g Github) GetAutocompleteRepositories(ctx context.Context, str string) ([]string, error) {
+	var q string
+
+	// If the user has already provided a org/user, it's much more effective to search based on that
+	// comparared to a complete freetext search
+	splitted := strings.SplitN(str, "/", 2)
+	switch {
+	case len(splitted) == 2:
+		// Search set the user or org (user/org in the search can be used interchangeable)
+		q = fmt.Sprintf("user:%s %s in:name", splitted[0], splitted[1])
+	default:
+		q = fmt.Sprintf("%s in:name", str)
+	}
+
+	repos, _, err := g.ghClient.Search.Repositories(ctx, q, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]string, len(repos.Repositories))
+	for i, repositories := range repos.Repositories {
+		ret[i] = repositories.GetFullName()
+	}
+
+	return ret, nil
+}

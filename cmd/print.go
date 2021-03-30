@@ -35,7 +35,7 @@ func PrintCmd() *cobra.Command {
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
 	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
 	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr`)
-	cmd.Flags().AddFlagSet(platformFlags())
+	configurePlatform(cmd)
 	cmd.Flags().AddFlagSet(logFlags(""))
 	cmd.Flags().AddFlagSet(outputFlag())
 
@@ -76,7 +76,7 @@ func print(cmd *cobra.Command, args []string) error {
 		return errors.New("could not get the working directory")
 	}
 
-	vc, err := getVersionController(flag)
+	vc, err := getVersionController(flag, true)
 	if err != nil {
 		return err
 	}
