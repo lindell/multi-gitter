@@ -3,7 +3,6 @@ package git
 import (
 	"bytes"
 	"fmt"
-	"net/url"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -28,13 +27,8 @@ type Git struct {
 
 // Clone a repository
 func (g *Git) Clone(baseName, headName string) error {
-	u, err := url.Parse(g.Repo)
-	if err != nil {
-		return err
-	}
-
 	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
-		URL:           u.String(),
+		URL:           g.Repo,
 		RemoteName:    "origin",
 		Depth:         g.FetchDepth,
 		ReferenceName: plumbing.NewBranchReferenceName(baseName),

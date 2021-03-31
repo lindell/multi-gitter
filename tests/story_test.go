@@ -3,7 +3,7 @@ package tests
 import (
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/lindell/multi-gitter/internal/domain"
@@ -23,6 +23,11 @@ func TestStory(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 	assert.NoError(t, err)
 
+	workingDir, err := os.Getwd()
+	assert.NoError(t, err)
+
+	changerBinaryPath := filepath.ToSlash(filepath.Join(workingDir, changerBinaryPath))
+
 	changeRepo := createRepo(t, "should-change", "i like apples")
 	changeRepo2 := createRepo(t, "should-change-2", "i like my apple")
 	noChangeRepo := createRepo(t, "should-not-change", "i like oranges")
@@ -30,7 +35,7 @@ func TestStory(t *testing.T) {
 	vcMock.AddRepository(changeRepo2)
 	vcMock.AddRepository(noChangeRepo)
 
-	runOutFile := path.Join(tmpDir, "run-log.txt")
+	runOutFile := filepath.Join(tmpDir, "run-log.txt")
 
 	command := cmd.RootCmd()
 	command.SetArgs([]string{"run",
@@ -39,19 +44,19 @@ func TestStory(t *testing.T) {
 		"--author-email", "test@example.com",
 		"-B", "custom-branch-name",
 		"-m", "test",
-		"scripts/changer/main",
+		changerBinaryPath,
 	})
 	err = command.Execute()
 	assert.NoError(t, err)
 
 	// Verify that the data of the original branch is intact
-	data, err := ioutil.ReadFile(path.Join(changeRepo.Path, fileName))
+	data, err := ioutil.ReadFile(filepath.Join(changeRepo.Path, fileName))
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("i like apples"), data)
 
 	// Verify that the new branch is changed
 	changeBranch(t, changeRepo.Path, "custom-branch-name", false)
-	data, err = ioutil.ReadFile(path.Join(changeRepo.Path, fileName))
+	data, err = ioutil.ReadFile(filepath.Join(changeRepo.Path, fileName))
 	assert.NoError(t, err)
 	assert.Equal(t, []byte("i like bananas"), data)
 
@@ -68,7 +73,7 @@ Repositories with a successful run:
 	//
 	// Status
 	//
-	statusOutFile := path.Join(tmpDir, "status-log.txt")
+	statusOutFile := filepath.Join(tmpDir, "status-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"status",
@@ -89,7 +94,7 @@ Repositories with a successful run:
 	//
 	// Merge
 	//
-	mergeLogFile := path.Join(tmpDir, "merge-log.txt")
+	mergeLogFile := filepath.Join(tmpDir, "merge-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"merge",
@@ -108,7 +113,7 @@ Repositories with a successful run:
 	//
 	// After Merge Status
 	//
-	afterMergeStatusOutFile := path.Join(tmpDir, "after-merge-status-log.txt")
+	afterMergeStatusOutFile := filepath.Join(tmpDir, "after-merge-status-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"status",
@@ -126,7 +131,7 @@ Repositories with a successful run:
 	//
 	// Close
 	//
-	closeLogFile := path.Join(tmpDir, "close-log.txt")
+	closeLogFile := filepath.Join(tmpDir, "close-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"close",
@@ -145,7 +150,7 @@ Repositories with a successful run:
 	//
 	// After Close Status
 	//
-	afterCloseStatusOutFile := path.Join(tmpDir, "after-close-status-log.txt")
+	afterCloseStatusOutFile := filepath.Join(tmpDir, "after-close-status-log.txt")
 
 	command = cmd.RootCmd()
 	command.SetArgs([]string{"status",

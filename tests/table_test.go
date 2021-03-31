@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -25,6 +25,8 @@ type runData struct {
 func TestTable(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
+
+	changerBinaryPath := filepath.ToSlash(filepath.Join(workingDir, changerBinaryPath))
 
 	tests := []struct {
 		name     string
@@ -49,7 +51,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -80,7 +82,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s", path.Join(workingDir, "scripts/changer/main.go")),
+				fmt.Sprintf("go run %s", filepath.ToSlash(filepath.Join(workingDir, "scripts/changer/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -111,7 +113,7 @@ func TestTable(t *testing.T) {
 				"-B", "custom-branch-name",
 				"--base-branch", "custom-base-branch",
 				"-m", "custom message",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 0)
@@ -139,7 +141,7 @@ func TestTable(t *testing.T) {
 				"-B", "custom-branch-name",
 				"--base-branch", "custom-base-branch",
 				"-m", "custom message",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -165,7 +167,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-m", "custom message",
 				"-r", "reviewer1,reviewer2",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -189,7 +191,7 @@ func TestTable(t *testing.T) {
 				"-m", "custom message",
 				"-r", "reviewer1,reviewer2,reviewer3",
 				"--max-reviewers", "2",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -211,7 +213,7 @@ func TestTable(t *testing.T) {
 				"-m", "custom message",
 				"-B", "custom-branch-name",
 				"--dry-run",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 0)
@@ -230,6 +232,10 @@ func TestTable(t *testing.T) {
 					createRepo(t, "should-change-4", "i like apples"),
 					createRepo(t, "should-change-5", "i like apples"),
 					createRepo(t, "should-change-6", "i like apples"),
+					createRepo(t, "should-change-7", "i like apples"),
+					createRepo(t, "should-change-8", "i like apples"),
+					createRepo(t, "should-change-9", "i like apples"),
+					createRepo(t, "should-change-10", "i like apples"),
 				},
 			},
 			args: []string{
@@ -238,12 +244,12 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-m", "custom message",
 				"-B", "custom-branch-name",
-				"-C", "3",
-				fmt.Sprintf("%s -sleep 100ms", path.Join(workingDir, "scripts/changer/main")),
+				"-C", "7",
+				fmt.Sprintf("%s -sleep 300ms", changerBinaryPath),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				require.Len(t, vcMock.PullRequests, 6)
-				require.Less(t, runData.took.Milliseconds(), int64(600))
+				require.Len(t, vcMock.PullRequests, 10)
+				require.Less(t, runData.took.Milliseconds(), int64(3000))
 			},
 		},
 
@@ -267,7 +273,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -304,7 +310,7 @@ Repositories with a successful run:
 				"-B", "custom-branch-name",
 				"-m", "custom message",
 				"--skip-pr",
-				path.Join(workingDir, "scripts/changer/main"),
+				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				fmt.Fprintln(os.Stderr, vcMock.Repositories[0].Path)

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 )
@@ -134,7 +135,7 @@ type Repository struct {
 
 // URL return the URL (filepath) of the repository on disk
 func (r Repository) URL(token string) string {
-	return "file://" + r.Path
+	return fmt.Sprintf(`file://"%s"`, filepath.ToSlash(r.Path))
 }
 
 // DefaultBranch returns "master"

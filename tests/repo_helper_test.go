@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -29,7 +29,7 @@ func createRepo(t *testing.T, name, dataInFile string) vcmock.Repository {
 }
 
 func createDummyRepo(dataInFile string) (string, error) {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-test-")
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-test-*.git")
 	if err != nil {
 		return "", err
 	}
@@ -39,7 +39,7 @@ func createDummyRepo(dataInFile string) (string, error) {
 		return "", err
 	}
 
-	testFilePath := path.Join(tmpDir, fileName)
+	testFilePath := filepath.Join(tmpDir, fileName)
 
 	err = ioutil.WriteFile(testFilePath, []byte(dataInFile), 0600)
 	if err != nil {
@@ -100,7 +100,7 @@ func changeTestFile(t *testing.T, basePath string, content string, commitMessage
 	repo, err := git.PlainOpen(basePath)
 	require.NoError(t, err)
 
-	testFilePath := path.Join(basePath, fileName)
+	testFilePath := filepath.Join(basePath, fileName)
 
 	err = ioutil.WriteFile(testFilePath, []byte(content), 0600)
 	require.NoError(t, err)
@@ -122,7 +122,7 @@ func changeTestFile(t *testing.T, basePath string, content string, commitMessage
 }
 
 func readTestFile(t *testing.T, basePath string) string {
-	testFilePath := path.Join(basePath, fileName)
+	testFilePath := filepath.Join(basePath, fileName)
 
 	b, err := ioutil.ReadFile(testFilePath)
 	require.NoError(t, err)

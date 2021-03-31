@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path"
+	"path/filepath"
 	"strings"
 	"syscall"
 
@@ -135,8 +135,8 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("could not find executable %s", parsedCommand[0])
 	}
 	// Executable needs to be defined with an absolute path since it will be run within the context of repositories
-	if !path.IsAbs(executablePath) {
-		executablePath = path.Join(workingDir, executablePath)
+	if !filepath.IsAbs(executablePath) {
+		executablePath = filepath.Join(workingDir, executablePath)
 	}
 
 	// Set up signal listening to cancel the context and let started runs finish gracefully
