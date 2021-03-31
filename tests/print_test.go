@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/lindell/multi-gitter/cmd"
@@ -30,16 +30,16 @@ func TestPrint(t *testing.T) {
 	vcMock.AddRepository(changeRepo2)
 	vcMock.AddRepository(noChangeRepo)
 
-	runLogFile := path.Join(tmpDir, "print-log.txt")
-	outFile := path.Join(tmpDir, "out.txt")
-	errOutFile := path.Join(tmpDir, "err-out.txt")
+	runLogFile := filepath.Join(tmpDir, "print-log.txt")
+	outFile := filepath.Join(tmpDir, "out.txt")
+	errOutFile := filepath.Join(tmpDir, "err-out.txt")
 
 	command := cmd.RootCmd()
 	command.SetArgs([]string{"print",
-		"--log-file", runLogFile,
-		"--output", outFile,
-		"--error-output", errOutFile,
-		fmt.Sprintf(`go run %s`, path.Join(workingDir, "scripts/printer/main.go")),
+		"--log-file", filepath.ToSlash(runLogFile),
+		"--output", filepath.ToSlash(outFile),
+		"--error-output", filepath.ToSlash(errOutFile),
+		fmt.Sprintf(`go run %s`, filepath.ToSlash(filepath.Join(workingDir, "scripts/printer/main.go"))),
 	})
 	err = command.Execute()
 	assert.NoError(t, err)

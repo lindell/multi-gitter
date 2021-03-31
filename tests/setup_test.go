@@ -3,16 +3,29 @@ package tests
 import (
 	"os"
 	"os/exec"
+	"runtime"
 	"testing"
 )
 
+var changerBinaryPath string
+var printerBinaryPath string
+
 func TestMain(m *testing.M) {
-	command := exec.Command("go", "build", "-o", "scripts/changer/main", "scripts/changer/main.go")
+	switch runtime.GOOS {
+	case "windows":
+		changerBinaryPath = "scripts/changer/main.exe"
+		printerBinaryPath = "scripts/printer/main.exe"
+	default:
+		changerBinaryPath = "scripts/changer/main"
+		printerBinaryPath = "scripts/printer/main"
+	}
+
+	command := exec.Command("go", "build", "-o", changerBinaryPath, "scripts/changer/main.go")
 	if err := command.Run(); err != nil {
 		panic(err)
 	}
 
-	command = exec.Command("go", "build", "-o", "scripts/printer/main", "scripts/printer/main.go")
+	command = exec.Command("go", "build", "-o", printerBinaryPath, "scripts/printer/main.go")
 	if err := command.Run(); err != nil {
 		panic(err)
 	}

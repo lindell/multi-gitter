@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -137,13 +136,13 @@ func readExamples() ([]exampleCategory, error) {
 		}
 
 		var examples []example
-		categoryDir := path.Join(examplesDir, f.Name())
+		categoryDir := filepath.Join(examplesDir, f.Name())
 		exampleFiles, err := ioutil.ReadDir(categoryDir)
 		if err != nil {
 			return nil, err
 		}
 		for _, e := range exampleFiles {
-			b, err := ioutil.ReadFile(path.Join(categoryDir, e.Name()))
+			b, err := ioutil.ReadFile(filepath.Join(categoryDir, e.Name()))
 			if err != nil {
 				return nil, err
 			}
