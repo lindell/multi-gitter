@@ -2,8 +2,14 @@ name: Testing
 on: [push, pull_request]
 jobs:
   build:
-    name: Build
-    runs-on: ubuntu-latest
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          # - windows-latest
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -13,22 +19,8 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
 
-      - name: Prepare coverage
-        run: mkdir coverage
-
       - name: Test
-        run: go test ./... -coverpkg=$( go list ./... | grep -v /tests | grep -v /tools | paste -sd "," -) -coverprofile coverage/coverage.out
-
-      - name: Coverage convert
-        uses: jandelgado/gcov2lcov-action@v1.0.5
-        with:
-          infile: coverage/coverage.out
-          outfile: coverage/lcov.info
-
-      - name: Coveralls report
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+        run: go test ./...
 
       - name: Build
         run: go build main.go
