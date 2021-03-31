@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.24.1](https://www.github.com/lindell/multi-gitter/compare/v0.24.0...v0.24.1) (2021-03-31)
+
+
+### Bug Fixes
+
+* fixed windows filepaths ([#89](https://www.github.com/lindell/multi-gitter/issues/89)) ([cb38fc0](https://www.github.com/lindell/multi-gitter/commit/cb38fc08a084dd7b5b05717b852e9804d52e1720))
+
 ## [0.24.0](https://www.github.com/lindell/multi-gitter/compare/v0.23.1...v0.24.0) (2021-03-30)
 
 
