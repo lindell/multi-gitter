@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.24.2](https://www.github.com/lindell/multi-gitter/compare/v0.24.1...v0.24.2) (2021-04-01)
+
+
+### Dependencies
+
+* update golang.org/x/oauth2 commit hash to 22b0ada ([#92](https://www.github.com/lindell/multi-gitter/issues/92)) ([335eee3](https://www.github.com/lindell/multi-gitter/commit/335eee37c02c54fa7d006ff0aab837b424f7d514))
+* update module github.com/google/go-github/v33 to v34 ([#93](https://www.github.com/lindell/multi-gitter/issues/93)) ([03d3278](https://www.github.com/lindell/multi-gitter/commit/03d327835bb7a99362e0b13224200a41d068a642))
+
 ### [0.24.1](https://www.github.com/lindell/multi-gitter/compare/v0.24.0...v0.24.1) (2021-03-31)
 
 
