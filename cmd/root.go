@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/lindell/multi-gitter/internal/domain"
-	"github.com/lindell/multi-gitter/internal/github"
-	"github.com/lindell/multi-gitter/internal/gitlab"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/scm/github"
+	"github.com/lindell/multi-gitter/internal/scm/gitlab"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
