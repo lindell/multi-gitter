@@ -9,11 +9,11 @@
 </div>
 <br>
 
-*multi-gitter* allows you to make changes in multiple repositories simultaneously. This is archived by running a script or program in the context of all repositories and if any changes are made, a pull request is created that can be merged manually by the set reviewers, or automatically by multi-gitter when CI pipelines has completed successfully.
+*multi-gitter* allows you to make changes in multiple repositories simultaneously. This is archived by running a script or program in the context of multiple repositories. If any changes are made, a pull request is created that can be merged manually by the set reviewers, or automatically by multi-gitter when CI pipelines has completed successfully.
 
 Are you a bash-guru or simply prefer your scripting in Node.js? It doesn't matter, since multi-gitter support any type of script or program. **If you can script it to run in one place, you can run it in all your repositories with one command!**
 
-Some examples:
+### Some examples:
 * Syncing a file (like a PR-template)
 * Programmatic refactoring
 * Updating a dependency
