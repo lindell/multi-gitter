@@ -43,8 +43,8 @@ func (vc *VersionController) CreatePullRequest(ctx context.Context, repo domain.
 	return pr, nil
 }
 
-// GetPullRequestStatuses gets mock pull request statuses
-func (vc *VersionController) GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
+// GetPullRequests gets mock pull request statuses
+func (vc *VersionController) GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
 	ret := make([]domain.PullRequest, 0, len(vc.PullRequests))
 	for _, pr := range vc.PullRequests {
 		if pr.NewPullRequest.Head == branchName {

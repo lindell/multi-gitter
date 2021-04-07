@@ -293,8 +293,8 @@ func (g Github) addReviewers(ctx context.Context, repo repository, newPR domain.
 	return err
 }
 
-// GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch
-func (g Github) GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
+// GetPullRequests gets all pull requests of with a specific branch
+func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
 	// TODO: If this is implemented with the GitHub v4 graphql api, it would be much faster
 
 	repos, err := g.getRepositories(ctx)

@@ -19,7 +19,7 @@ type Statuser struct {
 
 // Statuses checks the statuses of pull requests
 func (s Statuser) Statuses(ctx context.Context) error {
-	prs, err := s.VersionController.GetPullRequestStatuses(ctx, s.FeatureBranch)
+	prs, err := s.VersionController.GetPullRequests(ctx, s.FeatureBranch)
 	if err != nil {
 		return err
 	}
