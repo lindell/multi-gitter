@@ -17,7 +17,7 @@ type Merger struct {
 
 // Merge merges pull requests in an organization
 func (s Merger) Merge(ctx context.Context) error {
-	prs, err := s.VersionController.GetPullRequestStatuses(ctx, s.FeatureBranch)
+	prs, err := s.VersionController.GetPullRequests(ctx, s.FeatureBranch)
 	if err != nil {
 		return err
 	}

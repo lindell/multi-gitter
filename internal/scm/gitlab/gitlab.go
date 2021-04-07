@@ -288,8 +288,8 @@ func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, err
 	return userIDs, nil
 }
 
-// GetPullRequestStatuses gets the statuses of all pull requests of with a specific branch
-func (g *Gitlab) GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
+// GetPullRequests gets all pull requests of with a specific branch
+func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
 	projects, err := g.getProjects(ctx)
 	if err != nil {
 		return nil, err

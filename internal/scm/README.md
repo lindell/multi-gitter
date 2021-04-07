@@ -9,7 +9,7 @@ type VersionController interface {
     // Creates a pull request. The repo parameter can be expected to originate from the GetRepositories function in the same package
 	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error)
 
-	GetPullRequestStatuses(ctx context.Context, branchName string) ([]domain.PullRequest, error)
+	GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error)
 
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
 
