@@ -33,7 +33,7 @@ func (r *Counter) AddError(err error, repo domain.Repository) {
 	r.errorRepositories[msg] = append(r.errorRepositories[msg], repo)
 }
 
-// AddSuccess adds a repository that succeeded
+// AddSuccessRepositories adds a repository that succeeded
 func (r *Counter) AddSuccessRepositories(repo domain.Repository) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
@@ -41,7 +41,7 @@ func (r *Counter) AddSuccessRepositories(repo domain.Repository) {
 	r.successRepositories = append(r.successRepositories, repo)
 }
 
-// AddSuccess adds a pullrequest that succeeded
+// AddSuccessPullRequest adds a pullrequest that succeeded
 func (r *Counter) AddSuccessPullRequest(repo domain.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()

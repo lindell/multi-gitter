@@ -31,7 +31,7 @@ func (vc *VersionController) GetRepositories(ctx context.Context) ([]domain.Repo
 func (vc *VersionController) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	repository := repo.(Repository)
 
-	vc.PRNumber = vc.PRNumber + 1
+	vc.PRNumber++
 	pr := PullRequest{
 		PRStatus:       domain.PullRequestStatusPending,
 		PRNumber:       vc.PRNumber,

@@ -186,21 +186,29 @@ func run(cmd *cobra.Command, args []string) error {
 
 // https://stackoverflow.com/a/46973603
 func parseCommandLine(command string) ([]string, error) {
+	type state int
+
+	const (
+		stateStart state = iota
+		stateQuotes
+		stateArg
+	)
+
 	var args []string
-	state := "start"
+	currentState := stateStart
 	current := ""
 	quote := "\""
 	escapeNext := true
 	for i := 0; i < len(command); i++ {
 		c := command[i]
 
-		if state == "quotes" {
+		if currentState == stateQuotes {
 			if string(c) != quote {
 				current += string(c)
 			} else {
 				args = append(args, current)
 				current = ""
-				state = "start"
+				currentState = stateStart
 			}
 			continue
 		}
@@ -217,16 +225,16 @@ func parseCommandLine(command string) ([]string, error) {
 		}
 
 		if c == '"' || c == '\'' {
-			state = "quotes"
+			currentState = stateQuotes
 			quote = string(c)
 			continue
 		}
 
-		if state == "arg" {
+		if currentState == stateArg {
 			if c == ' ' || c == '\t' {
 				args = append(args, current)
 				current = ""
-				state = "start"
+				currentState = stateStart
 			} else {
 				current += string(c)
 			}
@@ -234,12 +242,12 @@ func parseCommandLine(command string) ([]string, error) {
 		}
 
 		if c != ' ' && c != '\t' {
-			state = "arg"
+			currentState = stateArg
 			current += string(c)
 		}
 	}
 
-	if state == "quotes" {
+	if currentState == stateQuotes {
 		return []string{}, fmt.Errorf("unclosed quote in command line: %s", command)
 	}
 
