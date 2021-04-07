@@ -29,3 +29,7 @@ func NewLogger(logger logger) io.WriteCloser {
 
 	return writer
 }
+
+func Test() {
+
+}
