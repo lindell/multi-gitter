@@ -8,6 +8,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// NewLoggingRoundTripper creates a new logging roundtripper
+func NewLoggingRoundTripper(rt http.RoundTripper) http.RoundTripper {
+	return LoggingRoundTripper{
+		Next: rt,
+	}
+}
+
 // LoggingRoundTripper logs a request-response
 type LoggingRoundTripper struct {
 	Next http.RoundTripper
