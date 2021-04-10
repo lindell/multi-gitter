@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"strings"
@@ -13,19 +14,22 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/lindell/multi-gitter/internal/domain"
-	"github.com/lindell/multi-gitter/internal/http"
 )
 
 // New create a new Github client
-func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []domain.MergeType) (*Github, error) {
+func New(
+	token string,
+	baseURL string,
+	transportMiddleware func(http.RoundTripper) http.RoundTripper,
+	repoListing RepositoryListing,
+	mergeTypes []domain.MergeType,
+) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	tc.Transport = http.LoggingRoundTripper{
-		Next: tc.Transport,
-	}
+	tc.Transport = transportMiddleware(tc.Transport)
 
 	var client *github.Client
 	if baseURL != "" {

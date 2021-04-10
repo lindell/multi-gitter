@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm/github"
 	"github.com/lindell/multi-gitter/internal/scm/gitlab"
@@ -250,7 +251,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		}
 	}
 
-	vc, err := github.New(token, gitBaseURL, github.RepositoryListing{
+	vc, err := github.New(token, gitBaseURL, http.NewLoggingRoundTripper, github.RepositoryListing{
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
