@@ -11,6 +11,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/scm/gitea"
 	"github.com/lindell/multi-gitter/internal/scm/github"
 	"github.com/lindell/multi-gitter/internal/scm/gitlab"
 
@@ -55,9 +56,9 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\"")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"github", "gitlab"}, cobra.ShellCompDirectiveDefault
+		return []string{"github", "gitlab", "gitea"}, cobra.ShellCompDirectiveDefault
 	})
 
 	// Autocompletion for organizations
@@ -215,6 +216,8 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 		return createGithubClient(flag, verifyFlags)
 	case "gitlab":
 		return createGitlabClient(flag, verifyFlags)
+	case "gitea":
+		return createGiteaClient(flag, verifyFlags)
 	}
 }
 
@@ -223,7 +226,6 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
-	mergeTypeStrs, _ := flag.GetStringSlice("merge-type") // Only used for the merge command
 
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repo set")
@@ -242,13 +244,9 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		}
 	}
 
-	// Convert all defined merge types (if any)
-	mergeTypes := make([]domain.MergeType, len(mergeTypeStrs))
-	for i, mt := range mergeTypeStrs {
-		mergeTypes[i], err = domain.ParseMergeType(mt)
-		if err != nil {
-			return nil, err
-		}
+	mergeTypes, err := getMergeTypes(flag)
+	if err != nil {
+		return nil, err
 	}
 
 	vc, err := github.New(token, gitBaseURL, http.NewLoggingRoundTripper, github.RepositoryListing{
@@ -298,6 +296,50 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	return vc, nil
 }
 
+func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+	giteaBaseURL, _ := flag.GetString("base-url")
+	orgs, _ := flag.GetStringSlice("org")
+	users, _ := flag.GetStringSlice("user")
+	repos, _ := flag.GetStringSlice("repo")
+
+	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
+		return nil, errors.New("no organization, user or repository set")
+	}
+
+	if giteaBaseURL == "" {
+		return nil, errors.New("no base-url set")
+	}
+
+	token, err := getToken(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	repoRefs := make([]gitea.RepositoryReference, len(repos))
+	for i := range repos {
+		repoRefs[i], err = gitea.ParseRepositoryReference(repos[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	mergeTypes, err := getMergeTypes(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	vc, err := gitea.New(token, giteaBaseURL, gitea.RepositoryListing{
+		Organizations: orgs,
+		Users:         users,
+		Repositories:  repoRefs,
+	}, mergeTypes)
+	if err != nil {
+		return nil, err
+	}
+
+	return vc, nil
+}
+
 func getToken(flag *flag.FlagSet) (string, error) {
 	if OverrideVersionController != nil {
 		return "", nil
@@ -310,6 +352,8 @@ func getToken(flag *flag.FlagSet) (string, error) {
 			token = ght
 		} else if ght := os.Getenv("GITLAB_TOKEN"); ght != "" {
 			token = ght
+		} else if ght := os.Getenv("GITEA_TOKEN"); ght != "" {
+			token = ght
 		}
 	}
 
@@ -318,6 +362,22 @@ func getToken(flag *flag.FlagSet) (string, error) {
 	}
 
 	return token, nil
+}
+
+func getMergeTypes(flag *flag.FlagSet) ([]domain.MergeType, error) {
+	mergeTypeStrs, _ := flag.GetStringSlice("merge-type") // Only used for the merge command
+
+	// Convert all defined merge types (if any)
+	var err error
+	mergeTypes := make([]domain.MergeType, len(mergeTypeStrs))
+	for i, mt := range mergeTypeStrs {
+		mergeTypes[i], err = domain.ParseMergeType(mt)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return mergeTypes, nil
 }
 
 // nopWriter is a writer that does nothing
