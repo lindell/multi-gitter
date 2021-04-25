@@ -73,7 +73,7 @@ go get github.com/lindell/multi-gitter
 
 ## Token
 
-To use multi-gitter, a token that is allowed to list repositories and create pull requests is needed. This token can either be set in the `GITHUB_TOKEN` or `GITLAB_TOKEN` environment variable, or by using the `--token` flag.
+To use multi-gitter, a token that is allowed to list repositories and create pull requests is needed. This token can either be set in the `GITHUB_TOKEN`, `GITLAB_TOKEN`, `GITEA_TOKEN` environment variable, or by using the `--token` flag.
 
 ### GitHub
 [How to generate a GitHub personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). Make sure to give to `repo` permissions.
@@ -81,6 +81,10 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 ### GitLab
 
 [How to generate a GitLab personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html). Make sure to give to it the `api` permission.
+
+### Gitea
+
+In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens 
 
 ## Usage
 {{range .Commands}}

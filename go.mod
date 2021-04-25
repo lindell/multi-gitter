@@ -3,6 +3,7 @@ module github.com/lindell/multi-gitter
 go 1.16
 
 require (
+	code.gitea.io/sdk/gitea v0.14.0
 	github.com/go-git/go-git/v5 v5.2.0
 	github.com/google/go-github/v33 v33.0.0
 	github.com/pkg/errors v0.9.1
