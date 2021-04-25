@@ -73,7 +73,7 @@ go get github.com/lindell/multi-gitter
 
 ## Token
 
-To use multi-gitter, a token that is allowed to list repositories and create pull requests is needed. This token can either be set in the `GITHUB_TOKEN` or `GITLAB_TOKEN` environment variable, or by using the `--token` flag.
+To use multi-gitter, a token that is allowed to list repositories and create pull requests is needed. This token can either be set in the `GITHUB_TOKEN`, `GITLAB_TOKEN`, `GITEA_TOKEN` environment variable, or by using the `--token` flag.
 
 ### GitHub
 [How to generate a GitHub personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token). Make sure to give to `repo` permissions.
@@ -81,6 +81,10 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 ### GitLab
 
 [How to generate a GitLab personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html). Make sure to give to it the `api` permission.
+
+### Gitea
+
+In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens 
 
 ## Usage
 
@@ -118,7 +122,7 @@ Flags:
   -M, --max-reviewers int       If this value is set, reviewers will be randomized
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string           The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string         The platform that is used. Available values: github, gitlab (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName"
@@ -145,7 +149,7 @@ Flags:
   -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
       --merge-type strings   The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
-  -p, --platform string      The platform that is used. Available values: github, gitlab (default "github")
+  -p, --platform string      The platform that is used. Available values: github, gitlab, gitea (default "github")
   -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName"
   -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName"
   -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
@@ -168,7 +172,7 @@ Flags:
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string       The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string     The platform that is used. Available values: github, gitlab (default "github")
+  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName"
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName"
   -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
@@ -190,7 +194,7 @@ Flags:
       --log-format string   The formating of the logs. Available values: text, json, json-pretty (default "text")
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
-  -p, --platform string     The platform that is used. Available values: github, gitlab (default "github")
+  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName"
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName"
   -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
@@ -219,7 +223,7 @@ Flags:
   -L, --log-level string      The level of logging that should be made. Available values: trace, debug, info, error (default "info")
   -O, --org strings           The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string         The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string       The platform that is used. Available values: github, gitlab (default "github")
+  -p, --platform string       The platform that is used. Available values: github, gitlab, gitea (default "github")
   -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName"
   -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName"
   -T, --token string          The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
