@@ -34,7 +34,7 @@ multi-gitter run [script path] [flags]
   -M, --max-reviewers int       If this value is set, reviewers will be randomized
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string           The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string         The platform that is used. Available values: github, gitlab (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName"
