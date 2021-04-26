@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.25.0](https://www.github.com/lindell/multi-gitter/compare/v0.24.2...v0.25.0) (2021-04-25)
+
+
+### Features
+
+* added Gitea support ([#105](https://www.github.com/lindell/multi-gitter/issues/105)) ([0f89791](https://www.github.com/lindell/multi-gitter/commit/0f89791d62fe32f0d2a98f0b735782898976e3f7))
+
 ### [0.24.2](https://www.github.com/lindell/multi-gitter/compare/v0.24.1...v0.24.2) (2021-04-01)
 
 
