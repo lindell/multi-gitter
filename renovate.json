@@ -14,7 +14,8 @@
         {
             "updateTypes": [
                 "minor",
-                "patch"
+                "patch",
+                "digest"
             ],
             "automerge": true,
             "automergeType": "branch",
@@ -27,15 +28,7 @@
                 "major"
             ],
             "schedule": [
-                "before 3am on the first day of the month"
-            ]
-        },
-        {
-            "updateTypes": [
-                "digest"
-            ],
-            "schedule": [
-                "every 3 months on the first day of the month"
+                "before 4am on the first day of the month"
             ]
         }
     ],
