@@ -1,5 +1,14 @@
 # Changelog
 
+### [0.25.1](https://www.github.com/lindell/multi-gitter/compare/v0.25.0...v0.25.1) (2021-05-01)
+
+
+### Dependencies
+
+* update golang.org/x/oauth2 commit hash to 81ed05c ([#107](https://www.github.com/lindell/multi-gitter/issues/107)) ([b529c3f](https://www.github.com/lindell/multi-gitter/commit/b529c3f113ccda92ee0981c48b0c26c74facb142))
+* update module github.com/go-git/go-git/v5 to v5.3.0 ([905dbdb](https://www.github.com/lindell/multi-gitter/commit/905dbdbfa5b420ee985bed2ff58cfb2399b051b7))
+* update module github.com/xanzy/go-gitlab to v0.49.0 ([#109](https://www.github.com/lindell/multi-gitter/issues/109)) ([597d8b4](https://www.github.com/lindell/multi-gitter/commit/597d8b41751b0cf90bc4743fc367ed72487ae35f))
+
 ## [0.25.0](https://www.github.com/lindell/multi-gitter/compare/v0.24.2...v0.25.0) (2021-04-25)
 
 
