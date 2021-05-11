@@ -367,6 +367,39 @@ Repositories with a successful run:
 				assert.Equal(t, "static-repo\ndynamic-repo\n:0\nCompletion ended with directive: ShellCompDirectiveDefault\n", runData.cmdOut)
 			},
 		},
+
+		{
+			name: "debug log",
+			vc: &vcmock.VersionController{
+				Repositories: []vcmock.Repository{
+					createRepo(t, "should-change", "i like apples"),
+				},
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--log-level", "debug",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+				assert.Contains(t, runData.logOut, "Cloning and running script")
+				assert.Contains(t, runData.logOut, "Change done, creating pull request")
+
+				assert.Equal(t, `Repositories with a successful run:
+  should-change #1
+`, runData.out)
+				assert.Contains(t, runData.logOut, `--- a/test.txt\n+++ b/test.txt\n@@ -1 +1 @@\n-i like apples\n\\ No newline at end of file\n+i like bananas\n\\ No newline at end of file\n`)
+			},
+		},
 	}
 
 	for _, test := range tests {
