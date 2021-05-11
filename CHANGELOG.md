@@ -1,5 +1,17 @@
 # Changelog
 
+### [0.25.3](https://www.github.com/lindell/multi-gitter/compare/v0.25.2...v0.25.3) (2021-05-11)
+
+
+### Bug Fixes
+
+* added panic recover on a run repo basis ([#114](https://www.github.com/lindell/multi-gitter/issues/114)) ([6d44adf](https://www.github.com/lindell/multi-gitter/commit/6d44adf5ddbf3783bc4a2224c35a923ab599e7c6))
+
+
+### Dependencies
+
+* update module github.com/sergi/go-diff to v1.2.0 ([#116](https://www.github.com/lindell/multi-gitter/issues/116)) ([0273abe](https://www.github.com/lindell/multi-gitter/commit/0273abeba104e2ce522b4a97b1498341ad9e41d6))
+
 ### [0.25.2](https://www.github.com/lindell/multi-gitter/compare/v0.25.1...v0.25.2) (2021-05-11)
 
 
