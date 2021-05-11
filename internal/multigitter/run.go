@@ -86,6 +86,13 @@ func (r Runner) Run(ctx context.Context) error {
 
 	runInParallel(func(i int) {
 		logger := log.WithField("repo", repos[i].FullName())
+
+		defer func() {
+			if r := recover(); r != nil {
+				rc.AddError(errors.New("run paniced"), repos[i])
+			}
+		}()
+
 		pr, err := r.runSingleRepo(ctx, repos[i])
 		if err != nil {
 			if err != errAborted {
