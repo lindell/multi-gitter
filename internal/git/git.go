@@ -136,7 +136,7 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 }
 
 func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
-	if !log.IsLevelEnabled(log.GetLevel()) {
+	if !log.IsLevelEnabled(log.DebugLevel) {
 		return nil
 	}
 
