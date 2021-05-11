@@ -1,5 +1,17 @@
 # Changelog
 
+### [0.25.2](https://www.github.com/lindell/multi-gitter/compare/v0.25.1...v0.25.2) (2021-05-11)
+
+
+### Bug Fixes
+
+* skip running git diff if debug or lower is not set ([#113](https://www.github.com/lindell/multi-gitter/issues/113)) ([5189374](https://www.github.com/lindell/multi-gitter/commit/51893745153e7825339f7398e844bf6d53404cc8))
+
+
+### Dependencies
+
+* update module github.com/google/go-github/v33 to v35 ([#110](https://www.github.com/lindell/multi-gitter/issues/110)) ([b6c8667](https://www.github.com/lindell/multi-gitter/commit/b6c8667f1ca48c62b1ec1703f8afa1664dfeca95))
+
 ### [0.25.1](https://www.github.com/lindell/multi-gitter/compare/v0.25.0...v0.25.1) (2021-05-01)
 
 
