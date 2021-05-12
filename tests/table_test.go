@@ -400,6 +400,61 @@ Repositories with a successful run:
 				assert.Contains(t, runData.logOut, `--- a/test.txt\n+++ b/test.txt\n@@ -1 +1 @@\n-i like apples\n\\ No newline at end of file\n+i like bananas\n\\ No newline at end of file\n`)
 			},
 		},
+
+		{
+			name: "gitignore",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "should-change", "i like apples")
+				addFile(t, repo.Path, ".gitignore", "newfile1", "added .gitignore")
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				fmt.Sprintf("go run %s -filenames newfile1,newfile2 -data test", filepath.ToSlash(filepath.Join(workingDir, "scripts/adder/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+				assert.Equal(t, "test", readFile(t, vcMock.Repositories[0].Path, "newfile2"))
+				assert.False(t, fileExist(t, vcMock.Repositories[0].Path, "newfile1"))
+			},
+		},
+
+		{
+			name: "no gitignore",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "should-change", "i like apples")
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				fmt.Sprintf("go run %s -filenames newfile1,newfile2 -data test", filepath.ToSlash(filepath.Join(workingDir, "scripts/adder/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+				assert.Equal(t, "test", readFile(t, vcMock.Repositories[0].Path, "newfile2"))
+				assert.True(t, fileExist(t, vcMock.Repositories[0].Path, "newfile1"))
+			},
+		},
 	}
 
 	for _, test := range tests {
