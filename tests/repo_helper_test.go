@@ -121,6 +121,31 @@ func changeTestFile(t *testing.T, basePath string, content string, commitMessage
 	require.NoError(t, err)
 }
 
+func addFile(t *testing.T, basePath string, fn string, content string, commitMessage string) {
+	repo, err := git.PlainOpen(basePath)
+	require.NoError(t, err)
+
+	testFilePath := filepath.Join(basePath, fn)
+
+	err = ioutil.WriteFile(testFilePath, []byte(content), 0600)
+	require.NoError(t, err)
+
+	wt, err := repo.Worktree()
+	require.NoError(t, err)
+
+	_, err = wt.Add(".")
+	require.NoError(t, err)
+
+	_, err = wt.Commit(commitMessage, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  "test",
+			Email: "test@example.com",
+			When:  time.Now(),
+		},
+	})
+	require.NoError(t, err)
+}
+
 func readTestFile(t *testing.T, basePath string) string {
 	testFilePath := filepath.Join(basePath, fileName)
 
@@ -128,4 +153,23 @@ func readTestFile(t *testing.T, basePath string) string {
 	require.NoError(t, err)
 
 	return string(b)
+}
+
+func readFile(t *testing.T, basePath string, fn string) string {
+	testFilePath := filepath.Join(basePath, fn)
+
+	b, err := ioutil.ReadFile(testFilePath)
+	require.NoError(t, err)
+
+	return string(b)
+}
+
+func fileExist(t *testing.T, basePath string, fn string) bool {
+	_, err := os.Stat(filepath.Join(basePath, fn))
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	require.NoError(t, err)
+	return true
 }
