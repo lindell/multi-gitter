@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.25.4](https://www.github.com/lindell/multi-gitter/compare/v0.25.3...v0.25.4) (2021-05-16)
+
+
+### Bug Fixes
+
+* make sure gitignore is used ([#119](https://www.github.com/lindell/multi-gitter/issues/119)) ([f33dee9](https://www.github.com/lindell/multi-gitter/commit/f33dee9a7acd798ab6ad0a7255351c50c9bd456e))
+
 ### [0.25.3](https://www.github.com/lindell/multi-gitter/compare/v0.25.2...v0.25.3) (2021-05-11)
 
 
