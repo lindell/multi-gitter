@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/pkg/errors"
@@ -97,7 +98,16 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 		return err
 	}
 
-	_, err = w.Add(".")
+	// Make sure gitignore is used
+	patterns, err := gitignore.ReadPatterns(w.Filesystem, nil)
+	if err != nil {
+		return err
+	}
+	w.Excludes = patterns
+
+	err = w.AddWithOptions(&git.AddOptions{
+		All: true,
+	})
 	if err != nil {
 		return err
 	}
