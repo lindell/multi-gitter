@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.25.5](https://www.github.com/lindell/multi-gitter/compare/v0.25.4...v0.25.5) (2021-06-01)
+
+
+### Dependencies
+
+* update golang.org/x/oauth2 commit hash to f6687ab ([cab768a](https://www.github.com/lindell/multi-gitter/commit/cab768a1a6bf93b8f113b0b7221db7a4bab375cd))
+* update module github.com/go-git/go-git/v5 to v5.4.1 ([fe45f2e](https://www.github.com/lindell/multi-gitter/commit/fe45f2e9ad2031ae4f436271e4a072101ba80805))
+
 ### [0.25.4](https://www.github.com/lindell/multi-gitter/compare/v0.25.3...v0.25.4) (2021-05-16)
 
 
