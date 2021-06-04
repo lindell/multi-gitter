@@ -61,6 +61,7 @@ type Runner struct {
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
+var errRejected = errors.New("changes where not included since they where manually rejected")
 
 type dryRunPullRequest struct {
 	status     domain.PullRequestStatus
@@ -281,7 +282,7 @@ func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *g
 			}
 			_ = proc.Signal(syscall.SIGTERM)
 
-			return errors.New("Aborted")
+			return errRejected
 		}
 
 		switch char {
@@ -297,7 +298,7 @@ func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *g
 				return err
 			}
 		case 'r':
-			return errors.New("Aborted")
+			return errRejected
 		case 'a':
 			return nil
 		}
