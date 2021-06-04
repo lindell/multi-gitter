@@ -9,7 +9,9 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 
+	"github.com/eiannone/keyboard"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -51,6 +53,10 @@ type Runner struct {
 	FetchDepth      int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent      int
 	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
+
+	// TODO: Describe interactive
+	Interactive     bool
+	interactiveLock sync.Mutex
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
@@ -69,7 +75,7 @@ func (pr dryRunPullRequest) String() string {
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
-func (r Runner) Run(ctx context.Context) error {
+func (r *Runner) Run(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
 		return err
@@ -137,7 +143,7 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (domain.PullRequest, error) {
+func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (domain.PullRequest, error) {
 	if ctx.Err() != nil {
 		return nil, errAborted
 	}
@@ -211,6 +217,13 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		return nil, err
 	}
 
+	if r.Interactive {
+		err = r.interactive(ctx, repo, sourceController)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if r.DryRun {
 		log.Info("Skipping pushing changes because of dry run")
 		return dryRunPullRequest{
@@ -240,4 +253,57 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 
 	return pr, nil
+}
+
+var interactiveInfo = `v: view changes
+a: add these changes
+q: quit (and ignore the changes)`
+
+func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *git.Git) error {
+	r.interactiveLock.Lock()
+	defer r.interactiveLock.Unlock()
+
+	if ctx.Err() != nil {
+		return errAborted
+	}
+
+	fmt.Printf("Changes where made to %s\n", repo.FullName())
+	fmt.Println(interactiveInfo)
+	for {
+		char, key, err := keyboard.GetSingleKey()
+		if err != nil {
+			return err
+		}
+
+		if key == keyboard.KeyCtrlC {
+			proc, err := os.FindProcess(os.Getpid())
+			if err != nil {
+				return err
+			}
+			_ = proc.Signal(syscall.SIGTERM)
+
+			return errors.New("Aborted")
+		}
+
+		switch char {
+		case 'v':
+			cmd := exec.Command("less")
+			cmd.Stdin, err = git.Diff()
+			cmd.Stdout = os.Stdout
+			if err != nil {
+				return err
+			}
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+		case 'q':
+			return errors.New("Aborted")
+		case 'a':
+			return nil
+		default:
+			fmt.Printf("unknown key %c\n", char)
+			fmt.Println(interactiveInfo)
+		}
+	}
 }

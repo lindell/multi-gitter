@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -112,13 +113,6 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 		return err
 	}
 
-	// Get the current hash to be able to diff it with the committed changes later
-	oldHead, err := g.repo.Head()
-	if err != nil {
-		return err
-	}
-	oldHash := oldHead.Hash()
-
 	var author *object.Signature
 	if commitAuthor != nil {
 		author = &object.Signature{
@@ -128,59 +122,68 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 		}
 	}
 
-	hash, err := w.Commit(commitMessage, &git.CommitOptions{
+	_, err = w.Commit(commitMessage, &git.CommitOptions{
 		Author: author,
 	})
 	if err != nil {
 		return err
 	}
 
-	commit, err := g.repo.CommitObject(hash)
-	if err != nil {
-		return err
+	if log.IsLevelEnabled(log.DebugLevel) {
+		reader, _ := g.Diff()
+		log.Debug(reader)
 	}
-
-	_ = g.logDiff(oldHash, commit.Hash)
 
 	return nil
 }
 
-func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
-	if !log.IsLevelEnabled(log.DebugLevel) {
-		return nil
+//
+func (g *Git) Diff() (io.Reader, error) {
+	iter, err := g.repo.Log(&git.LogOptions{})
+	if err != nil {
+		return nil, err
 	}
 
-	aCommit, err := g.repo.CommitObject(aHash)
+	newCommit, err := iter.Next()
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	oldCommit, err := iter.Next()
+	if err != nil {
+		return nil, err
+	}
+
+	aCommit, err := g.repo.CommitObject(oldCommit.Hash)
+	if err != nil {
+		return nil, err
 	}
 	aTree, err := aCommit.Tree()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	bCommit, err := g.repo.CommitObject(bHash)
+	bCommit, err := g.repo.CommitObject(newCommit.Hash)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	bTree, err := bCommit.Tree()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	patch, err := aTree.Patch(bTree)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	buf := &bytes.Buffer{}
 	err = patch.Encode(buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	log.Debug(buf.String())
 
-	return nil
+	return buf, nil
 }
 
 // BranchExist checks if the new branch exists
