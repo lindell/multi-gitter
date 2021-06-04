@@ -7,3 +7,8 @@ import "fmt"
 func Link(text, url string) string {
 	return fmt.Sprintf("\x1B]8;;%s\a%s\x1B]8;;\a", url, text)
 }
+
+// Bold generates a bold text for the terminal
+func Bold(text string) string {
+	return fmt.Sprintf("\033[1m%s\033[0m", text)
+}

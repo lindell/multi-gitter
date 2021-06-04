@@ -19,6 +19,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
+	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
 // VersionController fetches repositories
@@ -255,9 +256,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 	return pr, nil
 }
 
-var interactiveInfo = `v: view changes
-a: add these changes
-q: quit (and ignore the changes)`
+var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
 func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *git.Git) error {
 	r.interactiveLock.Lock()
@@ -267,7 +266,7 @@ func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *g
 		return errAborted
 	}
 
-	fmt.Printf("Changes where made to %s\n", repo.FullName())
+	fmt.Printf("Changes where made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Println(interactiveInfo)
 	for {
 		char, key, err := keyboard.GetSingleKey()
@@ -297,13 +296,10 @@ func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *g
 			if err != nil {
 				return err
 			}
-		case 'q':
+		case 'r':
 			return errors.New("Aborted")
 		case 'a':
 			return nil
-		default:
-			fmt.Printf("unknown key %c\n", char)
-			fmt.Println(interactiveInfo)
 		}
 	}
 }
