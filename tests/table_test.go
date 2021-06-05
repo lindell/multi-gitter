@@ -487,8 +487,45 @@ Repositories with a successful run:
 `, runData.out)
 
 				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
-				changeBranch(t, vcMock.Repositories[0].Path+"-forked", "custom-branch-name", false)
-				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path+"-forked"))
+				changeBranch(t, vcMock.Repositories[0].Path+"-forked-default-owner", "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path+"-forked-default-owner"))
+			},
+		},
+
+		{
+			name: "fork mode with specified owner",
+			vc: &vcmock.VersionController{
+				Repositories: []vcmock.Repository{
+					createRepo(t, "owner", "should-change", "i like apples"),
+				},
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--fork",
+				"--fork-owner", "custom-org",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+				assert.Contains(t, runData.logOut, "Cloning and running script")
+				assert.Contains(t, runData.logOut, "Change done, creating pull request")
+
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-change #1
+`, runData.out)
+
+				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
+				changeBranch(t, vcMock.Repositories[0].Path+"-forked-custom-org", "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path+"-forked-custom-org"))
 			},
 		},
 	}

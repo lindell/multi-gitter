@@ -109,10 +109,14 @@ func (vc *VersionController) GetAutocompleteRepositories(ctx context.Context, st
 }
 
 // ForkRepository forks a repository
-func (vc *VersionController) ForkRepository(ctx context.Context, repo domain.Repository) (domain.Repository, error) {
+func (vc *VersionController) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
 	r := repo.(Repository)
 
-	newPath := r.Path + "-forked"
+	if newOwner == "" {
+		newOwner = "default-owner"
+	}
+
+	newPath := fmt.Sprintf("%s-forked-%s", r.Path, newOwner)
 
 	_, err := git.PlainCloneContext(ctx, newPath, false, &git.CloneOptions{
 		URL: fmt.Sprintf(`file://"%s"`, filepath.ToSlash(r.Path)),
@@ -122,7 +126,7 @@ func (vc *VersionController) ForkRepository(ctx context.Context, repo domain.Rep
 	}
 
 	return Repository{
-		OwnerName: "fork-owner",
+		OwnerName: newOwner,
 		RepoName:  r.RepoName,
 		Path:      newPath,
 	}, nil
