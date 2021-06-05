@@ -414,11 +414,13 @@ func (g Github) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 	return err
 }
 
-// ForkRepository forks a repository
-func (g Github) ForkRepository(ctx context.Context, repo domain.Repository) (domain.Repository, error) {
+// ForkRepository forks a repository. If newOwner is empty, fork on the logged in user
+func (g Github) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
 	r := repo.(repository)
 
-	createdRepo, _, err := g.ghClient.Repositories.CreateFork(ctx, r.ownerName, r.name, &github.RepositoryCreateForkOptions{})
+	createdRepo, _, err := g.ghClient.Repositories.CreateFork(ctx, r.ownerName, r.name, &github.RepositoryCreateForkOptions{
+		Organization: newOwner,
+	})
 	if err != nil {
 		if _, isAccepted := err.(*github.AcceptedError); !isAccepted {
 			return nil, err

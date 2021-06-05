@@ -29,7 +29,7 @@ type VersionController interface {
 }
 
 type forker interface {
-	ForkRepository(ctx context.Context, repo domain.Repository) (domain.Repository, error)
+	ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error)
 }
 
 // Runner contains fields to be able to do the run
@@ -55,7 +55,9 @@ type Runner struct {
 	FetchDepth      int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent      int
 	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
-	Fork            bool // If set, create a fork and make the pull request from it
+
+	Fork      bool   // If set, create a fork and make the pull request from it
+	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
@@ -232,7 +234,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 			return nil, errors.New("platform does not support fork mode")
 		}
 
-		forkedRepo, err := forker.ForkRepository(ctx, repo)
+		forkedRepo, err := forker.ForkRepository(ctx, repo, r.ForkOwner)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fork repository")
 		}
