@@ -18,13 +18,14 @@ import (
 
 const fileName = "test.txt"
 
-func createRepo(t *testing.T, name, dataInFile string) vcmock.Repository {
+func createRepo(t *testing.T, ownerName string, repoName string, dataInFile string) vcmock.Repository {
 	tmpDir, err := createDummyRepo(dataInFile)
 	require.NoError(t, err)
 
 	return vcmock.Repository{
-		Name: name,
-		Path: tmpDir,
+		OwnerName: ownerName,
+		RepoName:  repoName,
+		Path:      tmpDir,
 	}
 }
 

@@ -89,6 +89,10 @@ func (r repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
 }
 
+func (r repository) Owner() string {
+	return r.ownerName
+}
+
 type pullRequest struct {
 	ownerName  string
 	repoName   string

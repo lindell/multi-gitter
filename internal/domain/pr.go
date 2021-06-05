@@ -12,6 +12,8 @@ type NewPullRequest struct {
 	Head  string
 	Base  string
 
+	Owner string // Optional field if the pull request originates from another owner
+
 	Reviewers []string // The username of all reviewers
 }
 

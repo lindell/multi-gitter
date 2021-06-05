@@ -42,7 +42,7 @@ func TestTable(t *testing.T) {
 			name: "simple",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change", "i like apples"),
+					createRepo(t, "owner", "should-change", "i like apples"),
 				},
 			},
 			args: []string{
@@ -64,7 +64,7 @@ func TestTable(t *testing.T) {
 				assert.Contains(t, runData.logOut, "Change done, creating pull request")
 
 				assert.Equal(t, `Repositories with a successful run:
-  should-change #1
+  owner/should-change #1
 `, runData.out)
 			},
 		},
@@ -73,7 +73,7 @@ func TestTable(t *testing.T) {
 			name: "with go run",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change", "i like apples"),
+					createRepo(t, "owner", "should-change", "i like apples"),
 				},
 			},
 			args: []string{
@@ -94,7 +94,7 @@ func TestTable(t *testing.T) {
 				assert.Contains(t, runData.logOut, "Change done, creating pull request")
 
 				assert.Equal(t, `Repositories with a successful run:
-  should-change #1
+  owner/should-change #1
 `, runData.out)
 			},
 		},
@@ -103,7 +103,7 @@ func TestTable(t *testing.T) {
 			name: "failing base-branch",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change", "i like apples"),
+					createRepo(t, "owner", "should-change", "i like apples"),
 				},
 			},
 			args: []string{
@@ -124,7 +124,7 @@ func TestTable(t *testing.T) {
 		{
 			name: "success base-branch",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
-				repo := createRepo(t, "should-change", "i like apples")
+				repo := createRepo(t, "owner", "should-change", "i like apples")
 				changeBranch(t, repo.Path, "custom-base-branch", true)
 				changeTestFile(t, repo.Path, "i like apple", "test change")
 				changeBranch(t, repo.Path, "master", false)
@@ -158,7 +158,7 @@ func TestTable(t *testing.T) {
 			name: "reviewers",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change", "i like apples"),
+					createRepo(t, "owner", "should-change", "i like apples"),
 				},
 			},
 			args: []string{
@@ -181,7 +181,7 @@ func TestTable(t *testing.T) {
 			name: "random reviewers",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change", "i like apples"),
+					createRepo(t, "owner", "should-change", "i like apples"),
 				},
 			},
 			args: []string{
@@ -203,7 +203,7 @@ func TestTable(t *testing.T) {
 			name: "dry run",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change", "i like apples"),
+					createRepo(t, "owner", "should-change", "i like apples"),
 				},
 			},
 			args: []string{
@@ -226,16 +226,16 @@ func TestTable(t *testing.T) {
 			name: "parallel",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change-1", "i like apples"),
-					createRepo(t, "should-change-2", "i like apples"),
-					createRepo(t, "should-change-3", "i like apples"),
-					createRepo(t, "should-change-4", "i like apples"),
-					createRepo(t, "should-change-5", "i like apples"),
-					createRepo(t, "should-change-6", "i like apples"),
-					createRepo(t, "should-change-7", "i like apples"),
-					createRepo(t, "should-change-8", "i like apples"),
-					createRepo(t, "should-change-9", "i like apples"),
-					createRepo(t, "should-change-10", "i like apples"),
+					createRepo(t, "owner", "should-change-1", "i like apples"),
+					createRepo(t, "owner", "should-change-2", "i like apples"),
+					createRepo(t, "owner", "should-change-3", "i like apples"),
+					createRepo(t, "owner", "should-change-4", "i like apples"),
+					createRepo(t, "owner", "should-change-5", "i like apples"),
+					createRepo(t, "owner", "should-change-6", "i like apples"),
+					createRepo(t, "owner", "should-change-7", "i like apples"),
+					createRepo(t, "owner", "should-change-8", "i like apples"),
+					createRepo(t, "owner", "should-change-9", "i like apples"),
+					createRepo(t, "owner", "should-change-10", "i like apples"),
 				},
 			},
 			args: []string{
@@ -256,14 +256,14 @@ func TestTable(t *testing.T) {
 		{
 			name: "existing head branch",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
-				repo := createRepo(t, "already-existing-branch", "i like apples")
+				repo := createRepo(t, "owner", "already-existing-branch", "i like apples")
 				changeBranch(t, repo.Path, "custom-branch-name", true)
 				changeTestFile(t, repo.Path, "i like apple", "test change")
 				changeBranch(t, repo.Path, "master", false)
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
 						repo,
-						createRepo(t, "should-change", "i like apples"),
+						createRepo(t, "owner", "should-change", "i like apples"),
 					},
 				}
 			},
@@ -281,9 +281,9 @@ func TestTable(t *testing.T) {
 				assert.Contains(t, runData.logOut, "Cloning and running script")
 
 				assert.Equal(t, `The new branch does already exist:
-  already-existing-branch
+  owner/already-existing-branch
 Repositories with a successful run:
-  should-change #1
+  owner/should-change #1
 `, runData.out)
 			},
 		},
@@ -291,7 +291,7 @@ Repositories with a successful run:
 		{
 			name: "skip-pr",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
-				repo := createRepo(t, "should-change", "i like apples")
+				repo := createRepo(t, "owner", "should-change", "i like apples")
 
 				// Change branch so that it's not the one we are expected to push to.
 				// If this can be avoided, it would be good.
@@ -321,7 +321,7 @@ Repositories with a successful run:
 				assert.Contains(t, runData.logOut, "Cloning and running script")
 
 				assert.Equal(t, `Repositories with a successful run:
-  should-change
+  owner/should-change
 `, runData.out)
 
 				changeBranch(t, vcMock.Repositories[0].Path, "master", false)
@@ -372,7 +372,7 @@ Repositories with a successful run:
 			name: "debug log",
 			vc: &vcmock.VersionController{
 				Repositories: []vcmock.Repository{
-					createRepo(t, "should-change", "i like apples"),
+					createRepo(t, "owner", "should-change", "i like apples"),
 				},
 			},
 			args: []string{
@@ -395,7 +395,7 @@ Repositories with a successful run:
 				assert.Contains(t, runData.logOut, "Change done, creating pull request")
 
 				assert.Equal(t, `Repositories with a successful run:
-  should-change #1
+  owner/should-change #1
 `, runData.out)
 				assert.Contains(t, runData.logOut, `--- a/test.txt\n+++ b/test.txt\n@@ -1 +1 @@\n-i like apples\n\\ No newline at end of file\n+i like bananas\n\\ No newline at end of file\n`)
 			},
@@ -404,7 +404,7 @@ Repositories with a successful run:
 		{
 			name: "gitignore",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
-				repo := createRepo(t, "should-change", "i like apples")
+				repo := createRepo(t, "owner", "should-change", "i like apples")
 				addFile(t, repo.Path, ".gitignore", "node_modules", "added .gitignore")
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -432,7 +432,7 @@ Repositories with a successful run:
 		{
 			name: "no gitignore",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
-				repo := createRepo(t, "should-change", "i like apples")
+				repo := createRepo(t, "owner", "should-change", "i like apples")
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
 						repo,
@@ -453,6 +453,42 @@ Repositories with a successful run:
 				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
 				assert.Equal(t, "test", readFile(t, vcMock.Repositories[0].Path, "src/index.js"))
 				assert.True(t, fileExist(t, vcMock.Repositories[0].Path, "node_modules/react/README.md"))
+			},
+		},
+
+		{
+			name: "fork mode",
+			vc: &vcmock.VersionController{
+				Repositories: []vcmock.Repository{
+					createRepo(t, "owner", "should-change", "i like apples"),
+				},
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--fork",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+				assert.Contains(t, runData.logOut, "Cloning and running script")
+				assert.Contains(t, runData.logOut, "Change done, creating pull request")
+
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-change #1
+`, runData.out)
+
+				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
+				changeBranch(t, vcMock.Repositories[0].Path+"-forked", "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path+"-forked"))
 			},
 		},
 	}

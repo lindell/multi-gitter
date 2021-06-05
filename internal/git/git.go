@@ -195,6 +195,17 @@ func (g *Git) BranchExist(branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push() error {
-	return g.repo.Push(&git.PushOptions{})
+func (g *Git) Push(remoteName string) error {
+	return g.repo.Push(&git.PushOptions{
+		RemoteName: remoteName,
+	})
+}
+
+// AddRemote adds a new remote
+func (g *Git) AddRemote(name, url string) error {
+	_, err := g.repo.CreateRemote(&config.RemoteConfig{
+		Name: name,
+		URLs: []string{url},
+	})
+	return err
 }

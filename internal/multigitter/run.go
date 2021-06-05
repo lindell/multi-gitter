@@ -28,6 +28,10 @@ type VersionController interface {
 	ClosePullRequest(ctx context.Context, pr domain.PullRequest) error
 }
 
+type forker interface {
+	ForkRepository(ctx context.Context, repo domain.Repository) (domain.Repository, error)
+}
+
 // Runner contains fields to be able to do the run
 type Runner struct {
 	VersionController VersionController
@@ -51,6 +55,7 @@ type Runner struct {
 	FetchDepth      int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent      int
 	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
+	Fork            bool // If set, create a fork and make the pull request from it
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
@@ -89,6 +94,7 @@ func (r Runner) Run(ctx context.Context) error {
 
 		defer func() {
 			if r := recover(); r != nil {
+				log.Error(r)
 				rc.AddError(errors.New("run paniced"), repos[i])
 			}
 		}()
@@ -218,7 +224,28 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		}, nil
 	}
 
-	err = sourceController.Push()
+	remoteName := "origin"
+	prOwner := ""
+	if r.Fork {
+		forker, ok := r.VersionController.(forker)
+		if !ok {
+			return nil, errors.New("platform does not support fork mode")
+		}
+
+		forkedRepo, err := forker.ForkRepository(ctx, repo)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fork repository")
+		}
+
+		err = sourceController.AddRemote("fork", forkedRepo.URL(r.Token))
+		if err != nil {
+			return nil, err
+		}
+		remoteName = "fork"
+		prOwner = forkedRepo.Owner()
+	}
+
+	err = sourceController.Push(remoteName)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
 	}
@@ -233,6 +260,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
 		Base:      baseBranch,
+		Owner:     prOwner,
 		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 	})
 	if err != nil {

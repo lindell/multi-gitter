@@ -23,9 +23,9 @@ func TestPrint(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
 
-	changeRepo := createRepo(t, "test-1", "i like apples")
-	changeRepo2 := createRepo(t, "test-2", "i like my apple")
-	noChangeRepo := createRepo(t, "test-3", "i like oranges")
+	changeRepo := createRepo(t, "owner", "test-1", "i like apples")
+	changeRepo2 := createRepo(t, "owner", "test-2", "i like my apple")
+	noChangeRepo := createRepo(t, "owner", "test-3", "i like oranges")
 	vcMock.AddRepository(changeRepo)
 	vcMock.AddRepository(changeRepo2)
 	vcMock.AddRepository(noChangeRepo)

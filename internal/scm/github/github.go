@@ -2,14 +2,15 @@ package github
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/v35/github"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
@@ -90,6 +91,10 @@ func (r repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
 }
 
+func (r repository) Owner() string {
+	return r.ownerName
+}
+
 type pullRequest struct {
 	ownerName  string
 	repoName   string
@@ -134,17 +139,12 @@ func (g Github) GetRepositories(ctx context.Context) ([]domain.Repository, error
 	for _, r := range allRepos {
 		permissions := r.GetPermissions()
 		if !r.GetArchived() && !r.GetDisabled() && permissions["pull"] && permissions["push"] {
-			u, err := url.Parse(r.GetCloneURL())
+			newRepo, err := convertRepo(r)
 			if err != nil {
-				return nil, err // TODO: better error
+				return nil, err
 			}
 
-			repos = append(repos, repository{
-				url:           *u,
-				name:          r.GetName(),
-				ownerName:     r.GetOwner().GetLogin(),
-				defaultBranch: r.GetDefaultBranch(),
-			})
+			repos = append(repos, newRepo)
 		}
 	}
 
@@ -274,10 +274,14 @@ func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, n
 }
 
 func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (*github.PullRequest, error) {
+	head := newPR.Head
+	if newPR.Owner != "" {
+		head = fmt.Sprintf("%s:%s", newPR.Owner, newPR.Head)
+	}
 	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
 		Title: &newPR.Title,
 		Body:  &newPR.Body,
-		Head:  &newPR.Head,
+		Head:  &head,
 		Base:  &newPR.Base,
 	})
 	if err != nil {
@@ -410,6 +414,35 @@ func (g Github) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 	return err
 }
 
+// ForkRepository forks a repository
+func (g Github) ForkRepository(ctx context.Context, repo domain.Repository) (domain.Repository, error) {
+	r := repo.(repository)
+
+	createdRepo, _, err := g.ghClient.Repositories.CreateFork(ctx, r.ownerName, r.name, &github.RepositoryCreateForkOptions{})
+	if err != nil {
+		if _, isAccepted := err.(*github.AcceptedError); !isAccepted {
+			return nil, err
+		}
+
+		// Request to fork was accepted, but the repo was not created yet. Poll for the repo to be created
+		var err error
+		var repo *github.Repository
+		for i := 0; i < 10; i++ {
+			repo, _, err = g.ghClient.Repositories.Get(ctx, createdRepo.GetOwner().GetLogin(), createdRepo.GetName())
+			if err != nil {
+				time.Sleep(time.Second * 3)
+				continue
+			}
+			// The fork does now exist
+			return convertRepo(repo)
+		}
+
+		return nil, errors.New("polling for forked repository took to long")
+	}
+
+	return convertRepo(createdRepo)
+}
+
 // GetAutocompleteOrganizations gets organizations for autocompletion
 func (g Github) GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error) {
 	orgs, _, err := g.ghClient.Organizations.List(ctx, "", nil)
@@ -466,4 +499,18 @@ func (g Github) GetAutocompleteRepositories(ctx context.Context, str string) ([]
 	}
 
 	return ret, nil
+}
+
+func convertRepo(r *github.Repository) (repository, error) {
+	u, err := url.Parse(r.GetCloneURL())
+	if err != nil {
+		return repository{}, errors.Wrap(err, "could not parse github clone error")
+	}
+
+	return repository{
+		url:           *u,
+		name:          r.GetName(),
+		ownerName:     r.GetOwner().GetLogin(),
+		defaultBranch: r.GetDefaultBranch(),
+	}, nil
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	git "github.com/go-git/go-git/v5"
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
@@ -58,7 +59,7 @@ func (vc *VersionController) GetPullRequests(ctx context.Context, branchName str
 func (vc *VersionController) MergePullRequest(ctx context.Context, pr domain.PullRequest) error {
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
-		if vc.PullRequests[i].Repository.Name == pullRequest.Repository.Name {
+		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
 			vc.PullRequests[i].PRStatus = domain.PullRequestStatusMerged
 			return nil
 		}
@@ -70,7 +71,7 @@ func (vc *VersionController) MergePullRequest(ctx context.Context, pr domain.Pul
 func (vc *VersionController) ClosePullRequest(ctx context.Context, pr domain.PullRequest) error {
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
-		if vc.PullRequests[i].Repository.Name == pullRequest.Repository.Name {
+		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
 			vc.PullRequests[i].PRStatus = domain.PullRequestStatusClosed
 			return nil
 		}
@@ -86,7 +87,7 @@ func (vc *VersionController) AddRepository(repo ...Repository) {
 // SetPRStatus sets the status of a pull request
 func (vc *VersionController) SetPRStatus(repoName string, branchName string, newStatus domain.PullRequestStatus) {
 	for i := range vc.PullRequests {
-		if vc.PullRequests[i].Repository.Name == repoName && vc.PullRequests[i].Head == branchName {
+		if vc.PullRequests[i].Repository.RepoName == repoName && vc.PullRequests[i].Head == branchName {
 			vc.PullRequests[i].PRStatus = newStatus
 		}
 	}
@@ -107,6 +108,26 @@ func (vc *VersionController) GetAutocompleteRepositories(ctx context.Context, st
 	return []string{"static-repo", str}, nil
 }
 
+// ForkRepository forks a repository
+func (vc *VersionController) ForkRepository(ctx context.Context, repo domain.Repository) (domain.Repository, error) {
+	r := repo.(Repository)
+
+	newPath := r.Path + "-forked"
+
+	_, err := git.PlainCloneContext(ctx, newPath, false, &git.CloneOptions{
+		URL: fmt.Sprintf(`file://"%s"`, filepath.ToSlash(r.Path)),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return Repository{
+		OwnerName: "fork-owner",
+		RepoName:  r.RepoName,
+		Path:      newPath,
+	}, nil
+}
+
 // PullRequest is a mock pr
 type PullRequest struct {
 	PRStatus domain.PullRequestStatus
@@ -124,13 +145,14 @@ func (pr PullRequest) Status() domain.PullRequestStatus {
 
 // String return a description of the pr
 func (pr PullRequest) String() string {
-	return fmt.Sprintf("%s #%d", pr.Repository.Name, pr.PRNumber)
+	return fmt.Sprintf("%s #%d", pr.Repository.FullName(), pr.PRNumber)
 }
 
 // Repository is a mock repository
 type Repository struct {
-	Name string
-	Path string
+	OwnerName string
+	RepoName  string
+	Path      string
 }
 
 // URL return the URL (filepath) of the repository on disk
@@ -145,5 +167,10 @@ func (r Repository) DefaultBranch() string {
 
 // FullName returns the name of the mock repo
 func (r Repository) FullName() string {
-	return r.Name
+	return fmt.Sprintf("%s/%s", r.OwnerName, r.RepoName)
+}
+
+// Owner returns the owner of a repo
+func (r Repository) Owner() string {
+	return r.OwnerName
 }
