@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.25.6](https://www.github.com/lindell/multi-gitter/compare/v0.25.5...v0.25.6) (2021-06-05)
+
+
+### Bug Fixes
+
+* fixed skip-pr flag description ([#127](https://www.github.com/lindell/multi-gitter/issues/127)) ([1c4e2ac](https://www.github.com/lindell/multi-gitter/commit/1c4e2acec3fee563eb3cfa7391f63ffd5fc1d61e))
+* typo where archived should be achieved ([#125](https://www.github.com/lindell/multi-gitter/issues/125)) ([5373ea8](https://www.github.com/lindell/multi-gitter/commit/5373ea8fd37e39ce1eb8edbb860af85faa47e370))
+
 ### [0.25.5](https://www.github.com/lindell/multi-gitter/compare/v0.25.4...v0.25.5) (2021-06-01)
 
 
