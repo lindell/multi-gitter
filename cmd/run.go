@@ -43,7 +43,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
 	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
-	cmd.Flags().BoolP("skip-pr", "", false, "Limit fetching to the specified number of commits. Set to 0 for no limit")
+	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
