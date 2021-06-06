@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.25.7](https://www.github.com/lindell/multi-gitter/compare/v0.25.6...v0.25.7) (2021-06-06)
+
+
+### Bug Fixes
+
+* improved error messages for common problems with the script ([de9e525](https://www.github.com/lindell/multi-gitter/commit/de9e5259d2bd900abf72c56f40a76f223cbfffd0))
+
 ### [0.25.6](https://www.github.com/lindell/multi-gitter/compare/v0.25.5...v0.25.6) (2021-06-05)
 
 
