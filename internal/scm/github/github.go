@@ -96,12 +96,14 @@ func (r repository) Owner() string {
 }
 
 type pullRequest struct {
-	ownerName  string
-	repoName   string
-	branchName string
-	number     int
-	guiURL     string
-	status     domain.PullRequestStatus
+	ownerName   string
+	repoName    string
+	branchName  string
+	prOwnerName string
+	prRepoName  string
+	number      int
+	guiURL      string
+	status      domain.PullRequestStatus
 }
 
 func (pr pullRequest) String() string {
@@ -264,13 +266,7 @@ func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, n
 		return nil, err
 	}
 
-	return pullRequest{
-		ownerName:  pr.GetBase().GetUser().GetLogin(),
-		repoName:   pr.GetBase().GetRepo().GetName(),
-		branchName: pr.GetHead().GetRef(),
-		number:     pr.GetNumber(),
-		guiURL:     pr.GetHTMLURL(),
-	}, nil
+	return convertPullRequest(pr), nil
 }
 
 func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (*github.PullRequest, error) {
@@ -317,7 +313,7 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]domai
 		log := log.WithField("repo", fmt.Sprintf("%s/%s", repoOwner, repoName))
 		log.Debug("Fetching latest pull request")
 		prs, _, err := g.ghClient.PullRequests.List(ctx, repoOwner, repoName, &github.PullRequestListOptions{
-			Head:      fmt.Sprintf("%s:%s", repoOwner, branchName),
+			Head:      branchName,
 			State:     "all",
 			Direction: "desc",
 			ListOptions: github.ListOptions{
@@ -359,14 +355,9 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]domai
 			}
 		}
 
-		prStatuses = append(prStatuses, pullRequest{
-			ownerName:  repoOwner,
-			repoName:   repoName,
-			branchName: pr.GetHead().GetRef(),
-			number:     pr.GetNumber(),
-			guiURL:     pr.GetHTMLURL(),
-			status:     status,
-		})
+		localPR := convertPullRequest(pr)
+		localPR.status = status
+		prStatuses = append(prStatuses, localPR)
 	}
 
 	return prStatuses, nil
@@ -395,7 +386,7 @@ func (g Github) MergePullRequest(ctx context.Context, pullReq domain.PullRequest
 		return err
 	}
 
-	_, err = g.ghClient.Git.DeleteRef(ctx, pr.ownerName, pr.repoName, fmt.Sprintf("heads/%s", pr.branchName))
+	_, err = g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
 	return err
 }
 
@@ -410,7 +401,7 @@ func (g Github) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 		return err
 	}
 
-	_, err = g.ghClient.Git.DeleteRef(ctx, pr.ownerName, pr.repoName, fmt.Sprintf("heads/%s", pr.branchName))
+	_, err = g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
 	return err
 }
 
@@ -515,4 +506,16 @@ func convertRepo(r *github.Repository) (repository, error) {
 		ownerName:     r.GetOwner().GetLogin(),
 		defaultBranch: r.GetDefaultBranch(),
 	}, nil
+}
+
+func convertPullRequest(pr *github.PullRequest) pullRequest {
+	return pullRequest{
+		ownerName:   pr.GetBase().GetUser().GetLogin(),
+		repoName:    pr.GetBase().GetRepo().GetName(),
+		branchName:  pr.GetHead().GetRef(),
+		prOwnerName: pr.GetHead().GetUser().GetLogin(),
+		prRepoName:  pr.GetHead().GetRepo().GetName(),
+		number:      pr.GetNumber(),
+		guiURL:      pr.GetHTMLURL(),
+	}
 }
