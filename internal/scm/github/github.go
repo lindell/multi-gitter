@@ -328,31 +328,9 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]domai
 		}
 		pr := prs[0]
 
-		// Determine the status of the pr
-		var status domain.PullRequestStatus
-		if pr.MergedAt != nil {
-			status = domain.PullRequestStatusMerged
-		} else if pr.ClosedAt != nil {
-			status = domain.PullRequestStatusClosed
-		} else {
-			log.Debug("Fetching the combined status of the pull request")
-			combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, repoOwner, repoName, pr.GetHead().GetSHA(), nil)
-			if err != nil {
-				return nil, err
-			}
-
-			if combinedStatus.GetTotalCount() == 0 {
-				status = domain.PullRequestStatusSuccess
-			} else {
-				switch combinedStatus.GetState() {
-				case "pending":
-					status = domain.PullRequestStatusPending
-				case "success":
-					status = domain.PullRequestStatusSuccess
-				case "failure", "error":
-					status = domain.PullRequestStatusError
-				}
-			}
+		status, err := g.getPrStatus(ctx, pr)
+		if err != nil {
+			return nil, err
 		}
 
 		localPR := convertPullRequest(pr)
@@ -518,4 +496,35 @@ func convertPullRequest(pr *github.PullRequest) pullRequest {
 		number:      pr.GetNumber(),
 		guiURL:      pr.GetHTMLURL(),
 	}
+}
+
+func (g Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (domain.PullRequestStatus, error) {
+	// Determine the status of the pr
+	var status domain.PullRequestStatus
+	if pr.MergedAt != nil {
+		status = domain.PullRequestStatusMerged
+	} else if pr.ClosedAt != nil {
+		status = domain.PullRequestStatusClosed
+	} else {
+		log.Debug("Fetching the combined status of the pull request")
+		combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, pr.GetBase().GetUser().GetLogin(), pr.GetBase().GetRepo().GetName(), pr.GetHead().GetSHA(), nil)
+		if err != nil {
+			return domain.PullRequestStatusUnknown, err
+		}
+
+		if combinedStatus.GetTotalCount() == 0 {
+			status = domain.PullRequestStatusSuccess
+		} else {
+			switch combinedStatus.GetState() {
+			case "pending":
+				status = domain.PullRequestStatusPending
+			case "success":
+				status = domain.PullRequestStatusSuccess
+			case "failure", "error":
+				status = domain.PullRequestStatusError
+			}
+		}
+	}
+
+	return status, nil
 }
