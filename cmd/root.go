@@ -226,6 +226,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	forkMode, _ := flag.GetBool("fork")
 
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repo set")
@@ -253,7 +254,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
-	}, mergeTypes)
+	}, mergeTypes, forkMode)
 	if err != nil {
 		return nil, err
 	}

@@ -24,6 +24,7 @@ func New(
 	transportMiddleware func(http.RoundTripper) http.RoundTripper,
 	repoListing RepositoryListing,
 	mergeTypes []domain.MergeType,
+	forkMode bool,
 ) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -46,6 +47,7 @@ func New(
 	return &Github{
 		RepositoryListing: repoListing,
 		MergeTypes:        mergeTypes,
+		Fork:              forkMode,
 		ghClient:          client,
 	}, nil
 }
@@ -54,7 +56,12 @@ func New(
 type Github struct {
 	RepositoryListing
 	MergeTypes []domain.MergeType
-	ghClient   *github.Client
+
+	// This determines if forks will be used when creating a prs.
+	// In this package, it mainly determines which repos are possible to make changes on
+	Fork bool
+
+	ghClient *github.Client
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -140,14 +147,21 @@ func (g Github) GetRepositories(ctx context.Context) ([]domain.Repository, error
 	repos := make([]domain.Repository, 0, len(allRepos))
 	for _, r := range allRepos {
 		permissions := r.GetPermissions()
-		if !r.GetArchived() && !r.GetDisabled() && permissions["pull"] && permissions["push"] {
-			newRepo, err := convertRepo(r)
-			if err != nil {
-				return nil, err
-			}
 
-			repos = append(repos, newRepo)
+		if r.GetArchived() || r.GetDisabled() || !permissions["pull"] {
+			continue
 		}
+		// The user needs push permissions or have defined that the pr should be on a fork
+		if !g.Fork && !permissions["push"] {
+			continue
+		}
+
+		newRepo, err := convertRepo(r)
+		if err != nil {
+			return nil, err
+		}
+
+		repos = append(repos, newRepo)
 	}
 
 	return repos, nil
