@@ -132,7 +132,10 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	executablePath, err := exec.LookPath(parsedCommand[0])
 	if err != nil {
-		return fmt.Errorf("could not find executable %s", parsedCommand[0])
+		if _, err := os.Stat(parsedCommand[0]); os.IsNotExist(err) {
+			return fmt.Errorf("could not find executable %s", parsedCommand[0])
+		}
+		return fmt.Errorf("could not find executable %s, does it have executable privileges?", parsedCommand[0])
 	}
 	// Executable needs to be defined with an absolute path since it will be run within the context of repositories
 	if !filepath.IsAbs(executablePath) {

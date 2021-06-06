@@ -101,7 +101,7 @@ func (r Printer) runSingleRepo(ctx context.Context, repo domain.Repository) erro
 
 	err = cmd.Run()
 	if err != nil {
-		return err
+		return transformExecError(err)
 	}
 
 	return nil
