@@ -220,7 +220,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 	}
 
 	if r.Interactive {
-		err = r.interactive(ctx, repo, sourceController)
+		err = r.interactive(ctx, tmpDir, repo, sourceController)
 		if err != nil {
 			return nil, err
 		}
@@ -259,7 +259,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *git.Git) error {
+func (r *Runner) interactive(ctx context.Context, dir string, repo domain.Repository, git *git.Git) error {
 	r.interactiveLock.Lock()
 	defer r.interactiveLock.Unlock()
 
@@ -287,9 +287,10 @@ func (r *Runner) interactive(ctx context.Context, repo domain.Repository, git *g
 
 		switch char {
 		case 'v':
-			cmd := exec.Command("less")
-			cmd.Stdin, err = git.Diff()
+			cmd := exec.Command("git", "diff", "HEAD~1")
+			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
 			if err != nil {
 				return err
 			}
