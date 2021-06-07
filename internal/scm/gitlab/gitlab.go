@@ -42,6 +42,9 @@ func New(token, baseURL string, repoListing RepositoryListing) (*Gitlab, error) 
 type Gitlab struct {
 	RepositoryListing
 	glClient *gitlab.Client
+
+	// Cached current user
+	currentUser *gitlab.User
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -94,7 +97,8 @@ func (r repository) FullName() string {
 type pullRequest struct {
 	ownerName  string
 	repoName   string
-	pid        int
+	targetPID  int
+	sourcePID  int
 	branchName string
 	iid        int
 	webURL     string
@@ -236,6 +240,7 @@ func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitla
 // CreatePullRequest creates a pull request
 func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	r := repo.(repository)
+	prR := prRepo.(repository)
 
 	// Convert from usernames to user ids
 	var assigneeIDs []int
@@ -247,13 +252,14 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, 
 		}
 	}
 
-	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(r.pid, &gitlab.CreateMergeRequestOptions{
-		Title:        &newPR.Title,
-		Description:  &newPR.Body,
-		SourceBranch: &newPR.Head,
-		TargetBranch: &newPR.Base,
-		AssigneeIDs:  assigneeIDs,
-	})
+	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(prR.pid, &gitlab.CreateMergeRequestOptions{
+		Title:           &newPR.Title,
+		Description:     &newPR.Body,
+		SourceBranch:    &newPR.Head,
+		TargetBranch:    &newPR.Base,
+		TargetProjectID: &r.pid,
+		AssigneeIDs:     assigneeIDs,
+	}, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +267,8 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, 
 	return pullRequest{
 		repoName:   r.name,
 		ownerName:  r.ownerName,
-		pid:        r.pid,
+		targetPID:  mr.TargetProjectID,
+		sourcePID:  mr.SourceProjectID,
 		branchName: newPR.Head,
 		iid:        mr.IID,
 		webURL:     mr.WebURL,
@@ -305,7 +312,8 @@ func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]doma
 		prs = append(prs, pullRequest{
 			repoName:   project.Path,
 			ownerName:  project.Namespace.Path,
-			pid:        project.ID,
+			targetPID:  mr.TargetProjectID,
+			sourcePID:  mr.SourceProjectID,
 			branchName: branchName,
 			status:     pullRequestStatus(mr),
 			iid:        mr.IID,
@@ -358,7 +366,7 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq domain.PullReques
 	pr := pullReq.(pullRequest)
 
 	shouldRemoveSourceBranch := true
-	_, _, err := g.glClient.MergeRequests.AcceptMergeRequest(pr.pid, pr.iid, &gitlab.AcceptMergeRequestOptions{
+	_, _, err := g.glClient.MergeRequests.AcceptMergeRequest(pr.targetPID, pr.iid, &gitlab.AcceptMergeRequestOptions{
 		ShouldRemoveSourceBranch: &shouldRemoveSourceBranch,
 	}, gitlab.WithContext(ctx))
 	if err != nil {
@@ -372,12 +380,12 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq domain.PullReques
 func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
-	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.pid, pr.iid, gitlab.WithContext(ctx))
+	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
 	if err != nil {
 		return err
 	}
 
-	_, err = g.glClient.Branches.DeleteBranch(pr.pid, pr.branchName, gitlab.WithContext(ctx))
+	_, err = g.glClient.Branches.DeleteBranch(pr.sourcePID, pr.branchName, gitlab.WithContext(ctx))
 	if err != nil {
 		return err
 	}
@@ -388,6 +396,24 @@ func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq domain.PullReques
 // ForkRepository forks a project
 func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
 	r := repo.(repository)
+
+	// TODO: User new owner if set
+
+	// Check if the project already exist
+	currentUser, err := g.getCurrentUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	project, resp, err := g.glClient.Projects.GetProject(
+		fmt.Sprintf("%s/%s", currentUser.Username, r.name),
+		nil,
+		gitlab.WithContext(ctx),
+	)
+	if err == nil { // Already forked, just return it
+		return convertProject(project)
+	} else if resp.StatusCode != http.StatusNotFound { // If the error was that the project does not exist, continue to fork it
+		return nil, err
+	}
 
 	newRepo, _, err := g.glClient.Projects.ForkProject(r.pid, &gitlab.ForkProjectOptions{
 		Namespace: &newOwner, // TODO: check if this is right
@@ -410,6 +436,21 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, new
 	}
 
 	return nil, errors.New("time waiting for fork to complete was exceeded")
+}
+
+func (g *Gitlab) getCurrentUser(ctx context.Context) (*gitlab.User, error) {
+	if g.currentUser != nil {
+		return g.currentUser, nil
+	}
+
+	user, _, err := g.glClient.Users.CurrentUser(gitlab.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	g.currentUser = user
+
+	return user, nil
 }
 
 func convertProject(project *gitlab.Project) (repository, error) {
