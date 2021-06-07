@@ -6,6 +6,4 @@ type Repository interface {
 	DefaultBranch() string
 	// Returns the full id of the repository, usually ownerName/repoName
 	FullName() string
-	// Owner of the repository
-	Owner() string
 }

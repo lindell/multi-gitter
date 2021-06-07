@@ -98,10 +98,6 @@ func (r repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
 }
 
-func (r repository) Owner() string {
-	return r.ownerName
-}
-
 type pullRequest struct {
 	ownerName   string
 	repoName    string
@@ -268,10 +264,11 @@ func (g Github) getRepository(ctx context.Context, repoRef RepositoryReference) 
 }
 
 // CreatePullRequest creates a pull request
-func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
+func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	r := repo.(repository)
+	prR := prRepo.(repository)
 
-	pr, err := g.createPullRequest(ctx, r, newPR)
+	pr, err := g.createPullRequest(ctx, r, prR, newPR)
 	if err != nil {
 		return nil, err
 	}
@@ -283,11 +280,8 @@ func (g Github) CreatePullRequest(ctx context.Context, repo domain.Repository, n
 	return convertPullRequest(pr), nil
 }
 
-func (g Github) createPullRequest(ctx context.Context, repo repository, newPR domain.NewPullRequest) (*github.PullRequest, error) {
-	head := newPR.Head
-	if newPR.Owner != "" {
-		head = fmt.Sprintf("%s:%s", newPR.Owner, newPR.Head)
-	}
+func (g Github) createPullRequest(ctx context.Context, repo repository, prRepo repository, newPR domain.NewPullRequest) (*github.PullRequest, error) {
+	head := fmt.Sprintf("%s:%s", prRepo.ownerName, newPR.Head)
 	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
 		Title: &newPR.Title,
 		Body:  &newPR.Body,

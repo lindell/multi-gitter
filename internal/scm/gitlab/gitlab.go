@@ -2,11 +2,13 @@ package gitlab
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/xanzy/go-gitlab"
 
@@ -89,10 +91,6 @@ func (r repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
 }
 
-func (r repository) Owner() string {
-	return r.ownerName
-}
-
 type pullRequest struct {
 	ownerName  string
 	repoName   string
@@ -124,18 +122,13 @@ func (g *Gitlab) GetRepositories(ctx context.Context) ([]domain.Repository, erro
 
 	repos := make([]domain.Repository, 0, len(allProjects))
 	for _, project := range allProjects {
-		u, err := url.Parse(project.HTTPURLToRepo)
+
+		p, err := convertProject(project)
 		if err != nil {
-			return nil, err // TODO: better error
+			return nil, err
 		}
 
-		repos = append(repos, repository{
-			url:           *u,
-			pid:           project.ID,
-			name:          project.Path,
-			ownerName:     project.Namespace.Path,
-			defaultBranch: project.DefaultBranch,
-		})
+		repos = append(repos, p)
 	}
 
 	return repos, nil
@@ -241,7 +234,7 @@ func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitla
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
+func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	r := repo.(repository)
 
 	// Convert from usernames to user ids
@@ -390,4 +383,46 @@ func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq domain.PullReques
 	}
 
 	return nil
+}
+
+// ForkRepository forks a project
+func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
+	r := repo.(repository)
+
+	newRepo, _, err := g.glClient.Projects.ForkProject(r.pid, &gitlab.ForkProjectOptions{
+		Namespace: &newOwner, // TODO: check if this is right
+	}, gitlab.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < 10; i++ {
+		repo, _, err := g.glClient.Projects.GetProject(newRepo.ID, nil, gitlab.WithContext(ctx))
+		if err != nil {
+			return nil, err
+		}
+
+		if repo.ImportStatus == "finished" {
+			return convertProject(newRepo)
+		}
+
+		time.Sleep(time.Second * 3)
+	}
+
+	return nil, errors.New("time waiting for fork to complete was exceeded")
+}
+
+func convertProject(project *gitlab.Project) (repository, error) {
+	u, err := url.Parse(project.HTTPURLToRepo)
+	if err != nil {
+		return repository{}, err
+	}
+
+	return repository{
+		url:           *u,
+		pid:           project.ID,
+		name:          project.Path,
+		ownerName:     project.Namespace.Path,
+		defaultBranch: project.DefaultBranch,
+	}, nil
 }

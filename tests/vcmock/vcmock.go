@@ -29,7 +29,7 @@ func (vc *VersionController) GetRepositories(ctx context.Context) ([]domain.Repo
 }
 
 // CreatePullRequest stores a mock pull request
-func (vc *VersionController) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
+func (vc *VersionController) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	repository := repo.(Repository)
 
 	vc.PRNumber++

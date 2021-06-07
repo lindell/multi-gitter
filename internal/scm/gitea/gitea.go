@@ -105,10 +105,6 @@ func (r repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
 }
 
-func (r repository) Owner() string {
-	return r.ownerName
-}
-
 type pullRequest struct {
 	ownerName  string
 	repoName   string
@@ -251,7 +247,7 @@ func (g *Gitea) getUserRepositories(ctx context.Context, username string) ([]*gi
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitea) CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
+func (g *Gitea) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	r := repo.(repository)
 
 	pr, _, err := g.giteaClient(ctx).CreatePullRequest(r.ownerName, r.name, gitea.CreatePullRequestOption{

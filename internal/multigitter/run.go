@@ -22,7 +22,7 @@ import (
 // VersionController fetches repositories
 type VersionController interface {
 	GetRepositories(ctx context.Context) ([]domain.Repository, error)
-	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error)
+	CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error)
 	GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
 	ClosePullRequest(ctx context.Context, pr domain.PullRequest) error
@@ -227,14 +227,14 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 
 	remoteName := "origin"
-	prOwner := ""
+	var forkedRepo domain.Repository
 	if r.Fork {
 		forker, ok := r.VersionController.(forker)
 		if !ok {
 			return nil, errors.New("platform does not support fork mode")
 		}
 
-		forkedRepo, err := forker.ForkRepository(ctx, repo, r.ForkOwner)
+		forkedRepo, err = forker.ForkRepository(ctx, repo, r.ForkOwner)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fork repository")
 		}
@@ -244,7 +244,6 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 			return nil, err
 		}
 		remoteName = "fork"
-		prOwner = forkedRepo.Owner()
 	}
 
 	err = sourceController.Push(remoteName)
@@ -257,12 +256,11 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 
 	log.Info("Change done, creating pull request")
-	pr, err := r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
+	pr, err := r.VersionController.CreatePullRequest(ctx, repo, forkedRepo, domain.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
 		Base:      baseBranch,
-		Owner:     prOwner,
 		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 	})
 	if err != nil {
