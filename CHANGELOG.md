@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.26.0](https://www.github.com/lindell/multi-gitter/compare/v0.25.6...v0.26.0) (2021-06-08)
+
+
+### Features
+
+* added --include-subgroups flag ([#131](https://www.github.com/lindell/multi-gitter/issues/131)) ([eff19a4](https://www.github.com/lindell/multi-gitter/commit/eff19a4b23030487fa9a3e64553443d2a8fb3133))
+
+
+### Bug Fixes
+
+* improved error messages for common problems with the script ([de9e525](https://www.github.com/lindell/multi-gitter/commit/de9e5259d2bd900abf72c56f40a76f223cbfffd0))
+
 ### [0.25.6](https://www.github.com/lindell/multi-gitter/compare/v0.25.5...v0.25.6) (2021-06-05)
 
 
