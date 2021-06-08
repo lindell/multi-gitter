@@ -480,6 +480,7 @@ Repositories with a successful run:
 
 				assert.Contains(t, runData.logOut, "Running on 1 repositories")
 				assert.Contains(t, runData.logOut, "Cloning and running script")
+				assert.Contains(t, runData.logOut, "Forking repository")
 				assert.Contains(t, runData.logOut, "Change done, creating pull request")
 
 				assert.Equal(t, `Repositories with a successful run:
@@ -517,6 +518,7 @@ Repositories with a successful run:
 
 				assert.Contains(t, runData.logOut, "Running on 1 repositories")
 				assert.Contains(t, runData.logOut, "Cloning and running script")
+				assert.Contains(t, runData.logOut, "Forking repository")
 				assert.Contains(t, runData.logOut, "Change done, creating pull request")
 
 				assert.Equal(t, `Repositories with a successful run:

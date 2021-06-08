@@ -229,6 +229,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	remoteName := "origin"
 	var forkedRepo domain.Repository
 	if r.Fork {
+		log.Info("Forking repository")
 		forker, ok := r.VersionController.(forker)
 		if !ok {
 			return nil, errors.New("platform does not support fork mode")
