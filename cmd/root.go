@@ -55,6 +55,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\"")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
+	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 
 	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
@@ -266,6 +267,7 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	groups, _ := flag.GetStringSlice("group")
 	users, _ := flag.GetStringSlice("user")
 	projects, _ := flag.GetStringSlice("project")
+	includeSubgroups, _ := flag.GetBool("include-subgroups")
 
 	if verifyFlags && len(groups) == 0 && len(users) == 0 && len(projects) == 0 {
 		return nil, errors.New("no group user or project set")
@@ -288,6 +290,8 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Groups:   groups,
 		Users:    users,
 		Projects: projRefs,
+	}, gitlab.Config{
+		IncludeSubgroups: includeSubgroups,
 	})
 	if err != nil {
 		return nil, err

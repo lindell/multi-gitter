@@ -15,7 +15,7 @@ import (
 )
 
 // New create a new Gitlab client
-func New(token, baseURL string, repoListing RepositoryListing) (*Gitlab, error) {
+func New(token, baseURL string, repoListing RepositoryListing, config Config) (*Gitlab, error) {
 	var options []gitlab.ClientOptionFunc
 	if baseURL != "" {
 		options = append(options, gitlab.WithBaseURL(baseURL))
@@ -32,6 +32,7 @@ func New(token, baseURL string, repoListing RepositoryListing) (*Gitlab, error) 
 
 	return &Gitlab{
 		RepositoryListing: repoListing,
+		Config:            config,
 		glClient:          client,
 	}, nil
 }
@@ -39,6 +40,7 @@ func New(token, baseURL string, repoListing RepositoryListing) (*Gitlab, error) 
 // Gitlab contain gitlab configuration
 type Gitlab struct {
 	RepositoryListing
+	Config   Config
 	glClient *gitlab.Client
 }
 
@@ -47,6 +49,11 @@ type RepositoryListing struct {
 	Groups   []string
 	Users    []string
 	Projects []ProjectReference
+}
+
+// Config includes extra config parameters for the GitLab client
+type Config struct {
+	IncludeSubgroups bool
 }
 
 // ProjectReference contains information to be able to reference a repository
@@ -188,6 +195,7 @@ func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*git
 				PerPage: 100,
 				Page:    i,
 			},
+			IncludeSubgroups: &g.Config.IncludeSubgroups,
 		}, gitlab.WithContext(ctx))
 		if err != nil {
 			return nil, err
