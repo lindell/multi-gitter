@@ -108,6 +108,10 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if skipPullRequest && forkMode {
+		return errors.New("--fork and --skip-pr can't be used at the same time")
+	}
+
 	// Parse commit author data
 	var commitAuthor *domain.CommitAuthor
 	if authorName != "" || authorEmail != "" {
