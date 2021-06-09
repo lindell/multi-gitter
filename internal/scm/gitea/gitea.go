@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	"code.gitea.io/sdk/gitea"
 	"github.com/pkg/errors"
@@ -106,12 +107,14 @@ func (r repository) FullName() string {
 }
 
 type pullRequest struct {
-	ownerName  string
-	repoName   string
-	branchName string
-	index      int64 // The id of the PR
-	webURL     string
-	status     domain.PullRequestStatus
+	ownerName   string
+	repoName    string
+	branchName  string
+	prOwnerName string
+	prRepoName  string
+	index       int64 // The id of the PR
+	webURL      string
+	status      domain.PullRequestStatus
 }
 
 func (pr pullRequest) String() string {
@@ -135,17 +138,11 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]domain.Repository, error
 
 	repos := make([]domain.Repository, 0, len(allRepos))
 	for _, repo := range allRepos {
-		u, err := url.Parse(repo.CloneURL)
+		convertedRepo, err := convertRepository(repo)
 		if err != nil {
-			return nil, err // TODO: better error
+			return nil, err
 		}
-
-		repos = append(repos, repository{
-			url:           *u,
-			name:          repo.Name,
-			ownerName:     repo.Owner.UserName,
-			defaultBranch: repo.DefaultBranch,
-		})
+		repos = append(repos, convertedRepo)
 	}
 
 	return repos, nil
@@ -249,9 +246,12 @@ func (g *Gitea) getUserRepositories(ctx context.Context, username string) ([]*gi
 // CreatePullRequest creates a pull request
 func (g *Gitea) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
 	r := repo.(repository)
+	prR := prRepo.(repository)
+
+	head := fmt.Sprintf("%s:%s", prR.ownerName, newPR.Head)
 
 	pr, _, err := g.giteaClient(ctx).CreatePullRequest(r.ownerName, r.name, gitea.CreatePullRequestOption{
-		Head:  newPR.Head,
+		Head:  head,
 		Base:  newPR.Base,
 		Title: newPR.Title,
 		Body:  newPR.Body,
@@ -419,4 +419,37 @@ func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 	}
 
 	return nil
+}
+
+// ForkRepository forks a repository. If newOwner is empty, fork on the logged in user
+func (g *Gitea) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
+	r := repo.(repository)
+
+	forkOptions := gitea.CreateForkOption{}
+	if newOwner != "" {
+		forkOptions.Organization = &newOwner
+	}
+
+	createdRepo, _, err := g.giteaClient(ctx).CreateFork(r.ownerName, r.name, forkOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	time.Sleep(time.Second * 10)
+
+	return convertRepository(createdRepo)
+}
+
+func convertRepository(repo *gitea.Repository) (repository, error) {
+	u, err := url.Parse(repo.CloneURL)
+	if err != nil {
+		return repository{}, err
+	}
+
+	return repository{
+		url:           *u,
+		name:          repo.Name,
+		ownerName:     repo.Owner.UserName,
+		defaultBranch: repo.DefaultBranch,
+	}, nil
 }
