@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.26.1](https://www.github.com/lindell/multi-gitter/compare/v0.26.0...v0.26.1) (2021-06-09)
+
+
+### Bug Fixes
+
+* made remove branch on merge the default behaviour for GitLab merge ([#135](https://www.github.com/lindell/multi-gitter/issues/135)) ([9cc5983](https://www.github.com/lindell/multi-gitter/commit/9cc5983407c3b5be4a42c55dbd7c4b03f54d3f23))
+
 ## [0.26.0](https://www.github.com/lindell/multi-gitter/compare/v0.25.6...v0.26.0) (2021-06-08)
 
 
