@@ -205,7 +205,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 
 	err = cmd.Run()
 	if err != nil {
-		return nil, err
+		return nil, transformExecError(err)
 	}
 
 	if changed, err := sourceController.Changes(); err != nil {
