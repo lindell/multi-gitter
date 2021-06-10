@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"code.gitea.io/sdk/gitea"
 	"github.com/pkg/errors"
@@ -56,6 +55,8 @@ type Gitea struct {
 
 	baseURL string
 	token   string
+
+	currentUser *gitea.User
 
 	MergeTypes []domain.MergeType
 }
@@ -268,11 +269,13 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo domain.Repository, p
 	}
 
 	return pullRequest{
-		repoName:   r.name,
-		ownerName:  r.ownerName,
-		branchName: newPR.Head,
-		index:      pr.Index,
-		webURL:     pr.HTMLURL,
+		repoName:    r.name,
+		ownerName:   r.ownerName,
+		branchName:  newPR.Head,
+		prOwnerName: pr.Head.Repository.Owner.UserName,
+		prRepoName:  pr.Head.Repository.Name,
+		index:       pr.Index,
+		webURL:      pr.HTMLURL,
 	}, nil
 }
 
@@ -299,12 +302,14 @@ func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]domai
 		}
 
 		prs = append(prs, pullRequest{
-			repoName:   repo.Name,
-			ownerName:  repo.Owner.UserName,
-			branchName: branchName,
-			status:     status,
-			index:      pr.Index,
-			webURL:     pr.HTMLURL,
+			repoName:    repo.Name,
+			ownerName:   repo.Owner.UserName,
+			branchName:  branchName,
+			prOwnerName: pr.Head.Repository.Owner.UserName,
+			prRepoName:  pr.Head.Repository.Name,
+			status:      status,
+			index:       pr.Index,
+			webURL:      pr.HTMLURL,
 		})
 	}
 
@@ -385,7 +390,7 @@ func (g *Gitea) MergePullRequest(ctx context.Context, pullReq domain.PullRequest
 		return errors.Errorf("could not merge %s/%s#%d", pr.ownerName, pr.repoName, pr.index)
 	}
 
-	deleted, _, err := g.giteaClient(ctx).DeleteRepoBranch(pr.ownerName, pr.repoName, pr.branchName)
+	deleted, _, err := g.giteaClient(ctx).DeleteRepoBranch(pr.prOwnerName, pr.prRepoName, pr.branchName)
 	if err != nil {
 		return errors.Wrapf(err, "could not delete branch after merging %s/%s", pr.ownerName, pr.repoName)
 	}
@@ -409,7 +414,7 @@ func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 		return errors.Wrapf(err, "could not close %s/%s#%d", pr.ownerName, pr.repoName, pr.index)
 	}
 
-	deleted, _, err := g.giteaClient(ctx).DeleteRepoBranch(pr.ownerName, pr.repoName, pr.branchName)
+	deleted, _, err := g.giteaClient(ctx).DeleteRepoBranch(pr.prOwnerName, pr.prRepoName, pr.branchName)
 	if err != nil {
 		return errors.Wrapf(err, "could not delete branch after merging %s/%s", pr.ownerName, pr.repoName)
 	}
@@ -425,6 +430,20 @@ func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 func (g *Gitea) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
 	r := repo.(repository)
 
+	var forkTo string
+	if forkTo == "" {
+		user, err := g.getUser(ctx)
+		if err != nil {
+			return nil, err
+		}
+		forkTo = user.UserName
+	}
+
+	existingRepo, _, err := g.giteaClient(ctx).GetRepo(forkTo, r.name)
+	if err == nil { // NB!
+		return convertRepository(existingRepo)
+	}
+
 	forkOptions := gitea.CreateForkOption{}
 	if newOwner != "" {
 		forkOptions.Organization = &newOwner
@@ -435,9 +454,21 @@ func (g *Gitea) ForkRepository(ctx context.Context, repo domain.Repository, newO
 		return nil, err
 	}
 
-	time.Sleep(time.Second * 10)
-
 	return convertRepository(createdRepo)
+}
+
+func (g *Gitea) getUser(ctx context.Context) (*gitea.User, error) {
+	if g.currentUser != nil {
+		return g.currentUser, nil
+	}
+
+	user, _, err := g.giteaClient(ctx).GetMyUserInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	g.currentUser = user
+	return user, nil
 }
 
 func convertRepository(repo *gitea.Repository) (repository, error) {
