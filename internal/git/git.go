@@ -2,7 +2,6 @@ package git
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -37,20 +36,6 @@ func (g *Git) Clone(baseName, headName string) error {
 	})
 	if err != nil {
 		return errors.Wrap(err, "could not clone from the remote")
-	}
-
-	if headName != "" {
-		err = r.Fetch(&git.FetchOptions{
-			RefSpecs: []config.RefSpec{
-				config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/remotes/origin/%s", headName, headName)),
-			},
-			Depth: g.FetchDepth,
-		})
-		if err != nil {
-			if _, ok := err.(git.NoMatchingRefSpecError); !ok {
-				return err
-			}
-		}
 	}
 
 	g.repo = r
@@ -184,14 +169,22 @@ func (g *Git) logDiff(aHash, bHash plumbing.Hash) error {
 }
 
 // BranchExist checks if the new branch exists
-func (g *Git) BranchExist(branchName string) (bool, error) {
-	_, err := g.repo.Reference(plumbing.ReferenceName(fmt.Sprintf("refs/remotes/origin/%s", branchName)), false)
-	if err == plumbing.ErrReferenceNotFound {
-		return false, nil
-	} else if err != nil {
+func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
+	remote, err := g.repo.Remote(remoteName)
+	if err != nil {
 		return false, err
 	}
-	return true, nil
+
+	refs, err := remote.List(&git.ListOptions{})
+	if err != nil {
+		return false, err
+	}
+	for _, r := range refs {
+		if r.Name().Short() == branchName {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // Push the committed changes to the remote

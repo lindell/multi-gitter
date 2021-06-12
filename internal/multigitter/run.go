@@ -177,13 +177,6 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 
 	// Change the branch to the feature branch
 	if !r.SkipPullRequest {
-		featureBranchExist, err := sourceController.BranchExist(r.FeatureBranch)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not verify if branch already exist")
-		} else if featureBranchExist {
-			return nil, domain.BranchExistError
-		}
-
 		err = sourceController.ChangeBranch(r.FeatureBranch)
 		if err != nil {
 			return nil, err
@@ -227,7 +220,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 
 	remoteName := "origin"
-	var forkedRepo domain.Repository
+	var prRepo domain.Repository = repo
 	if r.Fork {
 		log.Info("Forking repository")
 		forker, ok := r.VersionController.(forker)
@@ -235,16 +228,25 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 			return nil, errors.New("platform does not support fork mode")
 		}
 
-		forkedRepo, err = forker.ForkRepository(ctx, repo, r.ForkOwner)
+		prRepo, err = forker.ForkRepository(ctx, repo, r.ForkOwner)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fork repository")
 		}
 
-		err = sourceController.AddRemote("fork", forkedRepo.URL(r.Token))
+		err = sourceController.AddRemote("fork", prRepo.URL(r.Token))
 		if err != nil {
 			return nil, err
 		}
 		remoteName = "fork"
+	}
+
+	if !r.SkipPullRequest {
+		featureBranchExist, err := sourceController.BranchExist(remoteName, r.FeatureBranch)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not verify if branch already exist")
+		} else if featureBranchExist {
+			return nil, domain.BranchExistError
+		}
 	}
 
 	err = sourceController.Push(remoteName)
@@ -257,7 +259,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 
 	log.Info("Change done, creating pull request")
-	pr, err := r.VersionController.CreatePullRequest(ctx, repo, forkedRepo, domain.NewPullRequest{
+	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, domain.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
