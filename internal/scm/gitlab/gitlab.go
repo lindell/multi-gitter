@@ -266,6 +266,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, 
 		Description:        &newPR.Body,
 		SourceBranch:       &newPR.Head,
 		TargetBranch:       &newPR.Base,
+		TargetProjectID:    &r.pid,
 		AssigneeIDs:        assigneeIDs,
 		RemoveSourceBranch: &removeSourceBranch,
 	})
