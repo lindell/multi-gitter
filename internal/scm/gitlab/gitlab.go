@@ -407,15 +407,19 @@ func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq domain.PullReques
 func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
 	r := repo.(repository)
 
-	// TODO: User new owner if set
+	// Get the username of the fork (logged in user if none is set)
+	ownerUsername := newOwner
+	if newOwner == "" {
+		currentUser, err := g.getCurrentUser(ctx)
+		if err != nil {
+			return nil, err
+		}
+		ownerUsername = currentUser.Username
+	}
 
 	// Check if the project already exist
-	currentUser, err := g.getCurrentUser(ctx)
-	if err != nil {
-		return nil, err
-	}
 	project, resp, err := g.glClient.Projects.GetProject(
-		fmt.Sprintf("%s/%s", currentUser.Username, r.name),
+		fmt.Sprintf("%s/%s", ownerUsername, r.name),
 		nil,
 		gitlab.WithContext(ctx),
 	)
@@ -426,7 +430,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, new
 	}
 
 	newRepo, _, err := g.glClient.Projects.ForkProject(r.pid, &gitlab.ForkProjectOptions{
-		Namespace: &newOwner, // TODO: check if this is right
+		Namespace: &newOwner,
 	}, gitlab.WithContext(ctx))
 	if err != nil {
 		return nil, err
