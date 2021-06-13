@@ -26,9 +26,6 @@ type VersionController interface {
 	GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
 	ClosePullRequest(ctx context.Context, pr domain.PullRequest) error
-}
-
-type forker interface {
 	ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error)
 }
 
@@ -223,12 +220,8 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	var prRepo domain.Repository = repo
 	if r.Fork {
 		log.Info("Forking repository")
-		forker, ok := r.VersionController.(forker)
-		if !ok {
-			return nil, errors.New("platform does not support fork mode")
-		}
 
-		prRepo, err = forker.ForkRepository(ctx, repo, r.ForkOwner)
+		prRepo, err = r.VersionController.ForkRepository(ctx, repo, r.ForkOwner)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not fork repository")
 		}
