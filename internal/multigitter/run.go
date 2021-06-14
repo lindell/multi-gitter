@@ -72,11 +72,15 @@ func (pr dryRunPullRequest) String() string {
 	return fmt.Sprintf("%s #0", pr.Repository.FullName())
 }
 
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
 // Run runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not fetch repositories")
 	}
 
 	rc := repocounter.NewCounter()
@@ -104,6 +108,15 @@ func (r Runner) Run(ctx context.Context) error {
 				logger.Info(err)
 			}
 			rc.AddError(err, repos[i])
+			if log.IsLevelEnabled(log.TraceLevel) {
+				if err, ok := err.(stackTracer); ok {
+					trace := ""
+					for _, f := range err.StackTrace() {
+						trace += fmt.Sprintf("%+s:%d\n", f, f)
+					}
+					log.Trace(trace)
+				}
+			}
 			return
 		}
 
