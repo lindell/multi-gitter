@@ -66,7 +66,6 @@ func run(cmd *cobra.Command, args []string) error {
 	commitMessage, _ := flag.GetString("commit-message")
 	reviewers, _ := flag.GetStringSlice("reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
-	fetchDepth, _ := flag.GetInt("fetch-depth")
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	dryRun, _ := flag.GetBool("dry-run")
@@ -184,8 +183,9 @@ func run(cmd *cobra.Command, args []string) error {
 		CommitAuthor:     commitAuthor,
 		BaseBranch:       baseBranchName,
 
-		FetchDepth: fetchDepth,
 		Concurrent: concurrent,
+
+		CreateGit: getGitCreator(flag),
 	}
 
 	err = runner.Run(ctx)

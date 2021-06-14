@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/git/cmdgit"
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm/gitea"
@@ -367,6 +368,17 @@ func getToken(flag *flag.FlagSet) (string, error) {
 	}
 
 	return token, nil
+}
+
+func getGitCreator(flag *flag.FlagSet) func(string) multigitter.Git {
+	fetchDepth, _ := flag.GetInt("fetch-depth")
+
+	return func(path string) multigitter.Git {
+		return &cmdgit.Git{
+			Directory:  path,
+			FetchDepth: fetchDepth,
+		}
+	}
 }
 
 func getMergeTypes(flag *flag.FlagSet) ([]domain.MergeType, error) {

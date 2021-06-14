@@ -14,7 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/domain"
-	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 )
@@ -49,12 +48,13 @@ type Runner struct {
 	CommitAuthor     *domain.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 
-	FetchDepth      int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent      int
 	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
 
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
+
+	CreateGit func(dir string) Git
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
@@ -169,18 +169,14 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 	defer os.RemoveAll(tmpDir)
 
-	sourceController := &git.Git{
-		Directory:  tmpDir,
-		Repo:       repo.URL(r.Token),
-		FetchDepth: r.FetchDepth,
-	}
+	sourceController := r.CreateGit(tmpDir)
 
 	baseBranch := r.BaseBranch
 	if baseBranch == "" {
 		baseBranch = repo.DefaultBranch()
 	}
 
-	err = sourceController.Clone(baseBranch, r.FeatureBranch)
+	err = sourceController.Clone(repo.URL(r.Token), baseBranch)
 	if err != nil {
 		return nil, err
 	}

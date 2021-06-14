@@ -46,7 +46,6 @@ func print(cmd *cobra.Command, args []string) error {
 	flag := cmd.Flags()
 
 	concurrent, _ := flag.GetInt("concurrent")
-	fetchDepth, _ := flag.GetInt("fetch-depth")
 	strOutput, _ := flag.GetString("output")
 	strErrOutput, _ := flag.GetString("error-output")
 
@@ -116,8 +115,9 @@ func print(cmd *cobra.Command, args []string) error {
 		Stdout: output,
 		Stderr: errOutput,
 
-		FetchDepth: fetchDepth,
 		Concurrent: concurrent,
+
+		CreateGit: getGitCreator(flag),
 	}
 
 	err = printer.Print(ctx)

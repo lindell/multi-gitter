@@ -11,7 +11,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/domain"
-	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 )
 
@@ -26,8 +25,9 @@ type Printer struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
-	FetchDepth int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent int
+
+	CreateGit func(dir string) Git
 }
 
 // Print runs a script for multiple repositories and print the output of each run
@@ -77,13 +77,9 @@ func (r Printer) runSingleRepo(ctx context.Context, repo domain.Repository) erro
 	}
 	defer os.RemoveAll(tmpDir)
 
-	sourceController := &git.Git{
-		Directory:  tmpDir,
-		Repo:       repo.URL(r.Token),
-		FetchDepth: r.FetchDepth,
-	}
+	sourceController := r.CreateGit(tmpDir)
 
-	err = sourceController.Clone(repo.DefaultBranch(), "")
+	err = sourceController.Clone(repo.URL(r.Token), repo.DefaultBranch())
 	if err != nil {
 		return err
 	}
