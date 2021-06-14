@@ -66,6 +66,7 @@ issues:
         - errcheck
         - dupl
         - gosec
+        - unparam
     - path: cmd/ # The cmd package contains a lot of descriptions that must be on a single long line
       linters:
         - lll

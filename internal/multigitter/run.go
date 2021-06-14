@@ -22,10 +22,11 @@ import (
 // VersionController fetches repositories
 type VersionController interface {
 	GetRepositories(ctx context.Context) ([]domain.Repository, error)
-	CreatePullRequest(ctx context.Context, repo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error)
+	CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error)
 	GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
 	ClosePullRequest(ctx context.Context, pr domain.PullRequest) error
+	ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error)
 }
 
 // Runner contains fields to be able to do the run
@@ -51,6 +52,9 @@ type Runner struct {
 	FetchDepth      int // Limit fetching to the specified number of commits. Set to 0 for no limit
 	Concurrent      int
 	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
+
+	Fork      bool   // If set, create a fork and make the pull request from it
+	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
@@ -89,6 +93,7 @@ func (r Runner) Run(ctx context.Context) error {
 
 		defer func() {
 			if r := recover(); r != nil {
+				log.Error(r)
 				rc.AddError(errors.New("run paniced"), repos[i])
 			}
 		}()
@@ -169,13 +174,6 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 
 	// Change the branch to the feature branch
 	if !r.SkipPullRequest {
-		featureBranchExist, err := sourceController.BranchExist(r.FeatureBranch)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not verify if branch already exist")
-		} else if featureBranchExist {
-			return nil, domain.BranchExistError
-		}
-
 		err = sourceController.ChangeBranch(r.FeatureBranch)
 		if err != nil {
 			return nil, err
@@ -218,7 +216,33 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		}, nil
 	}
 
-	err = sourceController.Push()
+	remoteName := "origin"
+	var prRepo domain.Repository = repo
+	if r.Fork {
+		log.Info("Forking repository")
+
+		prRepo, err = r.VersionController.ForkRepository(ctx, repo, r.ForkOwner)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not fork repository")
+		}
+
+		err = sourceController.AddRemote("fork", prRepo.URL(r.Token))
+		if err != nil {
+			return nil, err
+		}
+		remoteName = "fork"
+	}
+
+	if !r.SkipPullRequest {
+		featureBranchExist, err := sourceController.BranchExist(remoteName, r.FeatureBranch)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not verify if branch already exist")
+		} else if featureBranchExist {
+			return nil, domain.BranchExistError
+		}
+	}
+
+	err = sourceController.Push(remoteName)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
 	}
@@ -228,7 +252,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 
 	log.Info("Change done, creating pull request")
-	pr, err := r.VersionController.CreatePullRequest(ctx, repo, domain.NewPullRequest{
+	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, domain.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,

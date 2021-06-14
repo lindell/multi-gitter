@@ -45,6 +45,8 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
+	cmd.Flags().BoolP("fork", "", false, "Fork the repository instead of creating a new branch on the same owner")
+	cmd.Flags().StringP("fork-owner", "", "", "If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	configurePlatform(cmd)
@@ -68,6 +70,8 @@ func run(cmd *cobra.Command, args []string) error {
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	dryRun, _ := flag.GetBool("dry-run")
+	forkMode, _ := flag.GetBool("fork")
+	forkOwner, _ := flag.GetString("fork-owner")
 	authorName, _ := flag.GetString("author-name")
 	authorEmail, _ := flag.GetString("author-email")
 	strOutput, _ := flag.GetString("output")
@@ -102,6 +106,10 @@ func run(cmd *cobra.Command, args []string) error {
 		if prBody == "" && len(split) == 2 {
 			prBody = split[2]
 		}
+	}
+
+	if skipPullRequest && forkMode {
+		return errors.New("--fork and --skip-pr can't be used at the same time")
 	}
 
 	// Parse commit author data
@@ -170,6 +178,8 @@ func run(cmd *cobra.Command, args []string) error {
 		Reviewers:        reviewers,
 		MaxReviewers:     maxReviewers,
 		DryRun:           dryRun,
+		Fork:             forkMode,
+		ForkOwner:        forkOwner,
 		SkipPullRequest:  skipPullRequest,
 		CommitAuthor:     commitAuthor,
 		BaseBranch:       baseBranchName,

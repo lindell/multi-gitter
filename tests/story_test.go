@@ -28,9 +28,9 @@ func TestStory(t *testing.T) {
 
 	changerBinaryPath := filepath.ToSlash(filepath.Join(workingDir, changerBinaryPath))
 
-	changeRepo := createRepo(t, "should-change", "i like apples")
-	changeRepo2 := createRepo(t, "should-change-2", "i like my apple")
-	noChangeRepo := createRepo(t, "should-not-change", "i like oranges")
+	changeRepo := createRepo(t, "owner", "should-change", "i like apples")
+	changeRepo2 := createRepo(t, "owner", "should-change-2", "i like my apple")
+	noChangeRepo := createRepo(t, "owner", "should-not-change", "i like oranges")
 	vcMock.AddRepository(changeRepo)
 	vcMock.AddRepository(changeRepo2)
 	vcMock.AddRepository(noChangeRepo)
@@ -64,10 +64,10 @@ func TestStory(t *testing.T) {
 	runOutData, err := ioutil.ReadFile(runOutFile)
 	require.NoError(t, err)
 	assert.Equal(t, `No data was changed:
-  should-not-change
+  owner/should-not-change
 Repositories with a successful run:
-  should-change #1
-  should-change-2 #2
+  owner/should-change #1
+  owner/should-change-2 #2
 `, string(runOutData))
 
 	//
@@ -86,7 +86,7 @@ Repositories with a successful run:
 	// Verify that the output was correct
 	statusOutData, err := ioutil.ReadFile(statusOutFile)
 	require.NoError(t, err)
-	assert.Equal(t, "should-change #1: Pending\nshould-change-2 #2: Pending\n", string(statusOutData))
+	assert.Equal(t, "owner/should-change #1: Pending\nowner/should-change-2 #2: Pending\n", string(statusOutData))
 
 	// One of the created PRs is set to succeeded
 	vcMock.SetPRStatus("should-change", "custom-branch-name", domain.PullRequestStatusSuccess)
@@ -108,7 +108,7 @@ Repositories with a successful run:
 	mergeLogData, err := ioutil.ReadFile(mergeLogFile)
 	require.NoError(t, err)
 	assert.Contains(t, string(mergeLogData), "Merging 1 pull requests")
-	assert.Contains(t, string(mergeLogData), "Merging pr=\"should-change #1\"")
+	assert.Contains(t, string(mergeLogData), "Merging pr=\"owner/should-change #1\"")
 
 	//
 	// After Merge Status
@@ -126,7 +126,7 @@ Repositories with a successful run:
 	// Verify that the output was correct
 	afterMergeStatusOutData, err := ioutil.ReadFile(afterMergeStatusOutFile)
 	require.NoError(t, err)
-	assert.Equal(t, "should-change #1: Merged\nshould-change-2 #2: Pending\n", string(afterMergeStatusOutData))
+	assert.Equal(t, "owner/should-change #1: Merged\nowner/should-change-2 #2: Pending\n", string(afterMergeStatusOutData))
 
 	//
 	// Close
@@ -145,7 +145,7 @@ Repositories with a successful run:
 	closeLogData, err := ioutil.ReadFile(closeLogFile)
 	require.NoError(t, err)
 	assert.Contains(t, string(closeLogData), "Closing 1 pull request")
-	assert.Contains(t, string(closeLogData), "Closing pr=\"should-change-2 #2\"")
+	assert.Contains(t, string(closeLogData), "Closing pr=\"owner/should-change-2 #2\"")
 
 	//
 	// After Close Status
@@ -163,5 +163,5 @@ Repositories with a successful run:
 	// Verify that the output was correct
 	afterCloseStatusOutData, err := ioutil.ReadFile(afterCloseStatusOutFile)
 	require.NoError(t, err)
-	assert.Equal(t, "should-change #1: Merged\nshould-change-2 #2: Closed\n", string(afterCloseStatusOutData))
+	assert.Equal(t, "owner/should-change #1: Merged\nowner/should-change-2 #2: Closed\n", string(afterCloseStatusOutData))
 }

@@ -117,7 +117,7 @@ func Test_GetRepositories(t *testing.T) {
 	{
 		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
 			Organizations: []string{"test-org"},
-		}, []domain.MergeType{domain.MergeTypeMerge})
+		}, []domain.MergeType{domain.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -137,7 +137,7 @@ func Test_GetRepositories(t *testing.T) {
 					Name:      "test1",
 				},
 			},
-		}, []domain.MergeType{domain.MergeTypeMerge})
+		}, []domain.MergeType{domain.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -152,7 +152,7 @@ func Test_GetRepositories(t *testing.T) {
 	{
 		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
 			Users: []string{"test-user"},
-		}, []domain.MergeType{domain.MergeTypeMerge})
+		}, []domain.MergeType{domain.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -174,7 +174,7 @@ func Test_GetRepositories(t *testing.T) {
 					Name:      "test1",
 				},
 			},
-		}, []domain.MergeType{domain.MergeTypeMerge})
+		}, []domain.MergeType{domain.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
