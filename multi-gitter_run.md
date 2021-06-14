@@ -26,6 +26,8 @@ multi-gitter run [script path] [flags]
   -C, --concurrent int          The maximum number of concurrent runs (default 1)
   -d, --dry-run                 Run without pushing changes or creating pull requests
   -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
+      --fork                    Fork the repository instead of creating a new branch on the same owner
+      --fork-owner string       If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                    help for run
       --include-subgroups       Include GitLab subgroups when using the --group flag.
