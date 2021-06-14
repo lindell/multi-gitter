@@ -77,6 +77,11 @@ type RepositoryReference struct {
 	Name      string
 }
 
+// String returns the string representation of a repo reference
+func (rr RepositoryReference) String() string {
+	return fmt.Sprintf("%s/%s", rr.OwnerName, rr.Name)
+}
+
 type repository struct {
 	url           url.URL
 	name          string
@@ -169,7 +174,7 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 	for _, org := range g.Organizations {
 		repos, err := g.getOrganizationRepositories(ctx, org)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "could not get organization repositories for %s", org)
 		}
 		allRepos = append(allRepos, repos...)
 	}
@@ -177,7 +182,7 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 	for _, user := range g.Users {
 		repos, err := g.getUserRepositories(ctx, user)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "could not get user repositories for %s", user)
 		}
 		allRepos = append(allRepos, repos...)
 	}
@@ -185,7 +190,7 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 	for _, repoRef := range g.Repositories {
 		repo, err := g.getRepository(ctx, repoRef)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "could not get information about %s", repoRef.String())
 		}
 		allRepos = append(allRepos, repo)
 	}
