@@ -416,7 +416,7 @@ func (g Github) ForkRepository(ctx context.Context, repo domain.Repository, newO
 			return convertRepo(repo)
 		}
 
-		return nil, errors.New("polling for forked repository took to long")
+		return nil, errors.New("time waiting for fork to complete was exceeded")
 	}
 
 	return convertRepo(createdRepo)
