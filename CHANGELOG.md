@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.27.0](https://www.github.com/lindell/multi-gitter/compare/v0.26.1...v0.27.0) (2021-06-14)
+
+
+### Features
+
+* added fork mode ([#128](https://www.github.com/lindell/multi-gitter/issues/128)) ([f9e7827](https://www.github.com/lindell/multi-gitter/commit/f9e78273440642be662686912b89ff38123bacf7))
+
+
+### Miscellaneous
+
+* improved logging and added stack trace if --log-level=trace is used ([#138](https://www.github.com/lindell/multi-gitter/issues/138)) ([abccc5f](https://www.github.com/lindell/multi-gitter/commit/abccc5f28ba22e3b2b99d6d3ee1c513a213caea7))
+
 ### [0.26.1](https://www.github.com/lindell/multi-gitter/compare/v0.26.0...v0.26.1) (2021-06-09)
 
 
