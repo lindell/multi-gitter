@@ -161,7 +161,7 @@ type Repository struct {
 
 // URL return the URL (filepath) of the repository on disk
 func (r Repository) URL(token string) string {
-	return fmt.Sprintf(`file://"%s"`, filepath.ToSlash(r.Path))
+	return fmt.Sprintf(`file://%s`, filepath.ToSlash(r.Path))
 }
 
 // DefaultBranch returns "master"
