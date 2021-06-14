@@ -430,7 +430,7 @@ func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 func (g *Gitea) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
 	r := repo.(repository)
 
-	var forkTo string
+	forkTo := newOwner
 	if forkTo == "" {
 		user, err := g.getUser(ctx)
 		if err != nil {
