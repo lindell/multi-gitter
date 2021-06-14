@@ -33,8 +33,8 @@ func PrintCmd() *cobra.Command {
 	}
 
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
-	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
 	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr`)
+	configureGit(cmd)
 	configurePlatform(cmd)
 	configureLogging(cmd, "")
 	cmd.Flags().AddFlagSet(outputFlag())
@@ -80,6 +80,11 @@ func print(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	gitCreator, err := getGitCreator(flag)
+	if err != nil {
+		return err
+	}
+
 	parsedCommand, err := parseCommandLine(command)
 	if err != nil {
 		return fmt.Errorf("could not parse command: %s", err)
@@ -117,7 +122,7 @@ func print(cmd *cobra.Command, args []string) error {
 
 		Concurrent: concurrent,
 
-		CreateGit: getGitCreator(flag),
+		CreateGit: gitCreator,
 	}
 
 	err = printer.Print(ctx)

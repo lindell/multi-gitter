@@ -47,7 +47,7 @@ func (g *Git) run(args ...string) (string, string, error) {
 	return stdout.String(), stderr.String(), nil
 }
 
-// Clone
+// Clone a repository
 func (g *Git) Clone(url string, baseName string) error {
 	args := []string{"clone", url, "--branch", baseName, "--single-branch"}
 	if g.FetchDepth > 0 {
@@ -59,19 +59,19 @@ func (g *Git) Clone(url string, baseName string) error {
 	return err
 }
 
-// ChangeBranch
+// ChangeBranch changes the branch
 func (g *Git) ChangeBranch(branchName string) error {
 	_, _, err := g.run("checkout", "-b", branchName)
 	return err
 }
 
-// Changes
+// Changes detect if any changes has been made in the directory
 func (g *Git) Changes() (bool, error) {
 	stdOut, _, err := g.run("status", "-s")
 	return len(stdOut) > 0, err
 }
 
-// Commit
+// Commit and push all changes
 func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error {
 	_, _, err := g.run("add", ".")
 	if err != nil {
@@ -82,7 +82,7 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 	return err
 }
 
-// BranchExist
+// BranchExist checks if the new branch exists
 func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 	stdOut, _, err := g.run("ls-remote", "-q", "-h")
 	if err != nil {
@@ -91,13 +91,13 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 	return strings.Contains(stdOut, fmt.Sprintf("refs/heads/%s", branchName)), nil
 }
 
-// Push
+// Push the committed changes to the remote
 func (g *Git) Push(remoteName string) error {
 	_, _, err := g.run("push", remoteName, "HEAD")
 	return err
 }
 
-// AddRemote
+// AddRemote adds a new remote
 func (g *Git) AddRemote(name, url string) error {
 	_, _, err := g.run("remote", "add", name, url)
 	return err
