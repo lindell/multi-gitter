@@ -167,7 +167,8 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	if err != nil {
 		return nil, err
 	}
-	defer os.RemoveAll(tmpDir)
+	// defer os.RemoveAll(tmpDir)
+	fmt.Println("MARKLAR", tmpDir)
 
 	sourceController := r.CreateGit(tmpDir)
 

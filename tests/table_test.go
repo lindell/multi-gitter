@@ -611,7 +611,7 @@ Repositories with a successful run:
 
 				outFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-output")
 				require.NoError(t, err)
-				defer os.Remove(outFile.Name())
+				// defer os.Remove(outFile.Name())
 
 				var vc *vcmock.VersionController
 				if test.vcCreate != nil {

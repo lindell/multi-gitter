@@ -84,7 +84,7 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 	if commitAuthor != nil {
 		cmd.Env = append(cmd.Env,
 			"GIT_AUTHOR_NAME="+commitAuthor.Name,
-			"GIT_AUTHOR_NAME="+commitAuthor.Email,
+			"GIT_AUTHOR_EMAIL="+commitAuthor.Email,
 			"GIT_COMMITTER_NAME="+commitAuthor.Name,
 			"GIT_COMMITTER_EMAIL="+commitAuthor.Email,
 		)
