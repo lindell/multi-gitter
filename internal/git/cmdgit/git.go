@@ -80,7 +80,7 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 	args := []string{"commit", "-m", commitMessage}
 
 	if commitAuthor != nil {
-		args = append(args, "--author", fmt.Sprintf("%s <%s>", commitAuthor.Name, commitAuthor.Email))
+		args = append(args, "--author="+fmt.Sprintf("%s <%s>", commitAuthor.Name, commitAuthor.Email))
 	}
 
 	_, _, err = g.run(args...)
