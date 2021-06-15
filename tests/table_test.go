@@ -148,6 +148,31 @@ func TestTable(t *testing.T) {
 		},
 
 		{
+			name:        "failing base-branch",
+			gitBackends: []gitBackend{gitBackendCmd},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--base-branch", "custom-base-branch",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.logOut, `msg="Remote branch custom-base-branch not found in upstream origin"`)
+			},
+		},
+
+		{
 			name: "success base-branch",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				repo := createRepo(t, "owner", "should-change", "i like apples")
@@ -279,11 +304,11 @@ func TestTable(t *testing.T) {
 				"-m", "custom message",
 				"-B", "custom-branch-name",
 				"-C", "7",
-				fmt.Sprintf("%s -sleep 300ms", changerBinaryPath),
+				fmt.Sprintf("%s -sleep 500ms", changerBinaryPath),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 10)
-				require.Less(t, runData.took.Milliseconds(), int64(3000))
+				require.Less(t, runData.took.Milliseconds(), int64(5000))
 			},
 		},
 
@@ -403,8 +428,7 @@ Repositories with a successful run:
 		},
 
 		{
-			name:        "debug log",
-			gitBackends: []gitBackend{gitBackendGo},
+			name: "debug log",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -602,6 +626,7 @@ Repositories with a successful run:
 				staticArgs := []string{
 					"--log-file", logFile.Name(),
 					"--output", outFile.Name(),
+					"--git-type", string(gitBackend),
 				}
 
 				command := cmd.RootCmd()

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 )
@@ -30,17 +31,15 @@ func (g *Git) run(args ...string) (string, string, error) {
 
 	err := cmd.Run()
 	if err != nil {
+		matches := errRe.FindStringSubmatch(stderr.String())
+		if matches != nil {
+			return "", "", errors.New(matches[3])
+		}
+
 		msg := fmt.Sprintf(`"%s" existed with %d`,
 			strings.Join(append([]string{"git"}, args...), " "),
 			cmd.ProcessState.ExitCode(),
 		)
-
-		fmt.Println(stderr.String())
-
-		matches := errRe.FindStringSubmatch(stderr.String())
-		if matches != nil {
-			msg += ": " + matches[3]
-		}
 
 		return "", "", errors.New(msg)
 	}
@@ -79,7 +78,27 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 	}
 
 	_, _, err = g.run("commit", "-m", commitMessage)
+
+	if err := g.logDiff(); err != nil {
+		return err
+	}
+
 	return err
+}
+
+func (g *Git) logDiff() error {
+	if !log.IsLevelEnabled(log.DebugLevel) {
+		return nil
+	}
+
+	stdout, _, err := g.run("diff", "HEAD~1")
+	if err != nil {
+		return err
+	}
+
+	log.Debug(stdout)
+
+	return nil
 }
 
 // BranchExist checks if the new branch exists
