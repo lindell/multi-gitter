@@ -20,11 +20,10 @@ type Git struct {
 
 var errRe = regexp.MustCompile(`(^|\n)(error|fatal): (.+)`)
 
-func (g *Git) run(args ...string) (string, string, error) {
+func (g *Git) run(cmd *exec.Cmd) (string, string, error) {
 	stderr := &bytes.Buffer{}
 	stdout := &bytes.Buffer{}
 
-	cmd := exec.Command("git", args...)
 	cmd.Dir = g.Directory
 	cmd.Stderr = stderr
 	cmd.Stdout = stdout
@@ -36,8 +35,7 @@ func (g *Git) run(args ...string) (string, string, error) {
 			return "", "", errors.New(matches[3])
 		}
 
-		msg := fmt.Sprintf(`"%s" existed with %d`,
-			strings.Join(append([]string{"git"}, args...), " "),
+		msg := fmt.Sprintf(`git command existed with %d`,
 			cmd.ProcessState.ExitCode(),
 		)
 
@@ -54,38 +52,45 @@ func (g *Git) Clone(url string, baseName string) error {
 	}
 	args = append(args, g.Directory)
 
-	_, _, err := g.run(args...)
+	cmd := exec.Command("git", args...)
+	_, _, err := g.run(cmd)
 	return err
 }
 
 // ChangeBranch changes the branch
 func (g *Git) ChangeBranch(branchName string) error {
-	_, _, err := g.run("checkout", "-b", branchName)
+	cmd := exec.Command("git", "checkout", "-b", branchName)
+	_, _, err := g.run(cmd)
 	return err
 }
 
 // Changes detect if any changes has been made in the directory
 func (g *Git) Changes() (bool, error) {
-	stdOut, _, err := g.run("status", "-s")
+	cmd := exec.Command("git", "status", "-s")
+	stdOut, _, err := g.run(cmd)
 	return len(stdOut) > 0, err
 }
 
 // Commit and push all changes
 func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error {
-	_, _, err := g.run("add", ".")
+	cmd := exec.Command("git", "add", ".")
+	_, _, err := g.run(cmd)
 	if err != nil {
 		return err
 	}
 
-	args := []string{"commit", "-m", commitMessage}
+	cmd = exec.Command("git", "commit", "-m", commitMessage)
 
 	if commitAuthor != nil {
-		args = append(args, fmt.Sprintf(`--author="%s"`, fmt.Sprintf("%s <%s>", commitAuthor.Name, commitAuthor.Email)))
+		cmd.Env = append(cmd.Env,
+			"GIT_AUTHOR_NAME="+commitAuthor.Name,
+			"GIT_AUTHOR_NAME="+commitAuthor.Email,
+			"GIT_COMMITTER_NAME="+commitAuthor.Name,
+			"GIT_COMMITTER_EMAIL="+commitAuthor.Email,
+		)
 	}
 
-	fmt.Println("MARKLAR", args)
-
-	_, _, err = g.run(args...)
+	_, _, err = g.run(cmd)
 
 	if err := g.logDiff(); err != nil {
 		return err
@@ -99,7 +104,8 @@ func (g *Git) logDiff() error {
 		return nil
 	}
 
-	stdout, _, err := g.run("diff", "HEAD~1")
+	cmd := exec.Command("git", "diff", "HEAD~1")
+	stdout, _, err := g.run(cmd)
 	if err != nil {
 		return err
 	}
@@ -111,7 +117,8 @@ func (g *Git) logDiff() error {
 
 // BranchExist checks if the new branch exists
 func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
-	stdOut, _, err := g.run("ls-remote", "-q", "-h")
+	cmd := exec.Command("git", "ls-remote", "-q", "-h")
+	stdOut, _, err := g.run(cmd)
 	if err != nil {
 		return false, err
 	}
@@ -120,12 +127,14 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 
 // Push the committed changes to the remote
 func (g *Git) Push(remoteName string) error {
-	_, _, err := g.run("push", remoteName, "HEAD")
+	cmd := exec.Command("git", "push", remoteName, "HEAD")
+	_, _, err := g.run(cmd)
 	return err
 }
 
 // AddRemote adds a new remote
 func (g *Git) AddRemote(name, url string) error {
-	_, _, err := g.run("remote", "add", name, url)
+	cmd := exec.Command("git", "remote", "add", name, url)
+	_, _, err := g.run(cmd)
 	return err
 }
