@@ -77,7 +77,13 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 		return err
 	}
 
-	_, _, err = g.run("commit", "-m", commitMessage)
+	args := []string{"commit", "-m", commitMessage}
+
+	if commitAuthor != nil {
+		args = append(args, "--author", fmt.Sprintf("%s <%s>", commitAuthor.Name, commitAuthor.Email))
+	}
+
+	_, _, err = g.run(args...)
 
 	if err := g.logDiff(); err != nil {
 		return err
