@@ -15,8 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Git is an implementation of git that executes git as a command
-// This has drawbacks, but the big benefit is that the configuration probably already present can be reused
+// Git is an implementation of git that used go-git
 type Git struct {
 	Directory  string // The (temporary) directory that should be worked within
 	FetchDepth int    // Limit fetching to the specified number of commits

@@ -13,6 +13,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/domain"
 )
 
+// Git is an implementation of git that executes git as commands
 type Git struct {
 	Directory  string // The (temporary) directory that should be worked within
 	FetchDepth int    // Limit fetching to the specified number of commits
@@ -20,7 +21,7 @@ type Git struct {
 
 var errRe = regexp.MustCompile(`(^|\n)(error|fatal): (.+)`)
 
-func (g *Git) run(cmd *exec.Cmd) (string, string, error) {
+func (g *Git) run(cmd *exec.Cmd) (string, error) {
 	stderr := &bytes.Buffer{}
 	stdout := &bytes.Buffer{}
 
@@ -32,16 +33,16 @@ func (g *Git) run(cmd *exec.Cmd) (string, string, error) {
 	if err != nil {
 		matches := errRe.FindStringSubmatch(stderr.String())
 		if matches != nil {
-			return "", "", errors.New(matches[3])
+			return "", errors.New(matches[3])
 		}
 
 		msg := fmt.Sprintf(`git command existed with %d`,
 			cmd.ProcessState.ExitCode(),
 		)
 
-		return "", "", errors.New(msg)
+		return "", errors.New(msg)
 	}
-	return stdout.String(), stderr.String(), nil
+	return stdout.String(), nil
 }
 
 // Clone a repository
@@ -53,28 +54,28 @@ func (g *Git) Clone(url string, baseName string) error {
 	args = append(args, g.Directory)
 
 	cmd := exec.Command("git", args...)
-	_, _, err := g.run(cmd)
+	_, err := g.run(cmd)
 	return err
 }
 
 // ChangeBranch changes the branch
 func (g *Git) ChangeBranch(branchName string) error {
 	cmd := exec.Command("git", "checkout", "-b", branchName)
-	_, _, err := g.run(cmd)
+	_, err := g.run(cmd)
 	return err
 }
 
 // Changes detect if any changes has been made in the directory
 func (g *Git) Changes() (bool, error) {
 	cmd := exec.Command("git", "status", "-s")
-	stdOut, _, err := g.run(cmd)
+	stdOut, err := g.run(cmd)
 	return len(stdOut) > 0, err
 }
 
 // Commit and push all changes
 func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error {
 	cmd := exec.Command("git", "add", ".")
-	_, _, err := g.run(cmd)
+	_, err := g.run(cmd)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,7 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 		)
 	}
 
-	_, _, err = g.run(cmd)
+	_, err = g.run(cmd)
 
 	if err := g.logDiff(); err != nil {
 		return err
@@ -105,7 +106,7 @@ func (g *Git) logDiff() error {
 	}
 
 	cmd := exec.Command("git", "diff", "HEAD~1")
-	stdout, _, err := g.run(cmd)
+	stdout, err := g.run(cmd)
 	if err != nil {
 		return err
 	}
@@ -118,7 +119,7 @@ func (g *Git) logDiff() error {
 // BranchExist checks if the new branch exists
 func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 	cmd := exec.Command("git", "ls-remote", "-q", "-h")
-	stdOut, _, err := g.run(cmd)
+	stdOut, err := g.run(cmd)
 	if err != nil {
 		return false, err
 	}
@@ -128,13 +129,13 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 // Push the committed changes to the remote
 func (g *Git) Push(remoteName string) error {
 	cmd := exec.Command("git", "push", remoteName, "HEAD")
-	_, _, err := g.run(cmd)
+	_, err := g.run(cmd)
 	return err
 }
 
 // AddRemote adds a new remote
 func (g *Git) AddRemote(name, url string) error {
 	cmd := exec.Command("git", "remote", "add", name, url)
-	_, _, err := g.run(cmd)
+	_, err := g.run(cmd)
 	return err
 }
