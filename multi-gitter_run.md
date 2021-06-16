@@ -28,6 +28,11 @@ multi-gitter run [script path] [flags]
   -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
       --fork                    Fork the repository instead of creating a new branch on the same owner
       --fork-owner string       If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
+      --git-type string         The type of git implementation to use.
+                                Available values:
+                                  go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
+                                  cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
+                                 (default "go")
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                    help for run
       --include-subgroups       Include GitLab subgroups when using the --group flag.

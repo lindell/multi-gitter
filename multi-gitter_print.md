@@ -21,6 +21,11 @@ multi-gitter print [script path] [flags]
   -C, --concurrent int        The maximum number of concurrent runs (default 1)
   -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr (default "-")
   -f, --fetch-depth int       Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
+      --git-type string       The type of git implementation to use.
+                              Available values:
+                                go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
+                                cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
+                               (default "go")
   -G, --group strings         The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                  help for print
       --include-subgroups     Include GitLab subgroups when using the --group flag.
