@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.28.0](https://www.github.com/lindell/multi-gitter/compare/v0.27.0...v0.28.0) (2021-06-16)
+
+
+### Features
+
+* added --git-type flag ([cb4701e](https://www.github.com/lindell/multi-gitter/commit/cb4701eb90b98bf585b1a8835368c4cd8f0e0095))
+
 ## [0.27.0](https://www.github.com/lindell/multi-gitter/compare/v0.26.1...v0.27.0) (2021-06-14)
 
 
