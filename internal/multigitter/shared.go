@@ -3,6 +3,7 @@ package multigitter
 import (
 	"syscall"
 
+	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/pkg/errors"
 )
 
@@ -18,4 +19,15 @@ func transformExecError(err error) error {
 		}
 	}
 	return err
+}
+
+// Git is a git implementation
+type Git interface {
+	Clone(url string, baseName string) error
+	ChangeBranch(branchName string) error
+	Changes() (bool, error)
+	Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error
+	BranchExist(remoteName, branchName string) (bool, error)
+	Push(remoteName string) error
+	AddRemote(name, url string) error
 }

@@ -42,13 +42,13 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
-	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests")
 	cmd.Flags().BoolP("fork", "", false, "Fork the repository instead of creating a new branch on the same owner")
 	cmd.Flags().StringP("fork-owner", "", "", "If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
+	configureGit(cmd)
 	configurePlatform(cmd)
 	configureLogging(cmd, "-")
 	cmd.Flags().AddFlagSet(outputFlag())
@@ -66,7 +66,6 @@ func run(cmd *cobra.Command, args []string) error {
 	commitMessage, _ := flag.GetString("commit-message")
 	reviewers, _ := flag.GetStringSlice("reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
-	fetchDepth, _ := flag.GetInt("fetch-depth")
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	dryRun, _ := flag.GetBool("dry-run")
@@ -134,6 +133,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	gitCreator, err := getGitCreator(flag)
+	if err != nil {
+		return err
+	}
+
 	parsedCommand, err := parseCommandLine(command)
 	if err != nil {
 		return fmt.Errorf("could not parse command: %s", err)
@@ -184,8 +188,9 @@ func run(cmd *cobra.Command, args []string) error {
 		CommitAuthor:     commitAuthor,
 		BaseBranch:       baseBranchName,
 
-		FetchDepth: fetchDepth,
 		Concurrent: concurrent,
+
+		CreateGit: gitCreator,
 	}
 
 	err = runner.Run(ctx)

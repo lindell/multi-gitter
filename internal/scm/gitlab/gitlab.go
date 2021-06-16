@@ -133,7 +133,6 @@ func (g *Gitlab) GetRepositories(ctx context.Context) ([]domain.Repository, erro
 
 	repos := make([]domain.Repository, 0, len(allProjects))
 	for _, project := range allProjects {
-
 		p, err := convertProject(project)
 		if err != nil {
 			return nil, err

@@ -22,6 +22,24 @@ type runData struct {
 	took   time.Duration
 }
 
+type gitBackend string
+
+const (
+	gitBackendGo  gitBackend = "go"
+	gitBackendCmd gitBackend = "cmd"
+)
+
+var gitBackends = []gitBackend{gitBackendGo, gitBackendCmd}
+
+func containsGitBackend(gitBackends []gitBackend, gitBackend gitBackend) bool {
+	for _, gb := range gitBackends {
+		if gb == gitBackend {
+			return true
+		}
+	}
+	return false
+}
+
 func TestTable(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
@@ -29,9 +47,9 @@ func TestTable(t *testing.T) {
 	changerBinaryPath := filepath.ToSlash(filepath.Join(workingDir, changerBinaryPath))
 
 	tests := []struct {
-		name     string
-		vc       *vcmock.VersionController
-		vcCreate func(t *testing.T) *vcmock.VersionController // Can be used if advanced setup is needed for the vc
+		name        string
+		gitBackends []gitBackend                                 // If set, use only the specified git backends, otherwise use all
+		vcCreate    func(t *testing.T) *vcmock.VersionController // Can be used if advanced setup is needed for the vc
 
 		args   []string
 		verify func(t *testing.T, vcMock *vcmock.VersionController, runData runData)
@@ -40,10 +58,12 @@ func TestTable(t *testing.T) {
 	}{
 		{
 			name: "simple",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -71,10 +91,12 @@ func TestTable(t *testing.T) {
 
 		{
 			name: "with go run",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -100,11 +122,14 @@ func TestTable(t *testing.T) {
 		},
 
 		{
-			name: "failing base-branch",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			name:        "failing base-branch",
+			gitBackends: []gitBackend{gitBackendGo},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -118,6 +143,31 @@ func TestTable(t *testing.T) {
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 0)
 				assert.Contains(t, runData.logOut, `msg="could not clone from the remote: couldn't find remote ref \"refs/heads/custom-base-branch\""`)
+			},
+		},
+
+		{
+			name:        "failing base-branch",
+			gitBackends: []gitBackend{gitBackendCmd},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--base-branch", "custom-base-branch",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.logOut, `msg="Remote branch custom-base-branch not found in upstream origin"`)
 			},
 		},
 
@@ -156,10 +206,12 @@ func TestTable(t *testing.T) {
 
 		{
 			name: "reviewers",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -179,10 +231,12 @@ func TestTable(t *testing.T) {
 
 		{
 			name: "random reviewers",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -201,10 +255,12 @@ func TestTable(t *testing.T) {
 
 		{
 			name: "dry run",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -224,19 +280,21 @@ func TestTable(t *testing.T) {
 
 		{
 			name: "parallel",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change-1", "i like apples"),
-					createRepo(t, "owner", "should-change-2", "i like apples"),
-					createRepo(t, "owner", "should-change-3", "i like apples"),
-					createRepo(t, "owner", "should-change-4", "i like apples"),
-					createRepo(t, "owner", "should-change-5", "i like apples"),
-					createRepo(t, "owner", "should-change-6", "i like apples"),
-					createRepo(t, "owner", "should-change-7", "i like apples"),
-					createRepo(t, "owner", "should-change-8", "i like apples"),
-					createRepo(t, "owner", "should-change-9", "i like apples"),
-					createRepo(t, "owner", "should-change-10", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change-1", "i like apples"),
+						createRepo(t, "owner", "should-change-2", "i like apples"),
+						createRepo(t, "owner", "should-change-3", "i like apples"),
+						createRepo(t, "owner", "should-change-4", "i like apples"),
+						createRepo(t, "owner", "should-change-5", "i like apples"),
+						createRepo(t, "owner", "should-change-6", "i like apples"),
+						createRepo(t, "owner", "should-change-7", "i like apples"),
+						createRepo(t, "owner", "should-change-8", "i like apples"),
+						createRepo(t, "owner", "should-change-9", "i like apples"),
+						createRepo(t, "owner", "should-change-10", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -245,11 +303,11 @@ func TestTable(t *testing.T) {
 				"-m", "custom message",
 				"-B", "custom-branch-name",
 				"-C", "7",
-				fmt.Sprintf("%s -sleep 300ms", changerBinaryPath),
+				fmt.Sprintf("%s -sleep 500ms", changerBinaryPath),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 10)
-				require.Less(t, runData.took.Milliseconds(), int64(3000))
+				require.Less(t, runData.took.Milliseconds(), int64(5000))
 			},
 		},
 
@@ -334,7 +392,9 @@ Repositories with a successful run:
 
 		{
 			name: "autocomplete org",
-			vc:   &vcmock.VersionController{},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{}
+			},
 			args: []string{
 				"__complete", "run",
 				"--org", "dynamic-org",
@@ -346,7 +406,9 @@ Repositories with a successful run:
 
 		{
 			name: "autocomplete user",
-			vc:   &vcmock.VersionController{},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{}
+			},
 			args: []string{
 				"__complete", "run",
 				"--user", "dynamic-user",
@@ -358,7 +420,9 @@ Repositories with a successful run:
 
 		{
 			name: "autocomplete repo",
-			vc:   &vcmock.VersionController{},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{}
+			},
 			args: []string{
 				"__complete", "run",
 				"--repo", "dynamic-repo",
@@ -370,10 +434,12 @@ Repositories with a successful run:
 
 		{
 			name: "debug log",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -458,10 +524,12 @@ Repositories with a successful run:
 
 		{
 			name: "fork mode",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -495,10 +563,12 @@ Repositories with a successful run:
 
 		{
 			name: "fork mode with specified owner",
-			vc: &vcmock.VersionController{
-				Repositories: []vcmock.Repository{
-					createRepo(t, "owner", "should-change", "i like apples"),
-				},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
 			},
 			args: []string{
 				"run",
@@ -532,56 +602,60 @@ Repositories with a successful run:
 		},
 	}
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			logFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-log")
-			require.NoError(t, err)
-			defer os.Remove(logFile.Name())
-
-			outFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-output")
-			require.NoError(t, err)
-			defer os.Remove(outFile.Name())
-
-			var vc *vcmock.VersionController
-			if test.vcCreate != nil {
-				vc = test.vcCreate(t)
-			} else {
-				vc = test.vc
-			}
-			cmd.OverrideVersionController = vc
-
-			cobraBuf := &bytes.Buffer{}
-
-			staticArgs := []string{
-				"--log-file", logFile.Name(),
-				"--output", outFile.Name(),
+	for _, gitBackend := range gitBackends {
+		for _, test := range tests {
+			// Some tests should only be run with specific git backends
+			if test.gitBackends != nil && !containsGitBackend(test.gitBackends, gitBackend) {
+				continue
 			}
 
-			command := cmd.RootCmd()
-			command.SetOut(cobraBuf)
-			command.SetErr(cobraBuf)
-			command.SetArgs(append(staticArgs, test.args...))
-			before := time.Now()
-			err = command.Execute()
-			took := time.Since(before)
-			if test.expectErr {
-				assert.Error(t, err)
-			} else {
+			t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
+				logFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-log")
+				require.NoError(t, err)
+				defer os.Remove(logFile.Name())
+
+				outFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-output")
+				require.NoError(t, err)
+				// defer os.Remove(outFile.Name())
+
+				vc := test.vcCreate(t)
+
+				cmd.OverrideVersionController = vc
+
+				cobraBuf := &bytes.Buffer{}
+
+				staticArgs := []string{
+					"--log-file", logFile.Name(),
+					"--output", outFile.Name(),
+					"--git-type", string(gitBackend),
+				}
+
+				command := cmd.RootCmd()
+				command.SetOut(cobraBuf)
+				command.SetErr(cobraBuf)
+				command.SetArgs(append(staticArgs, test.args...))
+				before := time.Now()
+				err = command.Execute()
+				took := time.Since(before)
+				if test.expectErr {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
+
+				logData, err := ioutil.ReadAll(logFile)
 				assert.NoError(t, err)
-			}
 
-			logData, err := ioutil.ReadAll(logFile)
-			assert.NoError(t, err)
+				outData, err := ioutil.ReadAll(outFile)
+				assert.NoError(t, err)
 
-			outData, err := ioutil.ReadAll(outFile)
-			assert.NoError(t, err)
-
-			test.verify(t, vc, runData{
-				logOut: string(logData),
-				out:    string(outData),
-				cmdOut: cobraBuf.String(),
-				took:   took,
+				test.verify(t, vc, runData{
+					logOut: string(logData),
+					out:    string(outData),
+					cmdOut: cobraBuf.String(),
+					took:   took,
+				})
 			})
-		})
+		}
 	}
 }
