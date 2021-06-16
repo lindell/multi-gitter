@@ -48,8 +48,7 @@ func TestTable(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		gitBackends []gitBackend // If set, use only the specified git backends, otherwise use all
-		vc          *vcmock.VersionController
+		gitBackends []gitBackend                                 // If set, use only the specified git backends, otherwise use all
 		vcCreate    func(t *testing.T) *vcmock.VersionController // Can be used if advanced setup is needed for the vc
 
 		args   []string
@@ -393,7 +392,9 @@ Repositories with a successful run:
 
 		{
 			name: "autocomplete org",
-			vc:   &vcmock.VersionController{},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{}
+			},
 			args: []string{
 				"__complete", "run",
 				"--org", "dynamic-org",
@@ -405,7 +406,9 @@ Repositories with a successful run:
 
 		{
 			name: "autocomplete user",
-			vc:   &vcmock.VersionController{},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{}
+			},
 			args: []string{
 				"__complete", "run",
 				"--user", "dynamic-user",
@@ -417,7 +420,9 @@ Repositories with a successful run:
 
 		{
 			name: "autocomplete repo",
-			vc:   &vcmock.VersionController{},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{}
+			},
 			args: []string{
 				"__complete", "run",
 				"--repo", "dynamic-repo",
@@ -613,12 +618,8 @@ Repositories with a successful run:
 				require.NoError(t, err)
 				// defer os.Remove(outFile.Name())
 
-				var vc *vcmock.VersionController
-				if test.vcCreate != nil {
-					vc = test.vcCreate(t)
-				} else {
-					vc = test.vc
-				}
+				vc := test.vcCreate(t)
+
 				cmd.OverrideVersionController = vc
 
 				cobraBuf := &bytes.Buffer{}

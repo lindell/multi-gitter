@@ -21,7 +21,8 @@ func transformExecError(err error) error {
 	return err
 }
 
-type git interface {
+// Git is a git implementation
+type Git interface {
 	Clone(url string, baseName string) error
 	ChangeBranch(branchName string) error
 	Changes() (bool, error)

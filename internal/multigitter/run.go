@@ -54,7 +54,7 @@ type Runner struct {
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
-	CreateGit func(dir string) git
+	CreateGit func(dir string) Git
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
