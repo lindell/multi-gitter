@@ -27,7 +27,7 @@ type Printer struct {
 
 	Concurrent int
 
-	CreateGit func(dir string) Git
+	CreateGit func(dir string) git
 }
 
 // Print runs a script for multiple repositories and print the output of each run
