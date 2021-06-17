@@ -12,6 +12,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/git/cmdgit"
 	"github.com/lindell/multi-gitter/internal/git/gogit"
 	"github.com/lindell/multi-gitter/internal/http"
+	internallog "github.com/lindell/multi-gitter/internal/log"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm/gitea"
 	"github.com/lindell/multi-gitter/internal/scm/github"
@@ -200,18 +201,34 @@ func logFlagInit(cmd *cobra.Command, args []string) error {
 
 	// Parse and set the log format
 	strFormat, _ := cmd.Flags().GetString("log-format")
+
+	var formatter log.Formatter
 	switch strFormat {
 	case "text":
-		log.SetFormatter(&log.TextFormatter{})
+		formatter = &log.TextFormatter{}
 	case "json":
-		log.SetFormatter(&log.JSONFormatter{})
+		formatter = &log.JSONFormatter{}
 	case "json-pretty":
-		log.SetFormatter(&log.JSONFormatter{
+		formatter = &log.JSONFormatter{
 			PrettyPrint: true,
-		})
+		}
 	default:
 		return fmt.Errorf(`unknown log-format "%s"`, strFormat)
 	}
+
+	// Make sure sensitive data is censored before logging them
+	var censorItems []internallog.CensorItem
+	if token, err := getToken(cmd.Flags()); err == nil && token != "" {
+		censorItems = append(censorItems, internallog.CensorItem{
+			Sensitive:   token,
+			Replacement: "<TOKEN>",
+		})
+	}
+
+	log.SetFormatter(&internallog.CensorFormatter{
+		CensorItems:         censorItems,
+		UnderlyingFormatter: formatter,
+	})
 
 	// Set the output (file)
 	strFile, _ := cmd.Flags().GetString("log-file")
