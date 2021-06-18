@@ -1,6 +1,7 @@
 package multigitter
 
 import (
+	"fmt"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/domain"
@@ -30,4 +31,19 @@ type Git interface {
 	BranchExist(remoteName, branchName string) (bool, error)
 	Push(remoteName string) error
 	AddRemote(name, url string) error
+}
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
+func getStackTrace(err error) string {
+	if err, ok := err.(stackTracer); ok {
+		trace := ""
+		for _, f := range err.StackTrace() {
+			trace += fmt.Sprintf("%+s:%d\n", f, f)
+		}
+		return trace
+	}
+	return ""
 }

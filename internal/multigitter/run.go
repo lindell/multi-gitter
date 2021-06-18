@@ -72,17 +72,15 @@ func (pr dryRunPullRequest) String() string {
 	return fmt.Sprintf("%s #0", pr.Repository.FullName())
 }
 
-type stackTracer interface {
-	StackTrace() errors.StackTrace
-}
-
 // Run runs a script for multiple repositories and creates PRs with the changes made
 func (r Runner) Run(ctx context.Context) error {
+	// Fetch all repositories that are are going to be used in the run
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
 
+	// Setting up a "counter" that keeps track of successful and failed runs
 	rc := repocounter.NewCounter()
 	defer func() {
 		if info := rc.Info(); info != "" {
@@ -108,15 +106,13 @@ func (r Runner) Run(ctx context.Context) error {
 				logger.Info(err)
 			}
 			rc.AddError(err, repos[i])
+
 			if log.IsLevelEnabled(log.TraceLevel) {
-				if err, ok := err.(stackTracer); ok {
-					trace := ""
-					for _, f := range err.StackTrace() {
-						trace += fmt.Sprintf("%+s:%d\n", f, f)
-					}
-					log.Trace(trace)
+				if stackTrace := getStackTrace(err); stackTrace != "" {
+					log.Trace(stackTrace)
 				}
 			}
+
 			return
 		}
 
@@ -197,6 +193,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
 	)
 
+	// Setup logger that transfers stdout and stderr from the run to logs
 	writer := logger.NewLogger(log)
 	defer writer.Close()
 	cmd.Stdout = writer
@@ -251,6 +248,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		}
 	}
 
+	log.Info("Pushing changes to remote")
 	err = sourceController.Push(remoteName)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
@@ -260,7 +258,7 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		return nil, nil
 	}
 
-	log.Info("Change done, creating pull request")
+	log.Info("Creating pull request")
 	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, domain.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
