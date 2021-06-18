@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -54,8 +52,6 @@ func print(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	command := flag.Arg(0)
-
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
 	}
@@ -70,11 +66,6 @@ func print(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	workingDir, err := os.Getwd()
-	if err != nil {
-		return errors.New("could not get the working directory")
-	}
-
 	vc, err := getVersionController(flag, true)
 	if err != nil {
 		return err
@@ -85,17 +76,9 @@ func print(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	parsedCommand, err := parseCommandLine(command)
+	executablePath, arguments, err := parseCommand(flag.Arg(0))
 	if err != nil {
-		return fmt.Errorf("could not parse command: %s", err)
-	}
-	executablePath, err := exec.LookPath(parsedCommand[0])
-	if err != nil {
-		return fmt.Errorf("could not find executable %s", parsedCommand[0])
-	}
-	// Executable needs to be defined with an absolute path since it will be run within the context of repositories
-	if !filepath.IsAbs(executablePath) {
-		executablePath = filepath.Join(workingDir, executablePath)
+		return err
 	}
 
 	// Set up signal listening to cancel the context and let started runs finish gracefully
@@ -112,7 +95,7 @@ func print(cmd *cobra.Command, args []string) error {
 
 	printer := multigitter.Printer{
 		ScriptPath: executablePath,
-		Arguments:  parsedCommand[1:],
+		Arguments:  arguments,
 		Token:      token,
 
 		VersionController: vc,
