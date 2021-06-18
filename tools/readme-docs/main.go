@@ -12,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/lindell/multi-gitter/cmd"
 )
@@ -23,6 +24,7 @@ type templateData struct {
 	MainUsage         string
 	Commands          []command
 	ExampleCategories []exampleCategory
+	YAMLExample       string
 }
 
 type command struct {
@@ -94,6 +96,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	data.YAMLExample = strings.TrimSpace(getYAMLExample(commandByName(subCommands, "run")))
+
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		log.Fatal(err)
@@ -109,6 +113,35 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// Replace some of the default values in the yaml example with these values
+var yamlExamples = map[string]string{
+	"repo":    "\n  - my-org/js-repo\n  - other-org/python-repo",
+	"project": "\n - group/project",
+}
+
+func getYAMLExample(cmd *cobra.Command) string {
+	b := strings.Builder{}
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		if f.Name == "config" {
+			return
+		}
+
+		val := f.DefValue
+		if val == "-" {
+			val = `"-"`
+		} else if val == "[]" {
+			val = "\n  - example"
+		}
+
+		if replacement, ok := yamlExamples[f.Name]; ok {
+			val = replacement
+		}
+
+		b.WriteString(fmt.Sprintf("%s: %s\n", f.Name, val))
+	})
+	return b.String()
 }
 
 func commandByName(cmds []*cobra.Command, name string) *cobra.Command {

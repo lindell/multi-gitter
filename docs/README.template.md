@@ -86,6 +86,18 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 
 In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens 
 
+## Config file
+
+All configuration in multi-gitter can be done through command line flags or configuration files or a mix of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml`.
+
+<details>
+  <summary>Example config</summary>
+
+```yaml
+{{ .YAMLExample }}
+```
+</details>
+
 ## Usage
 {{range .Commands}}
 * [{{ .Name }}](#-usage-of-{{ .Name }}) {{ .Short }}{{end}}
