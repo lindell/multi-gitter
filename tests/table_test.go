@@ -29,6 +29,26 @@ const (
 	gitBackendCmd gitBackend = "cmd"
 )
 
+type skipType int
+
+const (
+	skipTypeCI skipType = iota + 1
+)
+
+// skipTypes is a list of types that can be skipped. These can be set with build tags
+var skipTypes = []skipType{}
+
+func skipOverlap(tt1, tt2 []skipType) bool {
+	for _, t1 := range tt1 {
+		for _, t2 := range tt2 {
+			if t1 == t2 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 var gitBackends = []gitBackend{gitBackendGo, gitBackendCmd}
 
 func containsGitBackend(gitBackends []gitBackend, gitBackend gitBackend) bool {
@@ -53,6 +73,8 @@ func TestTable(t *testing.T) {
 
 		args   []string
 		verify func(t *testing.T, vcMock *vcmock.VersionController, runData runData)
+
+		skipTypes []skipType // Defined if a test should be skipped in some cases
 
 		expectErr bool
 	}{
@@ -281,7 +303,8 @@ func TestTable(t *testing.T) {
 		},
 
 		{
-			name: "parallel",
+			name:      "parallel",
+			skipTypes: []skipType{skipTypeCI}, // This test is time dependent, don't run it in CI since some runs might be to slow
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -611,6 +634,11 @@ Repositories with a successful run:
 		for _, test := range tests {
 			// Some tests should only be run with specific git backends
 			if test.gitBackends != nil && !containsGitBackend(test.gitBackends, gitBackend) {
+				continue
+			}
+
+			// Skip some tests depending on the values in skipTypes
+			if skipOverlap(skipTypes, test.skipTypes) {
 				continue
 			}
 
