@@ -17,7 +17,7 @@ jobs:
         run: mkdir coverage
 
       - name: Test
-        run: go test ./... -coverpkg=$( go list ./... | grep -v /tests | grep -v /tools | paste -sd "," -) -coverprofile coverage/coverage.out
+        run: go test ./... -tags ci -coverpkg=$( go list ./... | grep -v /tests | grep -v /tools | paste -sd "," -) -coverprofile coverage/coverage.out
 
       - name: Coverage convert
         uses: jandelgado/gcov2lcov-action@v1.0.8

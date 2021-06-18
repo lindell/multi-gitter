@@ -27,11 +27,11 @@ jobs:
         run: copy-item -Path "." -Destination "$env:temp\multi-gitter" -Recurse
       - name: Test (Windows)
         if: matrix.os == 'windows-latest'
-        run: cd $env:temp\multi-gitter && go test ./...
+        run: cd $env:temp\multi-gitter && go test ./... -tags ci
 
       - name: Test (Not Windows)
         if: matrix.os != 'windows-latest'
-        run: go test ./...
+        run: go test ./... -tags ci
 
       - name: Build
         run: go build main.go
