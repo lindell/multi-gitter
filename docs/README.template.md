@@ -91,7 +91,7 @@ In Gitea, access tokens can be generated under Settings -> Applications -> Manag
 All configuration in multi-gitter can be done through command line flags or configuration files or a mix of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml`.
 
 <details>
-  <summary>Example config</summary>
+  <summary>Example run config</summary>
 
 ```yaml
 {{ .YAMLExample }}

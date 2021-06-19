@@ -139,7 +139,12 @@ func getYAMLExample(cmd *cobra.Command) string {
 			val = replacement
 		}
 
-		b.WriteString(fmt.Sprintf("%s: %s\n", f.Name, val))
+		usage := strings.Split(strings.TrimSpace(f.Usage), "\n")
+		for i := range usage {
+			usage[i] = "# " + usage[i]
+		}
+
+		b.WriteString(fmt.Sprintf("%s\n%s: %s\n\n", strings.Join(usage, "\n"), f.Name, val))
 	})
 	return b.String()
 }
