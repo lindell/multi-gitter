@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.28.1](https://www.github.com/lindell/multi-gitter/compare/v0.28.0...v0.28.1) (2021-06-19)
+
+
+### Bug Fixes
+
+* made sure any tokens output in the logs are now censored ([#143](https://www.github.com/lindell/multi-gitter/issues/143)) ([0e5cee7](https://www.github.com/lindell/multi-gitter/commit/0e5cee7ecd6dde23d21869058cc383e83b232703))
+
 ## [0.28.0](https://www.github.com/lindell/multi-gitter/compare/v0.27.0...v0.28.0) (2021-06-16)
 
 
