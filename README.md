@@ -90,8 +90,10 @@ In Gitea, access tokens can be generated under Settings -> Applications -> Manag
 
 All configuration in multi-gitter can be done through command line flags, configuration files or a mix of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml`. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
 
+
+
 <details>
-  <summary>Example run config</summary>
+  <summary>All available run options</summary>
 
 ```yaml
 # Email of the committer. If not set, the global git config setting will be used.
@@ -192,6 +194,182 @@ user:
   - example
 ```
 </details>
+
+
+<details>
+  <summary>All available merge options</summary>
+
+```yaml
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url: 
+
+# The name of the branch where changes are committed.
+branch: multi-gitter-branch
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group: 
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout
+log-file: "-"
+
+# The formating of the logs. Available values: text, json, json-pretty
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error
+log-level: info
+
+# The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.
+merge-type: [merge,squash,rebase]
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org: 
+  - example
+
+# The platform that is used. Available values: github, gitlab, gitea
+platform: github
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName"
+project: 
+ - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+repo: 
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token: 
+
+# The name of a user. All repositories owned by that user will be used.
+user: 
+  - example
+```
+</details>
+
+
+
+<details>
+  <summary>All available close options</summary>
+
+```yaml
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url: 
+
+# The name of the branch where changes are committed.
+branch: multi-gitter-branch
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group: 
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout
+log-file: "-"
+
+# The formating of the logs. Available values: text, json, json-pretty
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error
+log-level: info
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org: 
+  - example
+
+# The platform that is used. Available values: github, gitlab, gitea
+platform: github
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName"
+project: 
+ - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+repo: 
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token: 
+
+# The name of a user. All repositories owned by that user will be used.
+user: 
+  - example
+```
+</details>
+
+
+<details>
+  <summary>All available print options</summary>
+
+```yaml
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url: 
+
+# The maximum number of concurrent runs
+concurrent: 1
+
+# The file that the output of the script should be outputted to. "-" means stderr
+error-output: "-"
+
+# Limit fetching to the specified number of commits. Set to 0 for no limit
+fetch-depth: 1
+
+# The type of git implementation to use.
+# Available values:
+#   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
+#   cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
+git-type: go
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group: 
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout
+log-file: 
+
+# The formating of the logs. Available values: text, json, json-pretty
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error
+log-level: info
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org: 
+  - example
+
+# The file that the output of the script should be outputted to. "-" means stdout
+output: "-"
+
+# The platform that is used. Available values: github, gitlab, gitea
+platform: github
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName"
+project: 
+ - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+repo: 
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token: 
+
+# The name of a user. All repositories owned by that user will be used.
+user: 
+  - example
+```
+</details>
+
 
 ## Usage
 

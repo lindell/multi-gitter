@@ -24,15 +24,15 @@ type templateData struct {
 	MainUsage         string
 	Commands          []command
 	ExampleCategories []exampleCategory
-	YAMLExample       string
 }
 
 type command struct {
-	ImageIcon string
-	Name      string
-	Long      string
-	Short     string
-	Usage     string
+	ImageIcon   string
+	Name        string
+	Long        string
+	Short       string
+	Usage       string
+	YAMLExample string
 }
 
 type exampleCategory struct {
@@ -82,11 +82,12 @@ func main() {
 	}
 	for _, c := range cmds {
 		data.Commands = append(data.Commands, command{
-			Name:      c.cmd.Name(),
-			ImageIcon: c.imgIcon,
-			Long:      c.cmd.Long,
-			Short:     c.cmd.Short,
-			Usage:     strings.TrimSpace(c.cmd.UsageString()),
+			Name:        c.cmd.Name(),
+			ImageIcon:   c.imgIcon,
+			Long:        c.cmd.Long,
+			Short:       c.cmd.Short,
+			Usage:       strings.TrimSpace(c.cmd.UsageString()),
+			YAMLExample: getYAMLExample(c.cmd),
 		})
 	}
 
@@ -95,8 +96,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	data.YAMLExample = strings.TrimSpace(getYAMLExample(commandByName(subCommands, "run")))
 
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
@@ -122,6 +121,10 @@ var yamlExamples = map[string]string{
 }
 
 func getYAMLExample(cmd *cobra.Command) string {
+	if cmd.Flag("config") == nil {
+		return ""
+	}
+
 	b := strings.Builder{}
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		if f.Name == "config" {
@@ -146,7 +149,7 @@ func getYAMLExample(cmd *cobra.Command) string {
 
 		b.WriteString(fmt.Sprintf("%s\n%s: %s\n\n", strings.Join(usage, "\n"), f.Name, val))
 	})
-	return b.String()
+	return strings.TrimSpace(b.String())
 }
 
 func commandByName(cmds []*cobra.Command, name string) *cobra.Command {
