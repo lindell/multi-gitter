@@ -13,6 +13,20 @@ func configureConfig(cmd *cobra.Command) {
 }
 
 func initializeConfig(cmd *cobra.Command) error {
+	// Prioritize reading config files defined with --config
+	if err := initializeDynamicConfig(cmd); err != nil {
+		return err
+	}
+
+	// Read any config defined in static config files
+	if err := initializeStaticConfig(cmd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func initializeDynamicConfig(cmd *cobra.Command) error {
 	configFile, _ := cmd.Flags().GetString("config")
 	if configFile == "" {
 		return nil
@@ -20,10 +34,24 @@ func initializeConfig(cmd *cobra.Command) error {
 
 	v := viper.New()
 
-	// Set the base name of the config file, without the file extension.
 	v.SetConfigFile(configFile)
+	v.SetConfigType("yaml")
+
+	if err := v.ReadInConfig(); err != nil {
+		return err
+	}
+
+	bindFlags(cmd, v)
+
+	return nil
+}
+
+func initializeStaticConfig(cmd *cobra.Command) error {
+	v := viper.New()
 
 	v.SetConfigType("yaml")
+	v.SetConfigName("config")
+	v.AddConfigPath("$HOME/.multi-gitter")
 
 	// Attempt to read the config file, gracefully ignoring errors
 	// caused by a config file not being found. Return an error
@@ -35,7 +63,6 @@ func initializeConfig(cmd *cobra.Command) error {
 		}
 	}
 
-	// Bind the current command's flags to viper
 	bindFlags(cmd, v)
 
 	return nil
