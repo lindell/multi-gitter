@@ -628,6 +628,35 @@ Repositories with a successful run:
 				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path+"-forked-custom-org"))
 			},
 		},
+
+		{
+			name: "config file",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--config", "test-config.yaml",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "config-message", vcMock.PullRequests[0].Title)
+
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-change #1
+`, runData.out)
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {

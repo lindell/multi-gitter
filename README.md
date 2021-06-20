@@ -86,6 +86,294 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 
 In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens 
 
+## Config file
+
+All configuration in multi-gitter can be done through command line flags, configuration files or a mix of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml`. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
+
+
+
+<details>
+  <summary>All available run options</summary>
+
+```yaml
+# Email of the committer. If not set, the global git config setting will be used.
+author-email:
+
+# Name of the committer. If not set, the global git config setting will be used.
+author-name:
+
+# The branch which the changes will be based on.
+base-branch:
+
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url:
+
+# The name of the branch where changes are committed.
+branch: multi-gitter-branch
+
+# The commit message. Will default to title + body if none is set.
+commit-message:
+
+# The maximum number of concurrent runs
+concurrent: 1
+
+# Run without pushing changes or creating pull requests
+dry-run: false
+
+# Limit fetching to the specified number of commits. Set to 0 for no limit
+fetch-depth: 1
+
+# Fork the repository instead of creating a new branch on the same owner
+fork: false
+
+# If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
+fork-owner:
+
+# The type of git implementation to use.
+# Available values:
+#   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
+#   cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
+git-type: go
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group:
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout
+log-file: "-"
+
+# The formating of the logs. Available values: text, json, json-pretty
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error
+log-level: info
+
+# If this value is set, reviewers will be randomized
+max-reviewers: 0
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org:
+  - example
+
+# The file that the output of the script should be outputted to. "-" means stdout
+output: "-"
+
+# The platform that is used. Available values: github, gitlab, gitea
+platform: github
+
+# The body of the commit message. Will default to everything but the first line of the commit message if none is set.
+pr-body:
+
+# The title of the PR. Will default to the first line of the commit message if none is set.
+pr-title:
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName"
+project:
+  - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+repo:
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The username of the reviewers to be added on the pull request.
+reviewers:
+  - example
+
+# Skip pull request and directly push to the branch
+skip-pr: false
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token:
+
+# The name of a user. All repositories owned by that user will be used.
+user:
+  - example
+```
+</details>
+
+
+<details>
+  <summary>All available merge options</summary>
+
+```yaml
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url:
+
+# The name of the branch where changes are committed.
+branch: multi-gitter-branch
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group:
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout
+log-file: "-"
+
+# The formating of the logs. Available values: text, json, json-pretty
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error
+log-level: info
+
+# The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.
+merge-type:
+  - merge
+  - squash
+  - rebase
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org:
+  - example
+
+# The platform that is used. Available values: github, gitlab, gitea
+platform: github
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName"
+project:
+  - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+repo:
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token:
+
+# The name of a user. All repositories owned by that user will be used.
+user:
+  - example
+```
+</details>
+
+
+
+<details>
+  <summary>All available close options</summary>
+
+```yaml
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url:
+
+# The name of the branch where changes are committed.
+branch: multi-gitter-branch
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group:
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout
+log-file: "-"
+
+# The formating of the logs. Available values: text, json, json-pretty
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error
+log-level: info
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org:
+  - example
+
+# The platform that is used. Available values: github, gitlab, gitea
+platform: github
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName"
+project:
+  - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+repo:
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token:
+
+# The name of a user. All repositories owned by that user will be used.
+user:
+  - example
+```
+</details>
+
+
+<details>
+  <summary>All available print options</summary>
+
+```yaml
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url:
+
+# The maximum number of concurrent runs
+concurrent: 1
+
+# The file that the output of the script should be outputted to. "-" means stderr
+error-output: "-"
+
+# Limit fetching to the specified number of commits. Set to 0 for no limit
+fetch-depth: 1
+
+# The type of git implementation to use.
+# Available values:
+#   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
+#   cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
+git-type: go
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group:
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout
+log-file:
+
+# The formating of the logs. Available values: text, json, json-pretty
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error
+log-level: info
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org:
+  - example
+
+# The file that the output of the script should be outputted to. "-" means stdout
+output: "-"
+
+# The platform that is used. Available values: github, gitlab, gitea
+platform: github
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName"
+project:
+  - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+repo:
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token:
+
+# The name of a user. All repositories owned by that user will be used.
+user:
+  - example
+```
+</details>
+
+
 ## Usage
 
 * [run](#-usage-of-run) Clones multiple repositories, run a script in that directory, and creates a PR with those changes.
@@ -113,6 +401,7 @@ Flags:
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
   -C, --concurrent int          The maximum number of concurrent runs (default 1)
+      --config string           Path of the config file.
   -d, --dry-run                 Run without pushing changes or creating pull requests
   -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
       --fork                    Fork the repository instead of creating a new branch on the same owner
@@ -151,6 +440,7 @@ Usage:
 Flags:
   -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
+      --config string        Path of the config file.
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups    Include GitLab subgroups when using the --group flag.
       --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
@@ -199,6 +489,7 @@ Usage:
 Flags:
   -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
+      --config string       Path of the config file.
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
       --log-file string     The file where all logs should be printed to. "-" means stdout (default "-")
@@ -226,6 +517,7 @@ Usage:
 Flags:
   -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -C, --concurrent int        The maximum number of concurrent runs (default 1)
+      --config string         Path of the config file.
   -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr (default "-")
   -f, --fetch-depth int       Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
       --git-type string       The type of git implementation to use.

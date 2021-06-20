@@ -49,6 +49,7 @@ func RunCmd() *cobra.Command {
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureLogging(cmd, "-")
+	configureConfig(cmd)
 	cmd.Flags().AddFlagSet(outputFlag())
 
 	return cmd

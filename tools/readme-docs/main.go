@@ -12,6 +12,7 @@ import (
 	"text/template"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"github.com/lindell/multi-gitter/cmd"
 )
@@ -26,11 +27,12 @@ type templateData struct {
 }
 
 type command struct {
-	ImageIcon string
-	Name      string
-	Long      string
-	Short     string
-	Usage     string
+	ImageIcon   string
+	Name        string
+	Long        string
+	Short       string
+	Usage       string
+	YAMLExample string
 }
 
 type exampleCategory struct {
@@ -80,11 +82,12 @@ func main() {
 	}
 	for _, c := range cmds {
 		data.Commands = append(data.Commands, command{
-			Name:      c.cmd.Name(),
-			ImageIcon: c.imgIcon,
-			Long:      c.cmd.Long,
-			Short:     c.cmd.Short,
-			Usage:     strings.TrimSpace(c.cmd.UsageString()),
+			Name:        c.cmd.Name(),
+			ImageIcon:   c.imgIcon,
+			Long:        c.cmd.Long,
+			Short:       c.cmd.Short,
+			Usage:       strings.TrimSpace(c.cmd.UsageString()),
+			YAMLExample: getYAMLExample(c.cmd),
 		})
 	}
 
@@ -109,6 +112,51 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// Replace some of the default values in the yaml example with these values
+var yamlExamples = map[string]string{
+	"repo":    "\n  - my-org/js-repo\n  - other-org/python-repo",
+	"project": "\n  - group/project",
+}
+
+var listDefaultRegex = regexp.MustCompile(`^\[(.+)\]$`)
+
+func getYAMLExample(cmd *cobra.Command) string {
+	if cmd.Flag("config") == nil {
+		return ""
+	}
+
+	b := strings.Builder{}
+	cmd.Flags().VisitAll(func(f *pflag.Flag) {
+		if f.Name == "config" {
+			return
+		}
+
+		// Determine how to format the example values
+		val := f.DefValue
+		if val == "-" {
+			val = ` "-"`
+		} else if val == "[]" {
+			val = "\n  - example"
+		} else if matches := listDefaultRegex.FindStringSubmatch(val); matches != nil {
+			val = "\n  - " + strings.Join(strings.Split(matches[1], ","), "\n  - ")
+		} else if val != "" {
+			val = " " + val
+		}
+
+		if replacement, ok := yamlExamples[f.Name]; ok {
+			val = replacement
+		}
+
+		usage := strings.Split(strings.TrimSpace(f.Usage), "\n")
+		for i := range usage {
+			usage[i] = "# " + usage[i]
+		}
+
+		b.WriteString(fmt.Sprintf("%s\n%s:%s\n\n", strings.Join(usage, "\n"), f.Name, val))
+	})
+	return strings.TrimSpace(b.String())
 }
 
 func commandByName(cmds []*cobra.Command, name string) *cobra.Command {
