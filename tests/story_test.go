@@ -17,6 +17,7 @@ import (
 // TestStory tests the common usecase: run, status, merge, status
 func TestStory(t *testing.T) {
 	vcMock := &vcmock.VersionController{}
+	defer vcMock.Clean()
 	cmd.OverrideVersionController = vcMock
 
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-test-run-")

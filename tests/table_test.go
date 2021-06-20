@@ -396,8 +396,6 @@ Repositories with a successful run:
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				fmt.Fprintln(os.Stderr, vcMock.Repositories[0].Path)
-
 				require.Len(t, vcMock.PullRequests, 0)
 
 				assert.Contains(t, runData.logOut, "Running on 1 repositories")
@@ -681,6 +679,7 @@ Repositories with a successful run:
 				// defer os.Remove(outFile.Name())
 
 				vc := test.vcCreate(t)
+				defer vc.Clean()
 
 				cmd.OverrideVersionController = vc
 

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	git "github.com/go-git/go-git/v5"
@@ -132,6 +133,13 @@ func (vc *VersionController) ForkRepository(ctx context.Context, repo domain.Rep
 	}, nil
 }
 
+// Clean cleans up the data on disk that exist within the version controller mock
+func (vc *VersionController) Clean() {
+	for _, repo := range vc.Repositories {
+		repo.Delete()
+	}
+}
+
 // PullRequest is a mock pr
 type PullRequest struct {
 	PRStatus domain.PullRequestStatus
@@ -177,4 +185,9 @@ func (r Repository) FullName() string {
 // Owner returns the owner of a repo
 func (r Repository) Owner() string {
 	return r.OwnerName
+}
+
+// Delete deletes data on disk
+func (r Repository) Delete() {
+	os.RemoveAll(r.Path)
 }
