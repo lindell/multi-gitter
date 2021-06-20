@@ -126,3 +126,5 @@ All configuration in multi-gitter can be done through command line flags, config
 ```
 </details>
 {{end}}{{end}}
+
+Do you have a nice script that might be useful to others? Please create a PR that adds it to the [examples folder](/examples).
