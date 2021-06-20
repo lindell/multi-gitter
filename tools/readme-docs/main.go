@@ -117,8 +117,10 @@ func main() {
 // Replace some of the default values in the yaml example with these values
 var yamlExamples = map[string]string{
 	"repo":    "\n  - my-org/js-repo\n  - other-org/python-repo",
-	"project": "\n - group/project",
+	"project": "\n  - group/project",
 }
+
+var listDefaultRegex = regexp.MustCompile(`^\[(.+)\]$`)
 
 func getYAMLExample(cmd *cobra.Command) string {
 	if cmd.Flag("config") == nil {
@@ -131,11 +133,16 @@ func getYAMLExample(cmd *cobra.Command) string {
 			return
 		}
 
+		// Determine how to format the example values
 		val := f.DefValue
 		if val == "-" {
-			val = `"-"`
+			val = ` "-"`
 		} else if val == "[]" {
 			val = "\n  - example"
+		} else if matches := listDefaultRegex.FindStringSubmatch(val); matches != nil {
+			val = "\n  - " + strings.Join(strings.Split(matches[1], ","), "\n  - ")
+		} else if val != "" {
+			val = " " + val
 		}
 
 		if replacement, ok := yamlExamples[f.Name]; ok {
@@ -147,7 +154,7 @@ func getYAMLExample(cmd *cobra.Command) string {
 			usage[i] = "# " + usage[i]
 		}
 
-		b.WriteString(fmt.Sprintf("%s\n%s: %s\n\n", strings.Join(usage, "\n"), f.Name, val))
+		b.WriteString(fmt.Sprintf("%s\n%s:%s\n\n", strings.Join(usage, "\n"), f.Name, val))
 	})
 	return strings.TrimSpace(b.String())
 }

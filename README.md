@@ -97,22 +97,22 @@ All configuration in multi-gitter can be done through command line flags, config
 
 ```yaml
 # Email of the committer. If not set, the global git config setting will be used.
-author-email: 
+author-email:
 
 # Name of the committer. If not set, the global git config setting will be used.
-author-name: 
+author-name:
 
 # The branch which the changes will be based on.
-base-branch: 
+base-branch:
 
 # Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
-base-url: 
+base-url:
 
 # The name of the branch where changes are committed.
 branch: multi-gitter-branch
 
 # The commit message. Will default to title + body if none is set.
-commit-message: 
+commit-message:
 
 # The maximum number of concurrent runs
 concurrent: 1
@@ -127,7 +127,7 @@ fetch-depth: 1
 fork: false
 
 # If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
-fork-owner: 
+fork-owner:
 
 # The type of git implementation to use.
 # Available values:
@@ -136,7 +136,7 @@ fork-owner:
 git-type: go
 
 # The name of a GitLab organization. All repositories in that group will be used.
-group: 
+group:
   - example
 
 # Include GitLab subgroups when using the --group flag.
@@ -155,7 +155,7 @@ log-level: info
 max-reviewers: 0
 
 # The name of a GitHub organization. All repositories in that organization will be used.
-org: 
+org:
   - example
 
 # The file that the output of the script should be outputted to. "-" means stdout
@@ -165,32 +165,32 @@ output: "-"
 platform: github
 
 # The body of the commit message. Will default to everything but the first line of the commit message if none is set.
-pr-body: 
+pr-body:
 
 # The title of the PR. Will default to the first line of the commit message if none is set.
-pr-title: 
+pr-title:
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName"
-project: 
- - group/project
+project:
+  - group/project
 
 # The name, including owner of a GitHub repository in the format "ownerName/repoName"
-repo: 
+repo:
   - my-org/js-repo
   - other-org/python-repo
 
 # The username of the reviewers to be added on the pull request.
-reviewers: 
+reviewers:
   - example
 
 # Skip pull request and directly push to the branch
 skip-pr: false
 
 # The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
-token: 
+token:
 
 # The name of a user. All repositories owned by that user will be used.
-user: 
+user:
   - example
 ```
 </details>
@@ -201,13 +201,13 @@ user:
 
 ```yaml
 # Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
-base-url: 
+base-url:
 
 # The name of the branch where changes are committed.
 branch: multi-gitter-branch
 
 # The name of a GitLab organization. All repositories in that group will be used.
-group: 
+group:
   - example
 
 # Include GitLab subgroups when using the --group flag.
@@ -223,29 +223,32 @@ log-format: text
 log-level: info
 
 # The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.
-merge-type: [merge,squash,rebase]
+merge-type:
+  - merge
+  - squash
+  - rebase
 
 # The name of a GitHub organization. All repositories in that organization will be used.
-org: 
+org:
   - example
 
 # The platform that is used. Available values: github, gitlab, gitea
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName"
-project: 
- - group/project
+project:
+  - group/project
 
 # The name, including owner of a GitHub repository in the format "ownerName/repoName"
-repo: 
+repo:
   - my-org/js-repo
   - other-org/python-repo
 
 # The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
-token: 
+token:
 
 # The name of a user. All repositories owned by that user will be used.
-user: 
+user:
   - example
 ```
 </details>
@@ -257,13 +260,13 @@ user:
 
 ```yaml
 # Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
-base-url: 
+base-url:
 
 # The name of the branch where changes are committed.
 branch: multi-gitter-branch
 
 # The name of a GitLab organization. All repositories in that group will be used.
-group: 
+group:
   - example
 
 # Include GitLab subgroups when using the --group flag.
@@ -279,26 +282,26 @@ log-format: text
 log-level: info
 
 # The name of a GitHub organization. All repositories in that organization will be used.
-org: 
+org:
   - example
 
 # The platform that is used. Available values: github, gitlab, gitea
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName"
-project: 
- - group/project
+project:
+  - group/project
 
 # The name, including owner of a GitHub repository in the format "ownerName/repoName"
-repo: 
+repo:
   - my-org/js-repo
   - other-org/python-repo
 
 # The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
-token: 
+token:
 
 # The name of a user. All repositories owned by that user will be used.
-user: 
+user:
   - example
 ```
 </details>
@@ -309,7 +312,7 @@ user:
 
 ```yaml
 # Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
-base-url: 
+base-url:
 
 # The maximum number of concurrent runs
 concurrent: 1
@@ -327,14 +330,14 @@ fetch-depth: 1
 git-type: go
 
 # The name of a GitLab organization. All repositories in that group will be used.
-group: 
+group:
   - example
 
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
 # The file where all logs should be printed to. "-" means stdout
-log-file: 
+log-file:
 
 # The formating of the logs. Available values: text, json, json-pretty
 log-format: text
@@ -343,7 +346,7 @@ log-format: text
 log-level: info
 
 # The name of a GitHub organization. All repositories in that organization will be used.
-org: 
+org:
   - example
 
 # The file that the output of the script should be outputted to. "-" means stdout
@@ -353,19 +356,19 @@ output: "-"
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName"
-project: 
- - group/project
+project:
+  - group/project
 
 # The name, including owner of a GitHub repository in the format "ownerName/repoName"
-repo: 
+repo:
   - my-org/js-repo
   - other-org/python-repo
 
 # The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
-token: 
+token:
 
 # The name of a user. All repositories owned by that user will be used.
-user: 
+user:
   - example
 ```
 </details>
