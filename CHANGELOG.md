@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.29.0](https://www.github.com/lindell/multi-gitter/compare/v0.28.0...v0.29.0) (2021-06-20)
+
+
+### Features
+
+* added configuration options through config files ([#150](https://www.github.com/lindell/multi-gitter/issues/150)) ([f38a7ad](https://www.github.com/lindell/multi-gitter/commit/f38a7ad3ffc9f6aaef60913a6a08006b5b672a93))
+
+
+### Bug Fixes
+
+* made sure any tokens output in the logs are now censored ([#143](https://www.github.com/lindell/multi-gitter/issues/143)) ([0e5cee7](https://www.github.com/lindell/multi-gitter/commit/0e5cee7ecd6dde23d21869058cc383e83b232703))
+
 ## [0.28.0](https://www.github.com/lindell/multi-gitter/compare/v0.27.0...v0.28.0) (2021-06-16)
 
 
