@@ -15,6 +15,7 @@ import (
 
 func TestPrint(t *testing.T) {
 	vcMock := &vcmock.VersionController{}
+	defer vcMock.Clean()
 	cmd.OverrideVersionController = vcMock
 
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-test-run-")
