@@ -114,16 +114,16 @@ branch: multi-gitter-branch
 # The commit message. Will default to title + body if none is set.
 commit-message:
 
-# The maximum number of concurrent runs
+# The maximum number of concurrent runs.
 concurrent: 1
 
-# Run without pushing changes or creating pull requests
+# Run without pushing changes or creating pull requests.
 dry-run: false
 
-# Limit fetching to the specified number of commits. Set to 0 for no limit
+# Limit fetching to the specified number of commits. Set to 0 for no limit.
 fetch-depth: 1
 
-# Fork the repository instead of creating a new branch on the same owner
+# Fork the repository instead of creating a new branch on the same owner.
 fork: false
 
 # If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
@@ -142,26 +142,26 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
-# The file where all logs should be printed to. "-" means stdout
+# The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
-# The formating of the logs. Available values: text, json, json-pretty
+# The formating of the logs. Available values: text, json, json-pretty.
 log-format: text
 
-# The level of logging that should be made. Available values: trace, debug, info, error
+# The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
-# If this value is set, reviewers will be randomized
+# If this value is set, reviewers will be randomized.
 max-reviewers: 0
 
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
   - example
 
-# The file that the output of the script should be outputted to. "-" means stdout
+# The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
 
-# The platform that is used. Available values: github, gitlab, gitea
+# The platform that is used. Available values: github, gitlab, gitea.
 platform: github
 
 # The body of the commit message. Will default to everything but the first line of the commit message if none is set.
@@ -170,11 +170,11 @@ pr-body:
 # The title of the PR. Will default to the first line of the commit message if none is set.
 pr-title:
 
-# The name, including owner of a GitLab project in the format "ownerName/repoName"
+# The name, including owner of a GitLab project in the format "ownerName/repoName".
 project:
   - group/project
 
-# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+# The name, including owner of a GitHub repository in the format "ownerName/repoName".
 repo:
   - my-org/js-repo
   - other-org/python-repo
@@ -183,7 +183,7 @@ repo:
 reviewers:
   - example
 
-# Skip pull request and directly push to the branch
+# Skip pull request and directly push to the branch.
 skip-pr: false
 
 # The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
@@ -213,13 +213,13 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
-# The file where all logs should be printed to. "-" means stdout
+# The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
-# The formating of the logs. Available values: text, json, json-pretty
+# The formating of the logs. Available values: text, json, json-pretty.
 log-format: text
 
-# The level of logging that should be made. Available values: trace, debug, info, error
+# The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
 # The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.
@@ -232,14 +232,14 @@ merge-type:
 org:
   - example
 
-# The platform that is used. Available values: github, gitlab, gitea
+# The platform that is used. Available values: github, gitlab, gitea.
 platform: github
 
-# The name, including owner of a GitLab project in the format "ownerName/repoName"
+# The name, including owner of a GitLab project in the format "ownerName/repoName".
 project:
   - group/project
 
-# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+# The name, including owner of a GitHub repository in the format "ownerName/repoName".
 repo:
   - my-org/js-repo
   - other-org/python-repo
@@ -272,27 +272,27 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
-# The file where all logs should be printed to. "-" means stdout
+# The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
-# The formating of the logs. Available values: text, json, json-pretty
+# The formating of the logs. Available values: text, json, json-pretty.
 log-format: text
 
-# The level of logging that should be made. Available values: trace, debug, info, error
+# The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
   - example
 
-# The platform that is used. Available values: github, gitlab, gitea
+# The platform that is used. Available values: github, gitlab, gitea.
 platform: github
 
-# The name, including owner of a GitLab project in the format "ownerName/repoName"
+# The name, including owner of a GitLab project in the format "ownerName/repoName".
 project:
   - group/project
 
-# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+# The name, including owner of a GitHub repository in the format "ownerName/repoName".
 repo:
   - my-org/js-repo
   - other-org/python-repo
@@ -314,13 +314,13 @@ user:
 # Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
-# The maximum number of concurrent runs
+# The maximum number of concurrent runs.
 concurrent: 1
 
-# The file that the output of the script should be outputted to. "-" means stderr
+# The file that the output of the script should be outputted to. "-" means stderr.
 error-output: "-"
 
-# Limit fetching to the specified number of commits. Set to 0 for no limit
+# Limit fetching to the specified number of commits. Set to 0 for no limit.
 fetch-depth: 1
 
 # The type of git implementation to use.
@@ -336,30 +336,30 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
-# The file where all logs should be printed to. "-" means stdout
+# The file where all logs should be printed to. "-" means stdout.
 log-file:
 
-# The formating of the logs. Available values: text, json, json-pretty
+# The formating of the logs. Available values: text, json, json-pretty.
 log-format: text
 
-# The level of logging that should be made. Available values: trace, debug, info, error
+# The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
   - example
 
-# The file that the output of the script should be outputted to. "-" means stdout
+# The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
 
-# The platform that is used. Available values: github, gitlab, gitea
+# The platform that is used. Available values: github, gitlab, gitea.
 platform: github
 
-# The name, including owner of a GitLab project in the format "ownerName/repoName"
+# The name, including owner of a GitLab project in the format "ownerName/repoName".
 project:
   - group/project
 
-# The name, including owner of a GitHub repository in the format "ownerName/repoName"
+# The name, including owner of a GitHub repository in the format "ownerName/repoName".
 repo:
   - my-org/js-repo
   - other-org/python-repo
@@ -400,11 +400,11 @@ Flags:
   -g, --base-url string         Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
-  -C, --concurrent int          The maximum number of concurrent runs (default 1)
+  -C, --concurrent int          The maximum number of concurrent runs. (default 1)
       --config string           Path of the config file.
-  -d, --dry-run                 Run without pushing changes or creating pull requests
-  -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
-      --fork                    Fork the repository instead of creating a new branch on the same owner
+  -d, --dry-run                 Run without pushing changes or creating pull requests.
+  -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
+      --fork                    Fork the repository instead of creating a new branch on the same owner.
       --fork-owner string       If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
       --git-type string         The type of git implementation to use.
                                 Available values:
@@ -413,19 +413,19 @@ Flags:
                                  (default "go")
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups       Include GitLab subgroups when using the --group flag.
-      --log-file string         The file where all logs should be printed to. "-" means stdout (default "-")
-      --log-format string       The formating of the logs. Available values: text, json, json-pretty (default "text")
-  -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error (default "info")
-  -M, --max-reviewers int       If this value is set, reviewers will be randomized
+      --log-file string         The file where all logs should be printed to. "-" means stdout. (default "-")
+      --log-format string       The formating of the logs. Available values: text, json, json-pretty. (default "text")
+  -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
+  -M, --max-reviewers int       If this value is set, reviewers will be randomized.
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
-  -o, --output string           The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea (default "github")
+  -o, --output string           The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea. (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
-  -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName"
-  -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName"
+  -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
+  -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
-      --skip-pr                 Skip pull request and directly push to the branch
+      --skip-pr                 Skip pull request and directly push to the branch.
   -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
 ```
@@ -443,14 +443,14 @@ Flags:
       --config string        Path of the config file.
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups    Include GitLab subgroups when using the --group flag.
-      --log-file string      The file where all logs should be printed to. "-" means stdout (default "-")
-      --log-format string    The formating of the logs. Available values: text, json, json-pretty (default "text")
-  -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error (default "info")
+      --log-file string      The file where all logs should be printed to. "-" means stdout. (default "-")
+      --log-format string    The formating of the logs. Available values: text, json, json-pretty. (default "text")
+  -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
       --merge-type strings   The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
-  -p, --platform string      The platform that is used. Available values: github, gitlab, gitea (default "github")
-  -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName"
-  -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName"
+  -p, --platform string      The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName".
+  -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings         The name of a user. All repositories owned by that user will be used.
 ```
@@ -467,14 +467,14 @@ Flags:
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
-      --log-file string     The file where all logs should be printed to. "-" means stdout (default "-")
-      --log-format string   The formating of the logs. Available values: text, json, json-pretty (default "text")
-  -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error (default "info")
+      --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
+      --log-format string   The formating of the logs. Available values: text, json, json-pretty. (default "text")
+  -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
-  -o, --output string       The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea (default "github")
-  -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName"
-  -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName"
+  -o, --output string       The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
+  -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
 ```
@@ -492,13 +492,13 @@ Flags:
       --config string       Path of the config file.
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
-      --log-file string     The file where all logs should be printed to. "-" means stdout (default "-")
-      --log-format string   The formating of the logs. Available values: text, json, json-pretty (default "text")
-  -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error (default "info")
+      --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
+      --log-format string   The formating of the logs. Available values: text, json, json-pretty. (default "text")
+  -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
-  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea (default "github")
-  -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName"
-  -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName"
+  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
+  -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
 ```
@@ -516,10 +516,10 @@ Usage:
 
 Flags:
   -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
-  -C, --concurrent int        The maximum number of concurrent runs (default 1)
+  -C, --concurrent int        The maximum number of concurrent runs. (default 1)
       --config string         Path of the config file.
-  -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr (default "-")
-  -f, --fetch-depth int       Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
+  -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr. (default "-")
+  -f, --fetch-depth int       Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --git-type string       The type of git implementation to use.
                               Available values:
                                 go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
@@ -527,14 +527,14 @@ Flags:
                                (default "go")
   -G, --group strings         The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups     Include GitLab subgroups when using the --group flag.
-      --log-file string       The file where all logs should be printed to. "-" means stdout
-      --log-format string     The formating of the logs. Available values: text, json, json-pretty (default "text")
-  -L, --log-level string      The level of logging that should be made. Available values: trace, debug, info, error (default "info")
+      --log-file string       The file where all logs should be printed to. "-" means stdout.
+      --log-format string     The formating of the logs. Available values: text, json, json-pretty. (default "text")
+  -L, --log-level string      The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings           The name of a GitHub organization. All repositories in that organization will be used.
-  -o, --output string         The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string       The platform that is used. Available values: github, gitlab, gitea (default "github")
-  -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName"
-  -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName"
+  -o, --output string         The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+  -p, --platform string       The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName".
+  -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -T, --token string          The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings          The name of a user. All repositories owned by that user will be used.
 ```
