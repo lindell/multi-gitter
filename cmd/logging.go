@@ -14,17 +14,17 @@ import (
 func configureLogging(cmd *cobra.Command, logFile string) {
 	flags := cmd.Flags()
 
-	flags.StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error")
+	flags.StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error.")
 	_ = cmd.RegisterFlagCompletionFunc("log-level", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"trace", "debug", "info", "error"}, cobra.ShellCompDirectiveDefault
 	})
 
-	flags.StringP("log-format", "", "text", `The formating of the logs. Available values: text, json, json-pretty`)
+	flags.StringP("log-format", "", "text", `The formating of the logs. Available values: text, json, json-pretty.`)
 	_ = cmd.RegisterFlagCompletionFunc("log-format", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"text", "json", "json-pretty"}, cobra.ShellCompDirectiveDefault
 	})
 
-	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout`)
+	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout.`)
 }
 
 func logFlagInit(cmd *cobra.Command, args []string) error {

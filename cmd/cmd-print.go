@@ -30,8 +30,8 @@ func PrintCmd() *cobra.Command {
 		RunE:    print,
 	}
 
-	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs")
-	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr`)
+	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
+	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr.`)
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureLogging(cmd, "")

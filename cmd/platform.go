@@ -23,11 +23,11 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
-	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\"")
-	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\"")
+	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
+	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea.")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"github", "gitlab", "gitea"}, cobra.ShellCompDirectiveDefault
 	})

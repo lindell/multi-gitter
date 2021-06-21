@@ -10,7 +10,7 @@ import (
 )
 
 func configureGit(cmd *cobra.Command) {
-	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit")
+	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit.")
 	cmd.Flags().StringP("git-type", "", "go", `The type of git implementation to use.
 Available values:
   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.

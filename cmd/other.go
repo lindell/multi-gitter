@@ -13,7 +13,7 @@ import (
 func outputFlag() *flag.FlagSet {
 	flags := flag.NewFlagSet("output", flag.ExitOnError)
 
-	flags.StringP("output", "o", "-", `The file that the output of the script should be outputted to. "-" means stdout`)
+	flags.StringP("output", "o", "-", `The file that the output of the script should be outputted to. "-" means stdout.`)
 
 	return flags
 }

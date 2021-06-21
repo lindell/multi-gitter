@@ -6,7 +6,7 @@ import "github.com/spf13/cobra"
 func CompletionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "completion [bash|zsh|fish]",
-		Short: "Print shell autocompletion scripts for multi-gitter",
+		Short: "Print shell autocompletion scripts for multi-gitter.",
 		Long: `To load completions:
 Bash:
 $ source <(multi-gitter completion bash)
