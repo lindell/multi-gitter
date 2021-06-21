@@ -19,6 +19,17 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/Library/Caches/go-build
+            %LocalAppData%\go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       # Because of a bug in go-git that that makes cloning of a folder in another Windows drive letter,
       # the test has to be moved and run in another folder on Windows (until the bug is fixed)
       # https://github.com/go-git/go-git/issues/247
