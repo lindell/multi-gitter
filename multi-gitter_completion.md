@@ -1,6 +1,6 @@
 ## multi-gitter completion
 
-Print shell autocompletion scripts for multi-gitter
+Print shell autocompletion scripts for multi-gitter.
 
 ### Synopsis
 
@@ -37,5 +37,5 @@ multi-gitter completion [bash|zsh|fish]
 
 ### SEE ALSO
 
-* [multi-gitter](multi-gitter.md)	 - Multi gitter is a tool for making changes into multiple git repositories
+* [multi-gitter](multi-gitter.md)	 - Multi gitter is a tool for making changes into multiple git repositories.
 

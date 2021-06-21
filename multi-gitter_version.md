@@ -18,5 +18,5 @@ multi-gitter version [flags]
 
 ### SEE ALSO
 
-* [multi-gitter](multi-gitter.md)	 - Multi gitter is a tool for making changes into multiple git repositories
+* [multi-gitter](multi-gitter.md)	 - Multi gitter is a tool for making changes into multiple git repositories.
 

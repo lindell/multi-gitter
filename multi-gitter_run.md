@@ -23,11 +23,11 @@ multi-gitter run [script path] [flags]
   -g, --base-url string         Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string   The commit message. Will default to title + body if none is set.
-  -C, --concurrent int          The maximum number of concurrent runs (default 1)
+  -C, --concurrent int          The maximum number of concurrent runs. (default 1)
       --config string           Path of the config file.
-  -d, --dry-run                 Run without pushing changes or creating pull requests
-  -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit (default 1)
-      --fork                    Fork the repository instead of creating a new branch on the same owner
+  -d, --dry-run                 Run without pushing changes or creating pull requests.
+  -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
+      --fork                    Fork the repository instead of creating a new branch on the same owner.
       --fork-owner string       If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
       --git-type string         The type of git implementation to use.
                                 Available values:
@@ -37,24 +37,24 @@ multi-gitter run [script path] [flags]
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                    help for run
       --include-subgroups       Include GitLab subgroups when using the --group flag.
-      --log-file string         The file where all logs should be printed to. "-" means stdout (default "-")
-      --log-format string       The formating of the logs. Available values: text, json, json-pretty (default "text")
-  -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error (default "info")
-  -M, --max-reviewers int       If this value is set, reviewers will be randomized
+      --log-file string         The file where all logs should be printed to. "-" means stdout. (default "-")
+      --log-format string       The formating of the logs. Available values: text, json, json-pretty. (default "text")
+  -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
+  -M, --max-reviewers int       If this value is set, reviewers will be randomized.
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
-  -o, --output string           The file that the output of the script should be outputted to. "-" means stdout (default "-")
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea (default "github")
+  -o, --output string           The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea. (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
-  -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName"
-  -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName"
+  -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
+  -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
-      --skip-pr                 Skip pull request and directly push to the branch
+      --skip-pr                 Skip pull request and directly push to the branch.
   -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
 ```
 
 ### SEE ALSO
 
-* [multi-gitter](multi-gitter.md)	 - Multi gitter is a tool for making changes into multiple git repositories
+* [multi-gitter](multi-gitter.md)	 - Multi gitter is a tool for making changes into multiple git repositories.
 
