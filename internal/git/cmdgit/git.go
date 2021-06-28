@@ -80,7 +80,7 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 		return err
 	}
 
-	cmd = exec.Command("git", "commit", "-m", commitMessage)
+	cmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 
 	if commitAuthor != nil {
 		cmd.Env = append(cmd.Env,
@@ -92,6 +92,9 @@ func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) er
 	}
 
 	_, err = g.run(cmd)
+	if err != nil {
+		return err
+	}
 
 	if err := g.logDiff(); err != nil {
 		return err
