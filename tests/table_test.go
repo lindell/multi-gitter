@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,14 +30,20 @@ const (
 	gitBackendCmd gitBackend = "cmd"
 )
 
-type skipType int
+type skipType string
 
 const (
-	skipTypeCI skipType = iota + 1
+	skipTypeTimeDependent skipType = "time-dependent"
 )
 
 // skipTypes is a list of types that can be skipped. These can be set with build tags
 var skipTypes = []skipType{}
+
+func init() {
+	for _, t := range strings.Split(os.Getenv("SKIP_TYPES"), ",") {
+		skipTypes = append(skipTypes, skipType(t))
+	}
+}
 
 func skipOverlap(tt1, tt2 []skipType) bool {
 	for _, t1 := range tt1 {
@@ -304,7 +311,7 @@ func TestTable(t *testing.T) {
 
 		{
 			name:      "parallel",
-			skipTypes: []skipType{skipTypeCI}, // This test is time dependent, don't run it in CI since some runs might be to slow
+			skipTypes: []skipType{skipTypeTimeDependent}, // This test is time dependent, don't run it in CI since some runs might be to slow
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -664,12 +671,12 @@ Repositories with a successful run:
 				continue
 			}
 
-			// Skip some tests depending on the values in skipTypes
-			if skipOverlap(skipTypes, test.skipTypes) {
-				continue
-			}
-
 			t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
+				// Skip some tests depending on the values in skipTypes
+				if skipOverlap(skipTypes, test.skipTypes) {
+					t.SkipNow()
+				}
+
 				logFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-log")
 				require.NoError(t, err)
 				defer os.Remove(logFile.Name())
