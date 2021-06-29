@@ -131,7 +131,7 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 
 // Push the committed changes to the remote
 func (g *Git) Push(remoteName string) error {
-	cmd := exec.Command("git", "push", remoteName, "HEAD")
+	cmd := exec.Command("git", "push", "--no-verify", remoteName, "HEAD")
 	_, err := g.run(cmd)
 	return err
 }
