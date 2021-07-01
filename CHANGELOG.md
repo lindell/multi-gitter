@@ -1,5 +1,19 @@
 # Changelog
 
+### [0.29.2](https://www.github.com/lindell/multi-gitter/compare/v0.29.1...v0.29.2) (2021-07-01)
+
+
+### Bug Fixes
+
+* push hooks no longer run with cmd-git implementation ([#159](https://www.github.com/lindell/multi-gitter/issues/159)) ([7360c0d](https://www.github.com/lindell/multi-gitter/commit/7360c0d14b83be627325d0b4ea95177e71c2a565))
+
+
+### Dependencies
+
+* update golang.org/x/oauth2 commit hash to a41e5a7 ([234ce36](https://www.github.com/lindell/multi-gitter/commit/234ce36753e5eec8d73700a4b65e4ee8ad0773a7))
+* update module github.com/go-git/go-git/v5 to v5.4.2 ([016f54d](https://www.github.com/lindell/multi-gitter/commit/016f54d39a8df80558b7c46880a7dfabd16c7e28))
+* update module github.com/google/go-github/v35 to v36 ([#162](https://www.github.com/lindell/multi-gitter/issues/162)) ([893d9ea](https://www.github.com/lindell/multi-gitter/commit/893d9eae5dd5f8abcf6c00cb233957aea532d1c2))
+
 ### [0.29.1](https://www.github.com/lindell/multi-gitter/compare/v0.29.0...v0.29.1) (2021-06-28)
 
 
