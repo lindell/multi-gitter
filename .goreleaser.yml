@@ -51,7 +51,7 @@ brews:
       email: johan@lindell.me
     description: "Update multiple repositories in bulk"
     homepage: https://github.com/lindell/multi-gitter
-    license: "MIT"
+    license: "Apache-2.0"
     folder: Formula
     install: |-
       bin.install "multi-gitter"
