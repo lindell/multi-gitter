@@ -61,7 +61,7 @@ type Runner struct {
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
-var errRejected = errors.New("changes where not included since they where manually rejected")
+var errRejected = errors.New("changes were not included since they were manually rejected")
 
 type dryRunPullRequest struct {
 	status     domain.PullRequestStatus
@@ -267,7 +267,7 @@ func (r *Runner) interactive(ctx context.Context, dir string, repo domain.Reposi
 		return errAborted
 	}
 
-	fmt.Printf("Changes where made to %s\n", terminal.Bold(repo.FullName()))
+	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Println(interactiveInfo)
 	for {
 		char, key, err := keyboard.GetSingleKey()
@@ -287,6 +287,7 @@ func (r *Runner) interactive(ctx context.Context, dir string, repo domain.Reposi
 
 		switch char {
 		case 'v':
+			fmt.Println("Showing changes...")
 			cmd := exec.Command("git", "diff", "HEAD~1")
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
@@ -299,8 +300,10 @@ func (r *Runner) interactive(ctx context.Context, dir string, repo domain.Reposi
 				return err
 			}
 		case 'r':
+			fmt.Println("Rejected, continuing...")
 			return errRejected
 		case 'a':
+			fmt.Println("Accepted, creating pull request...")
 			return nil
 		}
 	}
