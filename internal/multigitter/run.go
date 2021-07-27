@@ -303,7 +303,7 @@ func (r *Runner) interactive(ctx context.Context, dir string, repo domain.Reposi
 			fmt.Println("Rejected, continuing...")
 			return errRejected
 		case 'a':
-			fmt.Println("Accepted, creating pull request...")
+			fmt.Println("Accepted, proceeding...")
 			return nil
 		}
 	}
