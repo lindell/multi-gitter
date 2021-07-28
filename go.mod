@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	code.gitea.io/sdk/gitea v0.14.0
+	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807 // indirect
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-github/v36 v36.0.0
 	github.com/pkg/errors v0.9.1
