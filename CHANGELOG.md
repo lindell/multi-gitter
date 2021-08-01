@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.30.0](https://www.github.com/lindell/multi-gitter/compare/v0.29.2...v0.30.0) (2021-08-01)
+
+
+### Features
+
+* moved to built in completion command in cobra 1.2.x ([#163](https://www.github.com/lindell/multi-gitter/issues/163)) ([81a7187](https://www.github.com/lindell/multi-gitter/commit/81a7187fce1ab76e6d87bdeee02b268fdb21320b))
+
+
+### Dependencies
+
+* update module github.com/google/go-github/v36 to v37 ([213a1c6](https://www.github.com/lindell/multi-gitter/commit/213a1c6cc603cec49f889ffe52dd50d22f33ab44))
+* update module github.com/xanzy/go-gitlab to v0.50.1 ([cac5518](https://www.github.com/lindell/multi-gitter/commit/cac5518094e4cc82bf2ad6d47c42a593f3031034))
+
 ### [0.29.2](https://www.github.com/lindell/multi-gitter/compare/v0.29.1...v0.29.2) (2021-07-01)
 
 
