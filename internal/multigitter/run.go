@@ -57,9 +57,7 @@ type Runner struct {
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
-	// TODO: Describe interactive
-	Interactive     bool
-	interactiveLock sync.Mutex
+	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
 	CreateGit func(dir string) Git
 }
@@ -224,7 +222,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 	}
 
 	if r.Interactive {
-		err = r.interactive(ctx, tmpDir, repo)
+		err = r.interactive(tmpDir, repo)
 		if err != nil {
 			return nil, err
 		}
@@ -290,14 +288,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(ctx context.Context, dir string, repo domain.Repository) error {
-	r.interactiveLock.Lock()
-	defer r.interactiveLock.Unlock()
-
-	if ctx.Err() != nil {
-		return errAborted
-	}
-
+func (r *Runner) interactive(dir string, repo domain.Repository) error {
 	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Println(interactiveInfo)
 	for {
