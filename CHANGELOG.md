@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.31.0](https://www.github.com/lindell/multi-gitter/compare/v0.30.0...v0.31.0) (2021-08-08)
+
+
+### Features
+
+* interactive mode  ([#167](https://www.github.com/lindell/multi-gitter/issues/167)) ([7351520](https://www.github.com/lindell/multi-gitter/commit/73515206bc7201b28e0e1faef7e1009b3e5a34f9))
+
 ## [0.30.0](https://www.github.com/lindell/multi-gitter/compare/v0.29.2...v0.30.0) (2021-08-01)
 
 
