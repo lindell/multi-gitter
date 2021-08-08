@@ -37,6 +37,7 @@ multi-gitter run [script path] [flags]
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                    help for run
       --include-subgroups       Include GitLab subgroups when using the --group flag.
+  -i, --interactive             Take manual decision before committing any change. Requires git to be installed.
       --log-file string         The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string       The formating of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
