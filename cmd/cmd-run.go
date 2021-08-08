@@ -41,6 +41,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
+	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
 	cmd.Flags().BoolP("fork", "", false, "Fork the repository instead of creating a new branch on the same owner.")
 	cmd.Flags().StringP("fork-owner", "", "", "If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.")
@@ -67,6 +68,7 @@ func run(cmd *cobra.Command, args []string) error {
 	maxReviewers, _ := flag.GetInt("max-reviewers")
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
+	interactive, _ := flag.GetBool("interactive")
 	dryRun, _ := flag.GetBool("dry-run")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
@@ -108,6 +110,10 @@ func run(cmd *cobra.Command, args []string) error {
 		return errors.New("--fork and --skip-pr can't be used at the same time")
 	}
 
+	if concurrent > 1 && interactive {
+		return errors.New("--concurrent and --interactive can't be used at the same time")
+	}
+
 	// Parse commit author data
 	var commitAuthor *domain.CommitAuthor
 	if authorName != "" || authorEmail != "" {
@@ -147,7 +153,7 @@ func run(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}()
 
-	runner := multigitter.Runner{
+	runner := &multigitter.Runner{
 		ScriptPath:    executablePath,
 		Arguments:     arguments,
 		FeatureBranch: branchName,
@@ -162,6 +168,7 @@ func run(cmd *cobra.Command, args []string) error {
 		PullRequestBody:  prBody,
 		Reviewers:        reviewers,
 		MaxReviewers:     maxReviewers,
+		Interactive:      interactive,
 		DryRun:           dryRun,
 		Fork:             forkMode,
 		ForkOwner:        forkOwner,

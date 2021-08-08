@@ -9,13 +9,16 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"syscall"
 
+	"github.com/eiannone/keyboard"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
+	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
 // VersionController fetches repositories
@@ -54,10 +57,13 @@ type Runner struct {
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
+	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
+
 	CreateGit func(dir string) Git
 }
 
 var errAborted = errors.New("run was never started because of aborted execution")
+var errRejected = errors.New("changes were not included since they were manually rejected")
 
 type dryRunPullRequest struct {
 	status     domain.PullRequestStatus
@@ -73,7 +79,7 @@ func (pr dryRunPullRequest) String() string {
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
-func (r Runner) Run(ctx context.Context) error {
+func (r *Runner) Run(ctx context.Context) error {
 	// Fetch all repositories that are are going to be used in the run
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
@@ -151,7 +157,7 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (domain.PullRequest, error) {
+func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (domain.PullRequest, error) {
 	if ctx.Err() != nil {
 		return nil, errAborted
 	}
@@ -215,6 +221,13 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 		return nil, err
 	}
 
+	if r.Interactive {
+		err = r.interactive(tmpDir, repo)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if r.DryRun {
 		log.Info("Skipping pushing changes because of dry run")
 		return dryRunPullRequest{
@@ -271,4 +284,49 @@ func (r Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (doma
 	}
 
 	return pr, nil
+}
+
+var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
+
+func (r *Runner) interactive(dir string, repo domain.Repository) error {
+	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
+	fmt.Println(interactiveInfo)
+	for {
+		char, key, err := keyboard.GetSingleKey()
+		if err != nil {
+			return err
+		}
+
+		if key == keyboard.KeyCtrlC {
+			proc, err := os.FindProcess(os.Getpid())
+			if err != nil {
+				return err
+			}
+			_ = proc.Signal(syscall.SIGTERM)
+
+			return errRejected
+		}
+
+		switch char {
+		case 'v':
+			fmt.Println("Showing changes...")
+			cmd := exec.Command("git", "diff", "HEAD~1")
+			cmd.Dir = dir
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err != nil {
+				return err
+			}
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+		case 'r':
+			fmt.Println("Rejected, continuing...")
+			return errRejected
+		case 'a':
+			fmt.Println("Accepted, proceeding...")
+			return nil
+		}
+	}
 }
