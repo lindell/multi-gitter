@@ -69,13 +69,13 @@ type ProjectReference struct {
 
 // ParseProjectReference parses a repository reference from the format "ownerName/repoName"
 func ParseProjectReference(val string) (ProjectReference, error) {
-	split := strings.Split(val, "/")
-	if len(split) != 2 {
+	lastSlashIndex := strings.LastIndex(val, "/")
+	if lastSlashIndex == -1 {
 		return ProjectReference{}, fmt.Errorf("could not parse repository reference: %s", val)
 	}
 	return ProjectReference{
-		OwnerName: split[0],
-		Name:      split[1],
+		OwnerName: val[:lastSlashIndex],
+		Name:      val[lastSlashIndex+1:],
 	}, nil
 }
 
