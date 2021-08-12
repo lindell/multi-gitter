@@ -257,6 +257,60 @@ user:
 </details>
 
 
+<details>
+  <summary>All available status options</summary>
+
+```yaml
+# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+base-url:
+
+# The name of the branch where changes are committed.
+branch: multi-gitter-branch
+
+# The name of a GitLab organization. All repositories in that group will be used.
+group:
+  - example
+
+# Include GitLab subgroups when using the --group flag.
+include-subgroups: false
+
+# The file where all logs should be printed to. "-" means stdout.
+log-file: "-"
+
+# The formating of the logs. Available values: text, json, json-pretty.
+log-format: text
+
+# The level of logging that should be made. Available values: trace, debug, info, error.
+log-level: info
+
+# The name of a GitHub organization. All repositories in that organization will be used.
+org:
+  - example
+
+# The file that the output of the script should be outputted to. "-" means stdout.
+output: "-"
+
+# The platform that is used. Available values: github, gitlab, gitea.
+platform: github
+
+# The name, including owner of a GitLab project in the format "ownerName/repoName".
+project:
+  - group/project
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName".
+repo:
+  - my-org/js-repo
+  - other-org/python-repo
+
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+token:
+
+# The name of a user. All repositories owned by that user will be used.
+user:
+  - example
+```
+</details>
+
 
 <details>
   <summary>All available close options</summary>
@@ -469,6 +523,7 @@ Usage:
 Flags:
   -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
+      --config string       Path of the config file.
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
       --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
