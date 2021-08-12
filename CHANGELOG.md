@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.31.1](https://www.github.com/lindell/multi-gitter/compare/v0.31.0...v0.31.1) (2021-08-12)
+
+
+### Bug Fixes
+
+* added support for GitLab subgroups with --project ([#171](https://www.github.com/lindell/multi-gitter/issues/171)) ([25b5d54](https://www.github.com/lindell/multi-gitter/commit/25b5d543056909fdb1a937118989f06dd4902f80))
+
 ## [0.31.0](https://www.github.com/lindell/multi-gitter/compare/v0.30.0...v0.31.0) (2021-08-08)
 
 
