@@ -22,6 +22,7 @@ func StatusCmd() *cobra.Command {
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
 	configurePlatform(cmd)
 	configureLogging(cmd, "-")
+	configureConfig(cmd)
 	cmd.Flags().AddFlagSet(outputFlag())
 
 	return cmd
