@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.32.0](https://www.github.com/lindell/multi-gitter/compare/v0.31.1...v0.32.0) (2021-08-12)
+
+
+### Features
+
+* added --config to status command ([#174](https://www.github.com/lindell/multi-gitter/issues/174)) ([8c52c93](https://www.github.com/lindell/multi-gitter/commit/8c52c931df5fe786a9b9c26e77aebe50241f8391))
+
 ### [0.31.1](https://www.github.com/lindell/multi-gitter/compare/v0.31.0...v0.31.1) (2021-08-12)
 
 
