@@ -6,7 +6,7 @@ require (
 	code.gitea.io/sdk/gitea v0.14.0
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/google/go-github/v37 v37.0.0
+	github.com/google/go-github/v38 v38.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
