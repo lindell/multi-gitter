@@ -1,4 +1,4 @@
-package domain
+package pullrequest
 
 import (
 	"fmt"
@@ -15,32 +15,32 @@ type NewPullRequest struct {
 	Reviewers []string // The username of all reviewers
 }
 
-// PullRequestStatus is the status of a pull request, including statuses of the last commit
-type PullRequestStatus int
+// Status is the status of a pull request, including statuses of the last commit
+type Status int
 
 // All PullRequestStatuses
 const (
-	PullRequestStatusUnknown PullRequestStatus = iota
-	PullRequestStatusSuccess
-	PullRequestStatusPending
-	PullRequestStatusError
-	PullRequestStatusMerged
-	PullRequestStatusClosed
+	StatusUnknown Status = iota
+	StatusSuccess
+	StatusPending
+	StatusError
+	StatusMerged
+	StatusClosed
 )
 
-func (s PullRequestStatus) String() string {
+func (s Status) String() string {
 	switch s {
-	case PullRequestStatusUnknown:
+	case StatusUnknown:
 		return "Unknown"
-	case PullRequestStatusSuccess:
+	case StatusSuccess:
 		return "Success"
-	case PullRequestStatusPending:
+	case StatusPending:
 		return "Pending"
-	case PullRequestStatusError:
+	case StatusError:
 		return "Error"
-	case PullRequestStatusMerged:
+	case StatusMerged:
 		return "Merged"
-	case PullRequestStatusClosed:
+	case StatusClosed:
 		return "Closed"
 	}
 	return "Unknown"
@@ -48,7 +48,7 @@ func (s PullRequestStatus) String() string {
 
 // PullRequest represents a pull request
 type PullRequest interface {
-	Status() PullRequestStatus
+	Status() Status
 	String() string
 }
 

@@ -1,4 +1,4 @@
-package domain
+package git
 
 // GitConfig is configration for any git implementation
 type GitConfig struct {

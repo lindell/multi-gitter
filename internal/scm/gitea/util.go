@@ -2,27 +2,27 @@ package gitea
 
 import (
 	"code.gitea.io/sdk/gitea"
-	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/pullrequest"
 )
 
 // maps merge types to what they are called in the gitea api
-var mergeTypeGiteaName = map[domain.MergeType]gitea.MergeStyle{
-	domain.MergeTypeMerge:  gitea.MergeStyleMerge,
-	domain.MergeTypeRebase: gitea.MergeStyleRebase,
-	domain.MergeTypeSquash: gitea.MergeStyleSquash,
+var mergeTypeGiteaName = map[pullrequest.MergeType]gitea.MergeStyle{
+	pullrequest.MergeTypeMerge:  gitea.MergeStyleMerge,
+	pullrequest.MergeTypeRebase: gitea.MergeStyleRebase,
+	pullrequest.MergeTypeSquash: gitea.MergeStyleSquash,
 }
 
 // repoMergeTypes returns a list of all allowed merge types
-func repoMergeTypes(repo *gitea.Repository) []domain.MergeType {
-	ret := []domain.MergeType{}
+func repoMergeTypes(repo *gitea.Repository) []pullrequest.MergeType {
+	ret := []pullrequest.MergeType{}
 	if repo.AllowMerge {
-		ret = append(ret, domain.MergeTypeMerge)
+		ret = append(ret, pullrequest.MergeTypeMerge)
 	}
 	if repo.AllowMerge {
-		ret = append(ret, domain.MergeTypeRebase)
+		ret = append(ret, pullrequest.MergeTypeRebase)
 	}
 	if repo.AllowSquash {
-		ret = append(ret, domain.MergeTypeSquash)
+		ret = append(ret, pullrequest.MergeTypeSquash)
 	}
 	return ret
 }

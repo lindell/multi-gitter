@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/git"
 
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
@@ -115,12 +115,12 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse commit author data
-	var commitAuthor *domain.CommitAuthor
+	var commitAuthor *git.CommitAuthor
 	if authorName != "" || authorEmail != "" {
 		if authorName == "" || authorEmail == "" {
 			return errors.New("both author-name and author-email has to be set if the other is set")
 		}
-		commitAuthor = &domain.CommitAuthor{
+		commitAuthor = &git.CommitAuthor{
 			Name:  authorName,
 			Email: authorEmail,
 		}

@@ -7,7 +7,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/lindell/multi-gitter/internal/domain"
+	git2 "github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 
 	git "github.com/go-git/go-git/v5"
@@ -75,7 +75,7 @@ func (g *Git) Changes() (bool, error) {
 }
 
 // Commit and push all changes
-func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error {
+func (g *Git) Commit(commitAuthor *git2.CommitAuthor, commitMessage string) error {
 	w, err := g.repo.Worktree()
 	if err != nil {
 		return err

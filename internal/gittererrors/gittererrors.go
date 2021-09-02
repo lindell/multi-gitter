@@ -1,4 +1,4 @@
-package domain
+package gittererrors
 
 // Error exist to create constant errors
 type Error string

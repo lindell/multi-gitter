@@ -4,10 +4,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/lindell/multi-gitter/internal/pullrequest"
 	"github.com/pkg/errors"
 	flag "github.com/spf13/pflag"
-
-	"github.com/lindell/multi-gitter/internal/domain"
 )
 
 func outputFlag() *flag.FlagSet {
@@ -32,24 +31,26 @@ func getToken(flag *flag.FlagSet) (string, error) {
 			token = ght
 		} else if ght := os.Getenv("GITEA_TOKEN"); ght != "" {
 			token = ght
+		} else if ght := os.Getenv("BITBUCKET_SERVER_TOKEN"); ght != "" {
+			token = ght
 		}
 	}
 
 	if token == "" {
-		return "", errors.New("either the --token flag or the GITHUB_TOKEN environment variable has to be set")
+		return "", errors.New("either the --token flag or the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable has to be set")
 	}
 
 	return token, nil
 }
 
-func getMergeTypes(flag *flag.FlagSet) ([]domain.MergeType, error) {
+func getMergeTypes(flag *flag.FlagSet) ([]pullrequest.MergeType, error) {
 	mergeTypeStrs, _ := flag.GetStringSlice("merge-type") // Only used for the merge command
 
 	// Convert all defined merge types (if any)
 	var err error
-	mergeTypes := make([]domain.MergeType, len(mergeTypeStrs))
+	mergeTypes := make([]pullrequest.MergeType, len(mergeTypeStrs))
 	for i, mt := range mergeTypeStrs {
-		mergeTypes[i], err = domain.ParseMergeType(mt)
+		mergeTypes[i], err = pullrequest.ParseMergeType(mt)
 		if err != nil {
 			return nil, err
 		}

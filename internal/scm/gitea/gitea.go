@@ -9,14 +9,15 @@ import (
 	"strings"
 
 	"code.gitea.io/sdk/gitea"
+	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/repository"
 	"github.com/pkg/errors"
 
-	"github.com/lindell/multi-gitter/internal/domain"
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 )
 
 // New create a new Gitea client
-func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []domain.MergeType) (*Gitea, error) {
+func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []pullrequest.MergeType) (*Gitea, error) {
 	gitea := &Gitea{
 		RepositoryListing: repoListing,
 
@@ -58,7 +59,7 @@ type Gitea struct {
 
 	currentUser *gitea.User
 
-	MergeTypes []domain.MergeType
+	MergeTypes []pullrequest.MergeType
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -86,58 +87,14 @@ func ParseRepositoryReference(val string) (RepositoryReference, error) {
 	}, nil
 }
 
-type repository struct {
-	url           url.URL
-	name          string
-	ownerName     string
-	defaultBranch string
-}
-
-func (r repository) URL(token string) string {
-	// Set the token as https://oauth2:TOKEN@url
-	r.url.User = url.UserPassword("oauth2", token)
-	return r.url.String()
-}
-
-func (r repository) DefaultBranch() string {
-	return r.defaultBranch
-}
-
-func (r repository) FullName() string {
-	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
-}
-
-type pullRequest struct {
-	ownerName   string
-	repoName    string
-	branchName  string
-	prOwnerName string
-	prRepoName  string
-	index       int64 // The id of the PR
-	webURL      string
-	status      domain.PullRequestStatus
-}
-
-func (pr pullRequest) String() string {
-	return fmt.Sprintf("%s/%s #%d", pr.ownerName, pr.repoName, pr.index)
-}
-
-func (pr pullRequest) Status() domain.PullRequestStatus {
-	return pr.status
-}
-
-func (pr pullRequest) URL() string {
-	return pr.webURL
-}
-
 // GetRepositories fetches repositories from all sources (groups/user/specific repo)
-func (g *Gitea) GetRepositories(ctx context.Context) ([]domain.Repository, error) {
+func (g *Gitea) GetRepositories(ctx context.Context) ([]repository.Data, error) {
 	allRepos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	repos := make([]domain.Repository, 0, len(allRepos))
+	repos := make([]repository.Data, 0, len(allRepos))
 	for _, repo := range allRepos {
 		convertedRepo, err := convertRepository(repo)
 		if err != nil {
@@ -245,9 +202,9 @@ func (g *Gitea) getUserRepositories(ctx context.Context, username string) ([]*gi
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitea) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
-	r := repo.(repository)
-	prR := prRepo.(repository)
+func (g *Gitea) CreatePullRequest(ctx context.Context, repo repository.Data, prRepo repository.Data, newPR pullrequest.NewPullRequest) (pullrequest.PullRequest, error) {
+	r := repo.(Repository)
+	prR := prRepo.(Repository)
 
 	head := fmt.Sprintf("%s:%s", prR.ownerName, newPR.Head)
 
@@ -268,7 +225,7 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo domain.Repository, p
 		return nil, errors.Wrap(err, "could not add reviewer to pull request")
 	}
 
-	return pullRequest{
+	return PullRequest{
 		repoName:    r.name,
 		ownerName:   r.ownerName,
 		branchName:  newPR.Head,
@@ -280,13 +237,13 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo domain.Repository, p
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
-func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
+func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]pullrequest.PullRequest, error) {
 	repos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prs := []domain.PullRequest{}
+	prs := []pullrequest.PullRequest{}
 	for _, repo := range repos {
 		pr, err := g.getPullRequest(ctx, branchName, repo)
 		if err != nil {
@@ -301,7 +258,7 @@ func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]domai
 			return nil, err
 		}
 
-		prs = append(prs, pullRequest{
+		prs = append(prs, PullRequest{
 			repoName:    repo.Name,
 			ownerName:   repo.Owner.UserName,
 			branchName:  branchName,
@@ -334,39 +291,39 @@ func (g *Gitea) getPullRequest(ctx context.Context, branchName string, repo *git
 	return nil, nil
 }
 
-func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, pr *gitea.PullRequest) (domain.PullRequestStatus, error) {
+func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, pr *gitea.PullRequest) (pullrequest.Status, error) {
 	if pr.Merged != nil {
-		return domain.PullRequestStatusMerged, nil
+		return pullrequest.StatusMerged, nil
 	}
 
 	if pr.State == gitea.StateClosed {
-		return domain.PullRequestStatusClosed, nil
+		return pullrequest.StatusClosed, nil
 	}
 
 	status, _, err := g.giteaClient(ctx).GetCombinedStatus(repo.Owner.UserName, repo.Name, pr.Head.Sha)
 	if err != nil {
-		return domain.PullRequestStatusUnknown, err
+		return pullrequest.StatusUnknown, err
 	}
 
 	if len(status.Statuses) == 0 {
-		return domain.PullRequestStatusSuccess, nil
+		return pullrequest.StatusSuccess, nil
 	}
 
 	switch status.State {
 	case gitea.StatusPending:
-		return domain.PullRequestStatusPending, nil
+		return pullrequest.StatusPending, nil
 	case gitea.StatusSuccess:
-		return domain.PullRequestStatusSuccess, nil
+		return pullrequest.StatusSuccess, nil
 	case gitea.StatusError, gitea.StatusFailure:
-		return domain.PullRequestStatusError, nil
+		return pullrequest.StatusError, nil
 	}
 
-	return domain.PullRequestStatusUnknown, nil
+	return pullrequest.StatusUnknown, nil
 }
 
 // MergePullRequest merges a pull request
-func (g *Gitea) MergePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
-	pr := pullReq.(pullRequest)
+func (g *Gitea) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
+	pr := pullReq.(PullRequest)
 
 	repo, _, err := g.giteaClient(ctx).GetRepo(pr.ownerName, pr.repoName)
 	if err != nil {
@@ -374,7 +331,7 @@ func (g *Gitea) MergePullRequest(ctx context.Context, pullReq domain.PullRequest
 	}
 
 	// Filter out all merge types to only the allowed ones, but keep the order of the ones left
-	mergeTypes := domain.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
+	mergeTypes := pullrequest.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
 	if len(mergeTypes) == 0 {
 		return errors.New("none of the configured merge types was permitted")
 	}
@@ -403,8 +360,8 @@ func (g *Gitea) MergePullRequest(ctx context.Context, pullReq domain.PullRequest
 }
 
 // ClosePullRequest closes a pull request
-func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
-	pr := pullReq.(pullRequest)
+func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
+	pr := pullReq.(PullRequest)
 
 	state := gitea.StateClosed
 	_, _, err := g.giteaClient(ctx).EditPullRequest(pr.ownerName, pr.repoName, pr.index, gitea.EditPullRequestOption{
@@ -426,9 +383,9 @@ func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest
 	return nil
 }
 
-// ForkRepository forks a repository. If newOwner is empty, fork on the logged in user
-func (g *Gitea) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
-	r := repo.(repository)
+// ForkRepository forks a GiteaRepository. If newOwner is empty, fork on the logged in user
+func (g *Gitea) ForkRepository(ctx context.Context, repo repository.Data, newOwner string) (repository.Data, error) {
+	r := repo.(Repository)
 
 	forkTo := newOwner
 	if forkTo == "" {
@@ -471,13 +428,13 @@ func (g *Gitea) getUser(ctx context.Context) (*gitea.User, error) {
 	return user, nil
 }
 
-func convertRepository(repo *gitea.Repository) (repository, error) {
+func convertRepository(repo *gitea.Repository) (Repository, error) {
 	u, err := url.Parse(repo.CloneURL)
 	if err != nil {
-		return repository{}, err
+		return Repository{}, err
 	}
 
-	return repository{
+	return Repository{
 		url:           *u,
 		name:          repo.Name,
 		ownerName:     repo.Owner.UserName,

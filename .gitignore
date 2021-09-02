@@ -23,3 +23,7 @@ dist/
 coverage/
 
 completions/
+
+config.yml
+
+.idea/

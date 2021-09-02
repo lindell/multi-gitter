@@ -47,6 +47,7 @@ func print(cmd *cobra.Command, args []string) error {
 	concurrent, _ := flag.GetInt("concurrent")
 	strOutput, _ := flag.GetString("output")
 	strErrOutput, _ := flag.GetString("error-output")
+	username, _ := flag.GetString("username")
 
 	token, err := getToken(flag)
 	if err != nil {
@@ -97,6 +98,7 @@ func print(cmd *cobra.Command, args []string) error {
 	printer := multigitter.Printer{
 		ScriptPath: executablePath,
 		Arguments:  arguments,
+		Username:   username,
 		Token:      token,
 
 		VersionController: vc,
