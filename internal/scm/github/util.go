@@ -1,8 +1,8 @@
 package github
 
 import (
-	"github.com/google/go-github/v37/github"
 	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/google/go-github/v38/github"
 )
 
 // maps merge types to what they are called in the github api

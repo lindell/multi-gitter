@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v37/github"
 	"github.com/lindell/multi-gitter/internal/pullrequest"
 	"github.com/lindell/multi-gitter/internal/repository"
+	"github.com/google/go-github/v38/github"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
