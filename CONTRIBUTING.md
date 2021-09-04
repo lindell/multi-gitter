@@ -25,6 +25,12 @@ The only dependency needed for multi-gitter development is `go`. By forking and 
 
 All tests can be run with `go test ./...`. These tests will also run on multiple platforms once you push it.
 
+### Linting
+
+This project is linted with golangci-lint, and the [configuration file exist in the root of this project](/.golangci.yml). Linting is never perfect, and if something is not linting correctly, please discuss it in the PR.
+
+Some rules might seem superfluous, like comments on everything that is exported, but to encourage the addition of as many useful comments as possible, this repository imposes the rule that everything that is exported should have comments.
+
 ### Docs
 
 If you want to make changes to the README.md file. Please take a look in `./docs/README.template.md` since the README.md file is generated based on it. If you want to change something like the description of a flag, that change can be made directly in the code and docs will be updated automatically.
