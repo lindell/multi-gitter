@@ -12,5 +12,5 @@ _If there is not an existing issue, please make sure we have context on why this
 _Put any questions or notes for the reviewer here._
 
 # Checklist
-- [ ] Made sure the PR follows the [CONTRIBUTING.md](/CONTRIBUTING.md) guidelines
+- [ ] Made sure the PR follows the [CONTRIBUTING.md](CONTRIBUTING.md) guidelines
 - [ ] Tests if something new is added
