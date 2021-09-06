@@ -24,6 +24,7 @@ Are you a bash-guru or simply prefer your scripting in Node.js? It doesn't matte
 ## Demo
 
 ![Gif](docs/img/demo.gif)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flindell%2Fmulti-gitter.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flindell%2Fmulti-gitter?ref=badge_shield)
 
 ## Example
 
@@ -715,3 +716,7 @@ replace();
 
 
 Do you have a nice script that might be useful to others? Please create a PR that adds it to the [examples folder](/examples).
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flindell%2Fmulti-gitter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Flindell%2Fmulti-gitter?ref=badge_large)
