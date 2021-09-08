@@ -1,2 +1,5 @@
 branch: should-not-be-used
 commit-message: config-message
+pr-title-tags:
+  - tag1
+  - tag2

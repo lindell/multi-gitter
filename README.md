@@ -173,6 +173,10 @@ pr-body:
 # The title of the PR. Will default to the first line of the commit message if none is set.
 pr-title:
 
+# A list of tags with which to prefix the pr-title (will render as '[tag1][tag2] {{pr-title}}')
+pr-title-tags:
+  - example
+
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
 project:
   - group/project

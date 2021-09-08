@@ -655,7 +655,7 @@ Repositories with a successful run:
 				require.Len(t, vcMock.PullRequests, 1)
 				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
 				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
-				assert.Equal(t, "config-message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "[tag1][tag2] config-message", vcMock.PullRequests[0].Title)
 
 				assert.Equal(t, `Repositories with a successful run:
   owner/should-change #1

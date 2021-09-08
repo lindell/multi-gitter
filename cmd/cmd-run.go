@@ -35,6 +35,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
 	cmd.Flags().StringP("base-branch", "", "", "The branch which the changes will be based on.")
 	cmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
+	cmd.Flags().StringSliceP("pr-title-tags", "", nil, "A list of tags with which to prefix the pr-title (will render as '[tag1][tag2] {{pr-title}}')")
 	cmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
 	cmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
 	cmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
@@ -62,6 +63,7 @@ func run(cmd *cobra.Command, args []string) error {
 	branchName, _ := flag.GetString("branch")
 	baseBranchName, _ := flag.GetString("base-branch")
 	prTitle, _ := flag.GetString("pr-title")
+	prTitleTags, _ := flag.GetStringSlice("pr-title-tags")
 	prBody, _ := flag.GetString("pr-body")
 	commitMessage, _ := flag.GetString("commit-message")
 	reviewers, _ := flag.GetStringSlice("reviewers")
@@ -104,6 +106,11 @@ func run(cmd *cobra.Command, args []string) error {
 		if prBody == "" && len(split) == 2 {
 			prBody = split[2]
 		}
+	}
+
+	if len(prTitleTags) > 0 {
+		// eg: '[tag1][tag2] my PR!'
+		prTitle = fmt.Sprintf("[%s] %s", strings.Join(prTitleTags, "]["), prTitle)
 	}
 
 	if skipPullRequest && forkMode {
