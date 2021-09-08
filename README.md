@@ -484,6 +484,7 @@ Flags:
   -p, --platform string         The platform that is used. Available values: github, gitlab, gitea. (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
+      --pr-title-tags strings   A list of tags with which to prefix the pr-title (will render as '[tag1][tag2] {{pr-title}}')
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
