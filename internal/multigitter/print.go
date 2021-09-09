@@ -7,12 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 
+	"github.com/lindell/multi-gitter/internal/git"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
-	"github.com/lindell/multi-gitter/internal/repository"
 )
 
 // Printer contains fields to be able to do the print command
@@ -65,7 +64,7 @@ func (r Printer) Print(ctx context.Context) error {
 	return nil
 }
 
-func (r Printer) runSingleRepo(ctx context.Context, repo repository.Data) error {
+func (r Printer) runSingleRepo(ctx context.Context, repo git.Repository) error {
 	if ctx.Err() != nil {
 		return errAborted
 	}
@@ -81,16 +80,9 @@ func (r Printer) runSingleRepo(ctx context.Context, repo repository.Data) error 
 
 	sourceController := r.CreateGit(tmpDir)
 
-	if strings.TrimSpace(r.Username) == "" {
-		err = sourceController.Clone(repo.URL(r.Token), repo.DefaultBranch())
-		if err != nil {
-			return err
-		}
-	} else {
-		err = sourceController.Clone(repo.URLWithUsername(r.Username, r.Token), repo.DefaultBranch())
-		if err != nil {
-			return err
-		}
+	err = sourceController.Clone(repo.CloneURL(), repo.DefaultBranch())
+	if err != nil {
+		return err
 	}
 
 	// Run the command that might or might not change the content of the repo

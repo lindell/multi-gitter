@@ -1,4 +1,4 @@
-package pullrequest
+package git
 
 import (
 	"fmt"
@@ -15,12 +15,12 @@ type NewPullRequest struct {
 	Reviewers []string // The username of all reviewers
 }
 
-// Status is the status of a pull request, including statuses of the last commit
-type Status int
+// PullRequestStatus is the status of a pull request, including statuses of the last commit
+type PullRequestStatus int
 
 // All PullRequestStatuses
 const (
-	StatusUnknown Status = iota
+	StatusUnknown PullRequestStatus = iota
 	StatusSuccess
 	StatusPending
 	StatusError
@@ -28,7 +28,7 @@ const (
 	StatusClosed
 )
 
-func (s Status) String() string {
+func (s PullRequestStatus) String() string {
 	switch s {
 	case StatusUnknown:
 		return "Unknown"
@@ -48,7 +48,7 @@ func (s Status) String() string {
 
 // PullRequest represents a pull request
 type PullRequest interface {
-	Status() Status
+	Status() PullRequestStatus
 	String() string
 }
 

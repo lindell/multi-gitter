@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v37/github"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 )
 
-func convertPullRequest(pr *github.PullRequest) PullRequest {
-	return PullRequest{
+func convertPullRequest(pr *github.PullRequest) pullRequest {
+	return pullRequest{
 		ownerName:   pr.GetBase().GetUser().GetLogin(),
 		repoName:    pr.GetBase().GetRepo().GetName(),
 		branchName:  pr.GetHead().GetRef(),
@@ -19,7 +19,7 @@ func convertPullRequest(pr *github.PullRequest) PullRequest {
 	}
 }
 
-type PullRequest struct {
+type pullRequest struct {
 	ownerName   string
 	repoName    string
 	branchName  string
@@ -27,17 +27,17 @@ type PullRequest struct {
 	prRepoName  string
 	number      int
 	guiURL      string
-	status      pullrequest.Status
+	status      git.PullRequestStatus
 }
 
-func (pr PullRequest) String() string {
+func (pr pullRequest) String() string {
 	return fmt.Sprintf("%s/%s #%d", pr.ownerName, pr.repoName, pr.number)
 }
 
-func (pr PullRequest) Status() pullrequest.Status {
+func (pr pullRequest) Status() git.PullRequestStatus {
 	return pr.status
 }
 
-func (pr PullRequest) URL() string {
+func (pr pullRequest) URL() string {
 	return pr.guiURL
 }

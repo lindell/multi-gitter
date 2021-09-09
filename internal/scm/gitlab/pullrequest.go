@@ -3,10 +3,10 @@ package gitlab
 import (
 	"fmt"
 
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 )
 
-type PullRequest struct {
+type pullRequest struct {
 	ownerName  string
 	repoName   string
 	targetPID  int
@@ -14,17 +14,17 @@ type PullRequest struct {
 	branchName string
 	iid        int
 	webURL     string
-	status     pullrequest.Status
+	status     git.PullRequestStatus
 }
 
-func (pr PullRequest) String() string {
+func (pr pullRequest) String() string {
 	return fmt.Sprintf("%s/%s #%d", pr.ownerName, pr.repoName, pr.iid)
 }
 
-func (pr PullRequest) Status() pullrequest.Status {
+func (pr pullRequest) Status() git.PullRequestStatus {
 	return pr.status
 }
 
-func (pr PullRequest) URL() string {
+func (pr pullRequest) URL() string {
 	return pr.webURL
 }

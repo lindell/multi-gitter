@@ -2,27 +2,27 @@ package github
 
 import (
 	"github.com/google/go-github/v37/github"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 )
 
 // maps merge types to what they are called in the github api
-var mergeTypeGhName = map[pullrequest.MergeType]string{
-	pullrequest.MergeTypeMerge:  "merge",
-	pullrequest.MergeTypeRebase: "rebase",
-	pullrequest.MergeTypeSquash: "squash",
+var mergeTypeGhName = map[git.MergeType]string{
+	git.MergeTypeMerge:  "merge",
+	git.MergeTypeRebase: "rebase",
+	git.MergeTypeSquash: "squash",
 }
 
 // repoMergeTypes returns a list of all allowed merge types
-func repoMergeTypes(repo *github.Repository) []pullrequest.MergeType {
-	ret := []pullrequest.MergeType{}
+func repoMergeTypes(repo *github.Repository) []git.MergeType {
+	ret := []git.MergeType{}
 	if repo.GetAllowMergeCommit() {
-		ret = append(ret, pullrequest.MergeTypeMerge)
+		ret = append(ret, git.MergeTypeMerge)
 	}
 	if repo.GetAllowRebaseMerge() {
-		ret = append(ret, pullrequest.MergeTypeRebase)
+		ret = append(ret, git.MergeTypeRebase)
 	}
 	if repo.GetAllowSquashMerge() {
-		ret = append(ret, pullrequest.MergeTypeSquash)
+		ret = append(ret, git.MergeTypeSquash)
 	}
 	return ret
 }

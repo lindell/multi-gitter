@@ -84,7 +84,7 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 
 ### Gitea
 
-In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens 
+In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens
 
 ## Config file
 
@@ -189,7 +189,7 @@ reviewers:
 # Skip pull request and directly push to the branch.
 skip-pr: false
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
@@ -247,7 +247,7 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
@@ -302,7 +302,7 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
@@ -354,7 +354,7 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
@@ -421,7 +421,7 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
@@ -484,7 +484,7 @@ Flags:
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
       --skip-pr                 Skip pull request and directly push to the branch.
-  -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+  -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
 ```
 
@@ -509,7 +509,7 @@ Flags:
   -p, --platform string      The platform that is used. Available values: github, gitlab, gitea. (default "github")
   -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+  -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings         The name of a user. All repositories owned by that user will be used.
 ```
 
@@ -534,7 +534,7 @@ Flags:
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
 ```
 
@@ -558,7 +558,7 @@ Flags:
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
 ```
 
@@ -594,7 +594,7 @@ Flags:
   -p, --platform string       The platform that is used. Available values: github, gitlab, gitea. (default "github")
   -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string          The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+  -T, --token string          The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
   -U, --user strings          The name of a user. All repositories owned by that user will be used.
 ```
 

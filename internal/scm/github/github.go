@@ -9,8 +9,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v37/github"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
-	"github.com/lindell/multi-gitter/internal/repository"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -22,7 +21,7 @@ func New(
 	baseURL string,
 	transportMiddleware func(http.RoundTripper) http.RoundTripper,
 	repoListing RepositoryListing,
-	mergeTypes []pullrequest.MergeType,
+	mergeTypes []git.MergeType,
 	forkMode bool,
 ) (*Github, error) {
 	ctx := context.Background()
@@ -46,6 +45,7 @@ func New(
 	return &Github{
 		RepositoryListing: repoListing,
 		MergeTypes:        mergeTypes,
+		token:             token,
 		Fork:              forkMode,
 		ghClient:          client,
 	}, nil
@@ -54,7 +54,8 @@ func New(
 // Github contain github configuration
 type Github struct {
 	RepositoryListing
-	MergeTypes []pullrequest.MergeType
+	MergeTypes []git.MergeType
+	token      string
 
 	// This determines if forks will be used when creating a prs.
 	// In this package, it mainly determines which repos are possible to make changes on
@@ -70,7 +71,7 @@ type RepositoryListing struct {
 	Repositories  []RepositoryReference
 }
 
-// RepositoryReference contains information to be able to reference a Repository
+// RepositoryReference contains information to be able to reference a repository
 type RepositoryReference struct {
 	OwnerName string
 	Name      string
@@ -81,11 +82,11 @@ func (rr RepositoryReference) String() string {
 	return fmt.Sprintf("%s/%s", rr.OwnerName, rr.Name)
 }
 
-// ParseRepositoryReference parses a Repository reference from the format "ownerName/repoName"
+// ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
 func ParseRepositoryReference(val string) (RepositoryReference, error) {
 	split := strings.Split(val, "/")
 	if len(split) != 2 {
-		return RepositoryReference{}, fmt.Errorf("could not parse Repository reference: %s", val)
+		return RepositoryReference{}, fmt.Errorf("could not parse repository reference: %s", val)
 	}
 	return RepositoryReference{
 		OwnerName: split[0],
@@ -94,13 +95,13 @@ func ParseRepositoryReference(val string) (RepositoryReference, error) {
 }
 
 // GetRepositories fetches repositories from all sources (orgs/user/specific repo)
-func (g Github) GetRepositories(ctx context.Context) ([]repository.Data, error) {
+func (g Github) GetRepositories(ctx context.Context) ([]git.Repository, error) {
 	allRepos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	repos := make([]repository.Data, 0, len(allRepos))
+	repos := make([]git.Repository, 0, len(allRepos))
 	for _, r := range allRepos {
 		permissions := r.GetPermissions()
 
@@ -112,7 +113,7 @@ func (g Github) GetRepositories(ctx context.Context) ([]repository.Data, error) 
 			continue
 		}
 
-		newRepo, err := convertRepo(r)
+		newRepo, err := convertRepo(r, g.token)
 		if err != nil {
 			return nil, err
 		}
@@ -224,9 +225,9 @@ func (g Github) getRepository(ctx context.Context, repoRef RepositoryReference) 
 }
 
 // CreatePullRequest creates a pull request
-func (g Github) CreatePullRequest(ctx context.Context, repo repository.Data, prRepo repository.Data, newPR pullrequest.NewPullRequest) (pullrequest.PullRequest, error) {
-	r := repo.(Repository)
-	prR := prRepo.(Repository)
+func (g Github) CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error) {
+	r := repo.(repository)
+	prR := prRepo.(repository)
 
 	pr, err := g.createPullRequest(ctx, r, prR, newPR)
 	if err != nil {
@@ -240,7 +241,7 @@ func (g Github) CreatePullRequest(ctx context.Context, repo repository.Data, prR
 	return convertPullRequest(pr), nil
 }
 
-func (g Github) createPullRequest(ctx context.Context, repo Repository, prRepo Repository, newPR pullrequest.NewPullRequest) (*github.PullRequest, error) {
+func (g Github) createPullRequest(ctx context.Context, repo repository, prRepo repository, newPR git.NewPullRequest) (*github.PullRequest, error) {
 	head := fmt.Sprintf("%s:%s", prRepo.ownerName, newPR.Head)
 	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
 		Title: &newPR.Title,
@@ -255,7 +256,7 @@ func (g Github) createPullRequest(ctx context.Context, repo Repository, prRepo R
 	return pr, nil
 }
 
-func (g Github) addReviewers(ctx context.Context, repo Repository, newPR pullrequest.NewPullRequest, createdPR *github.PullRequest) error {
+func (g Github) addReviewers(ctx context.Context, repo repository, newPR git.NewPullRequest, createdPR *github.PullRequest) error {
 	if len(newPR.Reviewers) == 0 {
 		return nil
 	}
@@ -266,7 +267,7 @@ func (g Github) addReviewers(ctx context.Context, repo Repository, newPR pullreq
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
-func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]pullrequest.PullRequest, error) {
+func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
 	// TODO: If this is implemented with the GitHub v4 graphql api, it would be much faster
 
 	repos, err := g.getRepositories(ctx)
@@ -274,7 +275,7 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]pullr
 		return nil, err
 	}
 
-	prStatuses := []pullrequest.PullRequest{}
+	prStatuses := []git.PullRequest{}
 	for _, r := range repos {
 		repoOwner := r.GetOwner().GetLogin()
 		repoName := r.GetName()
@@ -310,8 +311,8 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]pullr
 }
 
 // MergePullRequest merges a pull request
-func (g Github) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
-	pr := pullReq.(PullRequest)
+func (g Github) MergePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+	pr := pullReq.(pullRequest)
 
 	// We need to fetch the repo again since no AllowXMerge is present in listings of repositories
 	repo, _, err := g.ghClient.Repositories.Get(ctx, pr.ownerName, pr.repoName)
@@ -320,7 +321,7 @@ func (g Github) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRe
 	}
 
 	// Filter out all merge types to only the allowed ones, but keep the order of the ones left
-	mergeTypes := pullrequest.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
+	mergeTypes := git.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
 	if len(mergeTypes) == 0 {
 		return errors.New("none of the configured merge types was permitted")
 	}
@@ -337,8 +338,8 @@ func (g Github) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRe
 }
 
 // ClosePullRequest closes a pull request
-func (g Github) ClosePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
-	pr := pullReq.(PullRequest)
+func (g Github) ClosePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+	pr := pullReq.(pullRequest)
 
 	_, _, err := g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
 		State: &[]string{"closed"}[0],
@@ -351,9 +352,9 @@ func (g Github) ClosePullRequest(ctx context.Context, pullReq pullrequest.PullRe
 	return err
 }
 
-// ForkRepository forks a Repository. If newOwner is empty, fork on the logged in user
-func (g Github) ForkRepository(ctx context.Context, repo repository.Data, newOwner string) (repository.Data, error) {
-	r := repo.(Repository)
+// ForkRepository forks a repository. If newOwner is empty, fork on the logged in user
+func (g Github) ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error) {
+	r := repo.(repository)
 
 	createdRepo, _, err := g.ghClient.Repositories.CreateFork(ctx, r.ownerName, r.name, &github.RepositoryCreateForkOptions{
 		Organization: newOwner,
@@ -373,13 +374,13 @@ func (g Github) ForkRepository(ctx context.Context, repo repository.Data, newOwn
 				continue
 			}
 			// The fork does now exist
-			return convertRepo(repo)
+			return convertRepo(repo, g.token)
 		}
 
 		return nil, errors.New("time waiting for fork to complete was exceeded")
 	}
 
-	return convertRepo(createdRepo)
+	return convertRepo(createdRepo, g.token)
 }
 
 // GetAutocompleteOrganizations gets organizations for autocompletion
@@ -440,30 +441,30 @@ func (g Github) GetAutocompleteRepositories(ctx context.Context, str string) ([]
 	return ret, nil
 }
 
-func (g Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (pullrequest.Status, error) {
+func (g Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (git.PullRequestStatus, error) {
 	// Determine the status of the pr
-	var status pullrequest.Status
+	var status git.PullRequestStatus
 	if pr.MergedAt != nil {
-		status = pullrequest.StatusMerged
+		status = git.StatusMerged
 	} else if pr.ClosedAt != nil {
-		status = pullrequest.StatusClosed
+		status = git.StatusClosed
 	} else {
 		log.Debug("Fetching the combined status of the pull request")
 		combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, pr.GetBase().GetUser().GetLogin(), pr.GetBase().GetRepo().GetName(), pr.GetHead().GetSHA(), nil)
 		if err != nil {
-			return pullrequest.StatusUnknown, err
+			return git.StatusUnknown, err
 		}
 
 		if combinedStatus.GetTotalCount() == 0 {
-			status = pullrequest.StatusSuccess
+			status = git.StatusSuccess
 		} else {
 			switch combinedStatus.GetState() {
 			case "pending":
-				status = pullrequest.StatusPending
+				status = git.StatusPending
 			case "success":
-				status = pullrequest.StatusSuccess
+				status = git.StatusSuccess
 			case "failure", "error":
-				status = pullrequest.StatusError
+				status = git.StatusError
 			}
 		}
 	}

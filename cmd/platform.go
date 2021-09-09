@@ -19,6 +19,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags := cmd.Flags()
 
 	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.")
+	flags.BoolP("insecure", "I", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
 	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
 
@@ -257,17 +258,19 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 }
 
 func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
-	bitbucketBaseURL, _ := flag.GetString("base-url")
+	bitbucketServerBaseURL, _ := flag.GetString("base-url")
 	projects, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	username, _ := flag.GetString("username")
+	insecure, _ := flag.GetBool("insecure")
 
 	if verifyFlags && len(projects) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repository set")
 	}
 
-	if bitbucketBaseURL == "" {
-		return nil, errors.New("no base-url set")
+	if bitbucketServerBaseURL == "" {
+		return nil, errors.New("no base-url set for bitbucket server")
 	}
 
 	token, err := getToken(flag)
@@ -283,7 +286,7 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 		}
 	}
 
-	vc, err := bitbucketserver.New(context.Background(), token, bitbucketBaseURL, true, bitbucketserver.RepositoryListing{
+	vc, err := bitbucketserver.New(username, token, bitbucketServerBaseURL, insecure, bitbucketserver.RepositoryListing{
 		Projects:     projects,
 		Users:        users,
 		Repositories: repoRefs,

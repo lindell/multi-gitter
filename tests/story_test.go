@@ -6,9 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/lindell/multi-gitter/internal/pullrequest"
-
 	"github.com/lindell/multi-gitter/cmd"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -72,7 +71,7 @@ Repositories with a successful run:
 `, string(runOutData))
 
 	//
-	// Status
+	// PullRequestStatus
 	//
 	statusOutFile := filepath.Join(tmpDir, "status-log.txt")
 
@@ -90,7 +89,7 @@ Repositories with a successful run:
 	assert.Equal(t, "owner/should-change #1: Pending\nowner/should-change-2 #2: Pending\n", string(statusOutData))
 
 	// One of the created PRs is set to succeeded
-	vcMock.SetPRStatus("should-change", "custom-branch-name", pullrequest.StatusSuccess)
+	vcMock.SetPRStatus("should-change", "custom-branch-name", git.StatusSuccess)
 
 	//
 	// Merge
@@ -112,7 +111,7 @@ Repositories with a successful run:
 	assert.Contains(t, string(mergeLogData), "Merging pr=\"owner/should-change #1\"")
 
 	//
-	// After Merge Status
+	// After Merge PullRequestStatus
 	//
 	afterMergeStatusOutFile := filepath.Join(tmpDir, "after-merge-status-log.txt")
 
@@ -149,7 +148,7 @@ Repositories with a successful run:
 	assert.Contains(t, string(closeLogData), "Closing pr=\"owner/should-change-2 #2\"")
 
 	//
-	// After Close Status
+	// After Close PullRequestStatus
 	//
 	afterCloseStatusOutFile := filepath.Join(tmpDir, "after-close-status-log.txt")
 

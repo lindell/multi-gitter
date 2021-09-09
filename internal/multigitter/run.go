@@ -8,31 +8,28 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 	"syscall"
 
 	"github.com/eiannone/keyboard"
 	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/gittererrors"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
-	"github.com/lindell/multi-gitter/internal/repository"
 )
 
 // VersionController fetches repositories
 type VersionController interface {
-	GetRepositories(ctx context.Context) ([]repository.Data, error)
-	CreatePullRequest(ctx context.Context, repo repository.Data, prRepo repository.Data, newPR pullrequest.NewPullRequest) (pullrequest.PullRequest, error)
-	GetPullRequests(ctx context.Context, branchName string) ([]pullrequest.PullRequest, error)
-	MergePullRequest(ctx context.Context, pr pullrequest.PullRequest) error
-	ClosePullRequest(ctx context.Context, pr pullrequest.PullRequest) error
-	ForkRepository(ctx context.Context, repo repository.Data, newOwner string) (repository.Data, error)
+	GetRepositories(ctx context.Context) ([]git.Repository, error)
+	CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error)
+	GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error)
+	MergePullRequest(ctx context.Context, pr git.PullRequest) error
+	ClosePullRequest(ctx context.Context, pr git.PullRequest) error
+	ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error)
 }
 
 // Runner contains fields to be able to do the run
@@ -71,11 +68,11 @@ var errAborted = errors.New("run was never started because of aborted execution"
 var errRejected = errors.New("changes were not included since they were manually rejected")
 
 type dryRunPullRequest struct {
-	status     pullrequest.Status
-	Repository repository.Data
+	status     git.PullRequestStatus
+	Repository git.Repository
 }
 
-func (pr dryRunPullRequest) Status() pullrequest.Status {
+func (pr dryRunPullRequest) Status() git.PullRequestStatus {
 	return pr.status
 }
 
@@ -162,7 +159,7 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r *Runner) runSingleRepo(ctx context.Context, repo repository.Data) (pullrequest.PullRequest, error) {
+func (r *Runner) runSingleRepo(ctx context.Context, repo git.Repository) (git.PullRequest, error) {
 	if ctx.Err() != nil {
 		return nil, errAborted
 	}
@@ -183,16 +180,9 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo repository.Data) (pullr
 		baseBranch = repo.DefaultBranch()
 	}
 
-	if strings.TrimSpace(r.Username) == "" {
-		err = sourceController.Clone(repo.URL(r.Token), repo.DefaultBranch())
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err = sourceController.Clone(repo.URLWithUsername(r.Username, r.Token), repo.DefaultBranch())
-		if err != nil {
-			return nil, err
-		}
+	err = sourceController.Clone(repo.CloneURL(), baseBranch)
+	if err != nil {
+		return nil, err
 	}
 
 	// Change the branch to the feature branch
@@ -248,7 +238,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo repository.Data) (pullr
 	}
 
 	remoteName := "origin"
-	var prRepo repository.Data = repo
+	var prRepo = repo
 	if r.Fork {
 		log.Info("Forking repository")
 
@@ -257,7 +247,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo repository.Data) (pullr
 			return nil, errors.Wrap(err, "could not fork repository")
 		}
 
-		err = sourceController.AddRemote("fork", prRepo.URL(r.Token))
+		err = sourceController.AddRemote("fork", prRepo.CloneURL())
 		if err != nil {
 			return nil, err
 		}
@@ -284,7 +274,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo repository.Data) (pullr
 	}
 
 	log.Info("Creating pull request")
-	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, pullrequest.NewPullRequest{
+	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, git.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
@@ -300,7 +290,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo repository.Data) (pullr
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(dir string, repo repository.Data) error {
+func (r *Runner) interactive(dir string, repo git.Repository) error {
 	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Println(interactiveInfo)
 	for {

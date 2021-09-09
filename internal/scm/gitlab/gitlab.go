@@ -5,14 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/lindell/multi-gitter/internal/git"
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
-	"github.com/lindell/multi-gitter/internal/repository"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -36,6 +34,7 @@ func New(token, baseURL string, repoListing RepositoryListing, config Config) (*
 		RepositoryListing: repoListing,
 		Config:            config,
 		glClient:          client,
+		token:             token,
 	}, nil
 }
 
@@ -43,6 +42,7 @@ func New(token, baseURL string, repoListing RepositoryListing, config Config) (*
 type Gitlab struct {
 	RepositoryListing
 	Config   Config
+	token    string
 	glClient *gitlab.Client
 
 	// Cached current user
@@ -61,17 +61,17 @@ type Config struct {
 	IncludeSubgroups bool
 }
 
-// ProjectReference contains information to be able to reference a Repository
+// ProjectReference contains information to be able to reference a repository
 type ProjectReference struct {
 	OwnerName string
 	Name      string
 }
 
-// ParseProjectReference parses a Repository reference from the format "ownerName/repoName"
+// ParseProjectReference parses a repository reference from the format "ownerName/repoName"
 func ParseProjectReference(val string) (ProjectReference, error) {
 	lastSlashIndex := strings.LastIndex(val, "/")
 	if lastSlashIndex == -1 {
-		return ProjectReference{}, fmt.Errorf("could not parse Repository reference: %s", val)
+		return ProjectReference{}, fmt.Errorf("could not parse repository reference: %s", val)
 	}
 	return ProjectReference{
 		OwnerName: val[:lastSlashIndex],
@@ -80,15 +80,15 @@ func ParseProjectReference(val string) (ProjectReference, error) {
 }
 
 // GetRepositories fetches repositories from all sources (groups/user/specific project)
-func (g *Gitlab) GetRepositories(ctx context.Context) ([]repository.Data, error) {
+func (g *Gitlab) GetRepositories(ctx context.Context) ([]git.Repository, error) {
 	allProjects, err := g.getProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	repos := make([]repository.Data, 0, len(allProjects))
+	repos := make([]git.Repository, 0, len(allProjects))
 	for _, project := range allProjects {
-		p, err := convertProject(project)
+		p, err := convertProject(project, g.token)
 		if err != nil {
 			return nil, err
 		}
@@ -200,9 +200,9 @@ func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitla
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitlab) CreatePullRequest(ctx context.Context, repo repository.Data, prRepo repository.Data, newPR pullrequest.NewPullRequest) (pullrequest.PullRequest, error) {
-	r := repo.(Repository)
-	prR := prRepo.(Repository)
+func (g *Gitlab) CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error) {
+	r := repo.(repository)
+	prR := prRepo.(repository)
 
 	// Convert from usernames to user ids
 	var assigneeIDs []int
@@ -228,7 +228,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo repository.Data, pr
 		return nil, err
 	}
 
-	return PullRequest{
+	return pullRequest{
 		repoName:   r.name,
 		ownerName:  r.ownerName,
 		targetPID:  mr.TargetProjectID,
@@ -257,13 +257,13 @@ func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, err
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
-func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]pullrequest.PullRequest, error) {
+func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
 	projects, err := g.getProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prs := []pullrequest.PullRequest{}
+	prs := []git.PullRequest{}
 	for _, project := range projects {
 		mr, err := g.getPullRequest(ctx, branchName, project)
 		if err != nil {
@@ -273,7 +273,7 @@ func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]pull
 			continue
 		}
 
-		prs = append(prs, PullRequest{
+		prs = append(prs, pullRequest{
 			repoName:   project.Path,
 			ownerName:  project.Namespace.Path,
 			targetPID:  mr.TargetProjectID,
@@ -310,24 +310,24 @@ func (g *Gitlab) getPullRequest(ctx context.Context, branchName string, project 
 	return mr, nil
 }
 
-func pullRequestStatus(mr *gitlab.MergeRequest) pullrequest.Status {
+func pullRequestStatus(mr *gitlab.MergeRequest) git.PullRequestStatus {
 	switch {
 	case mr.MergedAt != nil:
-		return pullrequest.StatusMerged
+		return git.StatusMerged
 	case mr.ClosedAt != nil:
-		return pullrequest.StatusClosed
+		return git.StatusClosed
 	case mr.Pipeline == nil, mr.Pipeline.Status == "success":
-		return pullrequest.StatusSuccess
+		return git.StatusSuccess
 	case mr.Pipeline.Status == "failed":
-		return pullrequest.StatusError
+		return git.StatusError
 	default:
-		return pullrequest.StatusPending
+		return git.StatusPending
 	}
 }
 
 // MergePullRequest merges a pull request
-func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
-	pr := pullReq.(PullRequest)
+func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+	pr := pullReq.(pullRequest)
 
 	shouldRemoveSourceBranch := true
 	_, _, err := g.glClient.MergeRequests.AcceptMergeRequest(pr.targetPID, pr.iid, &gitlab.AcceptMergeRequestOptions{
@@ -341,8 +341,8 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq pullrequest.PullR
 }
 
 // ClosePullRequest closes a pull request
-func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
-	pr := pullReq.(PullRequest)
+func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+	pr := pullReq.(pullRequest)
 
 	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
 	if err != nil {
@@ -358,8 +358,8 @@ func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq pullrequest.PullR
 }
 
 // ForkRepository forks a project
-func (g *Gitlab) ForkRepository(ctx context.Context, repo repository.Data, newOwner string) (repository.Data, error) {
-	r := repo.(Repository)
+func (g *Gitlab) ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error) {
+	r := repo.(repository)
 
 	// Get the username of the fork (logged in user if none is set)
 	ownerUsername := newOwner
@@ -378,7 +378,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo repository.Data, newOw
 		gitlab.WithContext(ctx),
 	)
 	if err == nil { // Already forked, just return it
-		return convertProject(project)
+		return convertProject(project, g.token)
 	} else if resp.StatusCode != http.StatusNotFound { // If the error was that the project does not exist, continue to fork it
 		return nil, err
 	}
@@ -397,7 +397,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo repository.Data, newOw
 		}
 
 		if repo.ImportStatus == "finished" {
-			return convertProject(newRepo)
+			return convertProject(newRepo, g.token)
 		}
 
 		time.Sleep(time.Second * 3)
@@ -419,19 +419,4 @@ func (g *Gitlab) getCurrentUser(ctx context.Context) (*gitlab.User, error) {
 	g.currentUser = user
 
 	return user, nil
-}
-
-func convertProject(project *gitlab.Project) (Repository, error) {
-	u, err := url.Parse(project.HTTPURLToRepo)
-	if err != nil {
-		return Repository{}, err
-	}
-
-	return Repository{
-		url:           *u,
-		pid:           project.ID,
-		name:          project.Path,
-		ownerName:     project.Namespace.Path,
-		defaultBranch: project.DefaultBranch,
-	}, nil
 }

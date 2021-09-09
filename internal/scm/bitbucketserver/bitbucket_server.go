@@ -11,8 +11,7 @@ import (
 	"strings"
 
 	bitbucketv1 "github.com/gfleury/go-bitbucket-v1"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
-	"github.com/lindell/multi-gitter/internal/repository"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
@@ -20,12 +19,11 @@ import (
 const (
 	cloneType     = "http"
 	stateMerged   = "MERGED"
-	stateOpen     = "OPEN"
 	stateDeclined = "DECLINED"
 )
 
 // New create a new BitbucketServer client
-func New(ctx context.Context, token, baseURL string, insecure bool, repoListing RepositoryListing) (*BitbucketServer, error) {
+func New(username, token, baseURL string, insecure bool, repoListing RepositoryListing) (*BitbucketServer, error) {
 	if strings.TrimSpace(token) == "" {
 		return nil, errors.New("token is empty")
 	}
@@ -45,9 +43,18 @@ func New(ctx context.Context, token, baseURL string, insecure bool, repoListing 
 
 	bitbucketServer := &BitbucketServer{}
 	bitbucketServer.RepositoryListing = repoListing
-	bitbucketServer.client = bitbucketv1.NewAPIClient(
+	bitbucketServer.username = username
+	bitbucketServer.token = token
+	bitbucketServer.insecure = insecure
+	bitbucketServer.baseURL = bitbucketBaseURL
+
+	return bitbucketServer, nil
+}
+
+func newClient(ctx context.Context, token, baseURL string, insecure bool) *bitbucketv1.APIClient {
+	return bitbucketv1.NewAPIClient(
 		ctx,
-		bitbucketv1.NewConfiguration(bitbucketBaseURL.String(), func(config *bitbucketv1.Configuration) {
+		bitbucketv1.NewConfiguration(baseURL, func(config *bitbucketv1.Configuration) {
 			config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", token))
 			config.HTTPClient = &http.Client{
 				Transport: &http.Transport{
@@ -56,13 +63,14 @@ func New(ctx context.Context, token, baseURL string, insecure bool, repoListing 
 			}
 		}),
 	)
-
-	return bitbucketServer, nil
 }
 
+// BitbucketServer is a SCM instance of Bitbucket Server the on-prem version of Bitbucket
 type BitbucketServer struct {
 	RepositoryListing
-	client *bitbucketv1.APIClient
+	username, token string
+	insecure        bool
+	baseURL         *url.URL
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -72,7 +80,7 @@ type RepositoryListing struct {
 	Repositories []RepositoryReference
 }
 
-// RepositoryReference contains information to be able to reference a Repository
+// RepositoryReference contains information to be able to reference a repository
 type RepositoryReference struct {
 	ProjectKey string
 	Name       string
@@ -96,17 +104,19 @@ func (rr RepositoryReference) String() string {
 }
 
 // GetRepositories Should get repositories based on the scm configuration
-func (b *BitbucketServer) GetRepositories(_ context.Context) ([]repository.Data, error) {
-	bitbucketRepositories, err := b.getRepositories()
+func (b *BitbucketServer) GetRepositories(ctx context.Context) ([]git.Repository, error) {
+	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+
+	bitbucketRepositories, err := b.getRepositories(client)
 	if err != nil {
 		return nil, err
 	}
 
-	repositories := make([]repository.Data, 0, len(bitbucketRepositories))
+	repositories := make([]git.Repository, 0, len(bitbucketRepositories))
 
 	// Get default branches and create repo interfaces
 	for _, bitbucketRepository := range bitbucketRepositories {
-		response, getDefaultBranchErr := b.client.DefaultApi.GetDefaultBranch(bitbucketRepository.Project.Key, bitbucketRepository.Slug)
+		response, getDefaultBranchErr := client.DefaultApi.GetDefaultBranch(bitbucketRepository.Project.Key, bitbucketRepository.Slug)
 		if getDefaultBranchErr != nil {
 			return nil, getDefaultBranchErr
 		}
@@ -117,7 +127,7 @@ func (b *BitbucketServer) GetRepositories(_ context.Context) ([]repository.Data,
 			return nil, err
 		}
 
-		repo, repoErr := newRepo(bitbucketRepository, defaultBranch)
+		repo, repoErr := convertRepository(bitbucketRepository, defaultBranch, b.username, b.token)
 		if repoErr != nil {
 			return nil, repoErr
 		}
@@ -128,33 +138,29 @@ func (b *BitbucketServer) GetRepositories(_ context.Context) ([]repository.Data,
 	return repositories, nil
 }
 
-func (b *BitbucketServer) getRepositories() ([]*bitbucketv1.Repository, error) {
+func (b *BitbucketServer) getRepositories(client *bitbucketv1.APIClient) ([]*bitbucketv1.Repository, error) {
 	var bitbucketRepositories []*bitbucketv1.Repository
 
 	for _, project := range b.Projects {
-		repos, err := b.getProjectRepositories(project)
+		repos, err := b.getProjectRepositories(client, project)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, repo := range repos {
-			bitbucketRepositories = append(bitbucketRepositories, repo)
-		}
+		bitbucketRepositories = append(bitbucketRepositories, repos...)
 	}
 
 	for _, user := range b.Users {
-		repos, err := b.getProjectRepositories(user)
+		repos, err := b.getProjectRepositories(client, user)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, repo := range repos {
-			bitbucketRepositories = append(bitbucketRepositories, repo)
-		}
+		bitbucketRepositories = append(bitbucketRepositories, repos...)
 	}
 
 	for _, repositoryRef := range b.Repositories {
-		repo, err := b.getRepository(repositoryRef.ProjectKey, repositoryRef.Name)
+		repo, err := b.getRepository(client, repositoryRef.ProjectKey, repositoryRef.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -178,8 +184,8 @@ func (b *BitbucketServer) getRepositories() ([]*bitbucketv1.Repository, error) {
 	return bitbucketRepositories, nil
 }
 
-func (b *BitbucketServer) getRepository(projectKey, repositorySlug string) (*bitbucketv1.Repository, error) {
-	response, err := b.client.DefaultApi.GetRepository(projectKey, repositorySlug)
+func (b *BitbucketServer) getRepository(client *bitbucketv1.APIClient, projectKey, repositorySlug string) (*bitbucketv1.Repository, error) {
+	response, err := client.DefaultApi.GetRepository(projectKey, repositorySlug)
 	if err != nil {
 		return nil, err
 	}
@@ -193,12 +199,12 @@ func (b *BitbucketServer) getRepository(projectKey, repositorySlug string) (*bit
 	return &bitbucketRepository, nil
 }
 
-func (b *BitbucketServer) getProjectRepositories(projectKey string) ([]*bitbucketv1.Repository, error) {
+func (b *BitbucketServer) getProjectRepositories(client *bitbucketv1.APIClient, projectKey string) ([]*bitbucketv1.Repository, error) {
 	params := map[string]interface{}{"start": 0, "limit": 25}
 
 	var repositories []*bitbucketv1.Repository
 	for {
-		response, err := b.client.DefaultApi.GetRepositoriesWithOptions(projectKey, params)
+		response, err := client.DefaultApi.GetRepositoriesWithOptions(projectKey, params)
 		if err != nil {
 			return nil, err
 		}
@@ -225,13 +231,15 @@ func (b *BitbucketServer) getProjectRepositories(projectKey string) ([]*bitbucke
 }
 
 // CreatePullRequest Creates a pull request. The repo parameter will always originate from the same package
-func (b *BitbucketServer) CreatePullRequest(_ context.Context, repo repository.Data, prRepo repository.Data, newPR pullrequest.NewPullRequest) (pullrequest.PullRequest, error) {
-	r := repo.(Repository)
-	prR := prRepo.(Repository)
+func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error) {
+	r := repo.(repository)
+	prR := prRepo.(repository)
+
+	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
 
 	var usersWithMetadata []bitbucketv1.UserWithMetadata
 	for _, reviewer := range newPR.Reviewers {
-		response, err := b.client.DefaultApi.GetUser(reviewer)
+		response, err := client.DefaultApi.GetUser(reviewer)
 		if err != nil {
 			return nil, err
 		}
@@ -245,7 +253,7 @@ func (b *BitbucketServer) CreatePullRequest(_ context.Context, repo repository.D
 		usersWithMetadata = append(usersWithMetadata, bitbucketv1.UserWithMetadata{User: userWithLinks})
 	}
 
-	response, err := b.client.DefaultApi.CreatePullRequest(r.project, r.name, bitbucketv1.PullRequest{
+	response, err := client.DefaultApi.CreatePullRequest(r.project, r.name, bitbucketv1.PullRequest{
 		Title:       newPR.Title,
 		Description: newPR.Body,
 		Reviewers:   usersWithMetadata,
@@ -269,27 +277,29 @@ func (b *BitbucketServer) CreatePullRequest(_ context.Context, repo repository.D
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("unable to create pull request for Repository %s: %s", r.name, err)
+		return nil, fmt.Errorf("unable to create pull request for repository %s: %s", r.name, err)
 	}
 
 	pullRequestResp, err := bitbucketv1.GetPullRequestResponse(response)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create pull request for Repository %s: %s", r.name, err)
+		return nil, fmt.Errorf("unable to create pull request for repository %s: %s", r.name, err)
 	}
 
 	return newPullRequest(pullRequestResp), nil
 }
 
 // GetPullRequests Gets the latest pull requests from repositories based on the scm configuration
-func (b *BitbucketServer) GetPullRequests(_ context.Context, branchName string) ([]pullrequest.PullRequest, error) {
-	repositories, err := b.getRepositories()
+func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
+	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+
+	repositories, err := b.getRepositories(client)
 	if err != nil {
 		return nil, err
 	}
 
-	var prs []pullrequest.PullRequest
+	var prs []git.PullRequest
 	for _, repo := range repositories {
-		pr, getPullRequestErr := b.getPullRequest(branchName, repo)
+		pr, getPullRequestErr := b.getPullRequest(client, branchName, repo)
 		if getPullRequestErr != nil {
 			return nil, getPullRequestErr
 		}
@@ -297,12 +307,12 @@ func (b *BitbucketServer) GetPullRequests(_ context.Context, branchName string) 
 			continue
 		}
 
-		status, pullRequestStatusErr := b.pullRequestStatus(repo, pr)
+		status, pullRequestStatusErr := b.pullRequestStatus(client, repo, pr)
 		if pullRequestStatusErr != nil {
 			return nil, pullRequestStatusErr
 		}
 
-		prs = append(prs, PullRequest{
+		prs = append(prs, pullRequest{
 			repoName:   repo.Slug,
 			project:    repo.Project.Key,
 			branchName: branchName,
@@ -313,45 +323,45 @@ func (b *BitbucketServer) GetPullRequests(_ context.Context, branchName string) 
 		})
 	}
 
-	return nil, nil
+	return prs, nil
 }
 
-func (b *BitbucketServer) pullRequestStatus(repo *bitbucketv1.Repository, pr *bitbucketv1.PullRequest) (pullrequest.Status, error) {
+func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo *bitbucketv1.Repository, pr *bitbucketv1.PullRequest) (git.PullRequestStatus, error) {
 	switch pr.State {
 	case stateMerged:
-		return pullrequest.StatusMerged, nil
+		return git.StatusMerged, nil
 	case stateDeclined:
-		return pullrequest.StatusClosed, nil
+		return git.StatusClosed, nil
 	}
 
-	response, err := b.client.DefaultApi.CanMerge(repo.Project.Key, repo.Slug, int64(pr.ID))
+	response, err := client.DefaultApi.CanMerge(repo.Project.Key, repo.Slug, int64(pr.ID))
 	if err != nil {
-		return pullrequest.StatusUnknown, err
+		return git.StatusUnknown, err
 	}
 
 	var merge bitbucketv1.MergeGetResponse
 	err = mapstructure.Decode(response.Values, &merge)
 	if err != nil {
-		return pullrequest.StatusUnknown, err
+		return git.StatusUnknown, err
 	}
 
 	if !merge.CanMerge {
-		return pullrequest.StatusPending, nil
+		return git.StatusPending, nil
 	}
 
 	if merge.Conflicted {
-		return pullrequest.StatusError, nil
+		return git.StatusError, nil
 	}
 
-	return pullrequest.StatusUnknown, nil
+	return git.StatusUnknown, nil
 }
 
-func (b *BitbucketServer) getPullRequest(branchName string, repo *bitbucketv1.Repository) (*bitbucketv1.PullRequest, error) {
+func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchName string, repo *bitbucketv1.Repository) (*bitbucketv1.PullRequest, error) {
 	params := map[string]interface{}{"start": 0, "limit": 25}
 
 	var pullRequests []bitbucketv1.PullRequest
 	for {
-		response, err := b.client.DefaultApi.GetPullRequestsPage(repo.Project.Key, repo.Slug, params)
+		response, err := client.DefaultApi.GetPullRequestsPage(repo.Project.Key, repo.Slug, params)
 		if err != nil {
 			return nil, err
 		}
@@ -362,9 +372,7 @@ func (b *BitbucketServer) getPullRequest(branchName string, repo *bitbucketv1.Re
 			return nil, err
 		}
 
-		for _, pr := range pager.Values {
-			pullRequests = append(pullRequests, pr)
-		}
+		pullRequests = append(pullRequests, pager.Values...)
 
 		if pager.IsLastPage {
 			break
@@ -379,14 +387,16 @@ func (b *BitbucketServer) getPullRequest(branchName string, repo *bitbucketv1.Re
 		}
 	}
 
-	return nil, errors.Errorf("could not find pull request in Repository %s for branch %s", repo.Name, branchName)
+	return nil, errors.Errorf("could not find pull request in repository %s for branch %s", repo.Name, branchName)
 }
 
 // MergePullRequest Merges a pull request, the pr parameter will always originate from the same package
-func (b *BitbucketServer) MergePullRequest(_ context.Context, pr pullrequest.PullRequest) error {
-	bitbucketPR := pr.(PullRequest)
+func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr git.PullRequest) error {
+	bitbucketPR := pr.(pullRequest)
 
-	response, err := b.client.DefaultApi.GetPullRequest(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number)
+	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+
+	response, err := client.DefaultApi.GetPullRequest(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number)
 	if err != nil {
 		if strings.Contains(err.Error(), "com.atlassian.bitbucket.pull.NoSuchPullRequestException") {
 			return nil
@@ -406,7 +416,7 @@ func (b *BitbucketServer) MergePullRequest(_ context.Context, pr pullrequest.Pul
 	mergeMap := make(map[string]interface{})
 	mergeMap["version"] = pullRequest.Version
 
-	_, err = b.client.DefaultApi.Merge(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number, mergeMap, nil, []string{"application/json"})
+	_, err = client.DefaultApi.Merge(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number, mergeMap, nil, []string{"application/json"})
 	if err != nil {
 		return err
 	}
@@ -415,16 +425,18 @@ func (b *BitbucketServer) MergePullRequest(_ context.Context, pr pullrequest.Pul
 }
 
 // ClosePullRequest Close a pull request, the pr parameter will always originate from the same package
-func (b *BitbucketServer) ClosePullRequest(_ context.Context, pr pullrequest.PullRequest) error {
-	bitbucketPR := pr.(PullRequest)
+func (b *BitbucketServer) ClosePullRequest(ctx context.Context, pr git.PullRequest) error {
+	bitbucketPR := pr.(pullRequest)
 
-	_, err := b.client.DefaultApi.DeletePullRequest(bitbucketPR.project, bitbucketPR.repoName, int64(bitbucketPR.number))
+	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+
+	_, err := client.DefaultApi.DeletePullRequest(bitbucketPR.project, bitbucketPR.repoName, int64(bitbucketPR.number))
 
 	return err
 }
 
 // ForkRepository forks a repository. If newOwner is set, use it, otherwise fork to the current user
-func (b *BitbucketServer) ForkRepository(_ context.Context, repo repository.Data, newOwner string) (repository.Data, error) {
+func (b *BitbucketServer) ForkRepository(_ context.Context, repo git.Repository, newOwner string) (git.Repository, error) {
 	return nil, errors.New("forking not implemented")
 }
 
@@ -444,32 +456,4 @@ type bitbucketPullRequestPager struct {
 	NextPageStart int                       `json:"nextPageStart"`
 	IsLastPage    bool                      `json:"isLastPage"`
 	Values        []bitbucketv1.PullRequest `json:"values"`
-}
-
-func newRepo(bitbucketRepository *bitbucketv1.Repository, defaultBranch bitbucketv1.Branch) (*Repository, error) {
-	var cloneURL *url.URL
-	var err error
-	for _, clone := range bitbucketRepository.Links.Clone {
-		if strings.EqualFold(clone.Name, cloneType) {
-			cloneURL, err = url.Parse(clone.Href)
-			if err != nil {
-				return nil, err
-			}
-
-			break
-		}
-	}
-
-	if cloneURL == nil {
-		return nil, errors.Errorf("unable to find clone url for repostory %s using clone type %s", bitbucketRepository.Name, cloneType)
-	}
-
-	repo := Repository{
-		name:          bitbucketRepository.Slug,
-		project:       bitbucketRepository.Project.Key,
-		defaultBranch: defaultBranch.DisplayID,
-		cloneURL:      cloneURL,
-	}
-
-	return &repo, nil
 }

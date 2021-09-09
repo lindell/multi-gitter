@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 	flag "github.com/spf13/pflag"
 )
@@ -43,14 +43,14 @@ func getToken(flag *flag.FlagSet) (string, error) {
 	return token, nil
 }
 
-func getMergeTypes(flag *flag.FlagSet) ([]pullrequest.MergeType, error) {
+func getMergeTypes(flag *flag.FlagSet) ([]git.MergeType, error) {
 	mergeTypeStrs, _ := flag.GetStringSlice("merge-type") // Only used for the merge command
 
 	// Convert all defined merge types (if any)
 	var err error
-	mergeTypes := make([]pullrequest.MergeType, len(mergeTypeStrs))
+	mergeTypes := make([]git.MergeType, len(mergeTypeStrs))
 	for i, mt := range mergeTypeStrs {
-		mergeTypes[i], err = pullrequest.ParseMergeType(mt)
+		mergeTypes[i], err = git.ParseMergeType(mt)
 		if err != nil {
 			return nil, err
 		}

@@ -3,10 +3,10 @@ package gitea
 import (
 	"fmt"
 
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 )
 
-type PullRequest struct {
+type pullRequest struct {
 	ownerName   string
 	repoName    string
 	branchName  string
@@ -14,17 +14,17 @@ type PullRequest struct {
 	prRepoName  string
 	index       int64 // The id of the PR
 	webURL      string
-	status      pullrequest.Status
+	status      git.PullRequestStatus
 }
 
-func (pr PullRequest) String() string {
+func (pr pullRequest) String() string {
 	return fmt.Sprintf("%s/%s #%d", pr.ownerName, pr.repoName, pr.index)
 }
 
-func (pr PullRequest) Status() pullrequest.Status {
+func (pr pullRequest) Status() git.PullRequestStatus {
 	return pr.status
 }
 
-func (pr PullRequest) URL() string {
+func (pr pullRequest) URL() string {
 	return pr.webURL
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/scm/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -117,7 +117,7 @@ func Test_GetRepositories(t *testing.T) {
 	{
 		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
 			Organizations: []string{"test-org"},
-		}, []pullrequest.MergeType{pullrequest.MergeTypeMerge}, false)
+		}, []git.MergeType{git.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -128,7 +128,7 @@ func Test_GetRepositories(t *testing.T) {
 		}
 	}
 
-	// Repository
+	// repository
 	{
 		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
 			Repositories: []github.RepositoryReference{
@@ -137,7 +137,7 @@ func Test_GetRepositories(t *testing.T) {
 					Name:      "test1",
 				},
 			},
-		}, []pullrequest.MergeType{pullrequest.MergeTypeMerge}, false)
+		}, []git.MergeType{git.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -152,7 +152,7 @@ func Test_GetRepositories(t *testing.T) {
 	{
 		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
 			Users: []string{"test-user"},
-		}, []pullrequest.MergeType{pullrequest.MergeTypeMerge}, false)
+		}, []git.MergeType{git.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -174,7 +174,7 @@ func Test_GetRepositories(t *testing.T) {
 					Name:      "test1",
 				},
 			},
-		}, []pullrequest.MergeType{pullrequest.MergeTypeMerge}, false)
+		}, []git.MergeType{git.MergeTypeMerge}, false)
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())

@@ -3,7 +3,7 @@ package multigitter
 import (
 	"context"
 
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,9 +21,9 @@ func (s Merger) Merge(ctx context.Context) error {
 		return err
 	}
 
-	successPrs := make([]pullrequest.PullRequest, 0, len(prs))
+	successPrs := make([]git.PullRequest, 0, len(prs))
 	for _, pr := range prs {
-		if pr.Status() == pullrequest.StatusSuccess {
+		if pr.Status() == git.StatusSuccess {
 			successPrs = append(successPrs, pr)
 		}
 	}

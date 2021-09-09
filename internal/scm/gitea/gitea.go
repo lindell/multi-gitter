@@ -4,20 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"sort"
 	"strings"
 
 	"code.gitea.io/sdk/gitea"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
-	"github.com/lindell/multi-gitter/internal/repository"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 )
 
 // New create a new Gitea client
-func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []pullrequest.MergeType) (*Gitea, error) {
+func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []git.MergeType) (*Gitea, error) {
 	gitea := &Gitea{
 		RepositoryListing: repoListing,
 
@@ -59,7 +57,7 @@ type Gitea struct {
 
 	currentUser *gitea.User
 
-	MergeTypes []pullrequest.MergeType
+	MergeTypes []git.MergeType
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -88,15 +86,15 @@ func ParseRepositoryReference(val string) (RepositoryReference, error) {
 }
 
 // GetRepositories fetches repositories from all sources (groups/user/specific repo)
-func (g *Gitea) GetRepositories(ctx context.Context) ([]repository.Data, error) {
+func (g *Gitea) GetRepositories(ctx context.Context) ([]git.Repository, error) {
 	allRepos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	repos := make([]repository.Data, 0, len(allRepos))
+	repos := make([]git.Repository, 0, len(allRepos))
 	for _, repo := range allRepos {
-		convertedRepo, err := convertRepository(repo)
+		convertedRepo, err := convertRepository(repo, g.token)
 		if err != nil {
 			return nil, err
 		}
@@ -202,9 +200,9 @@ func (g *Gitea) getUserRepositories(ctx context.Context, username string) ([]*gi
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitea) CreatePullRequest(ctx context.Context, repo repository.Data, prRepo repository.Data, newPR pullrequest.NewPullRequest) (pullrequest.PullRequest, error) {
-	r := repo.(Repository)
-	prR := prRepo.(Repository)
+func (g *Gitea) CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error) {
+	r := repo.(repository)
+	prR := prRepo.(repository)
 
 	head := fmt.Sprintf("%s:%s", prR.ownerName, newPR.Head)
 
@@ -225,7 +223,7 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo repository.Data, prR
 		return nil, errors.Wrap(err, "could not add reviewer to pull request")
 	}
 
-	return PullRequest{
+	return pullRequest{
 		repoName:    r.name,
 		ownerName:   r.ownerName,
 		branchName:  newPR.Head,
@@ -237,13 +235,13 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo repository.Data, prR
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
-func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]pullrequest.PullRequest, error) {
+func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
 	repos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prs := []pullrequest.PullRequest{}
+	prs := []git.PullRequest{}
 	for _, repo := range repos {
 		pr, err := g.getPullRequest(ctx, branchName, repo)
 		if err != nil {
@@ -258,7 +256,7 @@ func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]pullr
 			return nil, err
 		}
 
-		prs = append(prs, PullRequest{
+		prs = append(prs, pullRequest{
 			repoName:    repo.Name,
 			ownerName:   repo.Owner.UserName,
 			branchName:  branchName,
@@ -291,39 +289,39 @@ func (g *Gitea) getPullRequest(ctx context.Context, branchName string, repo *git
 	return nil, nil
 }
 
-func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, pr *gitea.PullRequest) (pullrequest.Status, error) {
+func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, pr *gitea.PullRequest) (git.PullRequestStatus, error) {
 	if pr.Merged != nil {
-		return pullrequest.StatusMerged, nil
+		return git.StatusMerged, nil
 	}
 
 	if pr.State == gitea.StateClosed {
-		return pullrequest.StatusClosed, nil
+		return git.StatusClosed, nil
 	}
 
 	status, _, err := g.giteaClient(ctx).GetCombinedStatus(repo.Owner.UserName, repo.Name, pr.Head.Sha)
 	if err != nil {
-		return pullrequest.StatusUnknown, err
+		return git.StatusUnknown, err
 	}
 
 	if len(status.Statuses) == 0 {
-		return pullrequest.StatusSuccess, nil
+		return git.StatusSuccess, nil
 	}
 
 	switch status.State {
 	case gitea.StatusPending:
-		return pullrequest.StatusPending, nil
+		return git.StatusPending, nil
 	case gitea.StatusSuccess:
-		return pullrequest.StatusSuccess, nil
+		return git.StatusSuccess, nil
 	case gitea.StatusError, gitea.StatusFailure:
-		return pullrequest.StatusError, nil
+		return git.StatusError, nil
 	}
 
-	return pullrequest.StatusUnknown, nil
+	return git.StatusUnknown, nil
 }
 
 // MergePullRequest merges a pull request
-func (g *Gitea) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
-	pr := pullReq.(PullRequest)
+func (g *Gitea) MergePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+	pr := pullReq.(pullRequest)
 
 	repo, _, err := g.giteaClient(ctx).GetRepo(pr.ownerName, pr.repoName)
 	if err != nil {
@@ -331,7 +329,7 @@ func (g *Gitea) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRe
 	}
 
 	// Filter out all merge types to only the allowed ones, but keep the order of the ones left
-	mergeTypes := pullrequest.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
+	mergeTypes := git.MergeTypeIntersection(g.MergeTypes, repoMergeTypes(repo))
 	if len(mergeTypes) == 0 {
 		return errors.New("none of the configured merge types was permitted")
 	}
@@ -360,8 +358,8 @@ func (g *Gitea) MergePullRequest(ctx context.Context, pullReq pullrequest.PullRe
 }
 
 // ClosePullRequest closes a pull request
-func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq pullrequest.PullRequest) error {
-	pr := pullReq.(PullRequest)
+func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+	pr := pullReq.(pullRequest)
 
 	state := gitea.StateClosed
 	_, _, err := g.giteaClient(ctx).EditPullRequest(pr.ownerName, pr.repoName, pr.index, gitea.EditPullRequestOption{
@@ -384,8 +382,8 @@ func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq pullrequest.PullRe
 }
 
 // ForkRepository forks a GiteaRepository. If newOwner is empty, fork on the logged in user
-func (g *Gitea) ForkRepository(ctx context.Context, repo repository.Data, newOwner string) (repository.Data, error) {
-	r := repo.(Repository)
+func (g *Gitea) ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error) {
+	r := repo.(repository)
 
 	forkTo := newOwner
 	if forkTo == "" {
@@ -398,7 +396,7 @@ func (g *Gitea) ForkRepository(ctx context.Context, repo repository.Data, newOwn
 
 	existingRepo, _, err := g.giteaClient(ctx).GetRepo(forkTo, r.name)
 	if err == nil { // NB!
-		return convertRepository(existingRepo)
+		return convertRepository(existingRepo, g.token)
 	}
 
 	forkOptions := gitea.CreateForkOption{}
@@ -411,7 +409,7 @@ func (g *Gitea) ForkRepository(ctx context.Context, repo repository.Data, newOwn
 		return nil, err
 	}
 
-	return convertRepository(createdRepo)
+	return convertRepository(createdRepo, g.token)
 }
 
 func (g *Gitea) getUser(ctx context.Context) (*gitea.User, error) {
@@ -426,18 +424,4 @@ func (g *Gitea) getUser(ctx context.Context) (*gitea.User, error) {
 
 	g.currentUser = user
 	return user, nil
-}
-
-func convertRepository(repo *gitea.Repository) (Repository, error) {
-	u, err := url.Parse(repo.CloneURL)
-	if err != nil {
-		return Repository{}, err
-	}
-
-	return Repository{
-		url:           *u,
-		name:          repo.Name,
-		ownerName:     repo.Owner.UserName,
-		defaultBranch: repo.DefaultBranch,
-	}, nil
 }

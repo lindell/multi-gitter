@@ -10,8 +10,7 @@ import (
 	"path/filepath"
 
 	git "github.com/go-git/go-git/v5"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
-	"github.com/lindell/multi-gitter/internal/repository"
+	git2 "github.com/lindell/multi-gitter/internal/git"
 )
 
 // VersionController is a mock of an version controller (Github/Gitlab/etc.)
@@ -22,8 +21,8 @@ type VersionController struct {
 }
 
 // GetRepositories returns mock repositories
-func (vc *VersionController) GetRepositories(ctx context.Context) ([]repository.Data, error) {
-	ret := make([]repository.Data, len(vc.Repositories))
+func (vc *VersionController) GetRepositories(ctx context.Context) ([]git2.Repository, error) {
+	ret := make([]git2.Repository, len(vc.Repositories))
 	for i := range vc.Repositories {
 		ret[i] = vc.Repositories[i]
 	}
@@ -31,12 +30,12 @@ func (vc *VersionController) GetRepositories(ctx context.Context) ([]repository.
 }
 
 // CreatePullRequest stores a mock pull request
-func (vc *VersionController) CreatePullRequest(ctx context.Context, repo repository.Data, prRepo repository.Data, newPR pullrequest.NewPullRequest) (pullrequest.PullRequest, error) {
+func (vc *VersionController) CreatePullRequest(ctx context.Context, repo git2.Repository, prRepo git2.Repository, newPR git2.NewPullRequest) (git2.PullRequest, error) {
 	repository := repo.(Repository)
 
 	vc.PRNumber++
 	pr := PullRequest{
-		PRStatus:       pullrequest.StatusPending,
+		PRStatus:       git2.StatusPending,
 		PRNumber:       vc.PRNumber,
 		Repository:     repository,
 		NewPullRequest: newPR,
@@ -47,8 +46,8 @@ func (vc *VersionController) CreatePullRequest(ctx context.Context, repo reposit
 }
 
 // GetPullRequests gets mock pull request statuses
-func (vc *VersionController) GetPullRequests(ctx context.Context, branchName string) ([]pullrequest.PullRequest, error) {
-	ret := make([]pullrequest.PullRequest, 0, len(vc.PullRequests))
+func (vc *VersionController) GetPullRequests(ctx context.Context, branchName string) ([]git2.PullRequest, error) {
+	ret := make([]git2.PullRequest, 0, len(vc.PullRequests))
 	for _, pr := range vc.PullRequests {
 		if pr.NewPullRequest.Head == branchName {
 			ret = append(ret, pr)
@@ -58,11 +57,11 @@ func (vc *VersionController) GetPullRequests(ctx context.Context, branchName str
 }
 
 // MergePullRequest sets the status of a mock pull requests to merged
-func (vc *VersionController) MergePullRequest(ctx context.Context, pr pullrequest.PullRequest) error {
+func (vc *VersionController) MergePullRequest(ctx context.Context, pr git2.PullRequest) error {
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
-			vc.PullRequests[i].PRStatus = pullrequest.StatusMerged
+			vc.PullRequests[i].PRStatus = git2.StatusMerged
 			return nil
 		}
 	}
@@ -70,11 +69,11 @@ func (vc *VersionController) MergePullRequest(ctx context.Context, pr pullreques
 }
 
 // ClosePullRequest sets the status of a mock pull requests to closed
-func (vc *VersionController) ClosePullRequest(ctx context.Context, pr pullrequest.PullRequest) error {
+func (vc *VersionController) ClosePullRequest(ctx context.Context, pr git2.PullRequest) error {
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
-			vc.PullRequests[i].PRStatus = pullrequest.StatusClosed
+			vc.PullRequests[i].PRStatus = git2.StatusClosed
 			return nil
 		}
 	}
@@ -87,7 +86,7 @@ func (vc *VersionController) AddRepository(repo ...Repository) {
 }
 
 // SetPRStatus sets the status of a pull request
-func (vc *VersionController) SetPRStatus(repoName string, branchName string, newStatus pullrequest.Status) {
+func (vc *VersionController) SetPRStatus(repoName string, branchName string, newStatus git2.PullRequestStatus) {
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.RepoName == repoName && vc.PullRequests[i].Head == branchName {
 			vc.PullRequests[i].PRStatus = newStatus
@@ -111,7 +110,7 @@ func (vc *VersionController) GetAutocompleteRepositories(ctx context.Context, st
 }
 
 // ForkRepository forks a repository
-func (vc *VersionController) ForkRepository(ctx context.Context, repo repository.Data, newOwner string) (repository.Data, error) {
+func (vc *VersionController) ForkRepository(ctx context.Context, repo git2.Repository, newOwner string) (git2.Repository, error) {
 	r := repo.(Repository)
 
 	if newOwner == "" {
@@ -143,16 +142,16 @@ func (vc *VersionController) Clean() {
 
 // PullRequest is a mock pr
 type PullRequest struct {
-	PRStatus pullrequest.Status
+	PRStatus git2.PullRequestStatus
 	PRNumber int
 	Merged   bool
 
 	Repository
-	pullrequest.NewPullRequest
+	git2.NewPullRequest
 }
 
 // Status returns the pr status
-func (pr PullRequest) Status() pullrequest.Status {
+func (pr PullRequest) Status() git2.PullRequestStatus {
 	return pr.PRStatus
 }
 
@@ -168,13 +167,8 @@ type Repository struct {
 	Path      string
 }
 
-// URL return the URL (filepath) of the repository on disk
-func (r Repository) URL(token string) string {
-	return fmt.Sprintf(`file://%s`, filepath.ToSlash(r.Path))
-}
-
-// URLWithUsername return the URL (filepath) of the repository on disk
-func (r Repository) URLWithUsername(username, token string) string {
+// CloneURL return the URL (filepath) of the repository on disk
+func (r Repository) CloneURL() string {
 	return fmt.Sprintf(`file://%s`, filepath.ToSlash(r.Path))
 }
 

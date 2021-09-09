@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	bitbucketv1 "github.com/gfleury/go-bitbucket-v1"
-	"github.com/lindell/multi-gitter/internal/pullrequest"
+	"github.com/lindell/multi-gitter/internal/git"
 )
 
-func newPullRequest(pr bitbucketv1.PullRequest) PullRequest {
-	return PullRequest{
+func newPullRequest(pr bitbucketv1.PullRequest) pullRequest {
+	return pullRequest{
 		project:    pr.ToRef.Repository.Project.Key,
 		repoName:   pr.ToRef.Repository.Slug,
 		branchName: pr.FromRef.DisplayID,
@@ -19,7 +19,7 @@ func newPullRequest(pr bitbucketv1.PullRequest) PullRequest {
 	}
 }
 
-type PullRequest struct {
+type pullRequest struct {
 	project    string
 	repoName   string
 	branchName string
@@ -27,17 +27,17 @@ type PullRequest struct {
 	prRepoName string
 	number     int
 	guiURL     string
-	status     pullrequest.Status
+	status     git.PullRequestStatus
 }
 
-func (pr PullRequest) String() string {
+func (pr pullRequest) String() string {
 	return fmt.Sprintf("%s/%s #%d", pr.project, pr.repoName, pr.number)
 }
 
-func (pr PullRequest) Status() pullrequest.Status {
+func (pr pullRequest) Status() git.PullRequestStatus {
 	return pr.status
 }
 
-func (pr PullRequest) URL() string {
+func (pr pullRequest) URL() string {
 	return pr.guiURL
 }
