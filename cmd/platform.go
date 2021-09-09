@@ -286,7 +286,7 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 		}
 	}
 
-	vc, err := bitbucketserver.New(username, token, bitbucketServerBaseURL, insecure, bitbucketserver.RepositoryListing{
+	vc, err := bitbucketserver.New(username, token, bitbucketServerBaseURL, insecure, http.NewLoggingRoundTripper, bitbucketserver.RepositoryListing{
 		Projects:     projects,
 		Users:        users,
 		Repositories: repoRefs,

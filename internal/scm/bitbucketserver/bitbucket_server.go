@@ -23,7 +23,7 @@ const (
 )
 
 // New create a new BitbucketServer client
-func New(username, token, baseURL string, insecure bool, repoListing RepositoryListing) (*BitbucketServer, error) {
+func New(username, token, baseURL string, insecure bool, transportMiddleware func(http.RoundTripper) http.RoundTripper, repoListing RepositoryListing) (*BitbucketServer, error) {
 	if strings.TrimSpace(token) == "" {
 		return nil, errors.New("token is empty")
 	}
@@ -45,23 +45,22 @@ func New(username, token, baseURL string, insecure bool, repoListing RepositoryL
 	bitbucketServer.RepositoryListing = repoListing
 	bitbucketServer.username = username
 	bitbucketServer.token = token
-	bitbucketServer.insecure = insecure
-	bitbucketServer.baseURL = bitbucketBaseURL
+	bitbucketServer.config = bitbucketv1.NewConfiguration(bitbucketBaseURL.String(), func(config *bitbucketv1.Configuration) {
+		config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", token))
+		config.HTTPClient = &http.Client{
+			Transport: transportMiddleware(&http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure}, // nolint: gosec
+			}),
+		}
+	})
 
 	return bitbucketServer, nil
 }
 
-func newClient(ctx context.Context, token, baseURL string, insecure bool) *bitbucketv1.APIClient {
+func newClient(ctx context.Context, config *bitbucketv1.Configuration) *bitbucketv1.APIClient {
 	return bitbucketv1.NewAPIClient(
 		ctx,
-		bitbucketv1.NewConfiguration(baseURL, func(config *bitbucketv1.Configuration) {
-			config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", token))
-			config.HTTPClient = &http.Client{
-				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure}, // nolint: gosec
-				},
-			}
-		}),
+		config,
 	)
 }
 
@@ -69,8 +68,7 @@ func newClient(ctx context.Context, token, baseURL string, insecure bool) *bitbu
 type BitbucketServer struct {
 	RepositoryListing
 	username, token string
-	insecure        bool
-	baseURL         *url.URL
+	config          *bitbucketv1.Configuration
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -105,7 +103,7 @@ func (rr RepositoryReference) String() string {
 
 // GetRepositories Should get repositories based on the scm configuration
 func (b *BitbucketServer) GetRepositories(ctx context.Context) ([]git.Repository, error) {
-	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+	client := newClient(ctx, b.config)
 
 	bitbucketRepositories, err := b.getRepositories(client)
 	if err != nil {
@@ -235,7 +233,7 @@ func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Reposi
 	r := repo.(repository)
 	prR := prRepo.(repository)
 
-	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+	client := newClient(ctx, b.config)
 
 	var usersWithMetadata []bitbucketv1.UserWithMetadata
 	for _, reviewer := range newPR.Reviewers {
@@ -290,7 +288,7 @@ func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Reposi
 
 // GetPullRequests Gets the latest pull requests from repositories based on the scm configuration
 func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
-	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+	client := newClient(ctx, b.config)
 
 	repositories, err := b.getRepositories(client)
 	if err != nil {
@@ -394,7 +392,7 @@ func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchNa
 func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr git.PullRequest) error {
 	bitbucketPR := pr.(pullRequest)
 
-	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+	client := newClient(ctx, b.config)
 
 	response, err := client.DefaultApi.GetPullRequest(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number)
 	if err != nil {
@@ -428,7 +426,7 @@ func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr git.PullReque
 func (b *BitbucketServer) ClosePullRequest(ctx context.Context, pr git.PullRequest) error {
 	bitbucketPR := pr.(pullRequest)
 
-	client := newClient(ctx, b.token, b.baseURL.String(), b.insecure)
+	client := newClient(ctx, b.config)
 
 	_, err := client.DefaultApi.DeletePullRequest(bitbucketPR.project, bitbucketPR.repoName, int64(bitbucketPR.number))
 
