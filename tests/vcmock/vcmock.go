@@ -35,7 +35,7 @@ func (vc *VersionController) CreatePullRequest(ctx context.Context, repo git2.Re
 
 	vc.PRNumber++
 	pr := PullRequest{
-		PRStatus:       git2.StatusPending,
+		PRStatus:       git2.PullRequestStatusPending,
 		PRNumber:       vc.PRNumber,
 		Repository:     repository,
 		NewPullRequest: newPR,
@@ -61,7 +61,7 @@ func (vc *VersionController) MergePullRequest(ctx context.Context, pr git2.PullR
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
-			vc.PullRequests[i].PRStatus = git2.StatusMerged
+			vc.PullRequests[i].PRStatus = git2.PullRequestStatusMerged
 			return nil
 		}
 	}
@@ -73,7 +73,7 @@ func (vc *VersionController) ClosePullRequest(ctx context.Context, pr git2.PullR
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
-			vc.PullRequests[i].PRStatus = git2.StatusClosed
+			vc.PullRequests[i].PRStatus = git2.PullRequestStatusClosed
 			return nil
 		}
 	}

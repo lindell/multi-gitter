@@ -89,7 +89,7 @@ Repositories with a successful run:
 	assert.Equal(t, "owner/should-change #1: Pending\nowner/should-change-2 #2: Pending\n", string(statusOutData))
 
 	// One of the created PRs is set to succeeded
-	vcMock.SetPRStatus("should-change", "custom-branch-name", git.StatusSuccess)
+	vcMock.SetPRStatus("should-change", "custom-branch-name", git.PullRequestStatusSuccess)
 
 	//
 	// Merge

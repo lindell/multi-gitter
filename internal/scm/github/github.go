@@ -445,26 +445,26 @@ func (g Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (git.Pu
 	// Determine the status of the pr
 	var status git.PullRequestStatus
 	if pr.MergedAt != nil {
-		status = git.StatusMerged
+		status = git.PullRequestStatusMerged
 	} else if pr.ClosedAt != nil {
-		status = git.StatusClosed
+		status = git.PullRequestStatusClosed
 	} else {
 		log.Debug("Fetching the combined status of the pull request")
 		combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, pr.GetBase().GetUser().GetLogin(), pr.GetBase().GetRepo().GetName(), pr.GetHead().GetSHA(), nil)
 		if err != nil {
-			return git.StatusUnknown, err
+			return git.PullRequestStatusUnknown, err
 		}
 
 		if combinedStatus.GetTotalCount() == 0 {
-			status = git.StatusSuccess
+			status = git.PullRequestStatusSuccess
 		} else {
 			switch combinedStatus.GetState() {
 			case "pending":
-				status = git.StatusPending
+				status = git.PullRequestStatusPending
 			case "success":
-				status = git.StatusSuccess
+				status = git.PullRequestStatusSuccess
 			case "failure", "error":
-				status = git.StatusError
+				status = git.PullRequestStatusError
 			}
 		}
 	}

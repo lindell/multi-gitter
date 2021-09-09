@@ -23,7 +23,7 @@ func (s Merger) Merge(ctx context.Context) error {
 
 	successPrs := make([]git.PullRequest, 0, len(prs))
 	for _, pr := range prs {
-		if pr.Status() == git.StatusSuccess {
+		if pr.Status() == git.PullRequestStatusSuccess {
 			successPrs = append(successPrs, pr)
 		}
 	}

@@ -23,7 +23,7 @@ func (s Closer) Close(ctx context.Context) error {
 
 	openPRs := make([]git.PullRequest, 0, len(prs))
 	for _, pr := range prs {
-		if pr.Status() != git.StatusClosed && pr.Status() != git.StatusMerged {
+		if pr.Status() != git.PullRequestStatusClosed && pr.Status() != git.PullRequestStatusMerged {
 			openPRs = append(openPRs, pr)
 		}
 	}

@@ -313,15 +313,15 @@ func (g *Gitlab) getPullRequest(ctx context.Context, branchName string, project 
 func pullRequestStatus(mr *gitlab.MergeRequest) git.PullRequestStatus {
 	switch {
 	case mr.MergedAt != nil:
-		return git.StatusMerged
+		return git.PullRequestStatusMerged
 	case mr.ClosedAt != nil:
-		return git.StatusClosed
+		return git.PullRequestStatusClosed
 	case mr.Pipeline == nil, mr.Pipeline.Status == "success":
-		return git.StatusSuccess
+		return git.PullRequestStatusSuccess
 	case mr.Pipeline.Status == "failed":
-		return git.StatusError
+		return git.PullRequestStatusError
 	default:
-		return git.StatusPending
+		return git.PullRequestStatusPending
 	}
 }
 

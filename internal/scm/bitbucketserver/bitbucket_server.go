@@ -329,31 +329,31 @@ func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string
 func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo *bitbucketv1.Repository, pr *bitbucketv1.PullRequest) (git.PullRequestStatus, error) {
 	switch pr.State {
 	case stateMerged:
-		return git.StatusMerged, nil
+		return git.PullRequestStatusMerged, nil
 	case stateDeclined:
-		return git.StatusClosed, nil
+		return git.PullRequestStatusClosed, nil
 	}
 
 	response, err := client.DefaultApi.CanMerge(repo.Project.Key, repo.Slug, int64(pr.ID))
 	if err != nil {
-		return git.StatusUnknown, err
+		return git.PullRequestStatusUnknown, err
 	}
 
 	var merge bitbucketv1.MergeGetResponse
 	err = mapstructure.Decode(response.Values, &merge)
 	if err != nil {
-		return git.StatusUnknown, err
+		return git.PullRequestStatusUnknown, err
 	}
 
 	if !merge.CanMerge {
-		return git.StatusPending, nil
+		return git.PullRequestStatusPending, nil
 	}
 
 	if merge.Conflicted {
-		return git.StatusError, nil
+		return git.PullRequestStatusError, nil
 	}
 
-	return git.StatusUnknown, nil
+	return git.PullRequestStatusUnknown, nil
 }
 
 func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchName string, repo *bitbucketv1.Repository) (*bitbucketv1.PullRequest, error) {

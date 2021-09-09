@@ -7,22 +7,22 @@ import (
 
 // maps merge types to what they are called in the github api
 var mergeTypeGhName = map[git.MergeType]string{
-	git.PullRequestMergeTypeMerge:  "merge",
-	git.PullRequestMergeTypeRebase: "rebase",
-	git.PullRequestMergeTypeSquash: "squash",
+	git.MergeTypeMerge:  "merge",
+	git.MergeTypeRebase: "rebase",
+	git.MergeTypeSquash: "squash",
 }
 
 // repoMergeTypes returns a list of all allowed merge types
 func repoMergeTypes(repo *github.Repository) []git.MergeType {
 	ret := []git.MergeType{}
 	if repo.GetAllowMergeCommit() {
-		ret = append(ret, git.PullRequestMergeTypeMerge)
+		ret = append(ret, git.MergeTypeMerge)
 	}
 	if repo.GetAllowRebaseMerge() {
-		ret = append(ret, git.PullRequestMergeTypeRebase)
+		ret = append(ret, git.MergeTypeRebase)
 	}
 	if repo.GetAllowSquashMerge() {
-		ret = append(ret, git.PullRequestMergeTypeSquash)
+		ret = append(ret, git.MergeTypeSquash)
 	}
 	return ret
 }

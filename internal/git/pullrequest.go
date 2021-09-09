@@ -20,27 +20,27 @@ type PullRequestStatus int
 
 // All PullRequestStatuses
 const (
-	StatusUnknown PullRequestStatus = iota
-	StatusSuccess
-	StatusPending
-	StatusError
-	StatusMerged
-	StatusClosed
+	PullRequestStatusUnknown PullRequestStatus = iota
+	PullRequestStatusSuccess
+	PullRequestStatusPending
+	PullRequestStatusError
+	PullRequestStatusMerged
+	PullRequestStatusClosed
 )
 
 func (s PullRequestStatus) String() string {
 	switch s {
-	case StatusUnknown:
+	case PullRequestStatusUnknown:
 		return "Unknown"
-	case StatusSuccess:
+	case PullRequestStatusSuccess:
 		return "Success"
-	case StatusPending:
+	case PullRequestStatusPending:
 		return "Pending"
-	case StatusError:
+	case PullRequestStatusError:
 		return "Error"
-	case StatusMerged:
+	case PullRequestStatusMerged:
 		return "Merged"
-	case StatusClosed:
+	case PullRequestStatusClosed:
 		return "Closed"
 	}
 	return "Unknown"
@@ -57,23 +57,23 @@ type MergeType int
 
 // All MergeTypes
 const (
-	PullRequestMergeTypeUnknown MergeType = iota
-	PullRequestMergeTypeMerge
-	PullRequestMergeTypeRebase
-	PullRequestMergeTypeSquash
+	MergeTypeUnknown MergeType = iota
+	MergeTypeMerge
+	MergeTypeRebase
+	MergeTypeSquash
 )
 
 // ParseMergeType parses a merge type
 func ParseMergeType(typ string) (MergeType, error) {
 	switch strings.ToLower(typ) {
 	case "merge":
-		return PullRequestMergeTypeMerge, nil
+		return MergeTypeMerge, nil
 	case "rebase":
-		return PullRequestMergeTypeRebase, nil
+		return MergeTypeRebase, nil
 	case "squash":
-		return PullRequestMergeTypeSquash, nil
+		return MergeTypeSquash, nil
 	}
-	return PullRequestMergeTypeUnknown, fmt.Errorf(`not a valid merge type: "%s"`, typ)
+	return MergeTypeUnknown, fmt.Errorf(`not a valid merge type: "%s"`, typ)
 }
 
 // MergeTypeIntersection calculates the intersection of two merge type slices,

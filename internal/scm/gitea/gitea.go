@@ -291,32 +291,32 @@ func (g *Gitea) getPullRequest(ctx context.Context, branchName string, repo *git
 
 func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, pr *gitea.PullRequest) (git.PullRequestStatus, error) {
 	if pr.Merged != nil {
-		return git.StatusMerged, nil
+		return git.PullRequestStatusMerged, nil
 	}
 
 	if pr.State == gitea.StateClosed {
-		return git.StatusClosed, nil
+		return git.PullRequestStatusClosed, nil
 	}
 
 	status, _, err := g.giteaClient(ctx).GetCombinedStatus(repo.Owner.UserName, repo.Name, pr.Head.Sha)
 	if err != nil {
-		return git.StatusUnknown, err
+		return git.PullRequestStatusUnknown, err
 	}
 
 	if len(status.Statuses) == 0 {
-		return git.StatusSuccess, nil
+		return git.PullRequestStatusSuccess, nil
 	}
 
 	switch status.State {
 	case gitea.StatusPending:
-		return git.StatusPending, nil
+		return git.PullRequestStatusPending, nil
 	case gitea.StatusSuccess:
-		return git.StatusSuccess, nil
+		return git.PullRequestStatusSuccess, nil
 	case gitea.StatusError, gitea.StatusFailure:
-		return git.StatusError, nil
+		return git.PullRequestStatusError, nil
 	}
 
-	return git.StatusUnknown, nil
+	return git.PullRequestStatusUnknown, nil
 }
 
 // MergePullRequest merges a pull request
