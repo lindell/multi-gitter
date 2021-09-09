@@ -57,23 +57,23 @@ type MergeType int
 
 // All MergeTypes
 const (
-	MergeTypeUnknown MergeType = iota
-	MergeTypeMerge
-	MergeTypeRebase
-	MergeTypeSquash
+	PullRequestMergeTypeUnknown MergeType = iota
+	PullRequestMergeTypeMerge
+	PullRequestMergeTypeRebase
+	PullRequestMergeTypeSquash
 )
 
 // ParseMergeType parses a merge type
 func ParseMergeType(typ string) (MergeType, error) {
 	switch strings.ToLower(typ) {
 	case "merge":
-		return MergeTypeMerge, nil
+		return PullRequestMergeTypeMerge, nil
 	case "rebase":
-		return MergeTypeRebase, nil
+		return PullRequestMergeTypeRebase, nil
 	case "squash":
-		return MergeTypeSquash, nil
+		return PullRequestMergeTypeSquash, nil
 	}
-	return MergeTypeUnknown, fmt.Errorf(`not a valid merge type: "%s"`, typ)
+	return PullRequestMergeTypeUnknown, fmt.Errorf(`not a valid merge type: "%s"`, typ)
 }
 
 // MergeTypeIntersection calculates the intersection of two merge type slices,
