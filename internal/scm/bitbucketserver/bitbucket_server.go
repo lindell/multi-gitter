@@ -493,8 +493,8 @@ func (b *BitbucketServer) deleteBranch(ctx context.Context, pr pullRequest) erro
 }
 
 // ForkRepository forks a repository. If newOwner is set, use it, otherwise fork to the current user
-func (b *BitbucketServer) ForkRepository(_ context.Context, repo git.Repository, newOwner string) (git.Repository, error) {
-	return nil, errors.New("forking not implemented")
+func (b *BitbucketServer) ForkRepository(_ context.Context, _ git.Repository, _ string) (git.Repository, error) {
+	return nil, errors.New("forking not implemented for bitbucket server")
 }
 
 type bitbucketRepositoryPager struct {
