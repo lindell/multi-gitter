@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.33.0](https://www.github.com/lindell/multi-gitter/compare/v0.32.0...v0.33.0) (2021-09-10)
+
+
+### Features
+
+* **bitbucketserver:** added support for bitbucket server ([#178](https://www.github.com/lindell/multi-gitter/issues/178)) ([2f7a1b6](https://www.github.com/lindell/multi-gitter/commit/2f7a1b6e313355a8aa4176cc216bd2d9ad6494a7))
+
+
+### Dependencies
+
+* update golang.org/x/oauth2 commit hash to 2bc19b1 ([858441a](https://www.github.com/lindell/multi-gitter/commit/858441a9822b6f86d9e68216742f550eb80f7e05))
+* update module github.com/google/go-github/v37 to v38 ([#176](https://www.github.com/lindell/multi-gitter/issues/176)) ([f15aaad](https://www.github.com/lindell/multi-gitter/commit/f15aaad21ba92a4d2c05c039f0b7f8963f245e75))
+
 ## [0.32.0](https://www.github.com/lindell/multi-gitter/compare/v0.31.1...v0.32.0) (2021-08-12)
 
 
