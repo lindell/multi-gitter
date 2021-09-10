@@ -20,8 +20,6 @@ type Printer struct {
 
 	ScriptPath string // Must be absolute path
 	Arguments  []string
-	Username   string
-	Token      string
 
 	Stdout io.Writer
 	Stderr io.Writer

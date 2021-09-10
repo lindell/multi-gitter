@@ -39,8 +39,6 @@ type Runner struct {
 	ScriptPath    string // Must be absolute path
 	Arguments     []string
 	FeatureBranch string
-	Username      string
-	Token         string
 
 	Output io.Writer
 

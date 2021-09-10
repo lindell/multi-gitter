@@ -76,11 +76,6 @@ func run(cmd *cobra.Command, args []string) error {
 	authorEmail, _ := flag.GetString("author-email")
 	strOutput, _ := flag.GetString("output")
 
-	token, err := getToken(flag)
-	if err != nil {
-		return err
-	}
-
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
 	}
@@ -157,7 +152,6 @@ func run(cmd *cobra.Command, args []string) error {
 		ScriptPath:    executablePath,
 		Arguments:     arguments,
 		FeatureBranch: branchName,
-		Token:         token,
 
 		Output: output,
 

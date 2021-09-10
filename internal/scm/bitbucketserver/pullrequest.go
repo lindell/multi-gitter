@@ -26,6 +26,7 @@ type pullRequest struct {
 	prProject  string
 	prRepoName string
 	number     int
+	version    int32
 	guiURL     string
 	status     git.PullRequestStatus
 }

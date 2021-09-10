@@ -1,9 +1,13 @@
 package bitbucketserver
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -43,8 +47,14 @@ func New(username, token, baseURL string, insecure bool, transportMiddleware fun
 
 	bitbucketServer := &BitbucketServer{}
 	bitbucketServer.RepositoryListing = repoListing
+	bitbucketServer.baseURL = bitbucketBaseURL
 	bitbucketServer.username = username
 	bitbucketServer.token = token
+	bitbucketServer.httpClient = &http.Client{
+		Transport: transportMiddleware(&http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure}, // nolint: gosec
+		}),
+	}
 	bitbucketServer.config = bitbucketv1.NewConfiguration(bitbucketBaseURL.String(), func(config *bitbucketv1.Configuration) {
 		config.AddDefaultHeader("Authorization", fmt.Sprintf("Bearer %s", token))
 		config.HTTPClient = &http.Client{
@@ -67,8 +77,10 @@ func newClient(ctx context.Context, config *bitbucketv1.Configuration) *bitbucke
 // BitbucketServer is a SCM instance of Bitbucket Server the on-prem version of Bitbucket
 type BitbucketServer struct {
 	RepositoryListing
+	baseURL         *url.URL
 	username, token string
 	config          *bitbucketv1.Configuration
+	httpClient      *http.Client
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -316,8 +328,10 @@ func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string
 			branchName: branchName,
 			prProject:  pr.FromRef.Repository.Project.Key,
 			prRepoName: pr.FromRef.Repository.Slug,
-			status:     status,
+			number:     pr.ID,
+			version:    pr.Version,
 			guiURL:     pr.Links.Self[0].Href,
+			status:     status,
 		})
 	}
 
@@ -351,7 +365,7 @@ func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo 
 		return git.PullRequestStatusError, nil
 	}
 
-	return git.PullRequestStatusUnknown, nil
+	return git.PullRequestStatusSuccess, nil
 }
 
 func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchName string, repo *bitbucketv1.Repository) (*bitbucketv1.PullRequest, error) {
@@ -385,7 +399,7 @@ func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchNa
 		}
 	}
 
-	return nil, errors.Errorf("could not find pull request in repository %s for branch %s", repo.Name, branchName)
+	return nil, nil
 }
 
 // MergePullRequest Merges a pull request, the pr parameter will always originate from the same package
@@ -402,24 +416,24 @@ func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr git.PullReque
 		return err
 	}
 
-	pullRequest, err := bitbucketv1.GetPullRequestResponse(response)
+	pullRequestResponse, err := bitbucketv1.GetPullRequestResponse(response)
 	if err != nil {
 		return err
 	}
 
-	if !pullRequest.Open {
+	if !pullRequestResponse.Open {
 		return nil
 	}
 
 	mergeMap := make(map[string]interface{})
-	mergeMap["version"] = pullRequest.Version
+	mergeMap["version"] = pullRequestResponse.Version
 
 	_, err = client.DefaultApi.Merge(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number, mergeMap, nil, []string{"application/json"})
 	if err != nil {
 		return err
 	}
 
-	return nil
+	return b.deleteBranch(ctx, bitbucketPR)
 }
 
 // ClosePullRequest Close a pull request, the pr parameter will always originate from the same package
@@ -428,9 +442,54 @@ func (b *BitbucketServer) ClosePullRequest(ctx context.Context, pr git.PullReque
 
 	client := newClient(ctx, b.config)
 
-	_, err := client.DefaultApi.DeletePullRequest(bitbucketPR.project, bitbucketPR.repoName, int64(bitbucketPR.number))
+	_, err := client.DefaultApi.DeleteWithVersion(bitbucketPR.project, bitbucketPR.repoName, int64(bitbucketPR.number), int64(bitbucketPR.version))
+	if err != nil {
+		return err
+	}
 
-	return err
+	return b.deleteBranch(ctx, bitbucketPR)
+}
+
+func (b *BitbucketServer) deleteBranch(ctx context.Context, pr pullRequest) error {
+	urlPath := *b.baseURL
+	urlPath.Path = path.Join(urlPath.Path, "branch-utils/1.0/projects", pr.project, "repos", pr.repoName, "branches")
+
+	body := bitbucketDeleteBranch{Name: path.Join("refs", "heads", pr.branchName), DryRun: false}
+	bodyBytes, err := json.Marshal(&body)
+	if err != nil {
+		return err
+	}
+
+	request, err := http.NewRequestWithContext(ctx, "DELETE", urlPath.String(), bytes.NewReader(bodyBytes))
+	if err != nil {
+		return err
+	}
+
+	request.Header.Add("Content-Type", "application/json")
+	request.Header.Add(
+		"Authorization",
+		"Basic "+base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", b.username, b.token))),
+	)
+
+	response, err := b.httpClient.Do(request) //nolint:bodyclose
+	if err != nil {
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
+
+	if response.StatusCode >= 400 {
+		buf := new(bytes.Buffer)
+		_, readFromErr := buf.ReadFrom(response.Body)
+		if readFromErr != nil {
+			return readFromErr
+		}
+
+		return errors.Errorf("unable to delete branch: status code %d: %s", response.StatusCode, buf.String())
+	}
+
+	return nil
 }
 
 // ForkRepository forks a repository. If newOwner is set, use it, otherwise fork to the current user
@@ -454,4 +513,9 @@ type bitbucketPullRequestPager struct {
 	NextPageStart int                       `json:"nextPageStart"`
 	IsLastPage    bool                      `json:"isLastPage"`
 	Values        []bitbucketv1.PullRequest `json:"values"`
+}
+
+type bitbucketDeleteBranch struct {
+	Name   string `json:"name"`
+	DryRun bool   `json:"dryRun"`
 }

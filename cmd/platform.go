@@ -19,7 +19,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags := cmd.Flags()
 
 	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.")
-	flags.BoolP("insecure", "I", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
+	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
 	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
 
