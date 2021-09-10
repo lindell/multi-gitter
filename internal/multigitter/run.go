@@ -12,10 +12,11 @@ import (
 	"syscall"
 
 	"github.com/eiannone/keyboard"
+	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/gittererrors"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
@@ -23,12 +24,12 @@ import (
 
 // VersionController fetches repositories
 type VersionController interface {
-	GetRepositories(ctx context.Context) ([]domain.Repository, error)
-	CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error)
-	GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error)
-	MergePullRequest(ctx context.Context, pr domain.PullRequest) error
-	ClosePullRequest(ctx context.Context, pr domain.PullRequest) error
-	ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error)
+	GetRepositories(ctx context.Context) ([]git.Repository, error)
+	CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error)
+	GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error)
+	MergePullRequest(ctx context.Context, pr git.PullRequest) error
+	ClosePullRequest(ctx context.Context, pr git.PullRequest) error
+	ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error)
 }
 
 // Runner contains fields to be able to do the run
@@ -38,7 +39,6 @@ type Runner struct {
 	ScriptPath    string // Must be absolute path
 	Arguments     []string
 	FeatureBranch string
-	Token         string
 
 	Output io.Writer
 
@@ -48,7 +48,7 @@ type Runner struct {
 	Reviewers        []string
 	MaxReviewers     int // If set to zero, all reviewers will be used
 	DryRun           bool
-	CommitAuthor     *domain.CommitAuthor
+	CommitAuthor     *git.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 
 	Concurrent      int
@@ -66,11 +66,11 @@ var errAborted = errors.New("run was never started because of aborted execution"
 var errRejected = errors.New("changes were not included since they were manually rejected")
 
 type dryRunPullRequest struct {
-	status     domain.PullRequestStatus
-	Repository domain.Repository
+	status     git.PullRequestStatus
+	Repository git.Repository
 }
 
-func (pr dryRunPullRequest) Status() domain.PullRequestStatus {
+func (pr dryRunPullRequest) Status() git.PullRequestStatus {
 	return pr.status
 }
 
@@ -157,7 +157,7 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (domain.PullRequest, error) {
+func (r *Runner) runSingleRepo(ctx context.Context, repo git.Repository) (git.PullRequest, error) {
 	if ctx.Err() != nil {
 		return nil, errAborted
 	}
@@ -178,7 +178,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 		baseBranch = repo.DefaultBranch()
 	}
 
-	err = sourceController.Clone(repo.URL(r.Token), baseBranch)
+	err = sourceController.Clone(repo.CloneURL(), baseBranch)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 	if changed, err := sourceController.Changes(); err != nil {
 		return nil, err
 	} else if !changed {
-		return nil, domain.NoChangeError
+		return nil, gittererrors.NoChangeError
 	}
 
 	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
@@ -236,7 +236,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 	}
 
 	remoteName := "origin"
-	var prRepo domain.Repository = repo
+	var prRepo = repo
 	if r.Fork {
 		log.Info("Forking repository")
 
@@ -245,7 +245,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 			return nil, errors.Wrap(err, "could not fork repository")
 		}
 
-		err = sourceController.AddRemote("fork", prRepo.URL(r.Token))
+		err = sourceController.AddRemote("fork", prRepo.CloneURL())
 		if err != nil {
 			return nil, err
 		}
@@ -257,7 +257,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exist")
 		} else if featureBranchExist {
-			return nil, domain.BranchExistError
+			return nil, gittererrors.BranchExistError
 		}
 	}
 
@@ -272,7 +272,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 	}
 
 	log.Info("Creating pull request")
-	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, domain.NewPullRequest{
+	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, git.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
@@ -288,7 +288,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo domain.Repository) (dom
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(dir string, repo domain.Repository) error {
+func (r *Runner) interactive(dir string, repo git.Repository) error {
 	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Println(interactiveInfo)
 	for {

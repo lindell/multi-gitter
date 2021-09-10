@@ -84,7 +84,7 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 
 ### Gitea
 
-In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens 
+In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens
 
 ## Config file
 

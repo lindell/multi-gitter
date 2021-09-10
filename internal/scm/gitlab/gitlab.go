@@ -5,15 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/xanzy/go-gitlab"
-
-	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/git"
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
+	"github.com/xanzy/go-gitlab"
 )
 
 // New create a new Gitlab client
@@ -36,6 +34,7 @@ func New(token, baseURL string, repoListing RepositoryListing, config Config) (*
 		RepositoryListing: repoListing,
 		Config:            config,
 		glClient:          client,
+		token:             token,
 	}, nil
 }
 
@@ -43,6 +42,7 @@ func New(token, baseURL string, repoListing RepositoryListing, config Config) (*
 type Gitlab struct {
 	RepositoryListing
 	Config   Config
+	token    string
 	glClient *gitlab.Client
 
 	// Cached current user
@@ -79,61 +79,16 @@ func ParseProjectReference(val string) (ProjectReference, error) {
 	}, nil
 }
 
-type repository struct {
-	url           url.URL
-	pid           int
-	name          string
-	ownerName     string
-	defaultBranch string
-}
-
-func (r repository) URL(token string) string {
-	// Set the token as https://oauth2:TOKEN@url
-	r.url.User = url.UserPassword("oauth2", token)
-	return r.url.String()
-}
-
-func (r repository) DefaultBranch() string {
-	return r.defaultBranch
-}
-
-func (r repository) FullName() string {
-	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
-}
-
-type pullRequest struct {
-	ownerName  string
-	repoName   string
-	targetPID  int
-	sourcePID  int
-	branchName string
-	iid        int
-	webURL     string
-	status     domain.PullRequestStatus
-}
-
-func (pr pullRequest) String() string {
-	return fmt.Sprintf("%s/%s #%d", pr.ownerName, pr.repoName, pr.iid)
-}
-
-func (pr pullRequest) Status() domain.PullRequestStatus {
-	return pr.status
-}
-
-func (pr pullRequest) URL() string {
-	return pr.webURL
-}
-
 // GetRepositories fetches repositories from all sources (groups/user/specific project)
-func (g *Gitlab) GetRepositories(ctx context.Context) ([]domain.Repository, error) {
+func (g *Gitlab) GetRepositories(ctx context.Context) ([]git.Repository, error) {
 	allProjects, err := g.getProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	repos := make([]domain.Repository, 0, len(allProjects))
+	repos := make([]git.Repository, 0, len(allProjects))
 	for _, project := range allProjects {
-		p, err := convertProject(project)
+		p, err := convertProject(project, g.token)
 		if err != nil {
 			return nil, err
 		}
@@ -245,7 +200,7 @@ func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitla
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitlab) CreatePullRequest(ctx context.Context, repo domain.Repository, prRepo domain.Repository, newPR domain.NewPullRequest) (domain.PullRequest, error) {
+func (g *Gitlab) CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error) {
 	r := repo.(repository)
 	prR := prRepo.(repository)
 
@@ -302,13 +257,13 @@ func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, err
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
-func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]domain.PullRequest, error) {
+func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
 	projects, err := g.getProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prs := []domain.PullRequest{}
+	prs := []git.PullRequest{}
 	for _, project := range projects {
 		mr, err := g.getPullRequest(ctx, branchName, project)
 		if err != nil {
@@ -355,23 +310,23 @@ func (g *Gitlab) getPullRequest(ctx context.Context, branchName string, project 
 	return mr, nil
 }
 
-func pullRequestStatus(mr *gitlab.MergeRequest) domain.PullRequestStatus {
+func pullRequestStatus(mr *gitlab.MergeRequest) git.PullRequestStatus {
 	switch {
 	case mr.MergedAt != nil:
-		return domain.PullRequestStatusMerged
+		return git.PullRequestStatusMerged
 	case mr.ClosedAt != nil:
-		return domain.PullRequestStatusClosed
+		return git.PullRequestStatusClosed
 	case mr.Pipeline == nil, mr.Pipeline.Status == "success":
-		return domain.PullRequestStatusSuccess
+		return git.PullRequestStatusSuccess
 	case mr.Pipeline.Status == "failed":
-		return domain.PullRequestStatusError
+		return git.PullRequestStatusError
 	default:
-		return domain.PullRequestStatusPending
+		return git.PullRequestStatusPending
 	}
 }
 
 // MergePullRequest merges a pull request
-func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
+func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq git.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
 	shouldRemoveSourceBranch := true
@@ -386,7 +341,7 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq domain.PullReques
 }
 
 // ClosePullRequest closes a pull request
-func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq domain.PullRequest) error {
+func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq git.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
 	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
@@ -403,7 +358,7 @@ func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq domain.PullReques
 }
 
 // ForkRepository forks a project
-func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, newOwner string) (domain.Repository, error) {
+func (g *Gitlab) ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error) {
 	r := repo.(repository)
 
 	// Get the username of the fork (logged in user if none is set)
@@ -423,7 +378,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, new
 		gitlab.WithContext(ctx),
 	)
 	if err == nil { // Already forked, just return it
-		return convertProject(project)
+		return convertProject(project, g.token)
 	} else if resp.StatusCode != http.StatusNotFound { // If the error was that the project does not exist, continue to fork it
 		return nil, err
 	}
@@ -442,7 +397,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo domain.Repository, new
 		}
 
 		if repo.ImportStatus == "finished" {
-			return convertProject(newRepo)
+			return convertProject(newRepo, g.token)
 		}
 
 		time.Sleep(time.Second * 3)
@@ -464,19 +419,4 @@ func (g *Gitlab) getCurrentUser(ctx context.Context) (*gitlab.User, error) {
 	g.currentUser = user
 
 	return user, nil
-}
-
-func convertProject(project *gitlab.Project) (repository, error) {
-	u, err := url.Parse(project.HTTPURLToRepo)
-	if err != nil {
-		return repository{}, err
-	}
-
-	return repository{
-		url:           *u,
-		pid:           project.ID,
-		name:          project.Path,
-		ownerName:     project.Namespace.Path,
-		defaultBranch: project.DefaultBranch,
-	}, nil
 }

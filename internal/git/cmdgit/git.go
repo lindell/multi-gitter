@@ -7,10 +7,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/lindell/multi-gitter/internal/domain"
 )
 
 // Git is an implementation of git that executes git as commands
@@ -73,7 +72,7 @@ func (g *Git) Changes() (bool, error) {
 }
 
 // Commit and push all changes
-func (g *Git) Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error {
+func (g *Git) Commit(commitAuthor *git.CommitAuthor, commitMessage string) error {
 	cmd := exec.Command("git", "add", ".")
 	_, err := g.run(cmd)
 	if err != nil {

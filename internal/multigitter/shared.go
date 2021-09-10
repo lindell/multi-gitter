@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"syscall"
 
-	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +27,7 @@ type Git interface {
 	Clone(url string, baseName string) error
 	ChangeBranch(branchName string) error
 	Changes() (bool, error)
-	Commit(commitAuthor *domain.CommitAuthor, commitMessage string) error
+	Commit(commitAuthor *git.CommitAuthor, commitMessage string) error
 	BranchExist(remoteName, branchName string) (bool, error)
 	Push(remoteName string) error
 	AddRemote(name, url string) error

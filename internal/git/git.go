@@ -1,7 +1,7 @@
-package domain
+package git
 
-// GitConfig is configration for any git implementation
-type GitConfig struct {
+// Config is configuration for any git implementation
+type Config struct {
 	// Absolute path to the directory
 	Directory string
 	// The fetch depth used when cloning, if set to 0, the entire history will be used

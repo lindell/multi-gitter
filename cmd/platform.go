@@ -6,6 +6,7 @@ import (
 
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/scm/bitbucketserver"
 	"github.com/lindell/multi-gitter/internal/scm/gitea"
 	"github.com/lindell/multi-gitter/internal/scm/github"
 	"github.com/lindell/multi-gitter/internal/scm/gitlab"
@@ -18,7 +19,9 @@ func configurePlatform(cmd *cobra.Command) {
 	flags := cmd.Flags()
 
 	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.")
-	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.")
+	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
+	flags.StringP("username", "u", "", "The Bitbucket server username.")
+	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
 
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
@@ -27,9 +30,9 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea.")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"github", "gitlab", "gitea"}, cobra.ShellCompDirectiveDefault
+		return []string{"github", "gitlab", "gitea", "bitbucket_server"}, cobra.ShellCompDirectiveDefault
 	})
 
 	// Autocompletion for organizations
@@ -118,14 +121,16 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 
 	platform, _ := flag.GetString("platform")
 	switch platform {
-	default:
-		return nil, fmt.Errorf("unknown platform: %s", platform)
 	case "github":
 		return createGithubClient(flag, verifyFlags)
 	case "gitlab":
 		return createGitlabClient(flag, verifyFlags)
 	case "gitea":
 		return createGiteaClient(flag, verifyFlags)
+	case "bitbucket_server":
+		return createBitbucketServerClient(flag, verifyFlags)
+	default:
+		return nil, fmt.Errorf("unknown platform: %s", platform)
 	}
 }
 
@@ -245,6 +250,47 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 		Users:         users,
 		Repositories:  repoRefs,
 	}, mergeTypes)
+	if err != nil {
+		return nil, err
+	}
+
+	return vc, nil
+}
+
+func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+	bitbucketServerBaseURL, _ := flag.GetString("base-url")
+	projects, _ := flag.GetStringSlice("org")
+	users, _ := flag.GetStringSlice("user")
+	repos, _ := flag.GetStringSlice("repo")
+	username, _ := flag.GetString("username")
+	insecure, _ := flag.GetBool("insecure")
+
+	if verifyFlags && len(projects) == 0 && len(users) == 0 && len(repos) == 0 {
+		return nil, errors.New("no organization, user or repository set")
+	}
+
+	if bitbucketServerBaseURL == "" {
+		return nil, errors.New("no base-url set for bitbucket server")
+	}
+
+	token, err := getToken(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	repoRefs := make([]bitbucketserver.RepositoryReference, len(repos))
+	for i := range repos {
+		repoRefs[i], err = bitbucketserver.ParseRepositoryReference(repos[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	vc, err := bitbucketserver.New(username, token, bitbucketServerBaseURL, insecure, http.NewLoggingRoundTripper, bitbucketserver.RepositoryListing{
+		Projects:     projects,
+		Users:        users,
+		Repositories: repoRefs,
+	})
 	if err != nil {
 		return nil, err
 	}

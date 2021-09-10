@@ -5,27 +5,27 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lindell/multi-gitter/internal/domain"
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
 // Counter keeps track of succeeded and failed repositories
 type Counter struct {
-	successPullRequests []domain.PullRequest
-	successRepositories []domain.Repository
-	errorRepositories   map[string][]domain.Repository
+	successPullRequests []git.PullRequest
+	successRepositories []git.Repository
+	errorRepositories   map[string][]git.Repository
 	lock                sync.RWMutex
 }
 
 // NewCounter create a new repo counter
 func NewCounter() *Counter {
 	return &Counter{
-		errorRepositories: map[string][]domain.Repository{},
+		errorRepositories: map[string][]git.Repository{},
 	}
 }
 
 // AddError add a failing repository together with the error that caused it
-func (r *Counter) AddError(err error, repo domain.Repository) {
+func (r *Counter) AddError(err error, repo git.Repository) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
@@ -34,7 +34,7 @@ func (r *Counter) AddError(err error, repo domain.Repository) {
 }
 
 // AddSuccessRepositories adds a repository that succeeded
-func (r *Counter) AddSuccessRepositories(repo domain.Repository) {
+func (r *Counter) AddSuccessRepositories(repo git.Repository) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
@@ -42,7 +42,7 @@ func (r *Counter) AddSuccessRepositories(repo domain.Repository) {
 }
 
 // AddSuccessPullRequest adds a pullrequest that succeeded
-func (r *Counter) AddSuccessPullRequest(repo domain.PullRequest) {
+func (r *Counter) AddSuccessPullRequest(repo git.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 

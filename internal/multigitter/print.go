@@ -8,9 +8,9 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/lindell/multi-gitter/internal/git"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/lindell/multi-gitter/internal/domain"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 )
 
@@ -20,7 +20,6 @@ type Printer struct {
 
 	ScriptPath string // Must be absolute path
 	Arguments  []string
-	Token      string
 
 	Stdout io.Writer
 	Stderr io.Writer
@@ -63,7 +62,7 @@ func (r Printer) Print(ctx context.Context) error {
 	return nil
 }
 
-func (r Printer) runSingleRepo(ctx context.Context, repo domain.Repository) error {
+func (r Printer) runSingleRepo(ctx context.Context, repo git.Repository) error {
 	if ctx.Err() != nil {
 		return errAborted
 	}
@@ -79,7 +78,7 @@ func (r Printer) runSingleRepo(ctx context.Context, repo domain.Repository) erro
 
 	sourceController := r.CreateGit(tmpDir)
 
-	err = sourceController.Clone(repo.URL(r.Token), repo.DefaultBranch())
+	err = sourceController.Clone(repo.CloneURL(), repo.DefaultBranch())
 	if err != nil {
 		return err
 	}

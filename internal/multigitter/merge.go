@@ -3,9 +3,8 @@ package multigitter
 import (
 	"context"
 
+	"github.com/lindell/multi-gitter/internal/git"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/lindell/multi-gitter/internal/domain"
 )
 
 // Merger merges pull requests in an organization
@@ -22,9 +21,9 @@ func (s Merger) Merge(ctx context.Context) error {
 		return err
 	}
 
-	successPrs := make([]domain.PullRequest, 0, len(prs))
+	successPrs := make([]git.PullRequest, 0, len(prs))
 	for _, pr := range prs {
-		if pr.Status() == domain.PullRequestStatusSuccess {
+		if pr.Status() == git.PullRequestStatusSuccess {
 			successPrs = append(successPrs, pr)
 		}
 	}
