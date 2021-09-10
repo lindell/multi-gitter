@@ -37,6 +37,7 @@ multi-gitter run [script path] [flags]
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
   -h, --help                    help for run
       --include-subgroups       Include GitLab subgroups when using the --group flag.
+      --insecure                Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
   -i, --interactive             Take manual decision before committing any change. Requires git to be installed.
       --log-file string         The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string       The formating of the logs. Available values: text, json, json-pretty. (default "text")
@@ -44,15 +45,16 @@ multi-gitter run [script path] [flags]
   -M, --max-reviewers int       If this value is set, reviewers will be randomized.
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string           The file that the output of the script should be outputted to. "-" means stdout. (default "-")
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
       --skip-pr                 Skip pull request and directly push to the branch.
-  -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
+  -u, --username string         The Bitbucket server username.
 ```
 
 ### SEE ALSO
