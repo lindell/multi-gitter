@@ -84,7 +84,7 @@ To use multi-gitter, a token that is allowed to list repositories and create pul
 
 ### Gitea
 
-In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens
+In Gitea, access tokens can be generated under Settings -> Applications -> Manage Access Tokens 
 
 ## Config file
 
@@ -142,6 +142,9 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
+# Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
+insecure: false
+
 # Take manual decision before committing any change. Requires git to be installed.
 interactive: false
 
@@ -164,7 +167,7 @@ org:
 # The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
 
-# The platform that is used. Available values: github, gitlab, gitea.
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
 # The body of the commit message. Will default to everything but the first line of the commit message if none is set.
@@ -189,12 +192,15 @@ reviewers:
 # Skip pull request and directly push to the branch.
 skip-pr: false
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
+
+# The Bitbucket server username.
+username:
 ```
 </details>
 
@@ -216,6 +222,9 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
+# Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
+insecure: false
+
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
@@ -235,7 +244,7 @@ merge-type:
 org:
   - example
 
-# The platform that is used. Available values: github, gitlab, gitea.
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -247,12 +256,15 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
+
+# The Bitbucket server username.
+username:
 ```
 </details>
 
@@ -274,6 +286,9 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
+# Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
+insecure: false
+
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
@@ -290,7 +305,7 @@ org:
 # The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
 
-# The platform that is used. Available values: github, gitlab, gitea.
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -302,12 +317,15 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
+
+# The Bitbucket server username.
+username:
 ```
 </details>
 
@@ -329,6 +347,9 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
+# Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
+insecure: false
+
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
@@ -342,7 +363,7 @@ log-level: info
 org:
   - example
 
-# The platform that is used. Available values: github, gitlab, gitea.
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -354,12 +375,15 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
+
+# The Bitbucket server username.
+username:
 ```
 </details>
 
@@ -393,6 +417,9 @@ group:
 # Include GitLab subgroups when using the --group flag.
 include-subgroups: false
 
+# Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
+insecure: false
+
 # The file where all logs should be printed to. "-" means stdout.
 log-file:
 
@@ -409,7 +436,7 @@ org:
 # The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
 
-# The platform that is used. Available values: github, gitlab, gitea.
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -421,12 +448,15 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
-# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+# The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
+
+# The Bitbucket server username.
+username:
 ```
 </details>
 
@@ -470,6 +500,7 @@ Flags:
                                  (default "go")
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups       Include GitLab subgroups when using the --group flag.
+      --insecure                Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
   -i, --interactive             Take manual decision before committing any change. Requires git to be installed.
       --log-file string         The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string       The formating of the logs. Available values: text, json, json-pretty. (default "text")
@@ -477,15 +508,16 @@ Flags:
   -M, --max-reviewers int       If this value is set, reviewers will be randomized.
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string           The file that the output of the script should be outputted to. "-" means stdout. (default "-")
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -b, --pr-body string          The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string         The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
       --skip-pr                 Skip pull request and directly push to the branch.
-  -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
+  -u, --username string         The Bitbucket server username.
 ```
 
 
@@ -501,16 +533,18 @@ Flags:
       --config string        Path of the config file.
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups    Include GitLab subgroups when using the --group flag.
+      --insecure             Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string      The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string    The formating of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
       --merge-type strings   The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
-  -p, --platform string      The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -p, --platform string      The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -T, --token string         The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings         The name of a user. All repositories owned by that user will be used.
+  -u, --username string      The Bitbucket server username.
 ```
 
 
@@ -526,16 +560,18 @@ Flags:
       --config string       Path of the config file.
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
+      --insecure            Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string   The formating of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string       The file that the output of the script should be outputted to. "-" means stdout. (default "-")
-  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
+  -u, --username string     The Bitbucket server username.
 ```
 
 
@@ -551,15 +587,17 @@ Flags:
       --config string       Path of the config file.
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
+      --insecure            Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string   The formating of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
-  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -T, --token string        The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
+  -u, --username string     The Bitbucket server username.
 ```
 
 
@@ -586,16 +624,18 @@ Flags:
                                (default "go")
   -G, --group strings         The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups     Include GitLab subgroups when using the --group flag.
+      --insecure              Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string       The file where all logs should be printed to. "-" means stdout.
       --log-format string     The formating of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string      The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings           The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string         The file that the output of the script should be outputted to. "-" means stdout. (default "-")
-  -p, --platform string       The platform that is used. Available values: github, gitlab, gitea. (default "github")
+  -p, --platform string       The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName".
-  -T, --token string          The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN environment variable.
+  -T, --token string          The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings          The name of a user. All repositories owned by that user will be used.
+  -u, --username string       The Bitbucket server username.
 ```
 
 
