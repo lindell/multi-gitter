@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -471,13 +470,11 @@ func (b *BitbucketServer) deleteBranch(ctx context.Context, pr pullRequest) erro
 		"Basic "+base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", b.username, b.token))),
 	)
 
-	response, err := b.httpClient.Do(request) //nolint:bodyclose
+	response, err := b.httpClient.Do(request)
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(response.Body)
+	defer response.Body.Close()
 
 	if response.StatusCode >= 400 {
 		buf := new(bytes.Buffer)
