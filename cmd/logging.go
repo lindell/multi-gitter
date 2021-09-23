@@ -62,10 +62,7 @@ func logFlagInit(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	log.SetFormatter(&internallog.CensorFormatter{
-		CensorItems:         censorItems,
-		UnderlyingFormatter: formatter,
-	})
+	log.SetFormatter(internallog.NewCensorFormatter(formatter, censorItems...))
 
 	// Set the output (file)
 	strFile, _ := cmd.Flags().GetString("log-file")
