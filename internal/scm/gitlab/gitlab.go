@@ -144,6 +144,7 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 
 func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*gitlab.Project, error) {
 	var allProjects []*gitlab.Project
+	withMergeRequestsEnabled := true
 	for i := 1; ; i++ {
 		projects, _, err := g.glClient.Groups.ListGroupProjects(groupName, &gitlab.ListGroupProjectsOptions{
 			ListOptions: gitlab.ListOptions{
@@ -151,7 +152,7 @@ func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*git
 				Page:    i,
 			},
 			IncludeSubgroups: &g.Config.IncludeSubgroups,
-			WithMergeRequestsEnabled: true,
+			WithMergeRequestsEnabled: &withMergeRequestsEnabled,
 		}, gitlab.WithContext(ctx))
 		if err != nil {
 			return nil, err
