@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.33.2](https://www.github.com/lindell/multi-gitter/compare/v0.33.1...v0.33.2) (2021-09-29)
+
+
+### Bug Fixes
+
+* **github:** ignore branch deletion error if branch is already deleted ([#189](https://www.github.com/lindell/multi-gitter/issues/189)) ([d63d041](https://www.github.com/lindell/multi-gitter/commit/d63d04184dc10d3c6538676dacdd63d973d06e02))
+* censor http authentication header ([#185](https://www.github.com/lindell/multi-gitter/issues/185)) ([633a2cc](https://www.github.com/lindell/multi-gitter/commit/633a2ccc973070790b0cb644aa9029727a220e20))
+
 ### [0.33.1](https://www.github.com/lindell/multi-gitter/compare/v0.33.0...v0.33.1) (2021-09-23)
 
 
