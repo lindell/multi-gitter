@@ -334,7 +334,13 @@ func (g Github) MergePullRequest(ctx context.Context, pullReq git.PullRequest) e
 	}
 
 	_, err = g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
-	return err
+
+	// Ignore errors about the reference not existing since it may be the case that GitHub has already deleted the branch
+	if err != nil && !strings.Contains(err.Error(), "Reference does not exist") {
+		return err
+	}
+
+	return nil
 }
 
 // ClosePullRequest closes a pull request
