@@ -21,6 +21,7 @@ func MergeCmd() *cobra.Command {
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
 	cmd.Flags().StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"}, "The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.")
 	configurePlatform(cmd)
+	configureRunPlatform(cmd)
 	configureLogging(cmd, "-")
 	configureConfig(cmd)
 
