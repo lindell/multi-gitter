@@ -109,11 +109,21 @@ func configurePlatform(cmd *cobra.Command) {
 }
 
 // configureRunPlatform defines platform flags that are relevant for commands that either make changes, or handling changes made
-func configureRunPlatform(cmd *cobra.Command) {
+func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
 	flags := cmd.Flags()
 
-	flags.BoolP("fork", "", false, "Fork the repository instead of creating a new branch on the same owner.")
-	flags.StringP("fork-owner", "", "", "If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user.")
+	forkDesc := "Fork the repository instead of creating a new branch on the same owner."
+	if !prCreating {
+		forkDesc = "Use pull requests made from forks instead of from the same repository."
+	}
+	flags.BoolP("fork", "", false, forkDesc)
+
+	forkOwnerDesc := "If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user."
+	if !prCreating {
+		forkOwnerDesc = "If set, use forks from the defined value instead of the logged in user."
+	}
+
+	flags.StringP("fork-owner", "", "", forkOwnerDesc)
 }
 
 // OverrideVersionController can be set to force a specific version controller to be used

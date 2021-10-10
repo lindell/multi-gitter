@@ -47,7 +47,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	configureGit(cmd)
 	configurePlatform(cmd)
-	configureRunPlatform(cmd)
+	configureRunPlatform(cmd, true)
 	configureLogging(cmd, "-")
 	configureConfig(cmd)
 	cmd.Flags().AddFlagSet(outputFlag())
