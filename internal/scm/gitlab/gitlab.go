@@ -151,7 +151,7 @@ func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*git
 				PerPage: 100,
 				Page:    i,
 			},
-			IncludeSubgroups: &g.Config.IncludeSubgroups,
+			IncludeSubgroups:         &g.Config.IncludeSubgroups,
 			WithMergeRequestsEnabled: &withMergeRequestsEnabled,
 		}, gitlab.WithContext(ctx))
 		if err != nil {
