@@ -23,6 +23,7 @@ func New(
 	repoListing RepositoryListing,
 	mergeTypes []git.MergeType,
 	forkMode bool,
+	forkOwner string,
 ) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -47,6 +48,7 @@ func New(
 		MergeTypes:        mergeTypes,
 		token:             token,
 		Fork:              forkMode,
+		ForkOwner:         forkOwner,
 		ghClient:          client,
 	}, nil
 }
@@ -61,7 +63,13 @@ type Github struct {
 	// In this package, it mainly determines which repos are possible to make changes on
 	Fork bool
 
+	// If set, the fork will happen to the ForkOwner value, and not the logged in user
+	ForkOwner string
+
 	ghClient *github.Client
+
+	// Caching of the logged in user
+	user string
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -280,9 +288,22 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]git.P
 		repoOwner := r.GetOwner().GetLogin()
 		repoName := r.GetName()
 		log := log.WithField("repo", fmt.Sprintf("%s/%s", repoOwner, repoName))
+
+		headOwner := repoOwner
+		if g.Fork {
+			if g.ForkOwner != "" {
+				headOwner = g.ForkOwner
+			} else {
+				headOwner, err = g.loggedInUser(ctx)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
 		log.Debug("Fetching latest pull request")
 		prs, _, err := g.ghClient.PullRequests.List(ctx, repoOwner, repoName, &github.PullRequestListOptions{
-			Head:      branchName,
+			Head:      fmt.Sprintf("%s:%s", headOwner, branchName),
 			State:     "all",
 			Direction: "desc",
 			ListOptions: github.ListOptions{
@@ -308,6 +329,21 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]git.P
 	}
 
 	return prStatuses, nil
+}
+
+func (g Github) loggedInUser(ctx context.Context) (string, error) {
+	if g.user != "" {
+		return g.user, nil
+	}
+
+	user, _, err := g.ghClient.Users.Get(ctx, "")
+	if err != nil {
+		return "", err
+	}
+
+	g.user = user.GetLogin()
+
+	return g.user, nil
 }
 
 // MergePullRequest merges a pull request

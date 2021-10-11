@@ -108,6 +108,24 @@ func configurePlatform(cmd *cobra.Command) {
 	})
 }
 
+// configureRunPlatform defines platform flags that are relevant for commands that either make changes, or handling changes made
+func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
+	flags := cmd.Flags()
+
+	forkDesc := "Fork the repository instead of creating a new branch on the same owner."
+	if !prCreating {
+		forkDesc = "Use pull requests made from forks instead of from the same repository."
+	}
+	flags.BoolP("fork", "", false, forkDesc)
+
+	forkOwnerDesc := "If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user."
+	if !prCreating {
+		forkOwnerDesc = "If set, use forks from the defined value instead of the logged in user."
+	}
+
+	flags.StringP("fork-owner", "", "", forkOwnerDesc)
+}
+
 // OverrideVersionController can be set to force a specific version controller to be used
 // This is used to override the version controller with a mock, to be used during testing
 var OverrideVersionController multigitter.VersionController = nil
@@ -140,6 +158,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
 	forkMode, _ := flag.GetBool("fork")
+	forkOwner, _ := flag.GetString("fork-owner")
 
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repo set")
@@ -167,7 +186,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
-	}, mergeTypes, forkMode)
+	}, mergeTypes, forkMode, forkOwner)
 	if err != nil {
 		return nil, err
 	}
