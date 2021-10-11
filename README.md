@@ -126,7 +126,7 @@ fetch-depth: 1
 # Fork the repository instead of creating a new branch on the same owner.
 fork: false
 
-# If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
+# If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user.
 fork-owner:
 
 # The type of git implementation to use.
@@ -215,6 +215,12 @@ base-url:
 # The name of the branch where changes are committed.
 branch: multi-gitter-branch
 
+# Use pull requests made from forks instead of from the same repository.
+fork: false
+
+# If set, use forks from the defined value instead of the logged in user.
+fork-owner:
+
 # The name of a GitLab organization. All repositories in that group will be used.
 group:
   - example
@@ -279,6 +285,12 @@ base-url:
 # The name of the branch where changes are committed.
 branch: multi-gitter-branch
 
+# Use pull requests made from forks instead of from the same repository.
+fork: false
+
+# If set, use forks from the defined value instead of the logged in user.
+fork-owner:
+
 # The name of a GitLab organization. All repositories in that group will be used.
 group:
   - example
@@ -339,6 +351,12 @@ base-url:
 
 # The name of the branch where changes are committed.
 branch: multi-gitter-branch
+
+# Use pull requests made from forks instead of from the same repository.
+fork: false
+
+# If set, use forks from the defined value instead of the logged in user.
+fork-owner:
 
 # The name of a GitLab organization. All repositories in that group will be used.
 group:
@@ -492,7 +510,7 @@ Flags:
   -d, --dry-run                 Run without pushing changes or creating pull requests.
   -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --fork                    Fork the repository instead of creating a new branch on the same owner.
-      --fork-owner string       If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
+      --fork-owner string       If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user.
       --git-type string         The type of git implementation to use.
                                 Available values:
                                   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
@@ -531,6 +549,8 @@ Flags:
   -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string        Path of the config file.
+      --fork                 Use pull requests made from forks instead of from the same repository.
+      --fork-owner string    If set, use forks from the defined value instead of the logged in user.
   -G, --group strings        The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups    Include GitLab subgroups when using the --group flag.
       --insecure             Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
@@ -558,6 +578,8 @@ Flags:
   -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string       Path of the config file.
+      --fork                Use pull requests made from forks instead of from the same repository.
+      --fork-owner string   If set, use forks from the defined value instead of the logged in user.
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
       --insecure            Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
@@ -585,6 +607,8 @@ Flags:
   -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string       Path of the config file.
+      --fork                Use pull requests made from forks instead of from the same repository.
+      --fork-owner string   If set, use forks from the defined value instead of the logged in user.
   -G, --group strings       The name of a GitLab organization. All repositories in that group will be used.
       --include-subgroups   Include GitLab subgroups when using the --group flag.
       --insecure            Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
