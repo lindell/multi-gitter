@@ -28,7 +28,7 @@ multi-gitter run [script path] [flags]
   -d, --dry-run                 Run without pushing changes or creating pull requests.
   -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --fork                    Fork the repository instead of creating a new branch on the same owner.
-      --fork-owner string       If set, make the fork to defined one. Default behavior is for the fork to be on the logged in user.
+      --fork-owner string       If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user.
       --git-type string         The type of git implementation to use.
                                 Available values:
                                   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
