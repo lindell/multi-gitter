@@ -1,5 +1,19 @@
 # Changelog
 
+### [0.33.3](https://www.github.com/lindell/multi-gitter/compare/v0.33.2...v0.33.3) (2021-10-11)
+
+
+### Bug Fixes
+
+* **github:** fixed that the fetching of pullrequests always pull the latest pr ([#195](https://www.github.com/lindell/multi-gitter/issues/195)) ([aa33af8](https://www.github.com/lindell/multi-gitter/commit/aa33af834d71e7122955b5023ab028c2d5fa42f8))
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 commit hash to dff2223 ([f570ee5](https://www.github.com/lindell/multi-gitter/commit/f570ee5086369b50091f5ad21f6762d96d93782c))
+* update module github.com/google/go-github/v38 to v39 ([#191](https://www.github.com/lindell/multi-gitter/issues/191)) ([5088532](https://www.github.com/lindell/multi-gitter/commit/508853232485cd4dd4886f46fead14fa71d7ae59))
+* update module github.com/spf13/viper to v1.9.0 ([becff1f](https://www.github.com/lindell/multi-gitter/commit/becff1f7d6fd755565601fd6eb4d321cac6d54a2))
+
 ### [0.33.2](https://www.github.com/lindell/multi-gitter/compare/v0.33.1...v0.33.2) (2021-09-29)
 
 
