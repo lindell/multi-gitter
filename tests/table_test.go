@@ -662,6 +662,31 @@ Repositories with a successful run:
 `, runData.out)
 			},
 		},
+
+		{
+			name: "assignees",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-m", "custom message",
+				"-a", "assignee1,assignee2",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Len(t, vcMock.PullRequests[0].Assignees, 2)
+				assert.Contains(t, vcMock.PullRequests[0].Assignees, "assignee1")
+				assert.Contains(t, vcMock.PullRequests[1].Assignees, "assignee2")
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {

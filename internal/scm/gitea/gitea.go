@@ -211,6 +211,7 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo git.Repository, prRe
 		Base:  newPR.Base,
 		Title: newPR.Title,
 		Body:  newPR.Body,
+		Assignees: newPR.Assignees,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create pull request")

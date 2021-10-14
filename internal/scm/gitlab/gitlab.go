@@ -206,14 +206,14 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo git.Repository, prR
 	r := repo.(repository)
 	prR := prRepo.(repository)
 
-	// Convert from usernames to user ids
-	var assigneeIDs []int
-	if len(newPR.Reviewers) > 0 {
-		var err error
-		assigneeIDs, err = g.getUserIDs(ctx, newPR.Reviewers)
-		if err != nil {
-			return nil, err
-		}
+	reviewersIDs, err := g.getUserIds(ctx, newPR.Reviewers)
+	if err != nil {
+		return nil, err
+	}
+
+	assigneesIDs, err := g.getUserIds(ctx, newPR.Assignees)
+	if err != nil {
+		return nil, err
 	}
 
 	removeSourceBranch := true
@@ -223,8 +223,9 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo git.Repository, prR
 		SourceBranch:       &newPR.Head,
 		TargetBranch:       &newPR.Base,
 		TargetProjectID:    &r.pid,
-		AssigneeIDs:        assigneeIDs,
+		ReviewerIDs:        reviewersIDs,
 		RemoveSourceBranch: &removeSourceBranch,
+		AssigneeIDs: 		assigneesIDs,
 	})
 	if err != nil {
 		return nil, err
@@ -239,6 +240,21 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo git.Repository, prR
 		iid:        mr.IID,
 		webURL:     mr.WebURL,
 	}, nil
+}
+
+func (g *Gitlab) getUserIds(ctx context.Context, usernames []string) ([]int, error) {
+	// Convert from usernames to user ids
+	var assigneeIDs []int
+
+	if len(usernames) > 0 {
+		var err error
+		assigneeIDs, err = g.getUserIDs(ctx, usernames)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return assigneeIDs, nil
 }
 
 func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, error) {

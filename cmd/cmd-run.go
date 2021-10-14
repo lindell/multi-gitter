@@ -45,6 +45,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
+	cmd.Flags().StringSliceP("assignees", "a", nil, "The username of the assignees to be added on the pull request.")
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureRunPlatform(cmd, true)
@@ -74,6 +75,7 @@ func run(cmd *cobra.Command, args []string) error {
 	authorName, _ := flag.GetString("author-name")
 	authorEmail, _ := flag.GetString("author-email")
 	strOutput, _ := flag.GetString("output")
+	assignees, _ := flag.GetStringSlice("assignees")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -168,6 +170,7 @@ func run(cmd *cobra.Command, args []string) error {
 		SkipPullRequest:  skipPullRequest,
 		CommitAuthor:     commitAuthor,
 		BaseBranch:       baseBranchName,
+		Assignees:        assignees,
 
 		Concurrent: concurrent,
 
