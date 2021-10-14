@@ -682,9 +682,9 @@ Repositories with a successful run:
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
-				assert.Len(t, vcMock.PullRequests[0].Assignees, 2)
+				require.Len(t, vcMock.PullRequests[0].Assignees, 2)
 				assert.Contains(t, vcMock.PullRequests[0].Assignees, "assignee1")
-				assert.Contains(t, vcMock.PullRequests[1].Assignees, "assignee2")
+				assert.Contains(t, vcMock.PullRequests[0].Assignees, "assignee2")
 			},
 		},
 	}

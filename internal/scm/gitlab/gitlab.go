@@ -225,7 +225,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo git.Repository, prR
 		TargetProjectID:    &r.pid,
 		ReviewerIDs:        reviewersIDs,
 		RemoveSourceBranch: &removeSourceBranch,
-		AssigneeIDs: 		assigneesIDs,
+		AssigneeIDs:        assigneesIDs,
 	})
 	if err != nil {
 		return nil, err

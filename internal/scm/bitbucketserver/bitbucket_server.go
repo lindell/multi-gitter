@@ -257,9 +257,9 @@ func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Reposi
 	}
 
 	response, err := client.DefaultApi.CreatePullRequest(r.project, r.name, bitbucketv1.PullRequest{
-		Title:       newPR.Title,
-		Description: newPR.Body,
-		Reviewers:   reviewers,
+		Title:        newPR.Title,
+		Description:  newPR.Body,
+		Reviewers:    reviewers,
 		Participants: assignees,
 		FromRef: bitbucketv1.PullRequestRef{
 			ID: fmt.Sprintf("refs/heads/%s", newPR.Head),
@@ -292,7 +292,7 @@ func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Reposi
 	return newPullRequest(pullRequestResp), nil
 }
 
-func (b *BitbucketServer) getUsersWithLinks(usernames []string, client *bitbucketv1.APIClient) ([]bitbucketv1.UserWithMetadata,  error) {
+func (b *BitbucketServer) getUsersWithLinks(usernames []string, client *bitbucketv1.APIClient) ([]bitbucketv1.UserWithMetadata, error) {
 	var usersWithMetadata []bitbucketv1.UserWithMetadata
 
 	for _, username := range usernames {

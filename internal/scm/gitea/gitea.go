@@ -207,10 +207,10 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo git.Repository, prRe
 	head := fmt.Sprintf("%s:%s", prR.ownerName, newPR.Head)
 
 	pr, _, err := g.giteaClient(ctx).CreatePullRequest(r.ownerName, r.name, gitea.CreatePullRequestOption{
-		Head:  head,
-		Base:  newPR.Base,
-		Title: newPR.Title,
-		Body:  newPR.Body,
+		Head:      head,
+		Base:      newPR.Base,
+		Title:     newPR.Title,
+		Body:      newPR.Body,
 		Assignees: newPR.Assignees,
 	})
 	if err != nil {
