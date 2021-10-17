@@ -41,9 +41,8 @@ Some rules might seem superfluous, like comments on everything that is exported,
 * **docs**: Documentation.
 * **examples**: Example scripts that can be used together with multi-gitter.
 * **internal**
-  * **domain**: This folder contains basic structures that can be used by multiple packages.
   * **git**: All implementations of git.
-  * **multi-gitter**: The main logic of multi-gitter. This is the code that glues everything together.
+  * **multigitter**: The main logic of multi-gitter. This is the code that glues everything together.
   * **scm**: Source control system implementations such as GitHub/GitLab/etc.
 * **test**: Integration tests.
 * **tools**: Tools for CI/CD or for development.
