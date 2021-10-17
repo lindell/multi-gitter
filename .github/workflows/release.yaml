@@ -35,10 +35,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GENERAL_GITHUB_SECRET }} # The tokens needs access to another repo, so the secret.GITHUB_SECRET won't suffice
         if: ${{ steps.release.outputs.release_created }}
-
-      - name: Release commenter
-        uses: apexskier/github-release-commenter@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          skip-label: true
-        if: ${{ steps.release.outputs.release_created }}
