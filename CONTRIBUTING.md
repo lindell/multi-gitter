@@ -33,7 +33,7 @@ Some rules might seem superfluous, like comments on everything that is exported,
 
 ### Docs
 
-If you want to make changes to the README.md file. Please take a look in `./docs/README.template.md` since the README.md file is generated based on it. If you want to change something like the description of a flag, that change can be made directly in the code and docs will be updated automatically.
+*Don't change the README.md file*. If you want to make changes to the README.md file. Please take a look in `./docs/README.template.md` since the README.md file is generated based on it. If you want to change something like the description of a flag, that change can be made directly in the code and docs will be updated automatically.
 
 ### Structure
 
