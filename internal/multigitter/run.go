@@ -52,7 +52,8 @@ type Runner struct {
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 
 	Concurrent      int
-	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
+	SkipPullRequest bool     // If set, the script will run directly on the base-branch without creating any PR
+	SkipRepository  []string // A list of repositories that run will skip
 
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
@@ -84,6 +85,22 @@ func (r *Runner) Run(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
 		return errors.Wrap(err, "could not fetch repositories")
+	}
+
+	skipRepos := r.SkipRepository
+	if len(skipRepos) >= 0 {
+	loop:
+		for i := 0; i < len(repos); i++ {
+			r := repos[i]
+			for _, rem := range skipRepos {
+				if r.FullName() == rem {
+					log.Infof("Skipping %s", r.FullName())
+					repos = append(repos[:i], repos[i+1:]...)
+					i--
+					continue loop
+				}
+			}
+		}
 	}
 
 	// Setting up a "counter" that keeps track of successful and failed runs

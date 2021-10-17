@@ -379,6 +379,38 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "skip-repo",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "owner", "should-skip", "i like my oranges")
+
+				// Change branch so that it's not the one we are expected to push to.
+				// If this can be avoided, it would be good.
+				changeBranch(t, repo.Path, "test", true)
+
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "test",
+				"--skip-repo", "owner/should-skip",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+
+				assert.Contains(t, runData.logOut, "Skipping owner/should-skip")
+				assert.Equal(t, "i like my oranges", readTestFile(t, vcMock.Repositories[0].Path))
+			},
+		},
+
+		{
 			name: "skip-pr",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				repo := createRepo(t, "owner", "should-change", "i like apples")
