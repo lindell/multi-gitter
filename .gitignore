@@ -26,4 +26,6 @@ completions/
 
 config.yml
 
+# Editor specific files
+.vscode/
 .idea/
