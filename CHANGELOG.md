@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.34.0](https://www.github.com/lindell/multi-gitter/compare/v0.33.3...v0.34.0) (2021-10-17)
+
+
+### Features
+
+* added more information to the version command ([#198](https://www.github.com/lindell/multi-gitter/issues/198)) ([ebf4578](https://www.github.com/lindell/multi-gitter/commit/ebf457822693000fe04caf4c36a5db70c9feab6c))
+
 ### [0.33.3](https://www.github.com/lindell/multi-gitter/compare/v0.33.2...v0.33.3) (2021-10-11)
 
 
