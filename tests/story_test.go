@@ -74,24 +74,6 @@ Repositories with a successful run:
 `, string(runOutData))
 
 	//
-	// SkipRepository
-	//
-	skipRepositoryFile := filepath.Join(tmpDir, "skip-repo.txt")
-
-	command = cmd.RootCmd()
-	command.SetArgs([]string{"run",
-		"--output", skipRepositoryFile,
-		"--author-name", "Test Author",
-		"--author-email", "test@example.com",
-		"-B", "custom-branch-name",
-		"-m", "test",
-		"--skip-repo", "owner/should-skip",
-		changerBinaryPath,
-	})
-	err = command.Execute()
-	assert.NoError(t, err)
-
-	//
 	// PullRequestStatus
 	//
 	statusOutFile := filepath.Join(tmpDir, "status-log.txt")

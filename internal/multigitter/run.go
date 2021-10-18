@@ -88,7 +88,7 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 
 	skipRepos := r.SkipRepository
-	if len(skipRepos) >= 0 {
+	if len(skipRepos) >= 1 {
 	loop:
 		for i := 0; i < len(repos); i++ {
 			r := repos[i]

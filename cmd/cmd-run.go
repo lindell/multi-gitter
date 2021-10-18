@@ -41,7 +41,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
-	cmd.Flags().StringSliceP("skip-repo", "s", nil, "The repository that multi-getter will skip running changes against.")
+	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")

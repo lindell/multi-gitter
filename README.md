@@ -192,10 +192,6 @@ reviewers:
 # Skip pull request and directly push to the branch.
 skip-pr: false
 
-# The repo(s) that will be skipped from the multi-gitter run.
-skip-repo:
-  - sweet-org/go-repo
-
 # The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
@@ -537,8 +533,6 @@ Flags:
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings       The username of the reviewers to be added on the pull request.
       --skip-pr                 Skip pull request and directly push to the branch.
-      --skip-repo               Repo(s) that will be skipped from the
-  multi-gitter run, format "ownerName/repoName".
   -T, --token string            The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
