@@ -87,21 +87,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
 
-	skipRepos := r.SkipRepository
-	if len(skipRepos) >= 1 {
-	loop:
-		for i := 0; i < len(repos); i++ {
-			r := repos[i]
-			for _, rem := range skipRepos {
-				if r.FullName() == rem {
-					log.Infof("Skipping %s", r.FullName())
-					repos = append(repos[:i], repos[i+1:]...)
-					i--
-					continue loop
-				}
-			}
-		}
-	}
+	filteredRepos := filterRepositories(repos, r.SkipRepository)
 
 	// Setting up a "counter" that keeps track of successful and failed runs
 	rc := repocounter.NewCounter()
@@ -111,24 +97,24 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 	}()
 
-	log.Infof("Running on %d repositories", len(repos))
+	log.Infof("Running on %d repositories", len(filteredRepos))
 
 	runInParallel(func(i int) {
-		logger := log.WithField("repo", repos[i].FullName())
+		logger := log.WithField("repo", filteredRepos[i].FullName())
 
 		defer func() {
 			if r := recover(); r != nil {
 				log.Error(r)
-				rc.AddError(errors.New("run paniced"), repos[i])
+				rc.AddError(errors.New("run paniced"), filteredRepos[i])
 			}
 		}()
 
-		pr, err := r.runSingleRepo(ctx, repos[i])
+		pr, err := r.runSingleRepo(ctx, filteredRepos[i])
 		if err != nil {
 			if err != errAborted {
 				logger.Info(err)
 			}
-			rc.AddError(err, repos[i])
+			rc.AddError(err, filteredRepos[i])
 
 			if log.IsLevelEnabled(log.TraceLevel) {
 				if stackTrace := getStackTrace(err); stackTrace != "" {
@@ -142,11 +128,28 @@ func (r *Runner) Run(ctx context.Context) error {
 		if pr != nil {
 			rc.AddSuccessPullRequest(pr)
 		} else {
-			rc.AddSuccessRepositories(repos[i])
+			rc.AddSuccessRepositories(filteredRepos[i])
 		}
-	}, len(repos), r.Concurrent)
+	}, len(filteredRepos), r.Concurrent)
 
 	return nil
+}
+
+func filterRepositories(repo []git.Repository, skipRepositoryNames []string) []git.Repository {
+	skipReposMap := map[string]struct{}{}
+	for _, skipRepo := range skipRepositoryNames {
+		skipReposMap[skipRepo] = struct{}{}
+	}
+
+	for i := 0; i < len(repo); i++ {
+		r := repo[i]
+		if _, shouldSkip := skipReposMap[r.FullName()]; shouldSkip {
+			log.Infof("Skipping %s", r.FullName())
+			repo = append(repo[:i], repo[i+1:]...)
+			i--
+		}
+	}
+	return repo
 }
 
 func runInParallel(fun func(i int), total int, maxConcurrent int) {
