@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.35.0](https://www.github.com/lindell/multi-gitter/compare/v0.34.0...v0.35.0) (2021-10-20)
+
+
+### Features
+
+* add possibility to add assignees to pull request ([#196](https://www.github.com/lindell/multi-gitter/issues/196)) ([6b685ba](https://www.github.com/lindell/multi-gitter/commit/6b685ba18ce7107e92984fd9654c9c1af274bf95))
+
 ## [0.34.0](https://www.github.com/lindell/multi-gitter/compare/v0.33.3...v0.34.0) (2021-10-17)
 
 
