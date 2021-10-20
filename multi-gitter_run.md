@@ -17,6 +17,7 @@ multi-gitter run [script path] [flags]
 ### Options
 
 ```
+  -a, --assignees strings       The username of the assignees to be added on the pull request.
       --author-email string     Email of the committer. If not set, the global git config setting will be used.
       --author-name string      Name of the committer. If not set, the global git config setting will be used.
       --base-branch string      The branch which the changes will be based on.
