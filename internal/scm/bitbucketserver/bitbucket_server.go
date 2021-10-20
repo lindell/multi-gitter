@@ -246,26 +246,15 @@ func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Reposi
 
 	client := newClient(ctx, b.config)
 
-	var usersWithMetadata []bitbucketv1.UserWithMetadata
-	for _, reviewer := range newPR.Reviewers {
-		response, err := client.DefaultApi.GetUser(reviewer)
-		if err != nil {
-			return nil, err
-		}
-
-		var userWithLinks bitbucketv1.UserWithLinks
-		err = mapstructure.Decode(response.Values, &userWithLinks)
-		if err != nil {
-			return nil, err
-		}
-
-		usersWithMetadata = append(usersWithMetadata, bitbucketv1.UserWithMetadata{User: userWithLinks})
+	reviewers, err := b.getUsersWithLinks(newPR.Reviewers, client)
+	if err != nil {
+		return nil, err
 	}
 
 	response, err := client.DefaultApi.CreatePullRequest(r.project, r.name, bitbucketv1.PullRequest{
 		Title:       newPR.Title,
 		Description: newPR.Body,
-		Reviewers:   usersWithMetadata,
+		Reviewers:   reviewers,
 		FromRef: bitbucketv1.PullRequestRef{
 			ID: fmt.Sprintf("refs/heads/%s", newPR.Head),
 			Repository: bitbucketv1.Repository{
@@ -295,6 +284,27 @@ func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Reposi
 	}
 
 	return newPullRequest(pullRequestResp), nil
+}
+
+func (b *BitbucketServer) getUsersWithLinks(usernames []string, client *bitbucketv1.APIClient) ([]bitbucketv1.UserWithMetadata, error) {
+	var usersWithMetadata []bitbucketv1.UserWithMetadata
+
+	for _, username := range usernames {
+		response, err := client.DefaultApi.GetUser(username)
+		if err != nil {
+			return nil, err
+		}
+
+		var userWithLinks bitbucketv1.UserWithLinks
+		err = mapstructure.Decode(response.Values, &userWithLinks)
+		if err != nil {
+			return nil, err
+		}
+
+		usersWithMetadata = append(usersWithMetadata, bitbucketv1.UserWithMetadata{User: userWithLinks})
+	}
+
+	return usersWithMetadata, nil
 }
 
 // GetPullRequests Gets the latest pull requests from repositories based on the scm configuration

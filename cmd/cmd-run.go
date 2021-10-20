@@ -38,6 +38,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
 	cmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
 	cmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
+	cmd.Flags().StringSliceP("assignees", "a", nil, "The username of the assignees to be added on the pull request.")
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
@@ -74,6 +75,7 @@ func run(cmd *cobra.Command, args []string) error {
 	authorName, _ := flag.GetString("author-name")
 	authorEmail, _ := flag.GetString("author-email")
 	strOutput, _ := flag.GetString("output")
+	assignees, _ := flag.GetStringSlice("assignees")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -168,6 +170,7 @@ func run(cmd *cobra.Command, args []string) error {
 		SkipPullRequest:  skipPullRequest,
 		CommitAuthor:     commitAuthor,
 		BaseBranch:       baseBranchName,
+		Assignees:        assignees,
 
 		Concurrent: concurrent,
 
