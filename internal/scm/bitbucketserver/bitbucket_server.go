@@ -251,16 +251,10 @@ func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Reposi
 		return nil, err
 	}
 
-	assignees, err := b.getUsersWithLinks(newPR.Assignees, client)
-	if err != nil {
-		return nil, err
-	}
-
 	response, err := client.DefaultApi.CreatePullRequest(r.project, r.name, bitbucketv1.PullRequest{
-		Title:        newPR.Title,
-		Description:  newPR.Body,
-		Reviewers:    reviewers,
-		Participants: assignees,
+		Title:       newPR.Title,
+		Description: newPR.Body,
+		Reviewers:   reviewers,
 		FromRef: bitbucketv1.PullRequestRef{
 			ID: fmt.Sprintf("refs/heads/%s", newPR.Head),
 			Repository: bitbucketv1.Repository{
