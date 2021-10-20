@@ -246,6 +246,10 @@ func (g Github) CreatePullRequest(ctx context.Context, repo git.Repository, prRe
 		return nil, err
 	}
 
+	if err := g.addAssignees(ctx, r, newPR, pr); err != nil {
+		return nil, err
+	}
+
 	return convertPullRequest(pr), nil
 }
 
@@ -271,6 +275,14 @@ func (g Github) addReviewers(ctx context.Context, repo repository, newPR git.New
 	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
 		Reviewers: newPR.Reviewers,
 	})
+	return err
+}
+
+func (g Github) addAssignees(ctx context.Context, repo repository, newPR git.NewPullRequest, createdPR *github.PullRequest) error {
+	if len(newPR.Assignees) == 0 {
+		return nil
+	}
+	_, _, err := g.ghClient.Issues.AddAssignees(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Assignees)
 	return err
 }
 

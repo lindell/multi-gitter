@@ -13,6 +13,7 @@ type NewPullRequest struct {
 	Base  string
 
 	Reviewers []string // The username of all reviewers
+	Assignees []string
 }
 
 // PullRequestStatus is the status of a pull request, including statuses of the last commit
