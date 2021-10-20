@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://www.github.com/lindell/multi-gitter/compare/v0.34.0...v1.0.0) (2021-10-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* the previous mapping in GitLab was reviewers -> assignees. It has now been corrected.
+
+### Features
+
+* add possibility to add assignees to pull request ([#196](https://www.github.com/lindell/multi-gitter/issues/196)) ([52cde84](https://www.github.com/lindell/multi-gitter/commit/52cde842f6da9b8e179c5b5bba50adaf4dbc17db))
+
 ## [0.34.0](https://www.github.com/lindell/multi-gitter/compare/v0.33.3...v0.34.0) (2021-10-17)
 
 
