@@ -13,7 +13,6 @@ import (
 
 	"github.com/eiannone/keyboard"
 	"github.com/lindell/multi-gitter/internal/git"
-	"github.com/lindell/multi-gitter/internal/gittererrors"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -65,6 +64,8 @@ type Runner struct {
 
 var errAborted = errors.New("run was never started because of aborted execution")
 var errRejected = errors.New("changes were not included since they were manually rejected")
+var errNoChange = errors.New("no data was changed")
+var errBranchExist = errors.New("the new branch does already exist")
 
 type dryRunPullRequest struct {
 	status     git.PullRequestStatus
@@ -214,7 +215,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo git.Repository) (git.Pu
 	if changed, err := sourceController.Changes(); err != nil {
 		return nil, err
 	} else if !changed {
-		return nil, gittererrors.NoChangeError
+		return nil, errNoChange
 	}
 
 	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
@@ -258,7 +259,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo git.Repository) (git.Pu
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exist")
 		} else if featureBranchExist {
-			return nil, gittererrors.BranchExistError
+			return nil, errBranchExist
 		}
 	}
 
