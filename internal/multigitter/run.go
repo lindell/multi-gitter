@@ -97,24 +97,24 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 	}()
 
-	log.Infof("Running on %d repositories", len(filteredRepos))
+	log.Infof("Running on %d repositories", len(repos))
 
 	runInParallel(func(i int) {
-		logger := log.WithField("repo", filteredRepos[i].FullName())
+		logger := log.WithField("repo", repos[i].FullName())
 
 		defer func() {
 			if r := recover(); r != nil {
 				log.Error(r)
-				rc.AddError(errors.New("run paniced"), filteredRepos[i])
+				rc.AddError(errors.New("run paniced"), repos[i])
 			}
 		}()
 
-		pr, err := r.runSingleRepo(ctx, filteredRepos[i])
+		pr, err := r.runSingleRepo(ctx, repos[i])
 		if err != nil {
 			if err != errAborted {
 				logger.Info(err)
 			}
-			rc.AddError(err, filteredRepos[i])
+			rc.AddError(err, repos[i])
 
 			if log.IsLevelEnabled(log.TraceLevel) {
 				if stackTrace := getStackTrace(err); stackTrace != "" {
@@ -128,9 +128,9 @@ func (r *Runner) Run(ctx context.Context) error {
 		if pr != nil {
 			rc.AddSuccessPullRequest(pr)
 		} else {
-			rc.AddSuccessRepositories(filteredRepos[i])
+			rc.AddSuccessRepositories(repos[i])
 		}
-	}, len(filteredRepos), r.Concurrent)
+	}, len(repos), r.Concurrent)
 
 	return nil
 }
