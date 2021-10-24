@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.36.0](https://www.github.com/lindell/multi-gitter/compare/v0.35.0...v0.36.0) (2021-10-24)
+
+
+### Features
+
+* add the ability to skip repos from the run command ([#197](https://www.github.com/lindell/multi-gitter/issues/197)) ([d4de4dc](https://www.github.com/lindell/multi-gitter/commit/d4de4dc5dc0d05726db2dabeb515303c21d53994))
+
 ## [0.35.0](https://www.github.com/lindell/multi-gitter/compare/v0.34.0...v0.35.0) (2021-10-20)
 
 
