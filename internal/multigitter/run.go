@@ -87,7 +87,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
 
-	filteredRepos := filterRepositories(repos, r.SkipRepository)
+	repos = filterRepositories(repos, r.SkipRepository)
 
 	// Setting up a "counter" that keeps track of successful and failed runs
 	rc := repocounter.NewCounter()
