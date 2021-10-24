@@ -135,21 +135,21 @@ func (r *Runner) Run(ctx context.Context) error {
 	return nil
 }
 
-func filterRepositories(repo []git.Repository, skipRepositoryNames []string) []git.Repository {
+func filterRepositories(repos []git.Repository, skipRepositoryNames []string) []git.Repository {
 	skipReposMap := map[string]struct{}{}
 	for _, skipRepo := range skipRepositoryNames {
 		skipReposMap[skipRepo] = struct{}{}
 	}
 
-	for i := 0; i < len(repo); i++ {
-		r := repo[i]
-		if _, shouldSkip := skipReposMap[r.FullName()]; shouldSkip {
+	filteredRepos := make([]git.Repository, 0, len(repos))
+	for _, r := range repos {
+		if _, shouldSkip := skipReposMap[r.FullName()]; !shouldSkip {
+			filteredRepos = append(filteredRepos, r)
+		} else {
 			log.Infof("Skipping %s", r.FullName())
-			repo = append(repo[:i], repo[i+1:]...)
-			i--
 		}
 	}
-	return repo
+	return filteredRepos
 }
 
 func runInParallel(fun func(i int), total int, maxConcurrent int) {
