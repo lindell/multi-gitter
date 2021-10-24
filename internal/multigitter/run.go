@@ -52,7 +52,8 @@ type Runner struct {
 	Assignees        []string
 
 	Concurrent      int
-	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
+	SkipPullRequest bool     // If set, the script will run directly on the base-branch without creating any PR
+	SkipRepository  []string // A list of repositories that run will skip
 
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
@@ -87,6 +88,8 @@ func (r *Runner) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
+
+	repos = filterRepositories(repos, r.SkipRepository)
 
 	// Setting up a "counter" that keeps track of successful and failed runs
 	rc := repocounter.NewCounter()
@@ -132,6 +135,23 @@ func (r *Runner) Run(ctx context.Context) error {
 	}, len(repos), r.Concurrent)
 
 	return nil
+}
+
+func filterRepositories(repos []git.Repository, skipRepositoryNames []string) []git.Repository {
+	skipReposMap := map[string]struct{}{}
+	for _, skipRepo := range skipRepositoryNames {
+		skipReposMap[skipRepo] = struct{}{}
+	}
+
+	filteredRepos := make([]git.Repository, 0, len(repos))
+	for _, r := range repos {
+		if _, shouldSkip := skipReposMap[r.FullName()]; !shouldSkip {
+			filteredRepos = append(filteredRepos, r)
+		} else {
+			log.Infof("Skipping %s", r.FullName())
+		}
+	}
+	return filteredRepos
 }
 
 func runInParallel(fun func(i int), total int, maxConcurrent int) {

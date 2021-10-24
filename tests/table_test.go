@@ -379,6 +379,36 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "skip-repo",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-skip", "i like my oranges"),
+						createRepo(t, "owner", "should-not-skip", "i like my apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "test",
+				"--skip-repo", "owner/should-skip",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				assert.Contains(t, runData.logOut, "Skipping owner/should-skip")
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-not-skip #1
+`, runData.out)
+				assert.Equal(t, "i like my oranges", readTestFile(t, vcMock.Repositories[0].Path))
+			},
+		},
+
+		{
 			name: "skip-pr",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				repo := createRepo(t, "owner", "should-change", "i like apples")
