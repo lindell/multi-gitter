@@ -31,11 +31,9 @@ func TestStory(t *testing.T) {
 	changeRepo := createRepo(t, "owner", "should-change", "i like apples")
 	changeRepo2 := createRepo(t, "owner", "should-change-2", "i like my apple")
 	noChangeRepo := createRepo(t, "owner", "should-not-change", "i like oranges")
-	skipRepo := createRepo(t, "owner", "should-skip", "i like my oranges")
 	vcMock.AddRepository(changeRepo)
 	vcMock.AddRepository(changeRepo2)
 	vcMock.AddRepository(noChangeRepo)
-	vcMock.AddRepository(skipRepo)
 
 	runOutFile := filepath.Join(tmpDir, "run-log.txt")
 
@@ -67,7 +65,6 @@ func TestStory(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, `No data was changed:
   owner/should-not-change
-  owner/should-skip
 Repositories with a successful run:
   owner/should-change #1
   owner/should-change-2 #2
