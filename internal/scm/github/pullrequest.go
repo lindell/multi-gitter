@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	"github.com/google/go-github/v39/github"
-	"github.com/lindell/multi-gitter/internal/git"
+
+	"github.com/lindell/multi-gitter/internal/scm"
 )
 
 func convertPullRequest(pr *github.PullRequest) pullRequest {
@@ -27,14 +28,14 @@ type pullRequest struct {
 	prRepoName  string
 	number      int
 	guiURL      string
-	status      git.PullRequestStatus
+	status      scm.PullRequestStatus
 }
 
 func (pr pullRequest) String() string {
 	return fmt.Sprintf("%s/%s #%d", pr.ownerName, pr.repoName, pr.number)
 }
 
-func (pr pullRequest) Status() git.PullRequestStatus {
+func (pr pullRequest) Status() scm.PullRequestStatus {
 	return pr.status
 }
 

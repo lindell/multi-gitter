@@ -3,7 +3,7 @@ package multigitter
 import (
 	"context"
 
-	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/scm"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,9 +21,9 @@ func (s Closer) Close(ctx context.Context) error {
 		return err
 	}
 
-	openPRs := make([]git.PullRequest, 0, len(prs))
+	openPRs := make([]scm.PullRequest, 0, len(prs))
 	for _, pr := range prs {
-		if pr.Status() != git.PullRequestStatusClosed && pr.Status() != git.PullRequestStatusMerged {
+		if pr.Status() != scm.PullRequestStatusClosed && pr.Status() != scm.PullRequestStatusMerged {
 			openPRs = append(openPRs, pr)
 		}
 	}

@@ -2,27 +2,27 @@ package gitea
 
 import (
 	"code.gitea.io/sdk/gitea"
-	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/scm"
 )
 
 // maps merge types to what they are called in the gitea api
-var mergeTypeGiteaName = map[git.MergeType]gitea.MergeStyle{
-	git.MergeTypeMerge:  gitea.MergeStyleMerge,
-	git.MergeTypeRebase: gitea.MergeStyleRebase,
-	git.MergeTypeSquash: gitea.MergeStyleSquash,
+var mergeTypeGiteaName = map[scm.MergeType]gitea.MergeStyle{
+	scm.MergeTypeMerge:  gitea.MergeStyleMerge,
+	scm.MergeTypeRebase: gitea.MergeStyleRebase,
+	scm.MergeTypeSquash: gitea.MergeStyleSquash,
 }
 
 // repoMergeTypes returns a list of all allowed merge types
-func repoMergeTypes(repo *gitea.Repository) []git.MergeType {
-	ret := []git.MergeType{}
+func repoMergeTypes(repo *gitea.Repository) []scm.MergeType {
+	ret := []scm.MergeType{}
 	if repo.AllowMerge {
-		ret = append(ret, git.MergeTypeMerge)
+		ret = append(ret, scm.MergeTypeMerge)
 	}
 	if repo.AllowMerge {
-		ret = append(ret, git.MergeTypeRebase)
+		ret = append(ret, scm.MergeTypeRebase)
 	}
 	if repo.AllowSquash {
-		ret = append(ret, git.MergeTypeSquash)
+		ret = append(ret, scm.MergeTypeSquash)
 	}
 	return ret
 }

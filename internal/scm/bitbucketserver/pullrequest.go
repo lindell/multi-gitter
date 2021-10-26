@@ -4,7 +4,8 @@ import (
 	"fmt"
 
 	bitbucketv1 "github.com/gfleury/go-bitbucket-v1"
-	"github.com/lindell/multi-gitter/internal/git"
+
+	"github.com/lindell/multi-gitter/internal/scm"
 )
 
 func newPullRequest(pr bitbucketv1.PullRequest) pullRequest {
@@ -28,14 +29,14 @@ type pullRequest struct {
 	number     int
 	version    int32
 	guiURL     string
-	status     git.PullRequestStatus
+	status     scm.PullRequestStatus
 }
 
 func (pr pullRequest) String() string {
 	return fmt.Sprintf("%s/%s #%d", pr.project, pr.repoName, pr.number)
 }
 
-func (pr pullRequest) Status() git.PullRequestStatus {
+func (pr pullRequest) Status() scm.PullRequestStatus {
 	return pr.status
 }
 

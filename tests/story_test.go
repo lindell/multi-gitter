@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/lindell/multi-gitter/cmd"
-	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -89,7 +89,7 @@ Repositories with a successful run:
 	assert.Equal(t, "owner/should-change #1: Pending\nowner/should-change-2 #2: Pending\n", string(statusOutData))
 
 	// One of the created PRs is set to succeeded
-	vcMock.SetPRStatus("should-change", "custom-branch-name", git.PullRequestStatusSuccess)
+	vcMock.SetPRStatus("should-change", "custom-branch-name", scm.PullRequestStatusSuccess)
 
 	//
 	// Merge

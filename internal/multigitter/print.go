@@ -8,10 +8,10 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/lindell/multi-gitter/internal/git"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
+	"github.com/lindell/multi-gitter/internal/scm"
 )
 
 // Printer contains fields to be able to do the print command
@@ -62,7 +62,7 @@ func (r Printer) Print(ctx context.Context) error {
 	return nil
 }
 
-func (r Printer) runSingleRepo(ctx context.Context, repo git.Repository) error {
+func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 	if ctx.Err() != nil {
 		return errAborted
 	}

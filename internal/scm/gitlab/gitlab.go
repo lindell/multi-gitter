@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lindell/multi-gitter/internal/git"
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
+	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -80,13 +80,13 @@ func ParseProjectReference(val string) (ProjectReference, error) {
 }
 
 // GetRepositories fetches repositories from all sources (groups/user/specific project)
-func (g *Gitlab) GetRepositories(ctx context.Context) ([]git.Repository, error) {
+func (g *Gitlab) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	allProjects, err := g.getProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	repos := make([]git.Repository, 0, len(allProjects))
+	repos := make([]scm.Repository, 0, len(allProjects))
 	for _, project := range allProjects {
 		p, err := convertProject(project, g.token)
 		if err != nil {
@@ -202,7 +202,7 @@ func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitla
 }
 
 // CreatePullRequest creates a pull request
-func (g *Gitlab) CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error) {
+func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	r := repo.(repository)
 	prR := prRepo.(repository)
 
@@ -275,13 +275,13 @@ func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, err
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
-func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
+func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	projects, err := g.getProjects(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prs := []git.PullRequest{}
+	prs := []scm.PullRequest{}
 	for _, project := range projects {
 		mr, err := g.getPullRequest(ctx, branchName, project)
 		if err != nil {
@@ -328,23 +328,23 @@ func (g *Gitlab) getPullRequest(ctx context.Context, branchName string, project 
 	return mr, nil
 }
 
-func pullRequestStatus(mr *gitlab.MergeRequest) git.PullRequestStatus {
+func pullRequestStatus(mr *gitlab.MergeRequest) scm.PullRequestStatus {
 	switch {
 	case mr.MergedAt != nil:
-		return git.PullRequestStatusMerged
+		return scm.PullRequestStatusMerged
 	case mr.ClosedAt != nil:
-		return git.PullRequestStatusClosed
+		return scm.PullRequestStatusClosed
 	case mr.Pipeline == nil, mr.Pipeline.Status == "success":
-		return git.PullRequestStatusSuccess
+		return scm.PullRequestStatusSuccess
 	case mr.Pipeline.Status == "failed":
-		return git.PullRequestStatusError
+		return scm.PullRequestStatusError
 	default:
-		return git.PullRequestStatusPending
+		return scm.PullRequestStatusPending
 	}
 }
 
 // MergePullRequest merges a pull request
-func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
 	shouldRemoveSourceBranch := true
@@ -359,7 +359,7 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq git.PullRequest) 
 }
 
 // ClosePullRequest closes a pull request
-func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq git.PullRequest) error {
+func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
 	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
@@ -376,7 +376,7 @@ func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq git.PullRequest) 
 }
 
 // ForkRepository forks a project
-func (g *Gitlab) ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error) {
+func (g *Gitlab) ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error) {
 	r := repo.(repository)
 
 	// Get the username of the fork (logged in user if none is set)

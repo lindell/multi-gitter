@@ -13,6 +13,7 @@ import (
 
 	"github.com/eiannone/keyboard"
 	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -23,12 +24,12 @@ import (
 
 // VersionController fetches repositories
 type VersionController interface {
-	GetRepositories(ctx context.Context) ([]git.Repository, error)
-	CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error)
-	GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error)
-	MergePullRequest(ctx context.Context, pr git.PullRequest) error
-	ClosePullRequest(ctx context.Context, pr git.PullRequest) error
-	ForkRepository(ctx context.Context, repo git.Repository, newOwner string) (git.Repository, error)
+	GetRepositories(ctx context.Context) ([]scm.Repository, error)
+	CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error)
+	GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error)
+	MergePullRequest(ctx context.Context, pr scm.PullRequest) error
+	ClosePullRequest(ctx context.Context, pr scm.PullRequest) error
+	ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error)
 }
 
 // Runner contains fields to be able to do the run
@@ -69,11 +70,11 @@ var errNoChange = errors.New("no data was changed")
 var errBranchExist = errors.New("the new branch does already exist")
 
 type dryRunPullRequest struct {
-	status     git.PullRequestStatus
-	Repository git.Repository
+	status     scm.PullRequestStatus
+	Repository scm.Repository
 }
 
-func (pr dryRunPullRequest) Status() git.PullRequestStatus {
+func (pr dryRunPullRequest) Status() scm.PullRequestStatus {
 	return pr.status
 }
 
@@ -137,13 +138,13 @@ func (r *Runner) Run(ctx context.Context) error {
 	return nil
 }
 
-func filterRepositories(repos []git.Repository, skipRepositoryNames []string) []git.Repository {
+func filterRepositories(repos []scm.Repository, skipRepositoryNames []string) []scm.Repository {
 	skipReposMap := map[string]struct{}{}
 	for _, skipRepo := range skipRepositoryNames {
 		skipReposMap[skipRepo] = struct{}{}
 	}
 
-	filteredRepos := make([]git.Repository, 0, len(repos))
+	filteredRepos := make([]scm.Repository, 0, len(repos))
 	for _, r := range repos {
 		if _, shouldSkip := skipReposMap[r.FullName()]; !shouldSkip {
 			filteredRepos = append(filteredRepos, r)
@@ -179,7 +180,7 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r *Runner) runSingleRepo(ctx context.Context, repo git.Repository) (git.PullRequest, error) {
+func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.PullRequest, error) {
 	if ctx.Err() != nil {
 		return nil, errAborted
 	}
@@ -294,7 +295,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo git.Repository) (git.Pu
 	}
 
 	log.Info("Creating pull request")
-	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, git.NewPullRequest{
+	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
 		Title:     r.PullRequestTitle,
 		Body:      r.PullRequestBody,
 		Head:      r.FeatureBranch,
@@ -311,7 +312,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo git.Repository) (git.Pu
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(dir string, repo git.Repository) error {
+func (r *Runner) interactive(dir string, repo scm.Repository) error {
 	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Println(interactiveInfo)
 	for {
