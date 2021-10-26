@@ -1,4 +1,4 @@
-package git
+package scm
 
 // Repository provides all the information needed about a git repository
 type Repository interface {

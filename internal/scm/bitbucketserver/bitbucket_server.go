@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	bitbucketv1 "github.com/gfleury/go-bitbucket-v1"
-	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
@@ -113,7 +113,7 @@ func (rr RepositoryReference) String() string {
 }
 
 // GetRepositories Should get repositories based on the scm configuration
-func (b *BitbucketServer) GetRepositories(ctx context.Context) ([]git.Repository, error) {
+func (b *BitbucketServer) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	client := newClient(ctx, b.config)
 
 	bitbucketRepositories, err := b.getRepositories(client)
@@ -121,7 +121,7 @@ func (b *BitbucketServer) GetRepositories(ctx context.Context) ([]git.Repository
 		return nil, err
 	}
 
-	repositories := make([]git.Repository, 0, len(bitbucketRepositories))
+	repositories := make([]scm.Repository, 0, len(bitbucketRepositories))
 
 	// Get default branches and create repo interfaces
 	for _, bitbucketRepository := range bitbucketRepositories {
@@ -240,7 +240,7 @@ func (b *BitbucketServer) getProjectRepositories(client *bitbucketv1.APIClient, 
 }
 
 // CreatePullRequest Creates a pull request. The repo parameter will always originate from the same package
-func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo git.Repository, prRepo git.Repository, newPR git.NewPullRequest) (git.PullRequest, error) {
+func (b *BitbucketServer) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	r := repo.(repository)
 	prR := prRepo.(repository)
 
@@ -308,7 +308,7 @@ func (b *BitbucketServer) getUsersWithLinks(usernames []string, client *bitbucke
 }
 
 // GetPullRequests Gets the latest pull requests from repositories based on the scm configuration
-func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string) ([]git.PullRequest, error) {
+func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	client := newClient(ctx, b.config)
 
 	repositories, err := b.getRepositories(client)
@@ -316,7 +316,7 @@ func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string
 		return nil, err
 	}
 
-	var prs []git.PullRequest
+	var prs []scm.PullRequest
 	for _, repo := range repositories {
 		pr, getPullRequestErr := b.getPullRequest(client, branchName, repo)
 		if getPullRequestErr != nil {
@@ -347,34 +347,34 @@ func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string
 	return prs, nil
 }
 
-func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo *bitbucketv1.Repository, pr *bitbucketv1.PullRequest) (git.PullRequestStatus, error) {
+func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo *bitbucketv1.Repository, pr *bitbucketv1.PullRequest) (scm.PullRequestStatus, error) {
 	switch pr.State {
 	case stateMerged:
-		return git.PullRequestStatusMerged, nil
+		return scm.PullRequestStatusMerged, nil
 	case stateDeclined:
-		return git.PullRequestStatusClosed, nil
+		return scm.PullRequestStatusClosed, nil
 	}
 
 	response, err := client.DefaultApi.CanMerge(repo.Project.Key, repo.Slug, int64(pr.ID))
 	if err != nil {
-		return git.PullRequestStatusUnknown, err
+		return scm.PullRequestStatusUnknown, err
 	}
 
 	var merge bitbucketv1.MergeGetResponse
 	err = mapstructure.Decode(response.Values, &merge)
 	if err != nil {
-		return git.PullRequestStatusUnknown, err
+		return scm.PullRequestStatusUnknown, err
 	}
 
 	if !merge.CanMerge {
-		return git.PullRequestStatusPending, nil
+		return scm.PullRequestStatusPending, nil
 	}
 
 	if merge.Conflicted {
-		return git.PullRequestStatusError, nil
+		return scm.PullRequestStatusError, nil
 	}
 
-	return git.PullRequestStatusSuccess, nil
+	return scm.PullRequestStatusSuccess, nil
 }
 
 func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchName string, repo *bitbucketv1.Repository) (*bitbucketv1.PullRequest, error) {
@@ -412,7 +412,7 @@ func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchNa
 }
 
 // MergePullRequest Merges a pull request, the pr parameter will always originate from the same package
-func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr git.PullRequest) error {
+func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	bitbucketPR := pr.(pullRequest)
 
 	client := newClient(ctx, b.config)
@@ -446,7 +446,7 @@ func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr git.PullReque
 }
 
 // ClosePullRequest Close a pull request, the pr parameter will always originate from the same package
-func (b *BitbucketServer) ClosePullRequest(ctx context.Context, pr git.PullRequest) error {
+func (b *BitbucketServer) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	bitbucketPR := pr.(pullRequest)
 
 	client := newClient(ctx, b.config)
@@ -500,7 +500,7 @@ func (b *BitbucketServer) deleteBranch(ctx context.Context, pr pullRequest) erro
 }
 
 // ForkRepository forks a repository. If newOwner is set, use it, otherwise fork to the current user
-func (b *BitbucketServer) ForkRepository(_ context.Context, _ git.Repository, _ string) (git.Repository, error) {
+func (b *BitbucketServer) ForkRepository(_ context.Context, _ scm.Repository, _ string) (scm.Repository, error) {
 	return nil, errors.New("forking not implemented for bitbucket server")
 }
 
