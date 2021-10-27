@@ -19,4 +19,17 @@ type VersionController interface {
 }
 ```
 
-The version controller can also implement additional functions to support features such as shell-autocompletion.
+
+## Autocompletion
+
+The version controller can also implement additional functions to support features such as shell-autocompletion. The following functions can be implemented independently and will automatically be used for tab completions when the user has activated it.
+
+```go
+func GetAutocompleteOrganizations(ctx context.Context, search string) ([]string, error)
+```
+```go
+func GetAutocompleteUsers(ctx context.Context, search string) ([]string, error)
+```
+```go
+func GetAutocompleteRepositories(ctx context.Context, search string) ([]string, error)
+```
