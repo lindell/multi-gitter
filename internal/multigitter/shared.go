@@ -29,7 +29,7 @@ type Git interface {
 	Changes() (bool, error)
 	Commit(commitAuthor *git.CommitAuthor, commitMessage string) error
 	BranchExist(remoteName, branchName string) (bool, error)
-	Push(remoteName string) error
+	Push(remoteName string, force bool) error
 	AddRemote(name, url string) error
 }
 
@@ -46,4 +46,26 @@ func getStackTrace(err error) string {
 		return trace
 	}
 	return ""
+}
+
+// ConflictStrategy define how a conflict of an already existing branch should be handled
+type ConflictStrategy int
+
+const (
+	// ConflictStrategySkip will skip the run for if the branch does already exist
+	ConflictStrategySkip ConflictStrategy = iota + 1
+	// ConflictStrategyReplace will ignore any existing branch and replace it with new changes
+	ConflictStrategyReplace
+)
+
+// ParseConflictStrategy parses a conflict strategy from a string
+func ParseConflictStrategy(str string) (ConflictStrategy, error) {
+	switch str {
+	default:
+		return ConflictStrategy(0), fmt.Errorf("could not parse \"%s\" as conflict strategy", str)
+	case "skip":
+		return ConflictStrategySkip, nil
+	case "replace":
+		return ConflictStrategyReplace, nil
+	}
 }

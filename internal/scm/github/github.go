@@ -70,7 +70,8 @@ type Github struct {
 	ghClient *github.Client
 
 	// Caching of the logged in user
-	user string
+	user      string
+	userMutex sync.Mutex
 
 	// Used to make sure request that modifies state does not happen to often
 	modMutex       sync.Mutex
@@ -309,16 +310,9 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 		repoName := r.GetName()
 		log := log.WithField("repo", fmt.Sprintf("%s/%s", repoOwner, repoName))
 
-		headOwner := repoOwner
-		if g.Fork {
-			if g.ForkOwner != "" {
-				headOwner = g.ForkOwner
-			} else {
-				headOwner, err = g.loggedInUser(ctx)
-				if err != nil {
-					return nil, err
-				}
-			}
+		headOwner, err := g.headOwner(ctx, repoOwner)
+		if err != nil {
+			return nil, err
 		}
 
 		log.Debug("Fetching latest pull request")
@@ -352,6 +346,9 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 }
 
 func (g *Github) loggedInUser(ctx context.Context) (string, error) {
+	g.userMutex.Lock()
+	defer g.userMutex.Unlock()
+
 	if g.user != "" {
 		return g.user, nil
 	}
@@ -364,6 +361,50 @@ func (g *Github) loggedInUser(ctx context.Context) (string, error) {
 	g.user = user.GetLogin()
 
 	return g.user, nil
+}
+
+// headOwner returns the owner of the repository from which any pullrequest will be made
+// This is normally the owner of the original repository, but if a fork has been made
+// it will be a different owner
+func (g *Github) headOwner(ctx context.Context, repoOwner string) (string, error) {
+	headOwner := repoOwner
+	if g.Fork {
+		if g.ForkOwner != "" {
+			headOwner = g.ForkOwner
+		} else {
+			var err error
+			headOwner, err = g.loggedInUser(ctx)
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+	return headOwner, nil
+}
+
+// GetOpenPullRequest gets a pull request for one specific repository
+func (g *Github) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
+	r := repo.(repository)
+
+	headOwner, err := g.headOwner(ctx, r.ownerName)
+	if err != nil {
+		return nil, err
+	}
+
+	prs, _, err := g.ghClient.PullRequests.List(ctx, headOwner, r.name, &github.PullRequestListOptions{
+		Head:  fmt.Sprintf("%s:%s", headOwner, branchName),
+		State: "open",
+		ListOptions: github.ListOptions{
+			PerPage: 1,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(prs) == 0 {
+		return nil, nil
+	}
+	return convertPullRequest(prs[0]), nil
 }
 
 // MergePullRequest merges a pull request

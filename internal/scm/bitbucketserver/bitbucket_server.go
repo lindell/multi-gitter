@@ -318,7 +318,7 @@ func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string
 
 	var prs []scm.PullRequest
 	for _, repo := range repositories {
-		pr, getPullRequestErr := b.getPullRequest(client, branchName, repo)
+		pr, getPullRequestErr := b.getPullRequest(client, branchName, repo.Project.Key, repo.Slug)
 		if getPullRequestErr != nil {
 			return nil, getPullRequestErr
 		}
@@ -326,28 +326,37 @@ func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string
 			continue
 		}
 
-		status, pullRequestStatusErr := b.pullRequestStatus(client, repo, pr)
-		if pullRequestStatusErr != nil {
-			return nil, pullRequestStatusErr
+		convertedPR, err := b.convertPullRequest(client, repo.Project.Key, repo.Slug, branchName, pr)
+		if err != nil {
+			return nil, err
 		}
 
-		prs = append(prs, pullRequest{
-			repoName:   repo.Slug,
-			project:    repo.Project.Key,
-			branchName: branchName,
-			prProject:  pr.FromRef.Repository.Project.Key,
-			prRepoName: pr.FromRef.Repository.Slug,
-			number:     pr.ID,
-			version:    pr.Version,
-			guiURL:     pr.Links.Self[0].Href,
-			status:     status,
-		})
+		prs = append(prs, convertedPR)
 	}
 
 	return prs, nil
 }
 
-func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo *bitbucketv1.Repository, pr *bitbucketv1.PullRequest) (scm.PullRequestStatus, error) {
+func (b *BitbucketServer) convertPullRequest(client *bitbucketv1.APIClient, project, repoName, branchName string, pr *bitbucketv1.PullRequest) (pullRequest, error) {
+	status, err := b.pullRequestStatus(client, project, repoName, pr)
+	if err != nil {
+		return pullRequest{}, err
+	}
+
+	return pullRequest{
+		repoName:   repoName,
+		project:    project,
+		branchName: branchName,
+		prProject:  pr.FromRef.Repository.Project.Key,
+		prRepoName: pr.FromRef.Repository.Slug,
+		number:     pr.ID,
+		version:    pr.Version,
+		guiURL:     pr.Links.Self[0].Href,
+		status:     status,
+	}, nil
+}
+
+func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, project, repoName string, pr *bitbucketv1.PullRequest) (scm.PullRequestStatus, error) {
 	switch pr.State {
 	case stateMerged:
 		return scm.PullRequestStatusMerged, nil
@@ -355,7 +364,7 @@ func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo 
 		return scm.PullRequestStatusClosed, nil
 	}
 
-	response, err := client.DefaultApi.CanMerge(repo.Project.Key, repo.Slug, int64(pr.ID))
+	response, err := client.DefaultApi.CanMerge(project, repoName, int64(pr.ID))
 	if err != nil {
 		return scm.PullRequestStatusUnknown, err
 	}
@@ -377,12 +386,12 @@ func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, repo 
 	return scm.PullRequestStatusSuccess, nil
 }
 
-func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchName string, repo *bitbucketv1.Repository) (*bitbucketv1.PullRequest, error) {
+func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchName, project, repoName string) (*bitbucketv1.PullRequest, error) {
 	params := map[string]interface{}{"start": 0, "limit": 25}
 
 	var pullRequests []bitbucketv1.PullRequest
 	for {
-		response, err := client.DefaultApi.GetPullRequestsPage(repo.Project.Key, repo.Slug, params)
+		response, err := client.DefaultApi.GetPullRequestsPage(project, repoName, params)
 		if err != nil {
 			return nil, err
 		}
@@ -409,6 +418,29 @@ func (b *BitbucketServer) getPullRequest(client *bitbucketv1.APIClient, branchNa
 	}
 
 	return nil, nil
+}
+
+// GetOpenPullRequest gets a pull request for one specific repository
+func (b *BitbucketServer) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
+	r := repo.(repository)
+
+	client := newClient(ctx, b.config)
+
+	pr, err := b.getPullRequest(client, branchName, r.project, r.name)
+	if err != nil {
+		return nil, err
+	}
+
+	if pr == nil {
+		return nil, nil
+	}
+
+	convertedPR, err := b.convertPullRequest(client, r.project, r.name, branchName, pr)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertedPR, nil
 }
 
 // MergePullRequest Merges a pull request, the pr parameter will always originate from the same package

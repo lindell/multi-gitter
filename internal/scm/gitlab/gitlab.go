@@ -291,19 +291,23 @@ func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 			continue
 		}
 
-		prs = append(prs, pullRequest{
-			repoName:   project.Path,
-			ownerName:  project.Namespace.Path,
-			targetPID:  mr.TargetProjectID,
-			sourcePID:  mr.SourceProjectID,
-			branchName: branchName,
-			status:     pullRequestStatus(mr),
-			iid:        mr.IID,
-			webURL:     mr.WebURL,
-		})
+		prs = append(prs, convertMergeRequest(mr, project.Path, project.Namespace.Path))
 	}
 
 	return prs, nil
+}
+
+func convertMergeRequest(mr *gitlab.MergeRequest, repoName, ownerName string) pullRequest {
+	return pullRequest{
+		repoName:   repoName,
+		ownerName:  ownerName,
+		targetPID:  mr.TargetProjectID,
+		sourcePID:  mr.SourceProjectID,
+		branchName: mr.SourceBranch,
+		status:     pullRequestStatus(mr),
+		iid:        mr.IID,
+		webURL:     mr.WebURL,
+	}
 }
 
 func (g *Gitlab) getPullRequest(ctx context.Context, branchName string, project *gitlab.Project) (*gitlab.MergeRequest, error) {
@@ -341,6 +345,29 @@ func pullRequestStatus(mr *gitlab.MergeRequest) scm.PullRequestStatus {
 	default:
 		return scm.PullRequestStatusPending
 	}
+}
+
+// GetOpenPullRequest gets a pull request for one specific repository
+func (g *Gitlab) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
+	project := repo.(repository)
+
+	state := "opened"
+	mrs, _, err := g.glClient.MergeRequests.ListProjectMergeRequests(project.pid, &gitlab.ListProjectMergeRequestsOptions{
+		ListOptions: gitlab.ListOptions{
+			PerPage: 1,
+		},
+		SourceBranch: &branchName,
+		State:        &state,
+	}, gitlab.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(mrs) == 0 {
+		return nil, nil
+	}
+
+	return convertMergeRequest(mrs[0], project.name, project.ownerName), nil
 }
 
 // MergePullRequest merges a pull request
