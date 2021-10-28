@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.36.1](https://www.github.com/lindell/multi-gitter/compare/v0.36.0...v0.36.1) (2021-10-28)
+
+
+### Bug Fixes
+
+* make sure GitHub's secondary rate limit is not reached ([#207](https://www.github.com/lindell/multi-gitter/issues/207)) ([8a5fabd](https://www.github.com/lindell/multi-gitter/commit/8a5fabdc9e54bdfbba421a466bd323aae8114bdd))
+
 ## [0.36.0](https://www.github.com/lindell/multi-gitter/compare/v0.35.0...v0.36.0) (2021-10-24)
 
 
