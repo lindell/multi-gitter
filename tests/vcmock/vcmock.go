@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/lindell/multi-gitter/internal/scm"
@@ -18,6 +19,8 @@ type VersionController struct {
 	PRNumber     int
 	Repositories []Repository
 	PullRequests []PullRequest
+
+	prLock sync.RWMutex
 }
 
 // GetRepositories returns mock repositories
@@ -33,6 +36,9 @@ func (vc *VersionController) GetRepositories(ctx context.Context) ([]scm.Reposit
 func (vc *VersionController) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	repository := repo.(Repository)
 
+	vc.prLock.Lock()
+	defer vc.prLock.Unlock()
+
 	vc.PRNumber++
 	pr := PullRequest{
 		PRStatus:       scm.PullRequestStatusPending,
@@ -47,6 +53,9 @@ func (vc *VersionController) CreatePullRequest(ctx context.Context, repo scm.Rep
 
 // GetPullRequests gets mock pull request statuses
 func (vc *VersionController) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
+	vc.prLock.RLock()
+	defer vc.prLock.RUnlock()
+
 	ret := make([]scm.PullRequest, 0, len(vc.PullRequests))
 	for _, pr := range vc.PullRequests {
 		if pr.NewPullRequest.Head == branchName {
@@ -58,6 +67,9 @@ func (vc *VersionController) GetPullRequests(ctx context.Context, branchName str
 
 // MergePullRequest sets the status of a mock pull requests to merged
 func (vc *VersionController) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
+	vc.prLock.Lock()
+	defer vc.prLock.Unlock()
+
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
@@ -70,6 +82,9 @@ func (vc *VersionController) MergePullRequest(ctx context.Context, pr scm.PullRe
 
 // ClosePullRequest sets the status of a mock pull requests to closed
 func (vc *VersionController) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error {
+	vc.prLock.Lock()
+	defer vc.prLock.Unlock()
+
 	pullRequest := pr.(PullRequest)
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
@@ -87,6 +102,9 @@ func (vc *VersionController) AddRepository(repo ...Repository) {
 
 // SetPRStatus sets the status of a pull request
 func (vc *VersionController) SetPRStatus(repoName string, branchName string, newStatus scm.PullRequestStatus) {
+	vc.prLock.Lock()
+	defer vc.prLock.Unlock()
+
 	for i := range vc.PullRequests {
 		if vc.PullRequests[i].Repository.RepoName == repoName && vc.PullRequests[i].Head == branchName {
 			vc.PullRequests[i].PRStatus = newStatus
