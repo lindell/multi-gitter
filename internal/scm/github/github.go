@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/go-github/v39/github"
@@ -70,6 +71,10 @@ type Github struct {
 
 	// Caching of the logged in user
 	user string
+
+	// Used to make sure request that modifies state does not happen to often
+	modMutex       sync.Mutex
+	lastModRequest time.Time
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -103,7 +108,7 @@ func ParseRepositoryReference(val string) (RepositoryReference, error) {
 }
 
 // GetRepositories fetches repositories from all sources (orgs/user/specific repo)
-func (g Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
+func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	allRepos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
@@ -132,7 +137,7 @@ func (g Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	return repos, nil
 }
 
-func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
+func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
 	allRepos := []*github.Repository{}
 
 	for _, org := range g.Organizations {
@@ -178,7 +183,7 @@ func (g Github) getRepositories(ctx context.Context) ([]*github.Repository, erro
 	return allRepos, nil
 }
 
-func (g Github) getOrganizationRepositories(ctx context.Context, orgName string) ([]*github.Repository, error) {
+func (g *Github) getOrganizationRepositories(ctx context.Context, orgName string) ([]*github.Repository, error) {
 	var repos []*github.Repository
 	i := 1
 	for {
@@ -201,7 +206,7 @@ func (g Github) getOrganizationRepositories(ctx context.Context, orgName string)
 	return repos, nil
 }
 
-func (g Github) getUserRepositories(ctx context.Context, user string) ([]*github.Repository, error) {
+func (g *Github) getUserRepositories(ctx context.Context, user string) ([]*github.Repository, error) {
 	var repos []*github.Repository
 	i := 1
 	for {
@@ -224,7 +229,7 @@ func (g Github) getUserRepositories(ctx context.Context, user string) ([]*github
 	return repos, nil
 }
 
-func (g Github) getRepository(ctx context.Context, repoRef RepositoryReference) (*github.Repository, error) {
+func (g *Github) getRepository(ctx context.Context, repoRef RepositoryReference) (*github.Repository, error) {
 	repo, _, err := g.ghClient.Repositories.Get(ctx, repoRef.OwnerName, repoRef.Name)
 	if err != nil {
 		return nil, err
@@ -233,9 +238,12 @@ func (g Github) getRepository(ctx context.Context, repoRef RepositoryReference) 
 }
 
 // CreatePullRequest creates a pull request
-func (g Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
+func (g *Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	r := repo.(repository)
 	prR := prRepo.(repository)
+
+	g.modLock()
+	defer g.modUnlock()
 
 	pr, err := g.createPullRequest(ctx, r, prR, newPR)
 	if err != nil {
@@ -253,7 +261,7 @@ func (g Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prRe
 	return convertPullRequest(pr), nil
 }
 
-func (g Github) createPullRequest(ctx context.Context, repo repository, prRepo repository, newPR scm.NewPullRequest) (*github.PullRequest, error) {
+func (g *Github) createPullRequest(ctx context.Context, repo repository, prRepo repository, newPR scm.NewPullRequest) (*github.PullRequest, error) {
 	head := fmt.Sprintf("%s:%s", prRepo.ownerName, newPR.Head)
 	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
 		Title: &newPR.Title,
@@ -268,7 +276,7 @@ func (g Github) createPullRequest(ctx context.Context, repo repository, prRepo r
 	return pr, nil
 }
 
-func (g Github) addReviewers(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
+func (g *Github) addReviewers(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
 	if len(newPR.Reviewers) == 0 {
 		return nil
 	}
@@ -278,7 +286,7 @@ func (g Github) addReviewers(ctx context.Context, repo repository, newPR scm.New
 	return err
 }
 
-func (g Github) addAssignees(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
+func (g *Github) addAssignees(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
 	if len(newPR.Assignees) == 0 {
 		return nil
 	}
@@ -287,7 +295,7 @@ func (g Github) addAssignees(ctx context.Context, repo repository, newPR scm.New
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
-func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
+func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	// TODO: If this is implemented with the GitHub v4 graphql api, it would be much faster
 
 	repos, err := g.getRepositories(ctx)
@@ -343,7 +351,7 @@ func (g Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 	return prStatuses, nil
 }
 
-func (g Github) loggedInUser(ctx context.Context) (string, error) {
+func (g *Github) loggedInUser(ctx context.Context) (string, error) {
 	if g.user != "" {
 		return g.user, nil
 	}
@@ -359,8 +367,11 @@ func (g Github) loggedInUser(ctx context.Context) (string, error) {
 }
 
 // MergePullRequest merges a pull request
-func (g Github) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
+func (g *Github) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
+
+	g.modLock()
+	defer g.modUnlock()
 
 	// We need to fetch the repo again since no AllowXMerge is present in listings of repositories
 	repo, _, err := g.ghClient.Repositories.Get(ctx, pr.ownerName, pr.repoName)
@@ -392,8 +403,11 @@ func (g Github) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) e
 }
 
 // ClosePullRequest closes a pull request
-func (g Github) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
+func (g *Github) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
+
+	g.modLock()
+	defer g.modUnlock()
 
 	_, _, err := g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
 		State: &[]string{"closed"}[0],
@@ -407,8 +421,11 @@ func (g Github) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) e
 }
 
 // ForkRepository forks a repository. If newOwner is empty, fork on the logged in user
-func (g Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error) {
+func (g *Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error) {
 	r := repo.(repository)
+
+	g.modLock()
+	defer g.modUnlock()
 
 	createdRepo, _, err := g.ghClient.Repositories.CreateFork(ctx, r.ownerName, r.name, &github.RepositoryCreateForkOptions{
 		Organization: newOwner,
@@ -438,7 +455,7 @@ func (g Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwne
 }
 
 // GetAutocompleteOrganizations gets organizations for autocompletion
-func (g Github) GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error) {
+func (g *Github) GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error) {
 	orgs, _, err := g.ghClient.Organizations.List(ctx, "", nil)
 	if err != nil {
 		return nil, err
@@ -453,7 +470,7 @@ func (g Github) GetAutocompleteOrganizations(ctx context.Context, _ string) ([]s
 }
 
 // GetAutocompleteUsers gets users for autocompletion
-func (g Github) GetAutocompleteUsers(ctx context.Context, str string) ([]string, error) {
+func (g *Github) GetAutocompleteUsers(ctx context.Context, str string) ([]string, error) {
 	users, _, err := g.ghClient.Search.Users(ctx, str, nil)
 	if err != nil {
 		return nil, err
@@ -468,7 +485,7 @@ func (g Github) GetAutocompleteUsers(ctx context.Context, str string) ([]string,
 }
 
 // GetAutocompleteRepositories gets repositories for autocompletion
-func (g Github) GetAutocompleteRepositories(ctx context.Context, str string) ([]string, error) {
+func (g *Github) GetAutocompleteRepositories(ctx context.Context, str string) ([]string, error) {
 	var q string
 
 	// If the user has already provided a org/user, it's much more effective to search based on that
@@ -495,7 +512,7 @@ func (g Github) GetAutocompleteRepositories(ctx context.Context, str string) ([]
 	return ret, nil
 }
 
-func (g Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (scm.PullRequestStatus, error) {
+func (g *Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (scm.PullRequestStatus, error) {
 	// Determine the status of the pr
 	var status scm.PullRequestStatus
 	if pr.MergedAt != nil {
@@ -524,4 +541,23 @@ func (g Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (scm.Pu
 	}
 
 	return status, nil
+}
+
+// modLock is a lock that should be used whenever a modifying request is made against the GitHub API.
+// It works as a normal lock, but also makes sure that there is a buffer period of 1 second since the
+// last critical section was left. This ensures that we always wait at least one seconds between modifying requests
+// and does not hit GitHubs secondary rate limit:
+// https://docs.github.com/en/rest/guides/best-practices-for-integrators#dealing-with-secondary-rate-limits
+func (g *Github) modLock() {
+	g.modMutex.Lock()
+	shouldWait := time.Second - time.Since(g.lastModRequest)
+	if shouldWait > 0 {
+		log.Debugf("Waiting %s to not hit GitHub ratelimit", shouldWait)
+		time.Sleep(shouldWait)
+	}
+}
+
+func (g *Github) modUnlock() {
+	g.lastModRequest = time.Now()
+	g.modMutex.Unlock()
 }
