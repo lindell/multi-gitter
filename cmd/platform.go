@@ -36,75 +36,36 @@ func configurePlatform(cmd *cobra.Command) {
 	})
 
 	// Autocompletion for organizations
-	_ = cmd.RegisterFlagCompletionFunc("org", func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		vc, err := getVersionController(cmd.Flags(), false)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-
-		type getOrger interface {
+	versionControllerCompletion(cmd, "org", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
+		g, ok := vc.(interface {
 			GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error)
-		}
-
-		g, ok := vc.(getOrger)
+		})
 		if !ok {
-			return nil, cobra.ShellCompDirectiveError
+			return nil, nil
 		}
-
-		orgs, err := g.GetAutocompleteOrganizations(cmd.Root().Context(), toComplete)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-
-		return orgs, cobra.ShellCompDirectiveDefault
+		return g.GetAutocompleteOrganizations(cmd.Root().Context(), toComplete)
 	})
 
 	// Autocompletion for users
-	_ = cmd.RegisterFlagCompletionFunc("user", func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		vc, err := getVersionController(cmd.Flags(), false)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-
-		type getUserser interface {
+	versionControllerCompletion(cmd, "user", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
+		g, ok := vc.(interface {
 			GetAutocompleteUsers(ctx context.Context, _ string) ([]string, error)
-		}
-
-		g, ok := vc.(getUserser)
+		})
 		if !ok {
-			return nil, cobra.ShellCompDirectiveError
+			return nil, nil
 		}
-
-		users, err := g.GetAutocompleteUsers(cmd.Root().Context(), toComplete)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-
-		return users, cobra.ShellCompDirectiveDefault
+		return g.GetAutocompleteUsers(cmd.Root().Context(), toComplete)
 	})
 
 	// Autocompletion for repositories
-	_ = cmd.RegisterFlagCompletionFunc("repo", func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		vc, err := getVersionController(cmd.Flags(), false)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-
-		type getRepositorieser interface {
+	versionControllerCompletion(cmd, "repo", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
+		g, ok := vc.(interface {
 			GetAutocompleteRepositories(ctx context.Context, _ string) ([]string, error)
-		}
-
-		g, ok := vc.(getRepositorieser)
+		})
 		if !ok {
-			return nil, cobra.ShellCompDirectiveError
+			return nil, nil
 		}
-
-		users, err := g.GetAutocompleteRepositories(cmd.Root().Context(), toComplete)
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-
-		return users, cobra.ShellCompDirectiveDefault
+		return g.GetAutocompleteRepositories(cmd.Root().Context(), toComplete)
 	})
 }
 
@@ -315,4 +276,20 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 	}
 
 	return vc, nil
+}
+
+// versionControllerCompletion is a helper function to allow for easier implementation of Cobra autocompletions that depend on a version controller
+func versionControllerCompletion(cmd *cobra.Command, flagName string, fn func(vc multigitter.VersionController, toComplete string) ([]string, error)) {
+	_ = cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		vc, err := getVersionController(cmd.Flags(), false)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		strs, err := fn(vc, toComplete)
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		return strs, cobra.ShellCompDirectiveNoFileComp
+	})
 }

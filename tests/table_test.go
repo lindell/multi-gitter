@@ -460,7 +460,7 @@ Repositories with a successful run:
 				"--org", "dynamic-org",
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, "static-org\ndynamic-org\n:0\nCompletion ended with directive: ShellCompDirectiveDefault\n", runData.cmdOut)
+				assert.Equal(t, "static-org\ndynamic-org\n:4\nCompletion ended with directive: ShellCompDirectiveNoFileComp\n", runData.cmdOut)
 			},
 		},
 
@@ -474,7 +474,7 @@ Repositories with a successful run:
 				"--user", "dynamic-user",
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, "static-user\ndynamic-user\n:0\nCompletion ended with directive: ShellCompDirectiveDefault\n", runData.cmdOut)
+				assert.Equal(t, "static-user\ndynamic-user\n:4\nCompletion ended with directive: ShellCompDirectiveNoFileComp\n", runData.cmdOut)
 			},
 		},
 
@@ -488,7 +488,7 @@ Repositories with a successful run:
 				"--repo", "dynamic-repo",
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, "static-repo\ndynamic-repo\n:0\nCompletion ended with directive: ShellCompDirectiveDefault\n", runData.cmdOut)
+				assert.Equal(t, "static-repo\ndynamic-repo\n:4\nCompletion ended with directive: ShellCompDirectiveNoFileComp\n", runData.cmdOut)
 			},
 		},
 
