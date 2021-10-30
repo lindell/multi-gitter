@@ -45,7 +45,10 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
-	cmd.Flags().StringP("conflict-strategy", "", "skip", "What should happen if the branch already exist. Available values: skip, append, replace")
+	cmd.Flags().StringP("conflict-strategy", "", "skip", `What should happen if the branch already exist.
+Available values:
+  skip: Skip making any changes to the existing branch and do not create a new pull request.
+  replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.`)
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	configureGit(cmd)
