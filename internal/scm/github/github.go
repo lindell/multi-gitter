@@ -367,19 +367,15 @@ func (g *Github) loggedInUser(ctx context.Context) (string, error) {
 // This is normally the owner of the original repository, but if a fork has been made
 // it will be a different owner
 func (g *Github) headOwner(ctx context.Context, repoOwner string) (string, error) {
-	headOwner := repoOwner
-	if g.Fork {
-		if g.ForkOwner != "" {
-			headOwner = g.ForkOwner
-		} else {
-			var err error
-			headOwner, err = g.loggedInUser(ctx)
-			if err != nil {
-				return "", err
-			}
-		}
+	if !g.Fork {
+		return repoOwner, nil
 	}
-	return headOwner, nil
+
+	if g.ForkOwner != "" {
+		return g.ForkOwner, nil
+	}
+
+	return g.loggedInUser(ctx)
 }
 
 // GetOpenPullRequest gets a pull request for one specific repository
