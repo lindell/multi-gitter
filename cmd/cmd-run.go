@@ -48,7 +48,11 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringP("conflict-strategy", "", "skip", `What should happen if the branch already exist.
 Available values:
   skip: Skip making any changes to the existing branch and do not create a new pull request.
-  replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.`)
+  replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
+`)
+	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
+	})
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	configureGit(cmd)
