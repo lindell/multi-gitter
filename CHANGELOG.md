@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.37.0](https://www.github.com/lindell/multi-gitter/compare/v0.36.1...v0.37.0) (2021-11-08)
+
+
+### Features
+
+* added --conflict-strategy ([#210](https://www.github.com/lindell/multi-gitter/issues/210)) ([5dfd6d9](https://www.github.com/lindell/multi-gitter/commit/5dfd6d9fc877d06f905cbeb27e39305d16afee65))
+
+
+### Bug Fixes
+
+* **bitbucket:** ensure username is set ([#212](https://www.github.com/lindell/multi-gitter/issues/212)) ([a463709](https://www.github.com/lindell/multi-gitter/commit/a4637093e71c3b667afb58e67439bb2b3c9fe927))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.15.0 ([1b0ac09](https://www.github.com/lindell/multi-gitter/commit/1b0ac094015c4b398147c3fc8759e83462b656b7))
+* update module github.com/google/go-github/v39 to v39.2.0 ([45f20a0](https://www.github.com/lindell/multi-gitter/commit/45f20a0e070e71231d785d1bb12cc04ee0d0e2e2))
+* update module github.com/xanzy/go-gitlab to v0.51.1 ([78fb3dc](https://www.github.com/lindell/multi-gitter/commit/78fb3dca3b3d5e1aff66799814e3c4a92edda0d7))
+
 ### [0.36.1](https://www.github.com/lindell/multi-gitter/compare/v0.36.0...v0.36.1) (2021-10-28)
 
 
