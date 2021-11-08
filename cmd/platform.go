@@ -253,6 +253,10 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 		return nil, errors.New("no base-url set for bitbucket server")
 	}
 
+	if username == "" {
+		return nil, errors.New("no username set")
+	}
+
 	token, err := getToken(flag)
 	if err != nil {
 		return nil, err
