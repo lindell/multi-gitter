@@ -186,9 +186,10 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(remoteName string) error {
+func (g *Git) Push(remoteName string, force bool) error {
 	return g.repo.Push(&git.PushOptions{
 		RemoteName: remoteName,
+		Force:      force,
 	})
 }
 

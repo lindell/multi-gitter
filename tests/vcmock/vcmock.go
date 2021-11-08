@@ -65,6 +65,25 @@ func (vc *VersionController) GetPullRequests(ctx context.Context, branchName str
 	return ret, nil
 }
 
+// GetOpenPullRequest gets mock open pull request
+func (vc *VersionController) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
+	vc.prLock.RLock()
+	defer vc.prLock.RUnlock()
+
+	r := repo.(Repository)
+
+	for _, pr := range vc.PullRequests {
+		if r.OwnerName == pr.OwnerName && r.RepoName == pr.RepoName && pr.NewPullRequest.Head == branchName && openPullRequest(pr) {
+			return pr, nil
+		}
+	}
+	return nil, nil
+}
+
+func openPullRequest(pr PullRequest) bool {
+	return pr.PRStatus == scm.PullRequestStatusSuccess || pr.PRStatus == scm.PullRequestStatusPending
+}
+
 // MergePullRequest sets the status of a mock pull requests to merged
 func (vc *VersionController) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	vc.prLock.Lock()

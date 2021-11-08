@@ -27,6 +27,7 @@ type VersionController interface {
 	GetRepositories(ctx context.Context) ([]scm.Repository, error)
 	CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error)
 	GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error)
+	GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr scm.PullRequest) error
 	ClosePullRequest(ctx context.Context, pr scm.PullRequest) error
 	ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error)
@@ -58,6 +59,8 @@ type Runner struct {
 
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
+
+	ConflictStrategy ConflictStrategy // Defines what will happen if a branch does already exist
 
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
@@ -275,17 +278,20 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		remoteName = "fork"
 	}
 
+	// Determine if a branch already exist and (depending on the conflict strategy) skip making changes
+	featureBranchExist := false
 	if !r.SkipPullRequest {
-		featureBranchExist, err := sourceController.BranchExist(remoteName, r.FeatureBranch)
+		featureBranchExist, err = sourceController.BranchExist(remoteName, r.FeatureBranch)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exist")
-		} else if featureBranchExist {
+		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
 			return nil, errBranchExist
 		}
 	}
 
 	log.Info("Pushing changes to remote")
-	err = sourceController.Push(remoteName)
+	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
+	err = sourceController.Push(remoteName, forcePush)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
 	}
@@ -294,17 +300,33 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, nil
 	}
 
-	log.Info("Creating pull request")
-	pr, err := r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
-		Title:     r.PullRequestTitle,
-		Body:      r.PullRequestBody,
-		Head:      r.FeatureBranch,
-		Base:      baseBranch,
-		Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
-		Assignees: r.Assignees,
-	})
-	if err != nil {
-		return nil, err
+	// Fetching any potentially existing pull request
+	var existingPullRequest scm.PullRequest = nil
+	if featureBranchExist {
+		pr, err := r.VersionController.GetOpenPullRequest(ctx, repo, r.FeatureBranch)
+		if err != nil {
+			return nil, err
+		}
+		existingPullRequest = pr
+	}
+
+	var pr scm.PullRequest
+	if existingPullRequest != nil {
+		log.Info("Skip creating pull requests since one is already open")
+		pr = existingPullRequest
+	} else {
+		log.Info("Creating pull request")
+		pr, err = r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
+			Title:     r.PullRequestTitle,
+			Body:      r.PullRequestBody,
+			Head:      r.FeatureBranch,
+			Base:      baseBranch,
+			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
+			Assignees: r.Assignees,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return pr, nil

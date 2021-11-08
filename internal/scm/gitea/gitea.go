@@ -204,7 +204,10 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo scm.Repository, prRe
 	r := repo.(repository)
 	prR := prRepo.(repository)
 
-	head := fmt.Sprintf("%s:%s", prR.ownerName, newPR.Head)
+	head := newPR.Head
+	if r.ownerName != prR.ownerName {
+		head = fmt.Sprintf("%s:%s", prR.ownerName, newPR.Head)
+	}
 
 	pr, _, err := g.giteaClient(ctx).CreatePullRequest(r.ownerName, r.name, gitea.CreatePullRequestOption{
 		Head:      head,
@@ -244,7 +247,7 @@ func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 
 	prs := []scm.PullRequest{}
 	for _, repo := range repos {
-		pr, err := g.getPullRequest(ctx, branchName, repo)
+		pr, err := g.getPullRequest(ctx, branchName, repo.Owner.UserName, repo.Name, gitea.StateAll)
 		if err != nil {
 			return nil, err
 		}
@@ -252,30 +255,39 @@ func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 			continue
 		}
 
-		status, err := g.pullRequestStatus(ctx, repo, pr)
+		convertedPR, err := g.convertPullRequest(ctx, pr)
 		if err != nil {
 			return nil, err
 		}
 
-		prs = append(prs, pullRequest{
-			repoName:    repo.Name,
-			ownerName:   repo.Owner.UserName,
-			branchName:  branchName,
-			prOwnerName: pr.Head.Repository.Owner.UserName,
-			prRepoName:  pr.Head.Repository.Name,
-			status:      status,
-			index:       pr.Index,
-			webURL:      pr.HTMLURL,
-		})
+		prs = append(prs, convertedPR)
 	}
 
 	return prs, nil
 }
 
-func (g *Gitea) getPullRequest(ctx context.Context, branchName string, repo *gitea.Repository) (*gitea.PullRequest, error) {
+func (g *Gitea) convertPullRequest(ctx context.Context, pr *gitea.PullRequest) (pullRequest, error) {
+	status, err := g.pullRequestStatus(ctx, pr)
+	if err != nil {
+		return pullRequest{}, err
+	}
+
+	return pullRequest{
+		repoName:    pr.Base.Repository.Name,
+		ownerName:   pr.Base.Repository.Owner.UserName,
+		branchName:  pr.Head.Name,
+		prOwnerName: pr.Head.Repository.Owner.UserName,
+		prRepoName:  pr.Head.Repository.Name,
+		status:      status,
+		index:       pr.Index,
+		webURL:      pr.HTMLURL,
+	}, nil
+}
+
+func (g *Gitea) getPullRequest(ctx context.Context, branchName string, owner, repoName string, state gitea.StateType) (*gitea.PullRequest, error) {
 	// We would like to be able to search for a pr with a specific head here, but current (2021-04-24), that option does not exist in the API
-	prs, _, err := g.giteaClient(ctx).ListRepoPullRequests(repo.Owner.UserName, repo.Name, gitea.ListPullRequestsOptions{
-		State: "all",
+	prs, _, err := g.giteaClient(ctx).ListRepoPullRequests(owner, repoName, gitea.ListPullRequestsOptions{
+		State: state,
 		Sort:  "recentupdate",
 	})
 	if err != nil {
@@ -290,7 +302,7 @@ func (g *Gitea) getPullRequest(ctx context.Context, branchName string, repo *git
 	return nil, nil
 }
 
-func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, pr *gitea.PullRequest) (scm.PullRequestStatus, error) {
+func (g *Gitea) pullRequestStatus(ctx context.Context, pr *gitea.PullRequest) (scm.PullRequestStatus, error) {
 	if pr.Merged != nil {
 		return scm.PullRequestStatusMerged, nil
 	}
@@ -299,7 +311,7 @@ func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, p
 		return scm.PullRequestStatusClosed, nil
 	}
 
-	status, _, err := g.giteaClient(ctx).GetCombinedStatus(repo.Owner.UserName, repo.Name, pr.Head.Sha)
+	status, _, err := g.giteaClient(ctx).GetCombinedStatus(pr.Base.Repository.Owner.UserName, pr.Base.Repository.Name, pr.Head.Sha)
 	if err != nil {
 		return scm.PullRequestStatusUnknown, err
 	}
@@ -318,6 +330,21 @@ func (g *Gitea) pullRequestStatus(ctx context.Context, repo *gitea.Repository, p
 	}
 
 	return scm.PullRequestStatusUnknown, nil
+}
+
+// GetOpenPullRequest gets a pull request for one specific repository
+func (g *Gitea) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
+	r := repo.(repository)
+
+	pr, err := g.getPullRequest(ctx, branchName, r.ownerName, r.name, gitea.StateOpen)
+	if err != nil {
+		return nil, err
+	}
+	if pr == nil {
+		return nil, nil
+	}
+
+	return g.convertPullRequest(ctx, pr)
 }
 
 // MergePullRequest merges a pull request
