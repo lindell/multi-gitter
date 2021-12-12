@@ -25,6 +25,7 @@ func New(
 	mergeTypes []scm.MergeType,
 	forkMode bool,
 	forkOwner string,
+	sshAuth bool,
 ) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -50,6 +51,7 @@ func New(
 		token:             token,
 		Fork:              forkMode,
 		ForkOwner:         forkOwner,
+		SSHAuth:           sshAuth,
 		ghClient:          client,
 	}, nil
 }
@@ -66,6 +68,9 @@ type Github struct {
 
 	// If set, the fork will happen to the ForkOwner value, and not the logged in user
 	ForkOwner string
+
+	// If set, use the SSH clone url instead of http(s)
+	SSHAuth bool
 
 	ghClient *github.Client
 
@@ -127,7 +132,7 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 			continue
 		}
 
-		newRepo, err := convertRepo(r, g.token)
+		newRepo, err := g.convertRepo(r)
 		if err != nil {
 			return nil, err
 		}
@@ -482,13 +487,13 @@ func (g *Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 				continue
 			}
 			// The fork does now exist
-			return convertRepo(repo, g.token)
+			return g.convertRepo(repo)
 		}
 
 		return nil, errors.New("time waiting for fork to complete was exceeded")
 	}
 
-	return convertRepo(createdRepo, g.token)
+	return g.convertRepo(createdRepo)
 }
 
 // GetAutocompleteOrganizations gets organizations for autocompletion

@@ -29,6 +29,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
+	flags.BoolP("ssh-auth", "", false, "Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos.")
 
 	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
@@ -120,6 +121,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	repos, _ := flag.GetStringSlice("repo")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
+	sshAuth, _ := flag.GetBool("ssh-auth")
 
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repo set")
@@ -147,7 +149,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
-	}, mergeTypes, forkMode, forkOwner)
+	}, mergeTypes, forkMode, forkOwner, sshAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +163,7 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	users, _ := flag.GetStringSlice("user")
 	projects, _ := flag.GetStringSlice("project")
 	includeSubgroups, _ := flag.GetBool("include-subgroups")
+	sshAuth, _ := flag.GetBool("ssh-auth")
 
 	if verifyFlags && len(groups) == 0 && len(users) == 0 && len(projects) == 0 {
 		return nil, errors.New("no group user or project set")
@@ -185,6 +188,7 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Projects: projRefs,
 	}, gitlab.Config{
 		IncludeSubgroups: includeSubgroups,
+		SSHAuth:          sshAuth,
 	})
 	if err != nil {
 		return nil, err

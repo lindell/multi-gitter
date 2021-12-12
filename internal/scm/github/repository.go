@@ -8,33 +8,37 @@ import (
 	"github.com/pkg/errors"
 )
 
-func convertRepo(r *github.Repository, token string) (repository, error) {
-	u, err := url.Parse(r.GetCloneURL())
-	if err != nil {
-		return repository{}, errors.Wrap(err, "could not parse github clone error")
+func (g *Github) convertRepo(r *github.Repository) (repository, error) {
+	var repoURL string
+	if g.SSHAuth {
+		repoURL = r.GetSSHURL()
+	} else {
+		u, err := url.Parse(r.GetCloneURL())
+		if err != nil {
+			return repository{}, errors.Wrap(err, "could not parse github clone error")
+		}
+		// Set the token as https://TOKEN@url
+		u.User = url.User(g.token)
+		repoURL = u.String()
 	}
 
 	return repository{
-		url:           *u,
+		url:           repoURL,
 		name:          r.GetName(),
 		ownerName:     r.GetOwner().GetLogin(),
 		defaultBranch: r.GetDefaultBranch(),
-		token:         token,
 	}, nil
 }
 
 type repository struct {
-	url           url.URL
+	url           string
 	name          string
 	ownerName     string
 	defaultBranch string
-	token         string
 }
 
 func (r repository) CloneURL() string {
-	// Set the token as https://TOKEN@url
-	r.url.User = url.User(r.token)
-	return r.url.String()
+	return r.url
 }
 
 func (r repository) DefaultBranch() string {

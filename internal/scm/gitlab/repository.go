@@ -7,35 +7,38 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-func convertProject(project *gitlab.Project, token string) (repository, error) {
-	u, err := url.Parse(project.HTTPURLToRepo)
-	if err != nil {
-		return repository{}, err
+func (g *Gitlab) convertProject(project *gitlab.Project) (repository, error) {
+	var cloneURL string
+	if g.Config.SSHAuth {
+		cloneURL = project.SSHURLToRepo
+	} else {
+		u, err := url.Parse(project.HTTPURLToRepo)
+		if err != nil {
+			return repository{}, err
+		}
+		u.User = url.UserPassword("oauth2", g.token)
+		cloneURL = u.String()
 	}
 
 	return repository{
-		url:           *u,
+		url:           cloneURL,
 		pid:           project.ID,
 		name:          project.Path,
 		ownerName:     project.Namespace.Path,
 		defaultBranch: project.DefaultBranch,
-		token:         token,
 	}, nil
 }
 
 type repository struct {
-	url           url.URL
+	url           string
 	pid           int
 	name          string
 	ownerName     string
 	defaultBranch string
-	token         string
 }
 
 func (r repository) CloneURL() string {
-	// Set the token as https://oauth2:TOKEN@url
-	r.url.User = url.UserPassword("oauth2", r.token)
-	return r.url.String()
+	return r.url
 }
 
 func (r repository) DefaultBranch() string {
