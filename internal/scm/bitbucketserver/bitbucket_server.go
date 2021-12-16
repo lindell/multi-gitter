@@ -20,13 +20,14 @@ import (
 )
 
 const (
-	cloneType     = "http"
+	cloneHTTPType = "http"
+	cloneSSHType  = "ssh"
 	stateMerged   = "MERGED"
 	stateDeclined = "DECLINED"
 )
 
 // New create a new BitbucketServer client
-func New(username, token, baseURL string, insecure bool, transportMiddleware func(http.RoundTripper) http.RoundTripper, repoListing RepositoryListing) (*BitbucketServer, error) {
+func New(username, token, baseURL string, insecure bool, sshAuth bool, transportMiddleware func(http.RoundTripper) http.RoundTripper, repoListing RepositoryListing) (*BitbucketServer, error) {
 	if strings.TrimSpace(token) == "" {
 		return nil, errors.New("token is empty")
 	}
@@ -49,6 +50,7 @@ func New(username, token, baseURL string, insecure bool, transportMiddleware fun
 	bitbucketServer.baseURL = bitbucketBaseURL
 	bitbucketServer.username = username
 	bitbucketServer.token = token
+	bitbucketServer.sshAuth = sshAuth
 	bitbucketServer.httpClient = &http.Client{
 		Transport: transportMiddleware(&http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure}, // nolint: gosec
@@ -78,6 +80,7 @@ type BitbucketServer struct {
 	RepositoryListing
 	baseURL         *url.URL
 	username, token string
+	sshAuth         bool
 	config          *bitbucketv1.Configuration
 	httpClient      *http.Client
 }
@@ -136,7 +139,7 @@ func (b *BitbucketServer) GetRepositories(ctx context.Context) ([]scm.Repository
 			return nil, err
 		}
 
-		repo, repoErr := convertRepository(bitbucketRepository, defaultBranch, b.username, b.token)
+		repo, repoErr := b.convertRepository(bitbucketRepository, defaultBranch)
 		if repoErr != nil {
 			return nil, repoErr
 		}

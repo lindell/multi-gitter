@@ -202,6 +202,7 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	sshAuth, _ := flag.GetBool("ssh-auth")
 
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repository set")
@@ -233,7 +234,7 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
-	}, mergeTypes)
+	}, mergeTypes, sshAuth)
 	if err != nil {
 		return nil, err
 	}
@@ -248,6 +249,7 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 	repos, _ := flag.GetStringSlice("repo")
 	username, _ := flag.GetString("username")
 	insecure, _ := flag.GetBool("insecure")
+	sshAuth, _ := flag.GetBool("ssh-auth")
 
 	if verifyFlags && len(projects) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repository set")
@@ -274,7 +276,7 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 		}
 	}
 
-	vc, err := bitbucketserver.New(username, token, bitbucketServerBaseURL, insecure, http.NewLoggingRoundTripper, bitbucketserver.RepositoryListing{
+	vc, err := bitbucketserver.New(username, token, bitbucketServerBaseURL, insecure, sshAuth, http.NewLoggingRoundTripper, bitbucketserver.RepositoryListing{
 		Projects:     projects,
 		Users:        users,
 		Repositories: repoRefs,
