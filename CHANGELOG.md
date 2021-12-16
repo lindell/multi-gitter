@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.38.0](https://www.github.com/lindell/multi-gitter/compare/v0.37.0...v0.38.0) (2021-12-16)
+
+
+### Features
+
+* added --ssh-auth option ([#215](https://www.github.com/lindell/multi-gitter/issues/215)) ([f5767a8](https://www.github.com/lindell/multi-gitter/commit/f5767a86c44562f3191eb8cff0d3084393ed1ac7))
+
 ## [0.37.0](https://www.github.com/lindell/multi-gitter/compare/v0.36.1...v0.37.0) (2021-11-08)
 
 
