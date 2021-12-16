@@ -7,33 +7,37 @@ import (
 	"code.gitea.io/sdk/gitea"
 )
 
-func convertRepository(repo *gitea.Repository, token string) (repository, error) {
-	u, err := url.Parse(repo.CloneURL)
-	if err != nil {
-		return repository{}, err
+func (g *Gitea) convertRepository(repo *gitea.Repository) (repository, error) {
+	var repoURL string
+	if g.SSHAuth {
+		repoURL = repo.SSHURL
+	} else {
+		u, err := url.Parse(repo.CloneURL)
+		if err != nil {
+			return repository{}, err
+		}
+		// Set the token as https://oauth2:TOKEN@url
+		u.User = url.UserPassword("oauth2", g.token)
+		repoURL = u.String()
 	}
 
 	return repository{
-		url:           *u,
+		url:           repoURL,
 		name:          repo.Name,
 		ownerName:     repo.Owner.UserName,
 		defaultBranch: repo.DefaultBranch,
-		token:         token,
 	}, nil
 }
 
 type repository struct {
-	url           url.URL
+	url           string
 	name          string
 	ownerName     string
 	defaultBranch string
-	token         string
 }
 
 func (r repository) CloneURL() string {
-	// Set the token as https://oauth2:TOKEN@url
-	r.url.User = url.UserPassword("oauth2", r.token)
-	return r.url.String()
+	return r.url
 }
 
 func (r repository) DefaultBranch() string {

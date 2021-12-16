@@ -8,34 +8,46 @@ import (
 	"github.com/pkg/errors"
 )
 
-func convertRepository(bitbucketRepository *bitbucketv1.Repository, defaultBranch bitbucketv1.Branch, username, token string) (*repository, error) {
-	var cloneURL *url.URL
-	var err error
-	for _, clone := range bitbucketRepository.Links.Clone {
-		if strings.EqualFold(clone.Name, cloneType) {
-			cloneURL, err = url.Parse(clone.Href)
-			if err != nil {
-				return nil, err
-			}
+func (b *BitbucketServer) convertRepository(bitbucketRepository *bitbucketv1.Repository, defaultBranch bitbucketv1.Branch) (*repository, error) {
+	var cloneURL string
 
-			break
+	if b.sshAuth {
+		cloneURL = findLinkType(bitbucketRepository.Links.Clone, cloneSSHType)
+		if cloneURL == "" {
+			return nil, errors.Errorf("unable to find clone url for repository %s using clone type %s", bitbucketRepository.Name, cloneSSHType)
 		}
-	}
+	} else {
+		httpURL := findLinkType(bitbucketRepository.Links.Clone, cloneHTTPType)
+		if httpURL == "" {
+			return nil, errors.Errorf("unable to find clone url for repository %s using clone type %s", bitbucketRepository.Name, cloneHTTPType)
+		}
+		parsedURL, err := url.Parse(httpURL)
+		if err != nil {
+			return nil, err
+		}
 
-	if cloneURL == nil {
-		return nil, errors.Errorf("unable to find clone url for repostory %s using clone type %s", bitbucketRepository.Name, cloneType)
+		parsedURL.User = url.UserPassword(b.username, b.token)
+		cloneURL = parsedURL.String()
 	}
 
 	repo := repository{
 		name:          bitbucketRepository.Slug,
 		project:       bitbucketRepository.Project.Key,
 		defaultBranch: defaultBranch.DisplayID,
-		username:      username,
-		token:         token,
 		cloneURL:      cloneURL,
 	}
 
 	return &repo, nil
+}
+
+func findLinkType(links []bitbucketv1.CloneLink, cloneType string) string {
+	for _, clone := range links {
+		if strings.EqualFold(clone.Name, cloneType) {
+			return clone.Href
+		}
+	}
+
+	return ""
 }
 
 // repository contains information about a bitbucket repository
@@ -43,19 +55,11 @@ type repository struct {
 	name          string
 	project       string
 	defaultBranch string
-	username      string
-	token         string
-	cloneURL      *url.URL
+	cloneURL      string
 }
 
 func (r repository) CloneURL() string {
-	cloneURL := r.cloneURL
-
-	if r.username != "" && r.token != "" {
-		cloneURL.User = url.UserPassword(r.username, r.token)
-	}
-
-	return cloneURL.String()
+	return r.cloneURL
 }
 
 func (r repository) DefaultBranch() string {

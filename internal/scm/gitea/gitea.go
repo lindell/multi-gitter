@@ -15,7 +15,7 @@ import (
 )
 
 // New create a new Gitea client
-func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []scm.MergeType) (*Gitea, error) {
+func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []scm.MergeType, sshAuth bool) (*Gitea, error) {
 	gitea := &Gitea{
 		RepositoryListing: repoListing,
 
@@ -23,6 +23,7 @@ func New(token, baseURL string, repoListing RepositoryListing, mergeTypes []scm.
 		token:   token,
 
 		MergeTypes: mergeTypes,
+		SSHAuth:    sshAuth,
 	}
 
 	// Initialize the gitea client to ensure no error will occur when running a function
@@ -58,6 +59,7 @@ type Gitea struct {
 	currentUser *gitea.User
 
 	MergeTypes []scm.MergeType
+	SSHAuth    bool
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -94,7 +96,7 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 
 	repos := make([]scm.Repository, 0, len(allRepos))
 	for _, repo := range allRepos {
-		convertedRepo, err := convertRepository(repo, g.token)
+		convertedRepo, err := g.convertRepository(repo)
 		if err != nil {
 			return nil, err
 		}
@@ -424,7 +426,7 @@ func (g *Gitea) ForkRepository(ctx context.Context, repo scm.Repository, newOwne
 
 	existingRepo, _, err := g.giteaClient(ctx).GetRepo(forkTo, r.name)
 	if err == nil { // NB!
-		return convertRepository(existingRepo, g.token)
+		return g.convertRepository(existingRepo)
 	}
 
 	forkOptions := gitea.CreateForkOption{}
@@ -437,7 +439,7 @@ func (g *Gitea) ForkRepository(ctx context.Context, repo scm.Repository, newOwne
 		return nil, err
 	}
 
-	return convertRepository(createdRepo, g.token)
+	return g.convertRepository(createdRepo)
 }
 
 func (g *Gitea) getUser(ctx context.Context) (*gitea.User, error) {

@@ -59,6 +59,7 @@ type RepositoryListing struct {
 // Config includes extra config parameters for the GitLab client
 type Config struct {
 	IncludeSubgroups bool
+	SSHAuth          bool
 }
 
 // ProjectReference contains information to be able to reference a repository
@@ -88,7 +89,7 @@ func (g *Gitlab) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 
 	repos := make([]scm.Repository, 0, len(allProjects))
 	for _, project := range allProjects {
-		p, err := convertProject(project, g.token)
+		p, err := g.convertProject(project)
 		if err != nil {
 			return nil, err
 		}
@@ -423,7 +424,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 		gitlab.WithContext(ctx),
 	)
 	if err == nil { // Already forked, just return it
-		return convertProject(project, g.token)
+		return g.convertProject(project)
 	} else if resp.StatusCode != http.StatusNotFound { // If the error was that the project does not exist, continue to fork it
 		return nil, err
 	}
@@ -442,7 +443,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 		}
 
 		if repo.ImportStatus == "finished" {
-			return convertProject(newRepo, g.token)
+			return g.convertProject(newRepo)
 		}
 
 		time.Sleep(time.Second * 3)
