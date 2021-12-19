@@ -291,6 +291,9 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 // versionControllerCompletion is a helper function to allow for easier implementation of Cobra autocompletions that depend on a version controller
 func versionControllerCompletion(cmd *cobra.Command, flagName string, fn func(vc multigitter.VersionController, toComplete string) ([]string, error)) {
 	_ = cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		// Make sure config files are loaded
+		_ = initializeConfig(cmd)
+
 		vc, err := getVersionController(cmd.Flags(), false)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
