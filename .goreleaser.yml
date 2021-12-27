@@ -31,6 +31,24 @@ archives:
       - README.md
       - LICENSE
       - completions/*
+nfpms:
+  - file_name_template: "{{ .ConventionalFileName }}"
+    id: packages
+    description: Update multiple repositories in bulk
+    maintainer: Johan Lindell <johan@lindell.me>
+    license: Apache-2.0
+    contents:
+      - src: ./completions/multi-gitter.bash
+        dst: /etc/bash_completion.d/multi-gitter
+      - src: ./completions/multi-gitter.fish
+        dst: /usr/share/fish/completions/multi-gitter.fish
+      - src: ./completions/multi-gitter.zsh
+        dst: /usr/local/share/zsh/site-functions/_multi-gitter
+    formats:
+    - deb
+    - rpm
+    recommends:
+    - git
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -61,3 +79,9 @@ brews:
       fish_completion.install "completions/multi-gitter.fish"
     test: |
       system "#{bin}/multi-gitter", "version"
+publishers:
+  - name: fury.io
+    ids:
+      - packages
+    dir: "{{ dir .ArtifactPath }}"
+    cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/multi-gitter/
