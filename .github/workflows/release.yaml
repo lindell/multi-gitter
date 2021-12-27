@@ -34,6 +34,7 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GENERAL_GITHUB_SECRET }} # The tokens needs access to another repo, so the secret.GITHUB_SECRET won't suffice
+          FURY_TOKEN: ${{ secrets.FURY_TOKEN }} # Gemfury token
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Comment on prs and issues
