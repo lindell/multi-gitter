@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.38.1](https://www.github.com/lindell/multi-gitter/compare/v0.38.0...v0.38.1) (2021-12-27)
+
+
+### Bug Fixes
+
+* make sure autocompletion works with settings from config files ([#217](https://www.github.com/lindell/multi-gitter/issues/217)) ([45e855c](https://www.github.com/lindell/multi-gitter/commit/45e855c314738f710092f2babb6a213727a63467))
+
 ## [0.38.0](https://www.github.com/lindell/multi-gitter/compare/v0.37.0...v0.38.0) (2021-12-16)
 
 
