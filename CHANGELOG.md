@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.38.2](https://www.github.com/lindell/multi-gitter/compare/v0.38.1...v0.38.2) (2021-12-27)
+
+
+### Bug Fixes
+
+* fixed fury.io token in release ([9deb2d2](https://www.github.com/lindell/multi-gitter/commit/9deb2d258a6b84c8f002b4aaab0ffc8ca135540a))
+
 ### [0.38.1](https://www.github.com/lindell/multi-gitter/compare/v0.38.0...v0.38.1) (2021-12-27)
 
 
