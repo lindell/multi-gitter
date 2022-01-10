@@ -9,17 +9,15 @@ import (
 	"os"
 	"os/exec"
 	"sync"
-	"syscall"
 
-	"github.com/eiannone/keyboard"
 	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
+	mgerrors "github.com/lindell/multi-gitter/internal/multigitter/errors"
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
-	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
 // VersionController fetches repositories
@@ -65,12 +63,9 @@ type Runner struct {
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
 	CreateGit func(dir string) Git
-}
 
-var errAborted = errors.New("run was never started because of aborted execution")
-var errRejected = errors.New("changes were not included since they were manually rejected")
-var errNoChange = errors.New("no data was changed")
-var errBranchExist = errors.New("the new branch does already exist")
+	repocounter *repocounter.Counter
+}
 
 type dryRunPullRequest struct {
 	status     scm.PullRequestStatus
@@ -96,31 +91,34 @@ func (r *Runner) Run(ctx context.Context) error {
 	repos = filterRepositories(repos, r.SkipRepository)
 
 	// Setting up a "counter" that keeps track of successful and failed runs
-	rc := repocounter.NewCounter()
+	r.repocounter = repocounter.NewCounter(repos)
 	defer func() {
-		if info := rc.Info(); info != "" {
+		if info := r.repocounter.Info(); info != "" {
 			fmt.Fprint(r.Output, info)
 		}
 	}()
 
 	log.Infof("Running on %d repositories", len(repos))
 
+	_ = r.repocounter.OpenTTY()
+	defer func() { _ = r.repocounter.CloseTTY() }()
+
 	runInParallel(func(i int) {
 		logger := log.WithField("repo", repos[i].FullName())
 
 		defer func() {
-			if r := recover(); r != nil {
-				log.Error(r)
-				rc.AddError(errors.New("run paniced"), repos[i])
+			if err := recover(); err != nil {
+				log.Error(err)
+				r.repocounter.SetError(errors.New("run paniced"), repos[i])
 			}
 		}()
 
 		pr, err := r.runSingleRepo(ctx, repos[i])
 		if err != nil {
-			if err != errAborted {
+			if err != mgerrors.ErrAborted {
 				logger.Info(err)
 			}
-			rc.AddError(err, repos[i])
+			r.repocounter.SetError(err, repos[i])
 
 			if log.IsLevelEnabled(log.TraceLevel) {
 				if stackTrace := getStackTrace(err); stackTrace != "" {
@@ -132,9 +130,10 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 
 		if pr != nil {
-			rc.AddSuccessPullRequest(pr)
+			r.repocounter.AddSuccessPullRequest(repos[i], pr)
+			r.repocounter.SetRepoAction(repos[i], repocounter.ActionSuccess)
 		} else {
-			rc.AddSuccessRepositories(repos[i])
+			r.repocounter.SetRepoAction(repos[i], repocounter.ActionSuccess)
 		}
 	}, len(repos), r.Concurrent)
 
@@ -185,11 +184,12 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 
 func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.PullRequest, error) {
 	if ctx.Err() != nil {
-		return nil, errAborted
+		return nil, mgerrors.ErrAborted
 	}
 
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
+	r.repocounter.SetRepoAction(repo, repocounter.ActionClone)
 
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-changer-")
 	if err != nil {
@@ -217,6 +217,8 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
+	r.repocounter.SetRepoAction(repo, repocounter.ActionRun)
+
 	// Run the command that might or might not change the content of the repo
 	// If the command return a non zero exit code, abort.
 	cmd := exec.Command(r.ScriptPath, r.Arguments...)
@@ -239,7 +241,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	if changed, err := sourceController.Changes(); err != nil {
 		return nil, err
 	} else if !changed {
-		return nil, errNoChange
+		return nil, mgerrors.ErrNoChange
 	}
 
 	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
@@ -285,11 +287,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exist")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
-			return nil, errBranchExist
+			return nil, mgerrors.ErrBranchExist
 		}
 	}
 
 	log.Info("Pushing changes to remote")
+	r.repocounter.SetRepoAction(repo, repocounter.ActionPush)
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
 	err = sourceController.Push(remoteName, forcePush)
 	if err != nil {
@@ -299,6 +302,8 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	if r.SkipPullRequest {
 		return nil, nil
 	}
+
+	r.repocounter.SetRepoAction(repo, repocounter.ActionCreatePR)
 
 	// Fetching any potentially existing pull request
 	var existingPullRequest scm.PullRequest = nil
@@ -335,44 +340,35 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
 func (r *Runner) interactive(dir string, repo scm.Repository) error {
-	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
-	fmt.Println(interactiveInfo)
+	r.repocounter.QuestionLock()
+	defer r.repocounter.QuestionUnlock()
+
 	for {
-		char, key, err := keyboard.GetSingleKey()
-		if err != nil {
-			return err
-		}
+		index := r.repocounter.AskQuestion(fmt.Sprintf("Changes were made to %s", repo.FullName()),
+			[]repocounter.QuestionOption{
+				{Text: "View changes", Shortcut: 'v'},
+				{Text: "Accept", Shortcut: 'a'},
+				{Text: "Reject", Shortcut: 'r'},
+			})
 
-		if key == keyboard.KeyCtrlC {
-			proc, err := os.FindProcess(os.Getpid())
-			if err != nil {
-				return err
-			}
-			_ = proc.Signal(syscall.SIGTERM)
-
-			return errRejected
-		}
-
-		switch char {
-		case 'v':
-			fmt.Println("Showing changes...")
+		switch index {
+		case 0:
 			cmd := exec.Command("git", "diff", "HEAD~1")
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
+			r.repocounter.SuspendTTY()
+			err := cmd.Run()
+			r.repocounter.ResumeTTY()
 			if err != nil {
 				return err
 			}
-			err = cmd.Run()
-			if err != nil {
-				return err
-			}
-		case 'r':
-			fmt.Println("Rejected, continuing...")
-			return errRejected
-		case 'a':
-			fmt.Println("Accepted, proceeding...")
+		case 1:
 			return nil
+		case 2:
+			return mgerrors.ErrRejected
+		default:
+			panic("should never happen")
 		}
 	}
 }

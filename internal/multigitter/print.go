@@ -10,6 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	mgerrors "github.com/lindell/multi-gitter/internal/multigitter/errors"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/scm"
 )
@@ -36,7 +37,7 @@ func (r Printer) Print(ctx context.Context) error {
 		return err
 	}
 
-	rc := repocounter.NewCounter()
+	rc := repocounter.NewCounter(repos)
 	defer func() {
 		if info := rc.Info(); info != "" {
 			fmt.Fprint(log.StandardLogger().Out, info)
@@ -49,14 +50,14 @@ func (r Printer) Print(ctx context.Context) error {
 		logger := log.WithField("repo", repos[i].FullName())
 		err := r.runSingleRepo(ctx, repos[i])
 		if err != nil {
-			if err != errAborted {
+			if err != mgerrors.ErrAborted {
 				logger.Info(err)
 			}
-			rc.AddError(err, repos[i])
+			rc.SetError(err, repos[i])
 			return
 		}
 
-		rc.AddSuccessRepositories(repos[i])
+		rc.SetRepoAction(repos[i], repocounter.ActionSuccess)
 	}, len(repos), r.Concurrent)
 
 	return nil
@@ -64,7 +65,7 @@ func (r Printer) Print(ctx context.Context) error {
 
 func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 	if ctx.Err() != nil {
-		return errAborted
+		return mgerrors.ErrAborted
 	}
 
 	log := log.WithField("repo", repo.FullName())

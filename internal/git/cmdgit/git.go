@@ -27,6 +27,9 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 	cmd.Dir = g.Directory
 	cmd.Stderr = stderr
 	cmd.Stdout = stdout
+	cmd.Env = []string{
+		"GIT_TERMINAL_PROMPT=0",
+	}
 
 	err := cmd.Run()
 	if err != nil {

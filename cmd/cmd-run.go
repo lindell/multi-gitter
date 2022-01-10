@@ -117,9 +117,9 @@ func run(cmd *cobra.Command, args []string) error {
 		return errors.New("--fork and --skip-pr can't be used at the same time")
 	}
 
-	if concurrent > 1 && interactive {
-		return errors.New("--concurrent and --interactive can't be used at the same time")
-	}
+	// if concurrent > 1 && interactive {
+	// 	return errors.New("--concurrent and --interactive can't be used at the same time")
+	// }
 
 	// Parse commit author data
 	var commitAuthor *git.CommitAuthor
