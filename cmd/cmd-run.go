@@ -109,7 +109,7 @@ func run(cmd *cobra.Command, args []string) error {
 		split := strings.SplitN(commitMessage, "\n", 2)
 		prTitle = split[0]
 		if prBody == "" && len(split) == 2 {
-			prBody = split[2]
+			prBody = split[1]
 		}
 	}
 
