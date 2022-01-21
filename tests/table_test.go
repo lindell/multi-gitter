@@ -806,6 +806,32 @@ Repositories with a successful run:
 				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[2].Path))
 			},
 		},
+
+		{
+			name: "multi line message body",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message\nwith more info\nand even more",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "with more info\nand even more", vcMock.PullRequests[0].Body)
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {
