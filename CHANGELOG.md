@@ -1,5 +1,18 @@
 # Changelog
 
+### [0.38.3](https://www.github.com/lindell/multi-gitter/compare/v0.38.2...v0.38.3) (2022-01-21)
+
+
+### Bug Fixes
+
+* fixed multi line commit message ([#222](https://www.github.com/lindell/multi-gitter/issues/222)) ([995a93c](https://www.github.com/lindell/multi-gitter/commit/995a93cf552300e3c4b580a0ffa2aeb3cdfd61a7))
+
+
+### Dependencies
+
+* update module github.com/mitchellh/mapstructure to v1.4.3 ([ea97fa2](https://www.github.com/lindell/multi-gitter/commit/ea97fa2010378b353c0a43f832aced2054ae182d))
+* update module github.com/xanzy/go-gitlab to v0.52.2 ([c88f791](https://www.github.com/lindell/multi-gitter/commit/c88f79152e1b99381fcc8de249149aa49089c77e))
+
 ### [0.38.2](https://www.github.com/lindell/multi-gitter/compare/v0.38.1...v0.38.2) (2021-12-27)
 
 
