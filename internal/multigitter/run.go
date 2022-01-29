@@ -95,6 +95,11 @@ func (r *Runner) Run(ctx context.Context) error {
 
 	repos = filterRepositories(repos, r.SkipRepository)
 
+	if len(repos) == 0 {
+		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want to change.")
+		return nil
+	}
+
 	// Setting up a "counter" that keeps track of successful and failed runs
 	rc := repocounter.NewCounter()
 	defer func() {

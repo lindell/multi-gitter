@@ -832,6 +832,28 @@ Repositories with a successful run:
 				assert.Equal(t, "with more info\nand even more", vcMock.PullRequests[0].Body)
 			},
 		},
+
+		{
+			name: "multi line message body",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.NotContains(t, runData.logOut, "Running on")
+				assert.Contains(t, runData.logOut, "No repositories found")
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {

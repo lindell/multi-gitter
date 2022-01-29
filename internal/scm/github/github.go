@@ -122,13 +122,23 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 
 	repos := make([]scm.Repository, 0, len(allRepos))
 	for _, r := range allRepos {
+		log := log.WithField("repo", r.GetFullName())
 		permissions := r.GetPermissions()
 
-		if r.GetArchived() || r.GetDisabled() || !permissions["pull"] {
+		// Check if it's even meaningful to run on this repository or if it will just error
+		// when trying to do other actions
+		switch {
+		case r.GetArchived():
+			log.Debug("Skipping repository since it's archived")
 			continue
-		}
-		// The user needs push permissions or have defined that the pr should be on a fork
-		if !g.Fork && !permissions["push"] {
+		case r.GetDisabled():
+			log.Debug("Skipping repository since it's disabled")
+			continue
+		case !permissions["pull"]:
+			log.Debug("Skipping repository since the token does not have pull permissions")
+			continue
+		case !g.Fork && !permissions["push"]:
+			log.Debug("Skipping repository since the token does not have push permissions and the run will not fork")
 			continue
 		}
 
