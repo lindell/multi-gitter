@@ -218,6 +218,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 	}
 
 	removeSourceBranch := true
+	squash := true
 	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(prR.pid, &gitlab.CreateMergeRequestOptions{
 		Title:              &newPR.Title,
 		Description:        &newPR.Body,
@@ -226,6 +227,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		TargetProjectID:    &r.pid,
 		ReviewerIDs:        reviewersIDs,
 		RemoveSourceBranch: &removeSourceBranch,
+		Squash:				&squash,
 		AssigneeIDs:        assigneesIDs,
 	})
 	if err != nil {
