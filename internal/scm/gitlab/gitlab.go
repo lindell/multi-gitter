@@ -390,7 +390,10 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
-	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
+	stateEvent := "close"
+	_, _, err := g.glClient.MergeRequests.UpdateMergeRequest(pr.targetPID, pr.iid, &gitlab.UpdateMergeRequestOptions{
+		StateEvent: &stateEvent,
+	}, gitlab.WithContext(ctx))
 	if err != nil {
 		return err
 	}
