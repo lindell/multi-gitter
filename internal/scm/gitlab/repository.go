@@ -26,7 +26,21 @@ func (g *Gitlab) convertProject(project *gitlab.Project) (repository, error) {
 		name:          project.Path,
 		ownerName:     project.Namespace.Path,
 		defaultBranch: project.DefaultBranch,
+		shouldSquash:  shouldSquash(project),
 	}, nil
+}
+
+func shouldSquash(project *gitlab.Project) bool {
+	setting := project.SquashOption
+
+	switch setting {
+	case gitlab.SquashOptionAlways, gitlab.SquashOptionDefaultOn:
+		return true
+	case gitlab.SquashOptionNever, gitlab.SquashOptionDefaultOff:
+		return false
+	default:
+		return false
+	}
 }
 
 type repository struct {
@@ -35,6 +49,7 @@ type repository struct {
 	name          string
 	ownerName     string
 	defaultBranch string
+	shouldSquash  bool
 }
 
 func (r repository) CloneURL() string {
