@@ -217,8 +217,28 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		return nil, err
 	}
 
+	// Fetch project level settings to determine squash option.
+	// See Gitlab Docs: https://docs.gitlab.com/ee/user/project/merge_requests/squash_and_merge.html#configure-squash-options-for-a-project
+	project,_, err := g.glClient.Projects.GetProject(r.pid, nil, gitlab.WithContext(ctx))
+	if err != nil {
+		return nil, err
+	}
+
+	shouldSquash := func(project *gitlab.Project) bool {
+		setting := project.SquashOption
+
+		switch setting {
+		case gitlab.SquashOptionAlways, gitlab.SquashOptionDefaultOn:
+			return true
+		case gitlab.SquashOptionNever, gitlab.SquashOptionDefaultOff:
+			return false
+		default:
+			return false
+		}
+	}
+
+	squash := shouldSquash(project)
 	removeSourceBranch := true
-	squash := true
 	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(prR.pid, &gitlab.CreateMergeRequestOptions{
 		Title:              &newPR.Title,
 		Description:        &newPR.Body,
