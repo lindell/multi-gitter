@@ -1,5 +1,19 @@
 # Changelog
 
+### [0.38.4](https://www.github.com/lindell/multi-gitter/compare/v0.38.3...v0.38.4) (2022-02-05)
+
+
+### Bug Fixes
+
+* **gitlab:** close MR instead of deleting it ([#230](https://www.github.com/lindell/multi-gitter/issues/230)) ([af2c2d9](https://www.github.com/lindell/multi-gitter/commit/af2c2d9b86a8cd0c6c09e3667a9f7c7689cf915c))
+* better logs when repositories are not used due to permissions ([#226](https://www.github.com/lindell/multi-gitter/issues/226)) ([668d0b0](https://www.github.com/lindell/multi-gitter/commit/668d0b0458988dc24de7beb4d087c2cccc7d3167))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.15.1 ([c8b4ab8](https://www.github.com/lindell/multi-gitter/commit/c8b4ab8cf55ace9e4f4751b540ba2e0dc7fd2807))
+* update module github.com/spf13/cobra to v1.3.0 ([afbe211](https://www.github.com/lindell/multi-gitter/commit/afbe21104568c9550e7cbaa48342ed5bcf3de3b8))
+
 ### [0.38.3](https://www.github.com/lindell/multi-gitter/compare/v0.38.2...v0.38.3) (2022-01-21)
 
 
