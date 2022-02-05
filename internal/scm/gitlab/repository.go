@@ -31,9 +31,7 @@ func (g *Gitlab) convertProject(project *gitlab.Project) (repository, error) {
 }
 
 func shouldSquash(project *gitlab.Project) bool {
-	setting := project.SquashOption
-
-	switch setting {
+	switch project.SquashOption {
 	case gitlab.SquashOptionAlways, gitlab.SquashOptionDefaultOn:
 		return true
 	case gitlab.SquashOptionNever, gitlab.SquashOptionDefaultOff:
