@@ -62,6 +62,8 @@ type Runner struct {
 
 	ConflictStrategy ConflictStrategy // Defines what will happen if a branch does already exist
 
+	Draft bool // If set, creates Pull Requests as draft
+
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
 	CreateGit func(dir string) Git
@@ -328,6 +330,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			Base:      baseBranch,
 			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 			Assignees: r.Assignees,
+			Draft:     r.Draft,
 		})
 		if err != nil {
 			return nil, err

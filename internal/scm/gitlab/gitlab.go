@@ -217,9 +217,14 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		return nil, err
 	}
 
+	prTitle := newPR.Title
+	if newPR.Draft {
+		prTitle = "Draft: " + prTitle // See https://docs.gitlab.com/ee/user/project/merge_requests/drafts.html#mark-merge-requests-as-drafts
+	}
+
 	removeSourceBranch := true
 	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(prR.pid, &gitlab.CreateMergeRequestOptions{
-		Title:              &newPR.Title,
+		Title:              &prTitle,
 		Description:        &newPR.Body,
 		SourceBranch:       &newPR.Head,
 		TargetBranch:       &newPR.Base,

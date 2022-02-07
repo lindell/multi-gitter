@@ -284,6 +284,7 @@ func (g *Github) createPullRequest(ctx context.Context, repo repository, prRepo 
 		Body:  &newPR.Body,
 		Head:  &head,
 		Base:  &newPR.Base,
+		Draft: &newPR.Draft,
 	})
 	if err != nil {
 		return nil, err
