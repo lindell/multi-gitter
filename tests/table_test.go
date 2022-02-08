@@ -834,7 +834,7 @@ Repositories with a successful run:
 		},
 
 		{
-			name: "No repositories found",
+			name: "no repositories found",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{},
