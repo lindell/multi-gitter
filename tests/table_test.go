@@ -834,7 +834,7 @@ Repositories with a successful run:
 		},
 
 		{
-			name: "multi line message body",
+			name: "No repositories found",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{},
@@ -852,6 +852,30 @@ Repositories with a successful run:
 				require.Len(t, vcMock.PullRequests, 0)
 				assert.NotContains(t, runData.logOut, "Running on")
 				assert.Contains(t, runData.logOut, "No repositories found")
+			},
+		},
+
+		{
+			name: "PRs as draft",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples as draft"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--draft",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.True(t, vcMock.PullRequests[0].Draft)
 			},
 		},
 	}
