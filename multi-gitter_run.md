@@ -31,6 +31,7 @@ multi-gitter run [script path] [flags]
                                      skip: Skip making any changes to the existing branch and do not create a new pull request.
                                      replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
                                     (default "skip")
+      --draft                      Create pull request(s) as draft.
   -d, --dry-run                    Run without pushing changes or creating pull requests.
   -f, --fetch-depth int            Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --fork                       Fork the repository instead of creating a new branch on the same owner.
