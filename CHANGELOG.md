@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.40.0](https://www.github.com/lindell/multi-gitter/compare/v0.39.0...v0.40.0) (2022-02-08)
+
+
+### Features
+
+* add ability to create PR as draft ([#232](https://www.github.com/lindell/multi-gitter/issues/232)) ([dbfef2b](https://www.github.com/lindell/multi-gitter/commit/dbfef2b0f8c3692d5f281d2269bc680263ec2406))
+
 ## [0.39.0](https://www.github.com/lindell/multi-gitter/compare/v0.38.3...v0.39.0) (2022-02-05)
 
 
