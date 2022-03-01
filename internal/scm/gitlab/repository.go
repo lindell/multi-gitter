@@ -24,7 +24,7 @@ func (g *Gitlab) convertProject(project *gitlab.Project) (repository, error) {
 		url:           cloneURL,
 		pid:           project.ID,
 		name:          project.Path,
-		ownerName:     project.Namespace.Path,
+		ownerName:     project.Namespace.FullPath,
 		defaultBranch: project.DefaultBranch,
 		shouldSquash:  shouldSquash(project),
 	}, nil
