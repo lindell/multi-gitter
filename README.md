@@ -714,6 +714,18 @@ Flags:
 ### general
 
 <details>
+  <summary>Clone all repositories locally while maintaining their group folder structure</summary>
+
+```sh
+#!/bin/bash
+
+# This script should be used with the print command.
+mkdir -p ~/multi-gitter/$REPOSITORY
+cp -r . ~/multi-gitter/$REPOSITORY
+```
+</details>
+
+<details>
   <summary>Replace a file if it exist</summary>
 
 ```sh
