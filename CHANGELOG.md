@@ -1,5 +1,23 @@
 # Changelog
 
+### [0.40.1](https://www.github.com/lindell/multi-gitter/compare/v0.40.0...v0.40.1) (2022-03-01)
+
+
+### Bug Fixes
+
+* **gitlab:** made entire owner structure a part of logging and $REPOSITORY ([ccac98a](https://www.github.com/lindell/multi-gitter/commit/ccac98a8c6ab7e4dc23e19519de7ccd958e1be43))
+
+
+### Dependencies
+
+* update module github.com/spf13/viper to v1.10.1 ([6052e73](https://www.github.com/lindell/multi-gitter/commit/6052e73c7e2f1a790fa4c23732aec0c23dcd131c))
+* update module github.com/xanzy/go-gitlab to v0.55.1 ([ea0eacc](https://www.github.com/lindell/multi-gitter/commit/ea0eacce1c3a711b9f3c0d51c2b714ebc72ddb23))
+
+
+### Miscellaneous
+
+* fixed gitlab api pointer change ([5c39b22](https://www.github.com/lindell/multi-gitter/commit/5c39b2208cb3480eaab816a18d029bd9b20b7ddc))
+
 ## [0.40.0](https://www.github.com/lindell/multi-gitter/compare/v0.39.0...v0.40.0) (2022-02-08)
 
 
