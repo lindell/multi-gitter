@@ -20,6 +20,35 @@ func convertPullRequest(pr *github.PullRequest) pullRequest {
 	}
 }
 
+func convertGraphQLPullRequest(pr graphqlPR) pullRequest {
+	combinedStatus := pr.Commits.Nodes[0].Commit.StatusCheckRollup.State
+	status := scm.PullRequestStatusUnknown
+
+	if combinedStatus == nil {
+		status = scm.PullRequestStatusSuccess
+	} else {
+		switch *combinedStatus {
+		case graphqlPullRequestStatePending:
+			status = scm.PullRequestStatusPending
+		case graphqlPullRequestStateSuccess:
+			status = scm.PullRequestStatusSuccess
+		case graphqlPullRequestStateFailure, graphqlPullRequestStateError:
+			status = scm.PullRequestStatusError
+		}
+	}
+
+	return pullRequest{
+		ownerName:   pr.BaseRepository.Owner.Login,
+		repoName:    pr.BaseRepository.Name,
+		branchName:  pr.HeadRefName,
+		prOwnerName: pr.HeadRepository.Owner.Login,
+		prRepoName:  pr.HeadRepository.Name,
+		number:      pr.Number,
+		guiURL:      pr.URL,
+		status:      status,
+	}
+}
+
 type pullRequest struct {
 	ownerName   string
 	repoName    string

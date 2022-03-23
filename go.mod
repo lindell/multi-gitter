@@ -18,3 +18,5 @@ require (
 	github.com/xanzy/go-gitlab v0.55.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 )
+
+require golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
