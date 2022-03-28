@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.41.0](https://www.github.com/lindell/multi-gitter/compare/v0.40.1...v0.41.0) (2022-03-28)
+
+
+### Features
+
+* **gitlab:** skip archived repos ([#240](https://www.github.com/lindell/multi-gitter/issues/240)) ([10df83a](https://www.github.com/lindell/multi-gitter/commit/10df83a80e486dc7f2c8ec085c1111d8fab42cfb))
+
 ### [0.40.1](https://www.github.com/lindell/multi-gitter/compare/v0.40.0...v0.40.1) (2022-03-01)
 
 
