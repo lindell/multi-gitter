@@ -146,12 +146,14 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*gitlab.Project, error) {
 	var allProjects []*gitlab.Project
 	withMergeRequestsEnabled := true
+	archived := false
 	for i := 1; ; i++ {
 		projects, _, err := g.glClient.Groups.ListGroupProjects(groupName, &gitlab.ListGroupProjectsOptions{
 			ListOptions: gitlab.ListOptions{
 				PerPage: 100,
 				Page:    i,
 			},
+			Archived:                 &archived,
 			IncludeSubgroups:         &g.Config.IncludeSubgroups,
 			WithMergeRequestsEnabled: &withMergeRequestsEnabled,
 		}, gitlab.WithContext(ctx))
@@ -182,12 +184,14 @@ func (g *Gitlab) getProject(ctx context.Context, projRef ProjectReference) (*git
 
 func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitlab.Project, error) {
 	var allProjects []*gitlab.Project
+	archived := false
 	for i := 1; ; i++ {
 		projects, _, err := g.glClient.Projects.ListUserProjects(username, &gitlab.ListProjectsOptions{
 			ListOptions: gitlab.ListOptions{
 				PerPage: 100,
 				Page:    i,
 			},
+			Archived: &archived,
 		}, gitlab.WithContext(ctx))
 		if err != nil {
 			return nil, err
