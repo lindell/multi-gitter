@@ -13,7 +13,7 @@ multi-gitter merge [flags]
 ### Options
 
 ```
-  -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string      Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string        Path of the config file.
       --fork                 Use pull requests made from forks instead of from the same repository.

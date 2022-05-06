@@ -21,7 +21,7 @@ multi-gitter run [script path] [flags]
       --author-email string        Email of the committer. If not set, the global git config setting will be used.
       --author-name string         Name of the committer. If not set, the global git config setting will be used.
       --base-branch string         The branch which the changes will be based on.
-  -g, --base-url string            Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string            Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string              The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string      The commit message. Will default to title + body if none is set.
   -C, --concurrent int             The maximum number of concurrent runs. (default 1)
