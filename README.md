@@ -758,6 +758,16 @@ find ./ -type f -exec sed -i -e 's/apple/orange/g' {} \;
 ### go
 
 <details>
+  <summary>Replace all instances of empty interface with any</summary>
+
+```sh
+#!/bin/bash
+
+gofmt -r 'interface{} -> any' -w **/*.go
+```
+</details>
+
+<details>
   <summary>Fix linting problems in all your go repositories</summary>
 
 ```sh
@@ -786,6 +796,17 @@ if [ $status_code -ne 0 ]; then
 fi
 
 go get $MODULE@$VERSION
+```
+</details>
+
+<details>
+  <summary>Upgrade Go version in go modules</summary>
+
+```sh
+#!/bin/bash
+
+go mod edit -go 1.18
+go mod tidy
 ```
 </details>
 
