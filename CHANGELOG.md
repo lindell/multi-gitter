@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.42.0](https://www.github.com/lindell/multi-gitter/compare/v0.41.0...v0.42.0) (2022-05-06)
+
+
+### Features
+
+* **github:** use graphql endpoint to get pull request status ([#242](https://www.github.com/lindell/multi-gitter/issues/242)) ([60bbbdf](https://www.github.com/lindell/multi-gitter/commit/60bbbdf526ce6e87d0f952fdae4858e4c6954952))
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 digest to 711d7d5 ([0ecf9ee](https://www.github.com/lindell/multi-gitter/commit/0ecf9ee2e17b162218b251db63b5e9946369df39))
+* update module github.com/mitchellh/mapstructure to v1.5.0 ([152c3b1](https://www.github.com/lindell/multi-gitter/commit/152c3b1aeebeb996221d28ca6072342e9188493c))
+* update module github.com/spf13/cobra to v1.4.0 ([d378aa0](https://www.github.com/lindell/multi-gitter/commit/d378aa00a1b54f8482ed4d18d94ef47651b44273))
+* update module github.com/spf13/viper to v1.11.0 ([a8e01ef](https://www.github.com/lindell/multi-gitter/commit/a8e01ef104ee09a38fe3d3551caa97fb5d00dc0e))
+* update module github.com/stretchr/testify to v1.7.1 ([7506930](https://www.github.com/lindell/multi-gitter/commit/750693020fffae4aef811558fcdd65abf3662935))
+
 ## [0.41.0](https://www.github.com/lindell/multi-gitter/compare/v0.40.1...v0.41.0) (2022-03-28)
 
 
