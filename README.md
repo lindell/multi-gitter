@@ -109,7 +109,7 @@ author-name:
 # The branch which the changes will be based on.
 base-branch:
 
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -229,7 +229,7 @@ username:
   <summary>All available merge options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -302,7 +302,7 @@ username:
   <summary>All available status options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -372,7 +372,7 @@ username:
   <summary>All available close options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -439,7 +439,7 @@ username:
   <summary>All available print options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The maximum number of concurrent runs.
@@ -535,7 +535,7 @@ Flags:
       --author-email string        Email of the committer. If not set, the global git config setting will be used.
       --author-name string         Name of the committer. If not set, the global git config setting will be used.
       --base-branch string         The branch which the changes will be based on.
-  -g, --base-url string            Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string            Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string              The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string      The commit message. Will default to title + body if none is set.
   -C, --concurrent int             The maximum number of concurrent runs. (default 1)
@@ -587,7 +587,7 @@ Usage:
   multi-gitter merge [flags]
 
 Flags:
-  -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string      Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string        Path of the config file.
       --fork                 Use pull requests made from forks instead of from the same repository.
@@ -617,7 +617,7 @@ Usage:
   multi-gitter status [flags]
 
 Flags:
-  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string     Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string       Path of the config file.
       --fork                Use pull requests made from forks instead of from the same repository.
@@ -647,7 +647,7 @@ Usage:
   multi-gitter close [flags]
 
 Flags:
-  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string     Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string       Path of the config file.
       --fork                Use pull requests made from forks instead of from the same repository.
@@ -680,7 +680,7 @@ Usage:
   multi-gitter print [script path] [flags]
 
 Flags:
-  -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string       Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -C, --concurrent int        The maximum number of concurrent runs. (default 1)
       --config string         Path of the config file.
   -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr. (default "-")
