@@ -1,5 +1,8 @@
 <h1 align="center">
-  <img alt="" src="docs/img/logo.svg" height="80" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/logo-dark-mode.svg" />
+    <img alt="Multi-gitter logo" src="docs/img/logo.svg" height="80" height="80" />
+  </picture>
 </h1>
 
 <div align="center">
