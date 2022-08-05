@@ -326,12 +326,13 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 
 	// The fragment is all the data needed from every repository
 	const fragment = `fragment repoProperties on Repository {
-		pullRequests(headRefName: $branchName, states: OPEN, last: 1) {
+		pullRequests(headRefName: $branchName, last: 1) {
 			nodes {
 				number
 				headRefName
 				closed
 				url
+				merged
 				baseRepository {
 					name
 					owner {

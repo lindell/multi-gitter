@@ -116,6 +116,7 @@ type graphqlPR struct {
 	HeadRefName    string `json:"headRefName"`
 	Closed         bool   `json:"closed"`
 	URL            string `json:"url"`
+	Merged         bool   `json:"merged"`
 	BaseRepository struct {
 		Name  string `json:"name"`
 		Owner struct {

@@ -24,7 +24,9 @@ func convertGraphQLPullRequest(pr graphqlPR) pullRequest {
 	combinedStatus := pr.Commits.Nodes[0].Commit.StatusCheckRollup.State
 	status := scm.PullRequestStatusUnknown
 
-	if combinedStatus == nil {
+	if pr.Merged {
+		status = scm.PullRequestStatusMerged
+	} else if combinedStatus == nil {
 		status = scm.PullRequestStatusSuccess
 	} else {
 		switch *combinedStatus {
