@@ -26,6 +26,7 @@ func New(
 	forkMode bool,
 	forkOwner string,
 	sshAuth bool,
+	readOnly bool,
 ) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -54,6 +55,7 @@ func New(
 		ForkOwner:         forkOwner,
 		SSHAuth:           sshAuth,
 		ghClient:          client,
+		ReadOnly:          readOnly,
 		httpClient: &http.Client{
 			Transport: transportMiddleware(http.DefaultTransport),
 		},
@@ -70,6 +72,9 @@ type Github struct {
 	// This determines if forks will be used when creating a prs.
 	// In this package, it mainly determines which repos are possible to make changes on
 	Fork bool
+
+	// This determines when we are running in read only mode.
+	ReadOnly bool
 
 	// If set, the fork will happen to the ForkOwner value, and not the logged in user
 	ForkOwner string
@@ -143,7 +148,7 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 		case !permissions["pull"]:
 			log.Debug("Skipping repository since the token does not have pull permissions")
 			continue
-		case !g.Fork && !permissions["push"]:
+		case !g.Fork && !g.ReadOnly && !permissions["push"]:
 			log.Debug("Skipping repository since the token does not have push permissions and the run will not fork")
 			continue
 		}

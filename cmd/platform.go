@@ -94,7 +94,7 @@ var OverrideVersionController multigitter.VersionController = nil
 
 // getVersionController gets the complete version controller
 // the verifyFlags parameter can be set to false if a complete vc is not required (during autocompletion)
-func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (multigitter.VersionController, error) {
 	if OverrideVersionController != nil {
 		return OverrideVersionController, nil
 	}
@@ -102,7 +102,7 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 	platform, _ := flag.GetString("platform")
 	switch platform {
 	case "github":
-		return createGithubClient(flag, verifyFlags)
+		return createGithubClient(flag, verifyFlags, readOnly)
 	case "gitlab":
 		return createGitlabClient(flag, verifyFlags)
 	case "gitea":
@@ -114,7 +114,7 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 	}
 }
 
-func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (multigitter.VersionController, error) {
 	gitBaseURL, _ := flag.GetString("base-url")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
@@ -149,7 +149,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
-	}, mergeTypes, forkMode, forkOwner, sshAuth)
+	}, mergeTypes, forkMode, forkOwner, sshAuth, readOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func versionControllerCompletion(cmd *cobra.Command, flagName string, fn func(vc
 		// Make sure config files are loaded
 		_ = initializeConfig(cmd)
 
-		vc, err := getVersionController(cmd.Flags(), false)
+		vc, err := getVersionController(cmd.Flags(), false, false)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
