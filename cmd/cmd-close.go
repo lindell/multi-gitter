@@ -32,7 +32,7 @@ func close(cmd *cobra.Command, args []string) error {
 
 	branchName, _ := flag.GetString("branch")
 
-	vc, err := getVersionController(flag, true)
+	vc, err := getVersionController(flag, true, false)
 	if err != nil {
 		return err
 	}

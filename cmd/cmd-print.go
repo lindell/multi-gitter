@@ -48,8 +48,6 @@ func print(cmd *cobra.Command, args []string) error {
 	strOutput, _ := flag.GetString("output")
 	strErrOutput, _ := flag.GetString("error-output")
 
-	_ = flag.Set("readOnly", "true")
-
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
 	}
@@ -64,7 +62,7 @@ func print(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	vc, err := getVersionController(flag, true)
+	vc, err := getVersionController(flag, true, true)
 	if err != nil {
 		return err
 	}

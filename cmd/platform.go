@@ -31,10 +31,6 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
 
-	// This is only used by PrintCmd to mark readOnly mode for version control platform
-	flags.Bool("readOnly", false, "If set, This is running in readonly will be read-only.")
-	_ = flags.MarkHidden("readOnly")
-
 	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"github", "gitlab", "gitea", "bitbucket_server"}, cobra.ShellCompDirectiveDefault
@@ -98,7 +94,7 @@ var OverrideVersionController multigitter.VersionController = nil
 
 // getVersionController gets the complete version controller
 // the verifyFlags parameter can be set to false if a complete vc is not required (during autocompletion)
-func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (multigitter.VersionController, error) {
 	if OverrideVersionController != nil {
 		return OverrideVersionController, nil
 	}
@@ -106,7 +102,7 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 	platform, _ := flag.GetString("platform")
 	switch platform {
 	case "github":
-		return createGithubClient(flag, verifyFlags)
+		return createGithubClient(flag, verifyFlags, readOnly)
 	case "gitlab":
 		return createGitlabClient(flag, verifyFlags)
 	case "gitea":
@@ -118,7 +114,7 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 	}
 }
 
-func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (multigitter.VersionController, error) {
 	gitBaseURL, _ := flag.GetString("base-url")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
@@ -126,7 +122,6 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
 	sshAuth, _ := flag.GetBool("ssh-auth")
-	readOnly, _ := flag.GetBool("readOnly")
 
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no organization, user or repo set")
@@ -299,7 +294,7 @@ func versionControllerCompletion(cmd *cobra.Command, flagName string, fn func(vc
 		// Make sure config files are loaded
 		_ = initializeConfig(cmd)
 
-		vc, err := getVersionController(cmd.Flags(), false)
+		vc, err := getVersionController(cmd.Flags(), false, false)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
