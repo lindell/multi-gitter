@@ -1,5 +1,30 @@
 # Changelog
 
+### [0.42.1](https://www.github.com/lindell/multi-gitter/compare/v0.42.0...v0.42.1) (2022-08-06)
+
+
+### Bug Fixes
+
+* **github:** allow only pull permission for print command ([#262](https://www.github.com/lindell/multi-gitter/issues/262)) ([582c706](https://www.github.com/lindell/multi-gitter/commit/582c70633e0dcef04699c62b160a57fedb50c00d))
+
+
+### Miscellaneous
+
+* **gitlab:** fixed subgroup spelling ([46f178a](https://www.github.com/lindell/multi-gitter/commit/46f178ab097fefb3d07b65f3522e3e516638107a))
+
+
+### Dependencies
+
+* update github.com/eiannone/keyboard digest to 0d22619 ([f38b2f5](https://www.github.com/lindell/multi-gitter/commit/f38b2f5b2bf17afab06ed709c6b5ba4c9c9a6075))
+* update golang.org/x/oauth2 digest to 128564f ([63eab95](https://www.github.com/lindell/multi-gitter/commit/63eab95d69715ca1794f05447e3a588b70d99e62))
+* update golang.org/x/oauth2 digest to 2104d58 ([c4605e2](https://www.github.com/lindell/multi-gitter/commit/c4605e2c8db5440fc68b5b779ee46b360c4459db))
+* update module github.com/sirupsen/logrus to v1.9.0 ([1c8201a](https://www.github.com/lindell/multi-gitter/commit/1c8201a3b748b511effeb02b98ae1485f0e97b31))
+* update module github.com/spf13/cobra to v1.5.0 ([eb15db4](https://www.github.com/lindell/multi-gitter/commit/eb15db4fc137d5a23f3d137a778e4235b26b4e74))
+* update module github.com/spf13/viper to v1.12.0 ([ffdf7ae](https://www.github.com/lindell/multi-gitter/commit/ffdf7ae901b1f98fdd279fd5d1aeb72095bf2ad2))
+* update module github.com/stretchr/testify to v1.8.0 ([81a757c](https://www.github.com/lindell/multi-gitter/commit/81a757c88d3942ff5295a8edfcec6ad99ff9e669))
+* update module github.com/xanzy/go-gitlab to v0.68.0 ([78ca7f3](https://www.github.com/lindell/multi-gitter/commit/78ca7f343b846c56a7fdc76f59ec6a7591d7c3da))
+* update module github.com/xanzy/go-gitlab to v0.68.2 ([dab0985](https://www.github.com/lindell/multi-gitter/commit/dab09851cf9b694096ec11084568685efcd860ff))
+
 ## [0.42.0](https://www.github.com/lindell/multi-gitter/compare/v0.41.0...v0.42.0) (2022-05-06)
 
 
