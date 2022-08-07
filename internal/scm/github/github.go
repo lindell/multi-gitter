@@ -337,6 +337,7 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 				headRefName
 				closed
 				url
+				merged
 				baseRepository {
 					name
 					owner {
