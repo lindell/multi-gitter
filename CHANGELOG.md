@@ -1,5 +1,17 @@
 # Changelog
 
+### [0.42.2](https://www.github.com/lindell/multi-gitter/compare/v0.42.1...v0.42.2) (2022-08-07)
+
+
+### Bug Fixes
+
+* **github:** correctly map merged prs ([#268](https://www.github.com/lindell/multi-gitter/issues/268)) ([0474040](https://www.github.com/lindell/multi-gitter/commit/0474040c86d7c213987fb5dfc503d6c46288cb3a))
+
+
+### Miscellaneous
+
+* updated to go modules to 1.18 ([#272](https://www.github.com/lindell/multi-gitter/issues/272)) ([d70a038](https://www.github.com/lindell/multi-gitter/commit/d70a03855a0a3da5b70e0ee85f53326cc4c137e6))
+
 ### [0.42.1](https://www.github.com/lindell/multi-gitter/compare/v0.42.0...v0.42.1) (2022-08-06)
 
 
