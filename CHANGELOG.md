@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.42.3](https://www.github.com/lindell/multi-gitter/compare/v0.42.2...v0.42.3) (2022-08-12)
+
+
+### Bug Fixes
+
+* deleted files are now detected with `git-type: go` ([#273](https://www.github.com/lindell/multi-gitter/issues/273)) ([b21509c](https://www.github.com/lindell/multi-gitter/commit/b21509c3b392fbe681c1cc5315ccdc63942abbc2))
+
 ### [0.42.2](https://www.github.com/lindell/multi-gitter/compare/v0.42.1...v0.42.2) (2022-08-07)
 
 
