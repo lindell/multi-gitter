@@ -95,6 +95,22 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 		return err
 	}
 
+	status, err := w.Status()
+	if err != nil {
+		return err
+	}
+
+	// This is a workaround for a bug in go-git where "add all" does not add deleted files
+	// If https://github.com/go-git/go-git/issues/223 is fixed, this can be removed
+	for file, s := range status {
+		if s.Worktree == git.Deleted {
+			_, err = w.Add(file)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	// Get the current hash to be able to diff it with the committed changes later
 	oldHead, err := g.repo.Head()
 	if err != nil {

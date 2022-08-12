@@ -878,6 +878,34 @@ Repositories with a successful run:
 				assert.True(t, vcMock.PullRequests[0].Draft)
 			},
 		},
+
+		{
+			name: "remove files",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "owner", "should-delete", "i like apples")
+				addFile(t, repo.Path, "test_file", "some content", "added test_file")
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				fmt.Sprintf("go run %s", filepath.ToSlash(filepath.Join(workingDir, "scripts/remover/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+
+				assert.False(t, fileExist(t, vcMock.Repositories[0].Path, "test_file"))
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {
