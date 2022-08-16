@@ -23,7 +23,7 @@ func (s Merger) Merge(ctx context.Context) error {
 
 	successPrs := make([]scm.PullRequest, 0, len(prs))
 	for _, pr := range prs {
-		if pr.Status() == scm.PullRequestStatusSuccess {
+		if pr.Status() == scm.PullRequestStatusSuccess && pr.Status() != scm.PullRequestStatusMerged {
 			successPrs = append(successPrs, pr)
 		}
 	}
