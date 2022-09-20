@@ -290,26 +290,27 @@ func (g *Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 
 func (g *Github) createPullRequest(ctx context.Context, repo repository, prRepo repository, newPR scm.NewPullRequest) (*github.PullRequest, error) {
 	head := fmt.Sprintf("%s:%s", prRepo.ownerName, newPR.Head)
-	pr, _, err := g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
-		Title: &newPR.Title,
-		Body:  &newPR.Body,
-		Head:  &head,
-		Base:  &newPR.Base,
-		Draft: &newPR.Draft,
-	})
-	if err != nil {
-		return nil, err
-	}
 
-	return pr, nil
+	pr, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
+		return g.ghClient.PullRequests.Create(ctx, repo.ownerName, repo.name, &github.NewPullRequest{
+			Title: &newPR.Title,
+			Body:  &newPR.Body,
+			Head:  &head,
+			Base:  &newPR.Base,
+			Draft: &newPR.Draft,
+		})
+	})
+	return pr, err
 }
 
 func (g *Github) addReviewers(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
 	if len(newPR.Reviewers) == 0 {
 		return nil
 	}
-	_, _, err := g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
-		Reviewers: newPR.Reviewers,
+	_, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
+		return g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
+			Reviewers: newPR.Reviewers,
+		})
 	})
 	return err
 }
@@ -318,7 +319,9 @@ func (g *Github) addAssignees(ctx context.Context, repo repository, newPR scm.Ne
 	if len(newPR.Assignees) == 0 {
 		return nil
 	}
-	_, _, err := g.ghClient.Issues.AddAssignees(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Assignees)
+	_, _, err := retry(ctx, func() (*github.Issue, *github.Response, error) {
+		return g.ghClient.Issues.AddAssignees(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Assignees)
+	})
 	return err
 }
 
@@ -504,14 +507,18 @@ func (g *Github) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 		return errors.New("none of the configured merge types was permitted")
 	}
 
-	_, _, err = g.ghClient.PullRequests.Merge(ctx, pr.ownerName, pr.repoName, pr.number, "", &github.PullRequestOptions{
-		MergeMethod: mergeTypeGhName[mergeTypes[0]],
+	_, _, err = retry(ctx, func() (*github.PullRequestMergeResult, *github.Response, error) {
+		return g.ghClient.PullRequests.Merge(ctx, pr.ownerName, pr.repoName, pr.number, "", &github.PullRequestOptions{
+			MergeMethod: mergeTypeGhName[mergeTypes[0]],
+		})
 	})
 	if err != nil {
 		return err
 	}
 
-	_, err = g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
+	_, err = retryWithoutReturn(ctx, func() (*github.Response, error) {
+		return g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
+	})
 
 	// Ignore errors about the reference not existing since it may be the case that GitHub has already deleted the branch
 	if err != nil && !strings.Contains(err.Error(), "Reference does not exist") {
@@ -546,9 +553,12 @@ func (g *Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 	g.modLock()
 	defer g.modUnlock()
 
-	createdRepo, _, err := g.ghClient.Repositories.CreateFork(ctx, r.ownerName, r.name, &github.RepositoryCreateForkOptions{
-		Organization: newOwner,
+	createdRepo, _, err := retry(ctx, func() (*github.Repository, *github.Response, error) {
+		return g.ghClient.Repositories.CreateFork(ctx, r.ownerName, r.name, &github.RepositoryCreateForkOptions{
+			Organization: newOwner,
+		})
 	})
+
 	if err != nil {
 		if _, isAccepted := err.(*github.AcceptedError); !isAccepted {
 			return nil, err
