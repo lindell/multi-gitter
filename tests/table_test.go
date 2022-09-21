@@ -906,6 +906,29 @@ Repositories with a successful run:
 				assert.False(t, fileExist(t, vcMock.Repositories[0].Path, "test_file"))
 			},
 		},
+
+		{
+			name: "same feature and base branch name",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-not-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "master",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Equal(t, "Both the feature branch and base branch was named master, if you intended to push directly into the base branch, please use the `skip-pr` option:\n  owner/should-not-change\n", runData.out)
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {

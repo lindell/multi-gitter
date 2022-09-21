@@ -211,6 +211,10 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		baseBranch = repo.DefaultBranch()
 	}
 
+	if baseBranch == r.FeatureBranch {
+		return nil, errors.Errorf("both the feature branch and base branch was named %s, if you intended to push directly into the base branch, please use the `skip-pr` option", baseBranch)
+	}
+
 	err = sourceController.Clone(repo.CloneURL(), baseBranch)
 	if err != nil {
 		return nil, err
