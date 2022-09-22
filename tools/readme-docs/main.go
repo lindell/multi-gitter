@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -108,7 +108,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(resultingPath, tmplBuf.Bytes(), 0644)
+	err = os.WriteFile(resultingPath, tmplBuf.Bytes(), 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func readExamples() ([]exampleCategory, error) {
 	categories := []exampleCategory{}
 
 	examplesDir := "./examples"
-	files, err := ioutil.ReadDir(examplesDir)
+	files, err := os.ReadDir(examplesDir)
 	if err != nil {
 		return nil, err
 	}
@@ -185,12 +185,12 @@ func readExamples() ([]exampleCategory, error) {
 
 		var examples []example
 		categoryDir := filepath.Join(examplesDir, f.Name())
-		exampleFiles, err := ioutil.ReadDir(categoryDir)
+		exampleFiles, err := os.ReadDir(categoryDir)
 		if err != nil {
 			return nil, err
 		}
 		for _, e := range exampleFiles {
-			b, err := ioutil.ReadFile(filepath.Join(categoryDir, e.Name()))
+			b, err := os.ReadFile(filepath.Join(categoryDir, e.Name()))
 			if err != nil {
 				return nil, err
 			}
