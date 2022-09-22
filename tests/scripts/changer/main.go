@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
-	"io/ioutil"
+	"os"
 	"time"
 )
 
@@ -18,14 +18,14 @@ func main() {
 		time.Sleep(d)
 	}
 
-	data, err := ioutil.ReadFile(fileName)
+	data, err := os.ReadFile(fileName)
 	if err != nil {
 		panic(err)
 	}
 
 	replaced := bytes.ReplaceAll(data, []byte("apple"), []byte("banana"))
 
-	err = ioutil.WriteFile(fileName, replaced, 0600)
+	err = os.WriteFile(fileName, replaced, 0600)
 	if err != nil {
 		panic(err)
 	}
