@@ -90,7 +90,7 @@ func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
 
 // OverrideVersionController can be set to force a specific version controller to be used
 // This is used to override the version controller with a mock, to be used during testing
-var OverrideVersionController multigitter.VersionController = nil
+var OverrideVersionController multigitter.VersionController
 
 // getVersionController gets the complete version controller
 // the verifyFlags parameter can be set to false if a complete vc is not required (during autocompletion)
