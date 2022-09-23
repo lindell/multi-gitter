@@ -311,7 +311,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	}
 
 	// Fetching any potentially existing pull request
-	var existingPullRequest scm.PullRequest = nil
+	var existingPullRequest scm.PullRequest
 	if featureBranchExist {
 		pr, err := r.VersionController.GetOpenPullRequest(ctx, repo, r.FeatureBranch)
 		if err != nil {
