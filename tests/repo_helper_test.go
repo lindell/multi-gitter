@@ -2,7 +2,6 @@ package tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -30,7 +29,7 @@ func createRepo(t *testing.T, ownerName string, repoName string, dataInFile stri
 }
 
 func createDummyRepo(dataInFile string) (string, error) {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-test-*.git")
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-test-*.git")
 	if err != nil {
 		return "", err
 	}
@@ -42,7 +41,7 @@ func createDummyRepo(dataInFile string) (string, error) {
 
 	testFilePath := filepath.Join(tmpDir, fileName)
 
-	err = ioutil.WriteFile(testFilePath, []byte(dataInFile), 0600)
+	err = os.WriteFile(testFilePath, []byte(dataInFile), 0600)
 	if err != nil {
 		return "", err
 	}
@@ -103,7 +102,7 @@ func changeTestFile(t *testing.T, basePath string, content string, commitMessage
 
 	testFilePath := filepath.Join(basePath, fileName)
 
-	err = ioutil.WriteFile(testFilePath, []byte(content), 0600)
+	err = os.WriteFile(testFilePath, []byte(content), 0600)
 	require.NoError(t, err)
 
 	wt, err := repo.Worktree()
@@ -128,7 +127,7 @@ func addFile(t *testing.T, basePath string, fn string, content string, commitMes
 
 	testFilePath := filepath.Join(basePath, fn)
 
-	err = ioutil.WriteFile(testFilePath, []byte(content), 0600)
+	err = os.WriteFile(testFilePath, []byte(content), 0600)
 	require.NoError(t, err)
 
 	wt, err := repo.Worktree()
@@ -150,7 +149,7 @@ func addFile(t *testing.T, basePath string, fn string, content string, commitMes
 func readTestFile(t *testing.T, basePath string) string {
 	testFilePath := filepath.Join(basePath, fileName)
 
-	b, err := ioutil.ReadFile(testFilePath)
+	b, err := os.ReadFile(testFilePath)
 	require.NoError(t, err)
 
 	return string(b)
@@ -159,7 +158,7 @@ func readTestFile(t *testing.T, basePath string) string {
 func readFile(t *testing.T, basePath string, fn string) string {
 	testFilePath := filepath.Join(basePath, fn)
 
-	b, err := ioutil.ReadFile(testFilePath)
+	b, err := os.ReadFile(testFilePath)
 	require.NoError(t, err)
 
 	return string(b)

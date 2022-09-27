@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -198,7 +197,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
 
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-changer-")
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-changer-")
 	if err != nil {
 		return nil, err
 	}
@@ -209,6 +208,10 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	baseBranch := r.BaseBranch
 	if baseBranch == "" {
 		baseBranch = repo.DefaultBranch()
+	}
+
+	if baseBranch == r.FeatureBranch {
+		return nil, errors.Errorf("both the feature branch and base branch was named %s, if you intended to push directly into the base branch, please use the `skip-pr` option", baseBranch)
 	}
 
 	err = sourceController.Clone(repo.CloneURL(), baseBranch)
@@ -308,7 +311,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	}
 
 	// Fetching any potentially existing pull request
-	var existingPullRequest scm.PullRequest = nil
+	var existingPullRequest scm.PullRequest
 	if featureBranchExist {
 		pr, err := r.VersionController.GetOpenPullRequest(ctx, repo, r.FeatureBranch)
 		if err != nil {

@@ -3,7 +3,7 @@ package tests
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -906,6 +906,29 @@ Repositories with a successful run:
 				assert.False(t, fileExist(t, vcMock.Repositories[0].Path, "test_file"))
 			},
 		},
+
+		{
+			name: "same feature and base branch name",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-not-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "master",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Equal(t, "Both the feature branch and base branch was named master, if you intended to push directly into the base branch, please use the `skip-pr` option:\n  owner/should-not-change\n", runData.out)
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {
@@ -921,11 +944,11 @@ Repositories with a successful run:
 					t.SkipNow()
 				}
 
-				logFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-log")
+				logFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-log")
 				require.NoError(t, err)
 				defer os.Remove(logFile.Name())
 
-				outFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-output")
+				outFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-output")
 				require.NoError(t, err)
 				// defer os.Remove(outFile.Name())
 
@@ -955,10 +978,10 @@ Repositories with a successful run:
 					assert.NoError(t, err)
 				}
 
-				logData, err := ioutil.ReadAll(logFile)
+				logData, err := io.ReadAll(logFile)
 				assert.NoError(t, err)
 
-				outData, err := ioutil.ReadAll(outFile)
+				outData, err := io.ReadAll(outFile)
 				assert.NoError(t, err)
 
 				test.verify(t, vc, runData{

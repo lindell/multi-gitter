@@ -2,7 +2,6 @@ package tests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -18,7 +17,7 @@ func TestPrint(t *testing.T) {
 	defer vcMock.Clean()
 	cmd.OverrideVersionController = vcMock
 
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-test-run-")
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-test-run-")
 	assert.NoError(t, err)
 
 	workingDir, err := os.Getwd()
@@ -46,12 +45,12 @@ func TestPrint(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify that the output was correct
-	outData, err := ioutil.ReadFile(outFile)
+	outData, err := os.ReadFile(outFile)
 	require.NoError(t, err)
 	assert.Equal(t, "i like apples\ni like my apple\ni like oranges\n", string(outData))
 
 	// Verify that the error output was correct
-	errOutData, err := ioutil.ReadFile(errOutFile)
+	errOutData, err := os.ReadFile(errOutFile)
 	require.NoError(t, err)
 	assert.Equal(t, "I LIKE APPLES\nI LIKE MY APPLE\nI LIKE ORANGES\n", string(errOutData))
 }
