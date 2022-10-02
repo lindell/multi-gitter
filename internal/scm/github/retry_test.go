@@ -142,9 +142,8 @@ func Test_retry(t *testing.T) {
 			return &github.PullRequest{
 				ID: &[]int64{100}[0],
 			}, okResponse.response, nil
-		} else {
-			return nil, secondaryRateLimitError.response, secondaryRateLimitError.err
 		}
+		return nil, secondaryRateLimitError.response, secondaryRateLimitError.err
 	}
 
 	pr, resp, err := retry(context.Background(), fn)
