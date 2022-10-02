@@ -23,7 +23,7 @@ func Test_retryWithoutReturn(t *testing.T) {
 		{
 			name: "one fail",
 			responses: []response{
-				temporaryErrorResponse,
+				secondaryRateLimitError,
 				okResponse,
 			},
 			sleep: 10 * time.Second,
@@ -31,8 +31,8 @@ func Test_retryWithoutReturn(t *testing.T) {
 		{
 			name: "two fails",
 			responses: []response{
-				temporaryErrorResponse,
-				temporaryErrorResponse,
+				secondaryRateLimitError,
+				secondaryRateLimitError,
 				okResponse,
 			},
 			sleep: 1*time.Minute + 30*time.Second,
@@ -40,9 +40,9 @@ func Test_retryWithoutReturn(t *testing.T) {
 		{
 			name: "three fails",
 			responses: []response{
-				temporaryErrorResponse,
-				temporaryErrorResponse,
-				temporaryErrorResponse,
+				secondaryRateLimitError,
+				secondaryRateLimitError,
+				secondaryRateLimitError,
 				okResponse,
 			},
 			sleep: 6*time.Minute + 0*time.Second,
@@ -50,10 +50,10 @@ func Test_retryWithoutReturn(t *testing.T) {
 		{
 			name: "four fails",
 			responses: []response{
-				temporaryErrorResponse,
-				temporaryErrorResponse,
-				temporaryErrorResponse,
-				temporaryErrorResponse,
+				secondaryRateLimitError,
+				secondaryRateLimitError,
+				secondaryRateLimitError,
+				secondaryRateLimitError,
 				okResponse,
 			},
 			sleep: 16*time.Minute + 40*time.Second,
@@ -61,7 +61,7 @@ func Test_retryWithoutReturn(t *testing.T) {
 		{
 			name: "a real fail",
 			responses: []response{
-				realErrorResponse,
+				realError,
 			},
 			sleep:   0,
 			wantErr: true,
@@ -69,12 +69,41 @@ func Test_retryWithoutReturn(t *testing.T) {
 		{
 			name: "two temporary fails and a real one",
 			responses: []response{
-				temporaryErrorResponse,
-				temporaryErrorResponse,
-				realErrorResponse,
+				secondaryRateLimitError,
+				secondaryRateLimitError,
+				realError,
 			},
 			sleep:   1*time.Minute + 30*time.Second,
 			wantErr: true,
+		},
+		{
+			name: "primary rate limit",
+			responses: []response{
+				primaryRateLimitError,
+				okResponse,
+			},
+			sleep:   1*time.Minute + 37*time.Second,
+			wantErr: false,
+		},
+		{
+			name: "two primary rate limit errors in a row",
+			responses: []response{
+				primaryRateLimitError,
+				primaryRateLimitError,
+				okResponse,
+			},
+			sleep:   3*time.Minute + 14*time.Second,
+			wantErr: false,
+		},
+		{
+			name: "secondary rate limit followed by primary rate limit",
+			responses: []response{
+				secondaryRateLimitError,
+				primaryRateLimitError,
+				okResponse,
+			},
+			sleep:   1*time.Minute + 47*time.Second,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -114,7 +143,7 @@ func Test_retry(t *testing.T) {
 				ID: &[]int64{100}[0],
 			}, okResponse.response, nil
 		} else {
-			return nil, temporaryErrorResponse.response, temporaryErrorResponse.err
+			return nil, secondaryRateLimitError.response, secondaryRateLimitError.err
 		}
 	}
 
@@ -137,9 +166,20 @@ var okResponse = response{
 		},
 	},
 }
-var realErrorResponse = createResponse(http.StatusNotFound, errors.New("something went wrong"))
-var tmpErrorMsg = "You have exceeded a secondary rate limit and have been temporarily blocked from content creation. Please retry your request again later."
-var temporaryErrorResponse = createResponse(http.StatusForbidden, errors.New(tmpErrorMsg))
+var realError = createResponse(http.StatusNotFound, errors.New("something went wrong"))
+var secondaryErrorMsg = "You have exceeded a secondary rate limit and have been temporarily blocked from content creation. Please retry your request again later."
+var secondaryRateLimitError = createResponse(http.StatusForbidden, errors.New(secondaryErrorMsg))
+var primaryRateLimitError = response{
+	response: &github.Response{
+		Response: &http.Response{
+			StatusCode: http.StatusForbidden,
+			Header: http.Header{
+				"Retry-After": []string{"97"},
+			},
+		},
+	},
+	err: errors.New("rate limited"),
+}
 
 func createResponse(statusCode int, err error) response {
 	return response{

@@ -55,7 +55,7 @@ func retryWithoutReturn(ctx context.Context, fn func() (*github.Response, error)
 		// If GitHub has specified how long we should wait, use that information
 		if httpResp != nil && httpResp.Header != nil {
 			if retryAfterStr != "" {
-				if retryAfter, err := strconv.Atoi(retryAfterStr); err != nil {
+				if retryAfter, err := strconv.Atoi(retryAfterStr); err == nil {
 					sleep(ctx, time.Duration(retryAfter)*time.Second)
 					continue
 				} else {
