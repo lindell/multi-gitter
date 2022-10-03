@@ -30,18 +30,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      # Because of a bug in go-git that that makes cloning of a folder in another Windows drive letter,
-      # the test has to be moved and run in another folder on Windows (until the bug is fixed)
-      # https://github.com/go-git/go-git/issues/247
-      - name: Make sure the Windows test is run on the correct drive
-        if: matrix.os == 'windows-latest'
-        run: copy-item -Path "." -Destination "$env:temp\multi-gitter" -Recurse
-      - name: Test (Windows)
-        if: matrix.os == 'windows-latest'
-        run: $env:SKIP_TYPES='time-dependent'; cd $env:temp\multi-gitter; go test ./... -v
-
-      - name: Test (Not Windows)
-        if: matrix.os != 'windows-latest'
+      - name: Test
         run: SKIP_TYPES=time-dependent go test ./... -v
 
       - name: Build
