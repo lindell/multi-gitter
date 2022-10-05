@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -60,6 +59,8 @@ type Runner struct {
 
 	ConflictStrategy ConflictStrategy // Defines what will happen if a branch does already exist
 
+	Draft bool // If set, creates Pull Requests as draft
+
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
 	CreateGit func(dir string) Git
@@ -89,6 +90,11 @@ func (r *Runner) Run(ctx context.Context) error {
 	}
 
 	repos = filterRepositories(repos, r.SkipRepository)
+
+	if len(repos) == 0 {
+		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want to change.")
+		return nil
+	}
 
 	// Setting up a "counter" that keeps track of successful and failed runs
 	r.repocounter = repocounter.NewCounter(repos)
@@ -191,7 +197,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	log.Info("Cloning and running script")
 	r.repocounter.SetRepoAction(repo, repocounter.ActionClone)
 
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-changer-")
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-changer-")
 	if err != nil {
 		return nil, err
 	}
@@ -202,6 +208,10 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	baseBranch := r.BaseBranch
 	if baseBranch == "" {
 		baseBranch = repo.DefaultBranch()
+	}
+
+	if baseBranch == r.FeatureBranch {
+		return nil, errors.Errorf("both the feature branch and base branch was named %s, if you intended to push directly into the base branch, please use the `skip-pr` option", baseBranch)
 	}
 
 	err = sourceController.Clone(repo.CloneURL(), baseBranch)
@@ -306,7 +316,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	r.repocounter.SetRepoAction(repo, repocounter.ActionCreatePR)
 
 	// Fetching any potentially existing pull request
-	var existingPullRequest scm.PullRequest = nil
+	var existingPullRequest scm.PullRequest
 	if featureBranchExist {
 		pr, err := r.VersionController.GetOpenPullRequest(ctx, repo, r.FeatureBranch)
 		if err != nil {
@@ -328,6 +338,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			Base:      baseBranch,
 			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 			Assignees: r.Assignees,
+			Draft:     r.Draft,
 		})
 		if err != nil {
 			return nil, err

@@ -1,7 +1,9 @@
 package github
 
 import (
-	"github.com/google/go-github/v39/github"
+	"strings"
+
+	"github.com/google/go-github/v47/github"
 	"github.com/lindell/multi-gitter/internal/scm"
 )
 
@@ -25,4 +27,11 @@ func repoMergeTypes(repo *github.Repository) []scm.MergeType {
 		ret = append(ret, scm.MergeTypeSquash)
 	}
 	return ret
+}
+
+func stripSuffixIfExist(str string, suffix string) string {
+	if strings.HasSuffix(str, suffix) {
+		return str[:len(str)-len(suffix)]
+	}
+	return str
 }

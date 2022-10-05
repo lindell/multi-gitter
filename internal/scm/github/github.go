@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v39/github"
+	"github.com/google/go-github/v47/github"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -26,6 +26,7 @@ func New(
 	forkMode bool,
 	forkOwner string,
 	sshAuth bool,
+	readOnly bool,
 ) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
@@ -49,10 +50,15 @@ func New(
 		RepositoryListing: repoListing,
 		MergeTypes:        mergeTypes,
 		token:             token,
+		baseURL:           baseURL,
 		Fork:              forkMode,
 		ForkOwner:         forkOwner,
 		SSHAuth:           sshAuth,
 		ghClient:          client,
+		ReadOnly:          readOnly,
+		httpClient: &http.Client{
+			Transport: transportMiddleware(http.DefaultTransport),
+		},
 	}, nil
 }
 
@@ -61,10 +67,14 @@ type Github struct {
 	RepositoryListing
 	MergeTypes []scm.MergeType
 	token      string
+	baseURL    string
 
 	// This determines if forks will be used when creating a prs.
 	// In this package, it mainly determines which repos are possible to make changes on
 	Fork bool
+
+	// This determines when we are running in read only mode.
+	ReadOnly bool
 
 	// If set, the fork will happen to the ForkOwner value, and not the logged in user
 	ForkOwner string
@@ -72,7 +82,8 @@ type Github struct {
 	// If set, use the SSH clone url instead of http(s)
 	SSHAuth bool
 
-	ghClient *github.Client
+	ghClient   *github.Client
+	httpClient *http.Client
 
 	// Caching of the logged in user
 	user      string
@@ -122,13 +133,23 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 
 	repos := make([]scm.Repository, 0, len(allRepos))
 	for _, r := range allRepos {
+		log := log.WithField("repo", r.GetFullName())
 		permissions := r.GetPermissions()
 
-		if r.GetArchived() || r.GetDisabled() || !permissions["pull"] {
+		// Check if it's even meaningful to run on this repository or if it will just error
+		// when trying to do other actions
+		switch {
+		case r.GetArchived():
+			log.Debug("Skipping repository since it's archived")
 			continue
-		}
-		// The user needs push permissions or have defined that the pr should be on a fork
-		if !g.Fork && !permissions["push"] {
+		case r.GetDisabled():
+			log.Debug("Skipping repository since it's disabled")
+			continue
+		case !permissions["pull"]:
+			log.Debug("Skipping repository since the token does not have pull permissions")
+			continue
+		case !g.Fork && !g.ReadOnly && !permissions["push"]:
+			log.Debug("Skipping repository since the token does not have push permissions and the run will not fork")
 			continue
 		}
 
@@ -274,6 +295,7 @@ func (g *Github) createPullRequest(ctx context.Context, repo repository, prRepo 
 		Body:  &newPR.Body,
 		Head:  &head,
 		Base:  &newPR.Base,
+		Draft: &newPR.Draft,
 	})
 	if err != nil {
 		return nil, err
@@ -302,52 +324,107 @@ func (g *Github) addAssignees(ctx context.Context, repo repository, newPR scm.Ne
 
 // GetPullRequests gets all pull requests of with a specific branch
 func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
-	// TODO: If this is implemented with the GitHub v4 graphql api, it would be much faster
-
 	repos, err := g.getRepositories(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	prStatuses := []scm.PullRequest{}
-	for _, r := range repos {
-		repoOwner := r.GetOwner().GetLogin()
-		repoName := r.GetName()
-		log := log.WithField("repo", fmt.Sprintf("%s/%s", repoOwner, repoName))
-
-		headOwner, err := g.headOwner(ctx, repoOwner)
-		if err != nil {
-			return nil, err
+	// The fragment is all the data needed from every repository
+	const fragment = `fragment repoProperties on Repository {
+		pullRequests(headRefName: $branchName, last: 1) {
+			nodes {
+				number
+				headRefName
+				closed
+				url
+				merged
+				baseRepository {
+					name
+					owner {
+						login
+					}
+				}
+				headRepository {
+					name
+					owner {
+						login
+					}
+				}
+				commits(last: 1) {
+					nodes {
+						commit {
+							statusCheckRollup {
+								state
+							}
+						}
+					}
+				}
+			}
 		}
+	}`
 
-		log.Debug("Fetching latest pull request")
-		prs, _, err := g.ghClient.PullRequests.List(ctx, repoOwner, repoName, &github.PullRequestListOptions{
-			Head:      fmt.Sprintf("%s:%s", headOwner, branchName),
-			State:     "all",
-			Direction: "desc",
-			ListOptions: github.ListOptions{
-				PerPage: 1,
-			},
-		})
-		if err != nil {
-			return nil, err
-		}
-		if len(prs) != 1 {
-			continue
-		}
-		pr := prs[0]
+	// Prepare data for compiling the query.
+	// Each repository will get its own variables ($ownerX, $repoX) and be returned
+	// via and alias repoX
+	repoParameters := make([]string, len(repos))
+	repoQueries := make([]string, len(repos))
+	queryVariables := map[string]interface{}{
+		"branchName": branchName,
+	}
+	for i, repo := range repos {
+		repoParameters[i] = fmt.Sprintf("$owner%[1]d: String!, $repo%[1]d: String!", i)
+		repoQueries[i] = fmt.Sprintf("repo%[1]d: repository(owner: $owner%[1]d, name: $repo%[1]d) { ...repoProperties }", i)
 
-		status, err := g.getPrStatus(ctx, pr)
-		if err != nil {
-			return nil, err
-		}
-
-		localPR := convertPullRequest(pr)
-		localPR.status = status
-		prStatuses = append(prStatuses, localPR)
+		queryVariables[fmt.Sprintf("owner%d", i)] = repo.GetOwner().GetLogin()
+		queryVariables[fmt.Sprintf("repo%d", i)] = repo.GetName()
 	}
 
-	return prStatuses, nil
+	// Create the final query
+	query := fmt.Sprintf(`
+		%s
+
+		query ($branchName: String!, %s) {
+			%s
+		}`,
+		fragment,
+		strings.Join(repoParameters, ", "),
+		strings.Join(repoQueries, "\n"),
+	)
+
+	result := map[string]graphqlRepo{}
+	err = g.makeGraphQLRequest(ctx, query, queryVariables, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch the repo based on name instead of looping through the map since that will
+	// guarantee the same ordering as the original repository list
+	prs := []scm.PullRequest{}
+	for i := range repos {
+		repo, ok := result[fmt.Sprintf("repo%d", i)]
+		if !ok {
+			return nil, fmt.Errorf("could not find repo%d", i)
+		}
+
+		if len(repo.PullRequests.Nodes) != 1 {
+			continue
+		}
+		pr := repo.PullRequests.Nodes[0]
+
+		// The graphql API does not have a way at query time to filter out the owner of the head branch
+		// of a PR. Therefore, we have to filter out any repo that does not match the head owner.
+		headOwner, err := g.headOwner(ctx, pr.BaseRepository.Owner.Login)
+		if err != nil {
+			return nil, err
+		}
+		if pr.HeadRepository.Owner.Login != headOwner {
+			continue
+		}
+
+		prs = append(prs, convertGraphQLPullRequest(pr))
+	}
+
+	return prs, nil
 }
 
 func (g *Github) loggedInUser(ctx context.Context) (string, error) {
@@ -552,37 +629,6 @@ func (g *Github) GetAutocompleteRepositories(ctx context.Context, str string) ([
 	}
 
 	return ret, nil
-}
-
-func (g *Github) getPrStatus(ctx context.Context, pr *github.PullRequest) (scm.PullRequestStatus, error) {
-	// Determine the status of the pr
-	var status scm.PullRequestStatus
-	if pr.MergedAt != nil {
-		status = scm.PullRequestStatusMerged
-	} else if pr.ClosedAt != nil {
-		status = scm.PullRequestStatusClosed
-	} else {
-		log.Debug("Fetching the combined status of the pull request")
-		combinedStatus, _, err := g.ghClient.Repositories.GetCombinedStatus(ctx, pr.GetBase().GetUser().GetLogin(), pr.GetBase().GetRepo().GetName(), pr.GetHead().GetSHA(), nil)
-		if err != nil {
-			return scm.PullRequestStatusUnknown, err
-		}
-
-		if combinedStatus.GetTotalCount() == 0 {
-			status = scm.PullRequestStatusSuccess
-		} else {
-			switch combinedStatus.GetState() {
-			case "pending":
-				status = scm.PullRequestStatusPending
-			case "success":
-				status = scm.PullRequestStatusSuccess
-			case "failure", "error":
-				status = scm.PullRequestStatusError
-			}
-		}
-	}
-
-	return status, nil
 }
 
 // modLock is a lock that should be used whenever a modifying request is made against the GitHub API.

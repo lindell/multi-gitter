@@ -3,7 +3,7 @@ package tests
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -806,6 +806,129 @@ Repositories with a successful run:
 				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[2].Path))
 			},
 		},
+
+		{
+			name: "multi line message body",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message\nwith more info\nand even more",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "with more info\nand even more", vcMock.PullRequests[0].Body)
+			},
+		},
+
+		{
+			name: "no repositories found",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.NotContains(t, runData.logOut, "Running on")
+				assert.Contains(t, runData.logOut, "No repositories found")
+			},
+		},
+
+		{
+			name: "PRs as draft",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples as draft"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--draft",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.True(t, vcMock.PullRequests[0].Draft)
+			},
+		},
+
+		{
+			name: "remove files",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "owner", "should-delete", "i like apples")
+				addFile(t, repo.Path, "test_file", "some content", "added test_file")
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				fmt.Sprintf("go run %s", filepath.ToSlash(filepath.Join(workingDir, "scripts/remover/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+
+				assert.False(t, fileExist(t, vcMock.Repositories[0].Path, "test_file"))
+			},
+		},
+
+		{
+			name: "same feature and base branch name",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-not-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "master",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Equal(t, "Both the feature branch and base branch was named master, if you intended to push directly into the base branch, please use the `skip-pr` option:\n  owner/should-not-change\n", runData.out)
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {
@@ -821,11 +944,11 @@ Repositories with a successful run:
 					t.SkipNow()
 				}
 
-				logFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-log")
+				logFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-log")
 				require.NoError(t, err)
 				defer os.Remove(logFile.Name())
 
-				outFile, err := ioutil.TempFile(os.TempDir(), "multi-gitter-test-output")
+				outFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-output")
 				require.NoError(t, err)
 				// defer os.Remove(outFile.Name())
 
@@ -855,10 +978,10 @@ Repositories with a successful run:
 					assert.NoError(t, err)
 				}
 
-				logData, err := ioutil.ReadAll(logFile)
+				logData, err := io.ReadAll(logFile)
 				assert.NoError(t, err)
 
-				outData, err := ioutil.ReadAll(outFile)
+				outData, err := io.ReadAll(outFile)
 				assert.NoError(t, err)
 
 				test.verify(t, vc, runData{

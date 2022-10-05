@@ -3,7 +3,7 @@ package github
 import (
 	"fmt"
 
-	"github.com/google/go-github/v39/github"
+	"github.com/google/go-github/v47/github"
 
 	"github.com/lindell/multi-gitter/internal/scm"
 )
@@ -17,6 +17,37 @@ func convertPullRequest(pr *github.PullRequest) pullRequest {
 		prRepoName:  pr.GetHead().GetRepo().GetName(),
 		number:      pr.GetNumber(),
 		guiURL:      pr.GetHTMLURL(),
+	}
+}
+
+func convertGraphQLPullRequest(pr graphqlPR) pullRequest {
+	combinedStatus := pr.Commits.Nodes[0].Commit.StatusCheckRollup.State
+	status := scm.PullRequestStatusUnknown
+
+	if pr.Merged {
+		status = scm.PullRequestStatusMerged
+	} else if combinedStatus == nil {
+		status = scm.PullRequestStatusSuccess
+	} else {
+		switch *combinedStatus {
+		case graphqlPullRequestStatePending:
+			status = scm.PullRequestStatusPending
+		case graphqlPullRequestStateSuccess:
+			status = scm.PullRequestStatusSuccess
+		case graphqlPullRequestStateFailure, graphqlPullRequestStateError:
+			status = scm.PullRequestStatusError
+		}
+	}
+
+	return pullRequest{
+		ownerName:   pr.BaseRepository.Owner.Login,
+		repoName:    pr.BaseRepository.Name,
+		branchName:  pr.HeadRefName,
+		prOwnerName: pr.HeadRepository.Owner.Login,
+		prRepoName:  pr.HeadRepository.Name,
+		number:      pr.Number,
+		guiURL:      pr.URL,
+		status:      status,
 	}
 }
 

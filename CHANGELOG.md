@@ -1,5 +1,129 @@
 # Changelog
 
+### [0.42.3](https://www.github.com/lindell/multi-gitter/compare/v0.42.2...v0.42.3) (2022-08-12)
+
+
+### Bug Fixes
+
+* deleted files are now detected with `git-type: go` ([#273](https://www.github.com/lindell/multi-gitter/issues/273)) ([b21509c](https://www.github.com/lindell/multi-gitter/commit/b21509c3b392fbe681c1cc5315ccdc63942abbc2))
+
+### [0.42.2](https://www.github.com/lindell/multi-gitter/compare/v0.42.1...v0.42.2) (2022-08-07)
+
+
+### Bug Fixes
+
+* **github:** correctly map merged prs ([#268](https://www.github.com/lindell/multi-gitter/issues/268)) ([0474040](https://www.github.com/lindell/multi-gitter/commit/0474040c86d7c213987fb5dfc503d6c46288cb3a))
+
+
+### Miscellaneous
+
+* updated to go modules to 1.18 ([#272](https://www.github.com/lindell/multi-gitter/issues/272)) ([d70a038](https://www.github.com/lindell/multi-gitter/commit/d70a03855a0a3da5b70e0ee85f53326cc4c137e6))
+
+### [0.42.1](https://www.github.com/lindell/multi-gitter/compare/v0.42.0...v0.42.1) (2022-08-06)
+
+
+### Bug Fixes
+
+* **github:** allow only pull permission for print command ([#262](https://www.github.com/lindell/multi-gitter/issues/262)) ([582c706](https://www.github.com/lindell/multi-gitter/commit/582c70633e0dcef04699c62b160a57fedb50c00d))
+
+
+### Miscellaneous
+
+* **gitlab:** fixed subgroup spelling ([46f178a](https://www.github.com/lindell/multi-gitter/commit/46f178ab097fefb3d07b65f3522e3e516638107a))
+
+
+### Dependencies
+
+* update github.com/eiannone/keyboard digest to 0d22619 ([f38b2f5](https://www.github.com/lindell/multi-gitter/commit/f38b2f5b2bf17afab06ed709c6b5ba4c9c9a6075))
+* update golang.org/x/oauth2 digest to 128564f ([63eab95](https://www.github.com/lindell/multi-gitter/commit/63eab95d69715ca1794f05447e3a588b70d99e62))
+* update golang.org/x/oauth2 digest to 2104d58 ([c4605e2](https://www.github.com/lindell/multi-gitter/commit/c4605e2c8db5440fc68b5b779ee46b360c4459db))
+* update module github.com/sirupsen/logrus to v1.9.0 ([1c8201a](https://www.github.com/lindell/multi-gitter/commit/1c8201a3b748b511effeb02b98ae1485f0e97b31))
+* update module github.com/spf13/cobra to v1.5.0 ([eb15db4](https://www.github.com/lindell/multi-gitter/commit/eb15db4fc137d5a23f3d137a778e4235b26b4e74))
+* update module github.com/spf13/viper to v1.12.0 ([ffdf7ae](https://www.github.com/lindell/multi-gitter/commit/ffdf7ae901b1f98fdd279fd5d1aeb72095bf2ad2))
+* update module github.com/stretchr/testify to v1.8.0 ([81a757c](https://www.github.com/lindell/multi-gitter/commit/81a757c88d3942ff5295a8edfcec6ad99ff9e669))
+* update module github.com/xanzy/go-gitlab to v0.68.0 ([78ca7f3](https://www.github.com/lindell/multi-gitter/commit/78ca7f343b846c56a7fdc76f59ec6a7591d7c3da))
+* update module github.com/xanzy/go-gitlab to v0.68.2 ([dab0985](https://www.github.com/lindell/multi-gitter/commit/dab09851cf9b694096ec11084568685efcd860ff))
+
+## [0.42.0](https://www.github.com/lindell/multi-gitter/compare/v0.41.0...v0.42.0) (2022-05-06)
+
+
+### Features
+
+* **github:** use graphql endpoint to get pull request status ([#242](https://www.github.com/lindell/multi-gitter/issues/242)) ([60bbbdf](https://www.github.com/lindell/multi-gitter/commit/60bbbdf526ce6e87d0f952fdae4858e4c6954952))
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 digest to 711d7d5 ([0ecf9ee](https://www.github.com/lindell/multi-gitter/commit/0ecf9ee2e17b162218b251db63b5e9946369df39))
+* update module github.com/mitchellh/mapstructure to v1.5.0 ([152c3b1](https://www.github.com/lindell/multi-gitter/commit/152c3b1aeebeb996221d28ca6072342e9188493c))
+* update module github.com/spf13/cobra to v1.4.0 ([d378aa0](https://www.github.com/lindell/multi-gitter/commit/d378aa00a1b54f8482ed4d18d94ef47651b44273))
+* update module github.com/spf13/viper to v1.11.0 ([a8e01ef](https://www.github.com/lindell/multi-gitter/commit/a8e01ef104ee09a38fe3d3551caa97fb5d00dc0e))
+* update module github.com/stretchr/testify to v1.7.1 ([7506930](https://www.github.com/lindell/multi-gitter/commit/750693020fffae4aef811558fcdd65abf3662935))
+
+## [0.41.0](https://www.github.com/lindell/multi-gitter/compare/v0.40.1...v0.41.0) (2022-03-28)
+
+
+### Features
+
+* **gitlab:** skip archived repos ([#240](https://www.github.com/lindell/multi-gitter/issues/240)) ([10df83a](https://www.github.com/lindell/multi-gitter/commit/10df83a80e486dc7f2c8ec085c1111d8fab42cfb))
+
+### [0.40.1](https://www.github.com/lindell/multi-gitter/compare/v0.40.0...v0.40.1) (2022-03-01)
+
+
+### Bug Fixes
+
+* **gitlab:** made entire owner structure a part of logging and $REPOSITORY ([ccac98a](https://www.github.com/lindell/multi-gitter/commit/ccac98a8c6ab7e4dc23e19519de7ccd958e1be43))
+
+
+### Dependencies
+
+* update module github.com/spf13/viper to v1.10.1 ([6052e73](https://www.github.com/lindell/multi-gitter/commit/6052e73c7e2f1a790fa4c23732aec0c23dcd131c))
+* update module github.com/xanzy/go-gitlab to v0.55.1 ([ea0eacc](https://www.github.com/lindell/multi-gitter/commit/ea0eacce1c3a711b9f3c0d51c2b714ebc72ddb23))
+
+
+### Miscellaneous
+
+* fixed gitlab api pointer change ([5c39b22](https://www.github.com/lindell/multi-gitter/commit/5c39b2208cb3480eaab816a18d029bd9b20b7ddc))
+
+## [0.40.0](https://www.github.com/lindell/multi-gitter/compare/v0.39.0...v0.40.0) (2022-02-08)
+
+
+### Features
+
+* add ability to create PR as draft ([#232](https://www.github.com/lindell/multi-gitter/issues/232)) ([dbfef2b](https://www.github.com/lindell/multi-gitter/commit/dbfef2b0f8c3692d5f281d2269bc680263ec2406))
+
+## [0.39.0](https://www.github.com/lindell/multi-gitter/compare/v0.38.3...v0.39.0) (2022-02-05)
+
+
+### Features
+
+* **gitlab:** respect project level squash setting ([#228](https://www.github.com/lindell/multi-gitter/issues/228)) ([b189661](https://www.github.com/lindell/multi-gitter/commit/b1896610c6f4f88099848f99163984fbf4de113f))
+
+
+### Bug Fixes
+
+* **gitlab:** close MR instead of deleting it ([#230](https://www.github.com/lindell/multi-gitter/issues/230)) ([af2c2d9](https://www.github.com/lindell/multi-gitter/commit/af2c2d9b86a8cd0c6c09e3667a9f7c7689cf915c))
+* better logs when repositories are not used due to permissions ([#226](https://www.github.com/lindell/multi-gitter/issues/226)) ([668d0b0](https://www.github.com/lindell/multi-gitter/commit/668d0b0458988dc24de7beb4d087c2cccc7d3167))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.15.1 ([c8b4ab8](https://www.github.com/lindell/multi-gitter/commit/c8b4ab8cf55ace9e4f4751b540ba2e0dc7fd2807))
+* update module github.com/spf13/cobra to v1.3.0 ([afbe211](https://www.github.com/lindell/multi-gitter/commit/afbe21104568c9550e7cbaa48342ed5bcf3de3b8))
+
+### [0.38.3](https://www.github.com/lindell/multi-gitter/compare/v0.38.2...v0.38.3) (2022-01-21)
+
+
+### Bug Fixes
+
+* fixed multi line commit message ([#222](https://www.github.com/lindell/multi-gitter/issues/222)) ([995a93c](https://www.github.com/lindell/multi-gitter/commit/995a93cf552300e3c4b580a0ffa2aeb3cdfd61a7))
+
+
+### Dependencies
+
+* update module github.com/mitchellh/mapstructure to v1.4.3 ([ea97fa2](https://www.github.com/lindell/multi-gitter/commit/ea97fa2010378b353c0a43f832aced2054ae182d))
+* update module github.com/xanzy/go-gitlab to v0.52.2 ([c88f791](https://www.github.com/lindell/multi-gitter/commit/c88f79152e1b99381fcc8de249149aa49089c77e))
+
 ### [0.38.2](https://www.github.com/lindell/multi-gitter/compare/v0.38.1...v0.38.2) (2021-12-27)
 
 

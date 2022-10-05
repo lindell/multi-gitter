@@ -62,7 +62,7 @@ func print(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	vc, err := getVersionController(flag, true)
+	vc, err := getVersionController(flag, true, true)
 	if err != nil {
 		return err
 	}

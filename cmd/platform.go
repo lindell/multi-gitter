@@ -18,7 +18,7 @@ import (
 func configurePlatform(cmd *cobra.Command) {
 	flags := cmd.Flags()
 
-	flags.StringP("base-url", "g", "", "Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.")
+	flags.StringP("base-url", "g", "", "Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.")
 	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
 	flags.StringP("token", "T", "", "The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
@@ -90,11 +90,11 @@ func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
 
 // OverrideVersionController can be set to force a specific version controller to be used
 // This is used to override the version controller with a mock, to be used during testing
-var OverrideVersionController multigitter.VersionController = nil
+var OverrideVersionController multigitter.VersionController
 
 // getVersionController gets the complete version controller
 // the verifyFlags parameter can be set to false if a complete vc is not required (during autocompletion)
-func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (multigitter.VersionController, error) {
 	if OverrideVersionController != nil {
 		return OverrideVersionController, nil
 	}
@@ -102,7 +102,7 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 	platform, _ := flag.GetString("platform")
 	switch platform {
 	case "github":
-		return createGithubClient(flag, verifyFlags)
+		return createGithubClient(flag, verifyFlags, readOnly)
 	case "gitlab":
 		return createGitlabClient(flag, verifyFlags)
 	case "gitea":
@@ -114,7 +114,7 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool) (multigitter.Ver
 	}
 }
 
-func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (multigitter.VersionController, error) {
 	gitBaseURL, _ := flag.GetString("base-url")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
@@ -149,7 +149,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
-	}, mergeTypes, forkMode, forkOwner, sshAuth)
+	}, mergeTypes, forkMode, forkOwner, sshAuth, readOnly)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func versionControllerCompletion(cmd *cobra.Command, flagName string, fn func(vc
 		// Make sure config files are loaded
 		_ = initializeConfig(cmd)
 
-		vc, err := getVersionController(cmd.Flags(), false)
+		vc, err := getVersionController(cmd.Flags(), false, false)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}

@@ -146,13 +146,15 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*gitlab.Project, error) {
 	var allProjects []*gitlab.Project
 	withMergeRequestsEnabled := true
+	archived := false
 	for i := 1; ; i++ {
 		projects, _, err := g.glClient.Groups.ListGroupProjects(groupName, &gitlab.ListGroupProjectsOptions{
 			ListOptions: gitlab.ListOptions{
 				PerPage: 100,
 				Page:    i,
 			},
-			IncludeSubgroups:         &g.Config.IncludeSubgroups,
+			Archived:                 &archived,
+			IncludeSubGroups:         &g.Config.IncludeSubgroups,
 			WithMergeRequestsEnabled: &withMergeRequestsEnabled,
 		}, gitlab.WithContext(ctx))
 		if err != nil {
@@ -182,12 +184,14 @@ func (g *Gitlab) getProject(ctx context.Context, projRef ProjectReference) (*git
 
 func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitlab.Project, error) {
 	var allProjects []*gitlab.Project
+	archived := false
 	for i := 1; ; i++ {
 		projects, _, err := g.glClient.Projects.ListUserProjects(username, &gitlab.ListProjectsOptions{
 			ListOptions: gitlab.ListOptions{
 				PerPage: 100,
 				Page:    i,
 			},
+			Archived: &archived,
 		}, gitlab.WithContext(ctx))
 		if err != nil {
 			return nil, err
@@ -217,16 +221,22 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		return nil, err
 	}
 
+	prTitle := newPR.Title
+	if newPR.Draft {
+		prTitle = "Draft: " + prTitle // See https://docs.gitlab.com/ee/user/project/merge_requests/drafts.html#mark-merge-requests-as-drafts
+	}
+
 	removeSourceBranch := true
 	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(prR.pid, &gitlab.CreateMergeRequestOptions{
-		Title:              &newPR.Title,
+		Title:              &prTitle,
 		Description:        &newPR.Body,
 		SourceBranch:       &newPR.Head,
 		TargetBranch:       &newPR.Base,
 		TargetProjectID:    &r.pid,
-		ReviewerIDs:        reviewersIDs,
+		ReviewerIDs:        &reviewersIDs,
 		RemoveSourceBranch: &removeSourceBranch,
-		AssigneeIDs:        assigneesIDs,
+		Squash:             &r.shouldSquash,
+		AssigneeIDs:        &assigneesIDs,
 	})
 	if err != nil {
 		return nil, err
@@ -390,7 +400,10 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
 
-	_, err := g.glClient.MergeRequests.DeleteMergeRequest(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
+	stateEvent := "close"
+	_, _, err := g.glClient.MergeRequests.UpdateMergeRequest(pr.targetPID, pr.iid, &gitlab.UpdateMergeRequestOptions{
+		StateEvent: &stateEvent,
+	}, gitlab.WithContext(ctx))
 	if err != nil {
 		return err
 	}

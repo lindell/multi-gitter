@@ -35,7 +35,7 @@ func status(cmd *cobra.Command, args []string) error {
 	branchName, _ := flag.GetString("branch")
 	strOutput, _ := flag.GetString("output")
 
-	vc, err := getVersionController(flag, true)
+	vc, err := getVersionController(flag, true, false)
 	if err != nil {
 		return err
 	}

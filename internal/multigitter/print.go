@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -71,7 +70,7 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
 
-	tmpDir, err := ioutil.TempDir(os.TempDir(), "multi-git-changer-")
+	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-changer-")
 	if err != nil {
 		return err
 	}

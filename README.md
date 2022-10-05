@@ -1,5 +1,8 @@
 <h1 align="center">
-  <img alt="" src="docs/img/logo.svg" height="80" />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/img/logo-dark-mode.svg" />
+    <img alt="Multi-gitter logo" src="docs/img/logo.svg" height="80" height="80" />
+  </picture>
 </h1>
 
 <div align="center">
@@ -68,7 +71,7 @@ curl -s https://raw.githubusercontent.com/lindell/multi-gitter/master/install.sh
 ### From source
 You can also install from source with `go install`, this is not recommended for most cases.
 ```bash
-go install github.com/lindell/multi-gitter
+go install github.com/lindell/multi-gitter@latest
 ```
 
 ## Token
@@ -109,7 +112,7 @@ author-name:
 # The branch which the changes will be based on.
 base-branch:
 
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -126,6 +129,9 @@ concurrent: 1
 #   skip: Skip making any changes to the existing branch and do not create a new pull request.
 #   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
 conflict-strategy: skip
+
+# Create pull request(s) as draft.
+draft: false
 
 # Run without pushing changes or creating pull requests.
 dry-run: false
@@ -226,7 +232,7 @@ username:
   <summary>All available merge options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -299,7 +305,7 @@ username:
   <summary>All available status options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -369,7 +375,7 @@ username:
   <summary>All available close options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -436,7 +442,7 @@ username:
   <summary>All available print options</summary>
 
 ```yaml
-# Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+# Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
 base-url:
 
 # The maximum number of concurrent runs.
@@ -532,7 +538,7 @@ Flags:
       --author-email string        Email of the committer. If not set, the global git config setting will be used.
       --author-name string         Name of the committer. If not set, the global git config setting will be used.
       --base-branch string         The branch which the changes will be based on.
-  -g, --base-url string            Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string            Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string              The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string      The commit message. Will default to title + body if none is set.
   -C, --concurrent int             The maximum number of concurrent runs. (default 1)
@@ -542,6 +548,7 @@ Flags:
                                      skip: Skip making any changes to the existing branch and do not create a new pull request.
                                      replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
                                     (default "skip")
+      --draft                      Create pull request(s) as draft.
   -d, --dry-run                    Run without pushing changes or creating pull requests.
   -f, --fetch-depth int            Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --fork                       Fork the repository instead of creating a new branch on the same owner.
@@ -583,7 +590,7 @@ Usage:
   multi-gitter merge [flags]
 
 Flags:
-  -g, --base-url string      Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string      Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string        The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string        Path of the config file.
       --fork                 Use pull requests made from forks instead of from the same repository.
@@ -613,7 +620,7 @@ Usage:
   multi-gitter status [flags]
 
 Flags:
-  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string     Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string       Path of the config file.
       --fork                Use pull requests made from forks instead of from the same repository.
@@ -643,7 +650,7 @@ Usage:
   multi-gitter close [flags]
 
 Flags:
-  -g, --base-url string     Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string     Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -B, --branch string       The name of the branch where changes are committed. (default "multi-gitter-branch")
       --config string       Path of the config file.
       --fork                Use pull requests made from forks instead of from the same repository.
@@ -676,7 +683,7 @@ Usage:
   multi-gitter print [script path] [flags]
 
 Flags:
-  -g, --base-url string       Base URL of the (v3) GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string       Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
   -C, --concurrent int        The maximum number of concurrent runs. (default 1)
       --config string         Path of the config file.
   -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr. (default "-")
@@ -708,6 +715,18 @@ Flags:
 ## Example scripts
 
 ### general
+
+<details>
+  <summary>Clone all repositories locally while maintaining their group folder structure</summary>
+
+```sh
+#!/bin/bash
+
+# This script should be used with the print command.
+mkdir -p ~/multi-gitter/$REPOSITORY
+cp -r . ~/multi-gitter/$REPOSITORY
+```
+</details>
 
 <details>
   <summary>Replace a file if it exist</summary>
@@ -742,6 +761,35 @@ find ./ -type f -exec sed -i -e 's/apple/orange/g' {} \;
 ### go
 
 <details>
+  <summary>Replace all instances of empty interface with any</summary>
+
+```sh
+#!/bin/bash
+
+gofmt -r 'interface{} -> any' -w **/*.go
+```
+</details>
+
+<details>
+  <summary>Fix the ioutil deprecation</summary>
+
+```sh
+#!/bin/bash
+
+gofmt -w -r 'ioutil.Discard -> io.Discard' .
+gofmt -w -r 'ioutil.NopCloser -> io.NopCloser' .
+gofmt -w -r 'ioutil.ReadAll -> io.ReadAll' .
+gofmt -w -r 'ioutil.ReadFile -> os.ReadFile' .
+gofmt -w -r 'ioutil.TempDir -> os.MkdirTemp' .
+gofmt -w -r 'ioutil.TempFile -> os.CreateTemp' .
+gofmt -w -r 'ioutil.WriteFile -> os.WriteFile' .
+gofmt -w -r 'ioutil.ReadDir -> os.ReadDir ' . # (note: returns a slice of os.DirEntry rather than a slice of fs.FileInfo)
+
+goimports -w .
+```
+</details>
+
+<details>
   <summary>Fix linting problems in all your go repositories</summary>
 
 ```sh
@@ -770,6 +818,17 @@ if [ $status_code -ne 0 ]; then
 fi
 
 go get $MODULE@$VERSION
+```
+</details>
+
+<details>
+  <summary>Upgrade Go version in go modules</summary>
+
+```sh
+#!/bin/bash
+
+go mod edit -go 1.18
+go mod tidy
 ```
 </details>
 

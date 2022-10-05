@@ -50,6 +50,7 @@ Available values:
   skip: Skip making any changes to the existing branch and do not create a new pull request.
   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
 `)
+	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
@@ -87,6 +88,7 @@ func run(cmd *cobra.Command, args []string) error {
 	authorEmail, _ := flag.GetString("author-email")
 	strOutput, _ := flag.GetString("output")
 	assignees, _ := flag.GetStringSlice("assignees")
+	draft, _ := flag.GetBool("draft")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -109,7 +111,7 @@ func run(cmd *cobra.Command, args []string) error {
 		split := strings.SplitN(commitMessage, "\n", 2)
 		prTitle = split[0]
 		if prBody == "" && len(split) == 2 {
-			prBody = split[2]
+			prBody = split[1]
 		}
 	}
 
@@ -133,7 +135,7 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	vc, err := getVersionController(flag, true)
+	vc, err := getVersionController(flag, true, false)
 	if err != nil {
 		return err
 	}
@@ -189,6 +191,7 @@ func run(cmd *cobra.Command, args []string) error {
 		BaseBranch:       baseBranchName,
 		Assignees:        assignees,
 		ConflictStrategy: conflictStrategy,
+		Draft:            draft,
 
 		Concurrent: concurrent,
 

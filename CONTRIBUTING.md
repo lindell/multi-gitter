@@ -37,7 +37,7 @@ Some rules might seem superfluous, like comments on everything that is exported,
 
 ### Structure
 
-* **cmd**: This is where the CLI is created. Everything that has to do with parsing flags or similair is done here, but no actual execution logic.
+* **cmd**: This is where the CLI is created. Everything that has to do with parsing flags or similar is done here, but no actual execution logic.
 * **docs**: Documentation.
 * **examples**: Example scripts that can be used together with multi-gitter.
 * **internal**
