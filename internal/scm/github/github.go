@@ -531,13 +531,13 @@ func (g *Github) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 	_, _, err := g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
 		State: &[]string{"closed"}[0],
 	})
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "Not Found") {
 		return err
 	}
 
 	_, err = g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
 	// Ignore errors about the reference not existing in case the PR had already been closed and the branch deleted
-	if err != nil && !strings.Contains(err.Error(), "Reference does not exist") {
+	if err != nil && !strings.Contains(err.Error(), "Reference does not exist") && !strings.Contains(err.Error(), "Not Found") {
 		return err
 	}
 
