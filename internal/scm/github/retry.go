@@ -36,7 +36,7 @@ func retry[K any](ctx context.Context, fn func() (K, *github.Response, error)) (
 	return val, resp, err
 }
 
-// retry runs a GitHub API request with no return value and retries it if a temporary error occurred
+// retryWithoutReturn runs a GitHub API request with no return value and retries it if a temporary error occurred
 func retryWithoutReturn(ctx context.Context, fn func() (*github.Response, error)) (*github.Response, error) {
 	tries := 0
 
