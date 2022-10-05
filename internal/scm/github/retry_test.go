@@ -109,8 +109,9 @@ func Test_retryWithoutReturn(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var slept time.Duration
-			sleep = func(ctx context.Context, d time.Duration) {
+			sleep = func(ctx context.Context, d time.Duration) error {
 				slept += d
+				return nil
 			}
 
 			call := 0
@@ -131,8 +132,9 @@ func Test_retryWithoutReturn(t *testing.T) {
 
 func Test_retry(t *testing.T) {
 	var slept time.Duration
-	sleep = func(ctx context.Context, d time.Duration) {
+	sleep = func(ctx context.Context, d time.Duration) error {
 		slept += d
+		return nil
 	}
 
 	call := 0

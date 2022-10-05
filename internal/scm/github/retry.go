@@ -14,11 +14,13 @@ import (
 
 const retryHeader = "Retry-After"
 
-var sleep = func(ctx context.Context, d time.Duration) {
+var sleep = func(ctx context.Context, d time.Duration) error {
 	log.Infof("Hit rate limit, sleeping for %s", d)
 	select {
 	case <-ctx.Done():
+		return errors.New("aborted while waiting for rate-limit")
 	case <-time.After(d):
+		return nil
 	}
 }
 
@@ -41,30 +43,39 @@ func retryWithoutReturn(ctx context.Context, fn func() (*github.Response, error)
 	for {
 		tries++
 
-		httpResp, err := fn()
+		githubResp, err := fn()
 		if err == nil { // NB!
-			return httpResp, nil
+			return githubResp, nil
 		}
 
-		retryAfterStr := httpResp.Header.Get(retryHeader)
-
-		if retryAfterStr == "" && !strings.Contains(err.Error(), "secondary rate limit") {
-			return httpResp, err
-		}
-
-		// If GitHub has specified how long we should wait, use that information
-		if httpResp != nil && httpResp.Header != nil {
+		// Get the number of retry seconds (if any)
+		retryAfter := 0
+		if githubResp != nil && githubResp.Header != nil {
+			retryAfterStr := githubResp.Header.Get(retryHeader)
 			if retryAfterStr != "" {
-				if retryAfter, err := strconv.Atoi(retryAfterStr); err == nil {
-					sleep(ctx, time.Duration(retryAfter)*time.Second)
-					continue
-				} else {
-					return httpResp, errors.WithMessage(err, "could not convert Retry-After header")
+				var err error
+				if retryAfter, err = strconv.Atoi(retryAfterStr); err != nil {
+					return githubResp, errors.WithMessage(err, "could not convert Retry-After header")
 				}
 			}
 		}
 
-		// Otherwise use an exponential back-off
-		sleep(ctx, time.Duration(math.Pow(float64(tries), 3))*10*time.Second)
+		switch {
+		// If GitHub has specified how long we should wait, use that information
+		case retryAfter != 0:
+			err := sleep(ctx, time.Duration(retryAfter)*time.Second)
+			if err != nil {
+				return githubResp, err
+			}
+		// If secondary rate limit error, use an exponential back-off to determine the wait
+		case strings.Contains(err.Error(), "secondary rate limit"):
+			err := sleep(ctx, time.Duration(math.Pow(float64(tries), 3))*10*time.Second)
+			if err != nil {
+				return githubResp, err
+			}
+		// If any other error, return the error
+		default:
+			return githubResp, err
+		}
 	}
 }
