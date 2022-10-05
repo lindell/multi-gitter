@@ -71,7 +71,7 @@ curl -s https://raw.githubusercontent.com/lindell/multi-gitter/master/install.sh
 ### From source
 You can also install from source with `go install`, this is not recommended for most cases.
 ```bash
-go install github.com/lindell/multi-gitter
+go install github.com/lindell/multi-gitter@latest
 ```
 
 ## Token
