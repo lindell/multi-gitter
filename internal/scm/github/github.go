@@ -536,7 +536,12 @@ func (g *Github) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 	}
 
 	_, err = g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
-	return err
+	// Ignore errors about the reference not existing in case the PR had already been closed and the branch deleted
+	if err != nil && !strings.Contains(err.Error(), "Reference does not exist") {
+		return err
+	}
+
+	return nil
 }
 
 // ForkRepository forks a repository. If newOwner is empty, fork on the logged in user
