@@ -214,11 +214,13 @@ func (g *Github) getOrganizationRepositories(ctx context.Context, orgName string
 	var repos []*github.Repository
 	i := 1
 	for {
-		rr, _, err := g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
-			ListOptions: github.ListOptions{
-				Page:    i,
-				PerPage: 100,
-			},
+		rr, _, err := retry(ctx, func() ([]*github.Repository, *github.Response, error) {
+			return g.ghClient.Repositories.ListByOrg(ctx, orgName, &github.RepositoryListByOrgOptions{
+				ListOptions: github.ListOptions{
+					Page:    i,
+					PerPage: 100,
+				},
+			})
 		})
 		if err != nil {
 			return nil, err
@@ -237,11 +239,13 @@ func (g *Github) getUserRepositories(ctx context.Context, user string) ([]*githu
 	var repos []*github.Repository
 	i := 1
 	for {
-		rr, _, err := g.ghClient.Repositories.List(ctx, user, &github.RepositoryListOptions{
-			ListOptions: github.ListOptions{
-				Page:    i,
-				PerPage: 100,
-			},
+		rr, _, err := retry(ctx, func() ([]*github.Repository, *github.Response, error) {
+			return g.ghClient.Repositories.List(ctx, user, &github.RepositoryListOptions{
+				ListOptions: github.ListOptions{
+					Page:    i,
+					PerPage: 100,
+				},
+			})
 		})
 		if err != nil {
 			return nil, err
@@ -257,7 +261,10 @@ func (g *Github) getUserRepositories(ctx context.Context, user string) ([]*githu
 }
 
 func (g *Github) getRepository(ctx context.Context, repoRef RepositoryReference) (*github.Repository, error) {
-	repo, _, err := g.ghClient.Repositories.Get(ctx, repoRef.OwnerName, repoRef.Name)
+	repo, _, err := retry(ctx, func() (*github.Repository, *github.Response, error) {
+		return g.ghClient.Repositories.Get(ctx, repoRef.OwnerName, repoRef.Name)
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +445,9 @@ func (g *Github) loggedInUser(ctx context.Context) (string, error) {
 		return g.user, nil
 	}
 
-	user, _, err := g.ghClient.Users.Get(ctx, "")
+	user, _, err := retry(ctx, func() (*github.User, *github.Response, error) {
+		return g.ghClient.Users.Get(ctx, "")
+	})
 	if err != nil {
 		return "", err
 	}
@@ -472,12 +481,14 @@ func (g *Github) GetOpenPullRequest(ctx context.Context, repo scm.Repository, br
 		return nil, err
 	}
 
-	prs, _, err := g.ghClient.PullRequests.List(ctx, headOwner, r.name, &github.PullRequestListOptions{
-		Head:  fmt.Sprintf("%s:%s", headOwner, branchName),
-		State: "open",
-		ListOptions: github.ListOptions{
-			PerPage: 1,
-		},
+	prs, _, err := retry(ctx, func() ([]*github.PullRequest, *github.Response, error) {
+		return g.ghClient.PullRequests.List(ctx, headOwner, r.name, &github.PullRequestListOptions{
+			Head:  fmt.Sprintf("%s:%s", headOwner, branchName),
+			State: "open",
+			ListOptions: github.ListOptions{
+				PerPage: 1,
+			},
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -496,7 +507,9 @@ func (g *Github) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 	defer g.modUnlock()
 
 	// We need to fetch the repo again since no AllowXMerge is present in listings of repositories
-	repo, _, err := g.ghClient.Repositories.Get(ctx, pr.ownerName, pr.repoName)
+	repo, _, err := retry(ctx, func() (*github.Repository, *github.Response, error) {
+		return g.ghClient.Repositories.Get(ctx, pr.ownerName, pr.repoName)
+	})
 	if err != nil {
 		return err
 	}
@@ -535,14 +548,18 @@ func (g *Github) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 	g.modLock()
 	defer g.modUnlock()
 
-	_, _, err := g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
-		State: &[]string{"closed"}[0],
+	_, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
+		return g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
+			State: &[]string{"closed"}[0],
+		})
 	})
 	if err != nil {
 		return err
 	}
 
-	_, err = g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
+	_, err = retryWithoutReturn(ctx, func() (*github.Response, error) {
+		return g.ghClient.Git.DeleteRef(ctx, pr.prOwnerName, pr.prRepoName, fmt.Sprintf("heads/%s", pr.branchName))
+	})
 	return err
 }
 
@@ -568,7 +585,9 @@ func (g *Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 		var err error
 		var repo *github.Repository
 		for i := 0; i < 10; i++ {
-			repo, _, err = g.ghClient.Repositories.Get(ctx, createdRepo.GetOwner().GetLogin(), createdRepo.GetName())
+			repo, _, err = retry(ctx, func() (*github.Repository, *github.Response, error) {
+				return g.ghClient.Repositories.Get(ctx, createdRepo.GetOwner().GetLogin(), createdRepo.GetName())
+			})
 			if err != nil {
 				time.Sleep(time.Second * 3)
 				continue
@@ -585,7 +604,9 @@ func (g *Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 
 // GetAutocompleteOrganizations gets organizations for autocompletion
 func (g *Github) GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error) {
-	orgs, _, err := g.ghClient.Organizations.List(ctx, "", nil)
+	orgs, _, err := retry(ctx, func() ([]*github.Organization, *github.Response, error) {
+		return g.ghClient.Organizations.List(ctx, "", nil)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -600,7 +621,9 @@ func (g *Github) GetAutocompleteOrganizations(ctx context.Context, _ string) ([]
 
 // GetAutocompleteUsers gets users for autocompletion
 func (g *Github) GetAutocompleteUsers(ctx context.Context, str string) ([]string, error) {
-	users, _, err := g.ghClient.Search.Users(ctx, str, nil)
+	users, _, err := retry(ctx, func() (*github.UsersSearchResult, *github.Response, error) {
+		return g.ghClient.Search.Users(ctx, str, nil)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -628,7 +651,9 @@ func (g *Github) GetAutocompleteRepositories(ctx context.Context, str string) ([
 		q = fmt.Sprintf("%s in:name", str)
 	}
 
-	repos, _, err := g.ghClient.Search.Repositories(ctx, q, nil)
+	repos, _, err := retry(ctx, func() (*github.RepositoriesSearchResult, *github.Response, error) {
+		return g.ghClient.Search.Repositories(ctx, q, nil)
+	})
 	if err != nil {
 		return nil, err
 	}
