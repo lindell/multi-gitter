@@ -21,7 +21,7 @@ func progressBar(screen tcell.Screen, width int, percentage float64, x, y int) {
 }
 
 func progressBarWithCounter(screen tcell.Screen, width int, total, parts, x, y int) {
-	totalRepoLength := log10(total)
+	totalRepoLength := log10(total) // Number of digits
 	counter := fmt.Sprintf("%0*d/%d ", totalRepoLength, parts, total)
 	percentage := float64(parts) / float64(total)
 	emitStr(screen, x, y, tcell.StyleDefault, counter)

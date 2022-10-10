@@ -13,6 +13,7 @@ import (
 )
 
 const descriptionLen = 11
+const maxRepoNameLen = 50
 
 // Counter keeps track of succeeded and failed repositories
 type Counter struct {
@@ -71,6 +72,10 @@ func NewCounter(repos []scm.Repository) *Counter {
 		if nameLength > maxLength {
 			maxLength = nameLength
 		}
+	}
+
+	if maxLength > maxRepoNameLen {
+		maxLength = maxRepoNameLen
 	}
 
 	counter.repoMaxLength = maxLength
@@ -162,6 +167,10 @@ func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 		r.ttyRender()
 		event := r.screen.PollEvent()
 		if event, ok := event.(*tcell.EventKey); ok {
+			if event.Key() == tcell.KeyCtrlC {
+				return -1
+			}
+
 			runeKey := event.Rune()
 			if runeKey != 0 {
 				for i, opt := range r.question.options {
@@ -226,7 +235,7 @@ func (r *Counter) ttyRender() {
 			}
 		}
 
-		emitStr(r.screen, r.columnStart(0), y, tcell.StyleDefault, repo.FullName())
+		emitStr(r.screen, r.columnStart(0), y, tcell.StyleDefault, shortenRepoName(repo, maxRepoNameLen))
 		emitStr(r.screen, r.columnStart(1), y, repo.action.Color(), center(description, descriptionLen))
 		progressBar(
 			r.screen,

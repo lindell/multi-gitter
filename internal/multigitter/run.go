@@ -85,6 +85,9 @@ func (pr dryRunPullRequest) String() string {
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
 func (r *Runner) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	// Fetch all repositories that are are going to be used in the run
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
@@ -126,7 +129,7 @@ func (r *Runner) Run(ctx context.Context) error {
 			}
 		}()
 
-		pr, err := r.runSingleRepo(ctx, repos[i])
+		pr, err := r.runSingleRepo(ctx, cancel, repos[i])
 		if err != nil {
 			if err != mgerrors.ErrAborted {
 				logger.Info(err)
@@ -195,7 +198,7 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 	return reviewers[0:maxReviewers]
 }
 
-func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.PullRequest, error) {
+func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.Repository) (scm.PullRequest, error) {
 	if ctx.Err() != nil {
 		return nil, mgerrors.ErrAborted
 	}
@@ -267,7 +270,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	}
 
 	if r.Interactive {
-		err = r.interactive(tmpDir, repo)
+		err = r.interactive(cancelAll, tmpDir, repo)
 		if err != nil {
 			return nil, err
 		}
@@ -355,7 +358,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	return pr, nil
 }
 
-func (r *Runner) interactive(dir string, repo scm.Repository) error {
+func (r *Runner) interactive(cancelAll func(), dir string, repo scm.Repository) error {
 	r.repocounter.QuestionLock()
 	defer r.repocounter.QuestionUnlock()
 
@@ -365,9 +368,13 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 				{Text: "View changes", Shortcut: 'v'},
 				{Text: "Accept", Shortcut: 'a'},
 				{Text: "Reject", Shortcut: 'r'},
+				{Text: "Cancel All", Shortcut: 'c'},
 			})
 
 		switch index {
+		case -1: // Ctrl + C
+			cancelAll()
+			return mgerrors.ErrRejected
 		case 0:
 			cmd := exec.Command("git", "diff", "HEAD~1")
 			cmd.Dir = dir
@@ -382,6 +389,9 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 		case 1:
 			return nil
 		case 2:
+			return mgerrors.ErrRejected
+		case 3:
+			cancelAll()
 			return mgerrors.ErrRejected
 		default:
 			panic("should never happen")
