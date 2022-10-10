@@ -59,19 +59,6 @@ func center(str string, size int) string {
 	return strBuilder.String()
 }
 
-func rightPad(str string, size int) string {
-	spaces := size - len(str)
-
-	strBuilder := strings.Builder{}
-
-	strBuilder.WriteString(str)
-	for i := 0; i < spaces; i++ {
-		strBuilder.WriteString(" ")
-	}
-
-	return strBuilder.String()
-}
-
 func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) int {
 	width := 0
 	for _, c := range str {

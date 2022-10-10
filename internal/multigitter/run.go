@@ -355,8 +355,6 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	return pr, nil
 }
 
-var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
-
 func (r *Runner) interactive(dir string, repo scm.Repository) error {
 	r.repocounter.QuestionLock()
 	defer r.repocounter.QuestionUnlock()

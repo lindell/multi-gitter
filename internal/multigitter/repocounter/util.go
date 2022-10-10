@@ -4,7 +4,7 @@ package repocounter
 func log10(num int) int {
 	ret := 0
 	for num != 0 {
-		ret += 1
+		ret++
 		num /= 10
 	}
 	return ret

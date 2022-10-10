@@ -162,7 +162,6 @@ func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 		r.ttyRender()
 		event := r.screen.PollEvent()
 		if event, ok := event.(*tcell.EventKey); ok {
-
 			runeKey := event.Rune()
 			if runeKey != 0 {
 				for i, opt := range r.question.options {
@@ -188,11 +187,11 @@ func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 }
 
 func (r *Counter) SuspendTTY() {
-	r.screen.Suspend()
+	_ = r.screen.Suspend()
 }
 
 func (r *Counter) ResumeTTY() {
-	r.screen.Resume()
+	_ = r.screen.Resume()
 }
 
 func (r *Counter) ttyRender() {
