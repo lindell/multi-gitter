@@ -270,7 +270,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.R
 	}
 
 	if r.Interactive {
-		err = r.interactive(cancelAll, tmpDir, repo)
+		err = r.interactive(ctx, cancelAll, tmpDir, repo)
 		if err != nil {
 			return nil, err
 		}
@@ -358,9 +358,13 @@ func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.R
 	return pr, nil
 }
 
-func (r *Runner) interactive(cancelAll func(), dir string, repo scm.Repository) error {
+func (r *Runner) interactive(ctx context.Context, cancelAll func(), dir string, repo scm.Repository) error {
 	r.repocounter.QuestionLock()
 	defer r.repocounter.QuestionUnlock()
+
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
 
 	for {
 		index := r.repocounter.AskQuestion(fmt.Sprintf("Changes were made to %s", repo.FullName()),
@@ -372,7 +376,7 @@ func (r *Runner) interactive(cancelAll func(), dir string, repo scm.Repository) 
 			})
 
 		switch index {
-		case -1: // Ctrl + C
+		case repocounter.QuestionCtrlC:
 			cancelAll()
 			return mgerrors.ErrRejected
 		case 0:

@@ -10,6 +10,8 @@ import (
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
+	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
@@ -97,6 +99,16 @@ func run(cmd *cobra.Command, args []string) error {
 	output, err := fileOutput(strOutput, os.Stdout)
 	if err != nil {
 		return err
+	}
+
+	useTTY := repocounter.TTYSupported()
+
+	if useTTY {
+		logOutput := log.StandardLogger().Out
+		logPrintsToTerminal := logOutput == os.Stderr || logOutput == os.Stdout
+		if logPrintsToTerminal {
+			log.SetOutput(nopWriter{})
+		}
 	}
 
 	// Set commit message based on pr title and body or the reverse
@@ -193,7 +205,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 		CreateGit: gitCreator,
 
-		TTY: false,
+		TTY: useTTY,
 	}
 
 	err = runner.Run(ctx)

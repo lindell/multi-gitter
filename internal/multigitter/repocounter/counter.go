@@ -12,6 +12,8 @@ import (
 	"github.com/lindell/multi-gitter/internal/scm"
 )
 
+const QuestionCtrlC = -1
+
 const descriptionLen = 11
 const maxRepoNameLen = 50
 
@@ -168,7 +170,7 @@ func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 		event := r.screen.PollEvent()
 		if event, ok := event.(*tcell.EventKey); ok {
 			if event.Key() == tcell.KeyCtrlC {
-				return -1
+				return QuestionCtrlC
 			}
 
 			runeKey := event.Rune()
@@ -313,6 +315,12 @@ func (r *Counter) Info() string {
 	}
 
 	return exitInfo
+}
+
+// TTYSupported checks if TTY is supported
+func TTYSupported() bool {
+	_, err := tcell.NewScreen()
+	return err == nil
 }
 
 type urler interface {
