@@ -68,7 +68,9 @@ func logFlagInit(cmd *cobra.Command, args []string) error {
 	strFile, _ := cmd.Flags().GetString("log-file")
 	if strFile == "" {
 		log.SetOutput(nopWriter{})
-	} else if strFile != "-" {
+	} else if strFile == "-" {
+		log.SetOutput(os.Stderr)
+	} else {
 		file, err := os.Create(strFile)
 		if err != nil {
 			return errors.Wrapf(err, "could not open log-file %s", strFile)

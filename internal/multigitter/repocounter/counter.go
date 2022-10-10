@@ -269,7 +269,7 @@ func (r *Counter) Info() string {
 
 	// Group all error messages together
 	errMap := map[string][]*repoStatus{}
-	for _, repo := range r.repositoriesMap {
+	for _, repo := range r.repositoriesList {
 		if repo.err != nil {
 			errMap[repo.err.Error()] = append(errMap[repo.err.Error()], repo)
 		}
@@ -283,7 +283,7 @@ func (r *Counter) Info() string {
 	}
 
 	successRepositories := []*repoStatus{}
-	for _, repo := range r.repositoriesMap {
+	for _, repo := range r.repositoriesList {
 		if repo.action == ActionSuccess {
 			successRepositories = append(successRepositories, repo)
 		}

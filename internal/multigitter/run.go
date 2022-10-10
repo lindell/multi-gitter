@@ -65,6 +65,8 @@ type Runner struct {
 
 	CreateGit func(dir string) Git
 
+	TTY bool // If set, the progress will be displayed using TTY. If set, it's important that nothing writes to stdout/stderr
+
 	repocounter *repocounter.Counter
 }
 
@@ -106,8 +108,13 @@ func (r *Runner) Run(ctx context.Context) error {
 
 	log.Infof("Running on %d repositories", len(repos))
 
-	_ = r.repocounter.OpenTTY()
-	defer func() { _ = r.repocounter.CloseTTY() }()
+	if r.TTY {
+		err := r.repocounter.OpenTTY()
+		if err != nil {
+			return err
+		}
+		defer func() { _ = r.repocounter.CloseTTY() }()
+	}
 
 	runInParallel(func(i int) {
 		logger := log.WithField("repo", repos[i].FullName())
