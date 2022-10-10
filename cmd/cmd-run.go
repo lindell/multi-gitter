@@ -193,7 +193,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 		CreateGit: gitCreator,
 
-		TTY: true,
+		TTY: false,
 	}
 
 	err = runner.Run(ctx)
