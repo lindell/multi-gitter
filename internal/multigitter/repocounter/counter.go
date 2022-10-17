@@ -5,14 +5,16 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gdamore/tcell/v2"
+	"github.com/lindell/go-ordered-set/orderedset"
 	mgerrors "github.com/lindell/multi-gitter/internal/multigitter/errors"
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 	"github.com/lindell/multi-gitter/internal/scm"
+	"github.com/sirupsen/logrus"
 )
-
-const QuestionCtrlC = -1
 
 const descriptionLen = 11
 const maxRepoNameLen = 50
@@ -32,9 +34,22 @@ type Counter struct {
 	lock sync.RWMutex
 
 	question     question
-	questionLock sync.Mutex // Used
+	questionLock sync.Mutex
 
-	screen tcell.Screen
+	toBeStarted *orderedset.OrderedSet[*repoStatus]
+	inProgress  *orderedset.OrderedSet[*repoStatus]
+	completed   *orderedset.OrderedSet[*repoStatus]
+
+	screen            tcell.Screen
+	quitCh            chan struct{}
+	eventCallback     func(tcell.Event)
+	eventCallbackLock sync.Mutex
+
+	abortListeners     []func()
+	abortListenersLock sync.Mutex
+
+	lastRender      time.Time
+	renderQueueLock sync.Mutex
 }
 
 type question struct {
@@ -60,6 +75,9 @@ type repoStatus struct {
 func NewCounter(repos []scm.Repository) *Counter {
 	counter := &Counter{
 		repositoriesMap: map[string]*repoStatus{},
+		toBeStarted:     orderedset.New[*repoStatus](),
+		inProgress:      orderedset.New[*repoStatus](),
+		completed:       orderedset.New[*repoStatus](),
 	}
 
 	maxLength := 0
@@ -68,6 +86,7 @@ func NewCounter(repos []scm.Repository) *Counter {
 			Repository: repo,
 		}
 		counter.repositoriesMap[repo.FullName()] = status
+		counter.toBeStarted.Add(status)
 		counter.repositoriesList = append(counter.repositoriesList, status)
 
 		nameLength := len(repo.FullName())
@@ -75,7 +94,6 @@ func NewCounter(repos []scm.Repository) *Counter {
 			maxLength = nameLength
 		}
 	}
-
 	if maxLength > maxRepoNameLen {
 		maxLength = maxRepoNameLen
 	}
@@ -105,14 +123,42 @@ func (r *Counter) OpenTTY() error {
 		return err
 	}
 
+	ch := make(chan tcell.Event)
+	r.quitCh = make(chan struct{})
+	go func() {
+		s.ChannelEvents(ch, r.quitCh)
+	}()
+	go func() {
+		for event := range ch {
+			r.handleEvent(event)
+		}
+	}()
+
 	r.screen = s
 
 	return nil
 }
 
 func (r *Counter) CloseTTY() error {
+	r.quitCh <- struct{}{}
 	r.screen.Fini()
 	return nil
+}
+
+func (r *Counter) OnAbort(fn func()) {
+	r.abortListenersLock.Lock()
+	defer r.abortListenersLock.Unlock()
+
+	r.abortListeners = append(r.abortListeners, fn)
+}
+
+func (r *Counter) abort() {
+	r.abortListenersLock.Lock()
+	defer r.abortListenersLock.Unlock()
+
+	for _, fn := range r.abortListeners {
+		fn()
+	}
 }
 
 // AddError add a failing repository together with the error that caused it
@@ -120,22 +166,75 @@ func (r *Counter) SetError(err error, repo scm.Repository) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
-	r.repositoriesMap[repo.FullName()].action = ActionError
+	r.setRepoAction(repo, ActionError)
 	r.repositoriesMap[repo.FullName()].err = err
-	r.done++
-	r.ttyRender()
+	r.queueRender()
 }
 
 func (r *Counter) SetRepoAction(repo scm.Repository, action Action) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
-	r.repositoriesMap[repo.FullName()].action = action
-	if action == ActionSuccess || action == ActionError {
-		r.done++
+	r.setRepoAction(repo, action)
+
+	r.queueRender()
+}
+
+func (r *Counter) waitForEvent() tcell.Event {
+	var event tcell.Event
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	r.eventCallbackLock.Lock()
+	r.eventCallback = func(e tcell.Event) {
+		event = e
+		wg.Done()
+	}
+	r.eventCallbackLock.Unlock()
+
+	wg.Wait()
+
+	r.eventCallbackLock.Lock()
+	r.eventCallback = nil
+	r.eventCallbackLock.Unlock()
+
+	return event
+}
+
+func (r *Counter) handleEvent(event tcell.Event) {
+	logrus.Info(spew.Sdump(event))
+
+	if event, ok := event.(*tcell.EventKey); ok {
+		if event.Key() == tcell.KeyCtrlC {
+			r.abort()
+			return
+		}
 	}
 
-	r.ttyRender()
+	if _, ok := event.(*tcell.EventResize); ok {
+		r.queueRender()
+		return
+	}
+
+	r.eventCallbackLock.Lock()
+	if r.eventCallback != nil {
+		r.eventCallback(event)
+	}
+	r.eventCallbackLock.Unlock()
+}
+
+func (r *Counter) setRepoAction(repo scm.Repository, action Action) {
+	status := r.repositoriesMap[repo.FullName()]
+	status.action = action
+	percentage := action.Percentage()
+	if percentage == 1 {
+		r.inProgress.Delete(status)
+		r.completed.Add(status)
+		r.done++
+	} else if percentage > 0 {
+		r.toBeStarted.Delete(status)
+		r.inProgress.Add(status)
+	}
 }
 
 // AddSuccessPullRequest adds a pullrequest that succeeded
@@ -157,7 +256,6 @@ func (r *Counter) QuestionUnlock() {
 func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 	defer func() {
 		r.question = question{}
-		r.ttyRender()
 	}()
 
 	r.question = question{
@@ -167,12 +265,8 @@ func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 
 	for {
 		r.ttyRender()
-		event := r.screen.PollEvent()
+		event := r.waitForEvent()
 		if event, ok := event.(*tcell.EventKey); ok {
-			if event.Key() == tcell.KeyCtrlC {
-				return QuestionCtrlC
-			}
-
 			runeKey := event.Rune()
 			if runeKey != 0 {
 				for i, opt := range r.question.options {
@@ -205,10 +299,26 @@ func (r *Counter) ResumeTTY() {
 	_ = r.screen.Resume()
 }
 
+func (r *Counter) queueRender() {
+	r.renderQueueLock.Lock()
+	defer r.renderQueueLock.Unlock()
+	// TODO: This is not working (as expected)
+
+	sinceLastRender := time.Since(r.lastRender)
+	if sinceLastRender > time.Millisecond*100 {
+		r.ttyRender()
+		return
+	}
+	time.Sleep(time.Millisecond*100 - sinceLastRender)
+	r.ttyRender()
+}
+
 func (r *Counter) ttyRender() {
 	if r.screen == nil {
 		return
 	}
+
+	r.lastRender = time.Now()
 
 	r.screen.Clear()
 
@@ -223,33 +333,32 @@ func (r *Counter) ttyRender() {
 	emitStr(r.screen, r.columnStart(1), 0, headerStyle, center("STATE", descriptionLen))
 	emitStr(r.screen, r.columnStart(2), 0, headerStyle, "PROGRESS")
 
-	y := 1
+	// Determine the size of each category, completed/in progress/to be started
+	totalSize := screenHeight - 3
+	inProgressSize := minInt(r.inProgress.Size(), totalSize) // In progress takes priority, but can't still be bigger than the screen
+	completedSize := minInt((totalSize-inProgressSize)/2, r.completed.Size())
+	toBeStartedSize := minInt(totalSize-inProgressSize-completedSize, r.toBeStarted.Size())
+	completedSize = maxInt(completedSize, totalSize-inProgressSize-toBeStartedSize)
 
-	for _, repo := range r.repositoriesList {
-		description := repo.action.Description()
-		if repo.action == ActionError {
-			if repo.err == mgerrors.ErrNoChange {
-				description = "no change"
-			} else if repo.err == mgerrors.ErrRejected {
-				description = "rejected"
-			} else if err, ok := repo.err.(*exec.ExitError); ok {
-				description = fmt.Sprintf("exit %d", err.ExitCode())
-			}
-		}
+	y := 0
+	completedY := 0
+	iterateTimes[*repoStatus](completedSize, r.completed.IterReverse(), func(repo *repoStatus) {
+		r.renderRepoStatus(y+completedSize-completedY, repo)
+		completedY++
+	})
+	y += completedSize
 
-		emitStr(r.screen, r.columnStart(0), y, tcell.StyleDefault, shortenRepoName(repo, maxRepoNameLen))
-		emitStr(r.screen, r.columnStart(1), y, repo.action.Color(), center(description, descriptionLen))
-		progressBar(
-			r.screen,
-			// screenWidth-(r.repoMaxLength+descriptionLen+2),
-			20,
-			statusToPercentage(repo.action),
-			r.columnStart(2),
-			y,
-		)
+	inProgressY := 0
+	iterateTimes[*repoStatus](inProgressSize, r.inProgress.IterReverse(), func(repo *repoStatus) {
+		r.renderRepoStatus(y+inProgressSize-inProgressY, repo)
+		inProgressY++
+	})
+	y += inProgressSize
 
+	iterateTimes[*repoStatus](toBeStartedSize, r.toBeStarted.Iter(), func(repo *repoStatus) {
 		y++
-	}
+		r.renderRepoStatus(y, repo)
+	})
 
 	progressBarWithCounter(
 		r.screen,
@@ -261,13 +370,36 @@ func (r *Counter) ttyRender() {
 	)
 
 	// Not thread safe yet TODO fix
-	emitStr(r.screen, 1, screenHeight-4, tcell.StyleDefault, r.question.text)
+	emitStr(r.screen, 1, screenHeight-3, headerStyle, r.question.text)
 	buttonX := 1
 	for i, question := range r.question.options {
-		buttonX += button(r.screen, buttonX, screenHeight-3, question.Text, i == r.question.index) + 1
+		buttonX += button(r.screen, buttonX, screenHeight-2, question.Text, i == r.question.index) + 1
 	}
 
 	r.screen.Show()
+}
+
+func (r *Counter) renderRepoStatus(y int, repoStatus *repoStatus) {
+	description := repoStatus.action.Description()
+	if repoStatus.action == ActionError {
+		if repoStatus.err == mgerrors.ErrNoChange {
+			description = "no change"
+		} else if repoStatus.err == mgerrors.ErrRejected {
+			description = "rejected"
+		} else if err, ok := repoStatus.err.(*exec.ExitError); ok {
+			description = fmt.Sprintf("exit %d", err.ExitCode())
+		}
+	}
+
+	emitStr(r.screen, r.columnStart(0), y, tcell.StyleDefault, shortenRepoName(repoStatus, maxRepoNameLen))
+	emitStr(r.screen, r.columnStart(1), y, repoStatus.action.Color(), center(description, descriptionLen))
+	progressBar(
+		r.screen,
+		20,
+		repoStatus.action.Percentage(),
+		r.columnStart(2),
+		y,
+	)
 }
 
 // Info returns a formated string about all repositories

@@ -59,8 +59,8 @@ func (a Action) Color() tcell.Style {
 	}
 }
 
-func statusToPercentage(s Action) float64 {
-	switch s {
+func (a Action) Percentage() float64 {
+	switch a {
 	case ActionNotStarted:
 		return 0.0
 	case ActionClone:
@@ -76,6 +76,6 @@ func statusToPercentage(s Action) float64 {
 	case ActionError:
 		return 1.0
 	default:
-		panic(fmt.Sprintf("could not get percentage of status %q", s))
+		panic(fmt.Sprintf("could not get percentage of status %q", a))
 	}
 }

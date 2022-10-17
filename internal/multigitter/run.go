@@ -116,6 +116,9 @@ func (r *Runner) Run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		r.repocounter.OnAbort(func() {
+			cancel()
+		})
 		defer func() { _ = r.repocounter.CloseTTY() }()
 	}
 
@@ -376,9 +379,6 @@ func (r *Runner) interactive(ctx context.Context, cancelAll func(), dir string, 
 			})
 
 		switch index {
-		case repocounter.QuestionCtrlC:
-			cancelAll()
-			return mgerrors.ErrRejected
 		case 0:
 			cmd := exec.Command("git", "diff", "HEAD~1")
 			cmd.Dir = dir

@@ -21,6 +21,8 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 )
 
+require github.com/lindell/go-ordered-set v1.0.2
+
 require (
 	github.com/Microsoft/go-winio v0.4.16 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
