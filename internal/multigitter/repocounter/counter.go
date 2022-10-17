@@ -305,11 +305,11 @@ func (r *Counter) queueRender() {
 	// TODO: This is not working (as expected)
 
 	sinceLastRender := time.Since(r.lastRender)
-	if sinceLastRender > time.Millisecond*100 {
+	if sinceLastRender > time.Millisecond*1 {
 		r.ttyRender()
 		return
 	}
-	time.Sleep(time.Millisecond*100 - sinceLastRender)
+	time.Sleep(time.Millisecond*1 - sinceLastRender)
 	r.ttyRender()
 }
 
