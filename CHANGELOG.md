@@ -1,5 +1,23 @@
 # Changelog
 
+### [0.42.4](https://www.github.com/lindell/multi-gitter/compare/v0.42.3...v0.42.4) (2022-10-17)
+
+
+### Bug Fixes
+
+* **github:** added missing closed pr status ([#290](https://www.github.com/lindell/multi-gitter/issues/290)) ([9e3644a](https://www.github.com/lindell/multi-gitter/commit/9e3644a899197470985707112238f9990df99564))
+* better error message when the same feature and base branch is used ([#281](https://www.github.com/lindell/multi-gitter/issues/281)) ([ff98e8f](https://www.github.com/lindell/multi-gitter/commit/ff98e8fff43a3ccc14feb2f24f6c54c134dbc21c))
+* retry when encounting the GitHub rate limit ([#280](https://www.github.com/lindell/multi-gitter/issues/280)) ([008a26a](https://www.github.com/lindell/multi-gitter/commit/008a26ae0182c8e69cc0679a0d7ee776415c1d62))
+
+
+### Dependencies
+
+* update golang.org/x/oauth2 digest to f213421 ([dfd1837](https://www.github.com/lindell/multi-gitter/commit/dfd18376c44f4b9a36628142fc52277b0aa48ec0))
+* update module github.com/spf13/viper to v1.13.0 ([099a9c9](https://www.github.com/lindell/multi-gitter/commit/099a9c9f3e5341b207ec298356319303df67a31f))
+* update module github.com/xanzy/go-gitlab to v0.73.1 ([badc233](https://www.github.com/lindell/multi-gitter/commit/badc23353c3f611031fa70483b6892cf8f2e0b99))
+* update module go to 1.19 ([2fdbcde](https://www.github.com/lindell/multi-gitter/commit/2fdbcde5f6160ece5b8fac38d65761278b9f0f6a))
+* update module go-github to v47 ([#286](https://www.github.com/lindell/multi-gitter/issues/286)) ([68fb1e2](https://www.github.com/lindell/multi-gitter/commit/68fb1e28af23bbdd8c77323e572a3c43d06a4445))
+
 ### [0.42.3](https://www.github.com/lindell/multi-gitter/compare/v0.42.2...v0.42.3) (2022-08-12)
 
 
