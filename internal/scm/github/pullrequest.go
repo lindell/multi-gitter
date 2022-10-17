@@ -26,6 +26,8 @@ func convertGraphQLPullRequest(pr graphqlPR) pullRequest {
 
 	if pr.Merged {
 		status = scm.PullRequestStatusMerged
+	} else if pr.Closed {
+		status = scm.PullRequestStatusClosed
 	} else if combinedStatus == nil {
 		status = scm.PullRequestStatusSuccess
 	} else {
