@@ -285,6 +285,10 @@ func (g *Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		return nil, err
 	}
 
+	if err := g.addLabels(ctx, r, newPR, pr); err != nil {
+		return nil, err
+	}
+
 	return convertPullRequest(pr), nil
 }
 
@@ -321,6 +325,16 @@ func (g *Github) addAssignees(ctx context.Context, repo repository, newPR scm.Ne
 	}
 	_, _, err := retry(ctx, func() (*github.Issue, *github.Response, error) {
 		return g.ghClient.Issues.AddAssignees(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Assignees)
+	})
+	return err
+}
+
+func (g *Github) addLabels(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
+	if len(newPR.Labels) == 0 {
+		return nil
+	}
+	_, _, err := retry(ctx, func() ([]*github.Label, *github.Response, error) {
+		return g.ghClient.Issues.AddLabelsToIssue(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Labels)
 	})
 	return err
 }

@@ -226,6 +226,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		prTitle = "Draft: " + prTitle // See https://docs.gitlab.com/ee/user/project/merge_requests/drafts.html#mark-merge-requests-as-drafts
 	}
 
+	labels := gitlab.Labels(newPR.Labels)
 	removeSourceBranch := true
 	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(prR.pid, &gitlab.CreateMergeRequestOptions{
 		Title:              &prTitle,
@@ -237,6 +238,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		RemoveSourceBranch: &removeSourceBranch,
 		Squash:             &r.shouldSquash,
 		AssigneeIDs:        &assigneesIDs,
+		Labels:             &labels,
 	})
 	if err != nil {
 		return nil, err

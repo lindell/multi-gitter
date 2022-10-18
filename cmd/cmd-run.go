@@ -54,6 +54,7 @@ Available values:
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
+	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	configureGit(cmd)
@@ -89,6 +90,7 @@ func run(cmd *cobra.Command, args []string) error {
 	strOutput, _ := flag.GetString("output")
 	assignees, _ := flag.GetStringSlice("assignees")
 	draft, _ := flag.GetBool("draft")
+	labels, _ := flag.GetStringSlice("labels")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -192,6 +194,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Assignees:        assignees,
 		ConflictStrategy: conflictStrategy,
 		Draft:            draft,
+		Labels:           labels,
 
 		Concurrent: concurrent,
 
