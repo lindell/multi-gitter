@@ -63,6 +63,8 @@ type Runner struct {
 
 	Draft bool // If set, creates Pull Requests as draft
 
+	Labels []string // Labels to be added to the pull request
+
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
 	CreateGit func(dir string) Git
@@ -334,6 +336,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 			Assignees: r.Assignees,
 			Draft:     r.Draft,
+			Labels:    r.Labels,
 		})
 		if err != nil {
 			return nil, err

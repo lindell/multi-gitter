@@ -216,12 +216,18 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo scm.Repository, prRe
 		prTitle = "WIP: " + prTitle // See https://docs.gitea.io/en-us/pull-request/
 	}
 
+	labels, err := g.getLabelsFromStrings(ctx, r, newPR.Labels)
+	if err != nil {
+		return nil, errors.WithMessage(err, "could not map labels")
+	}
+
 	pr, _, err := g.giteaClient(ctx).CreatePullRequest(r.ownerName, r.name, gitea.CreatePullRequestOption{
 		Head:      head,
 		Base:      newPR.Base,
 		Title:     prTitle,
 		Body:      newPR.Body,
 		Assignees: newPR.Assignees,
+		Labels:    labels,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "could not create pull request")
@@ -243,6 +249,33 @@ func (g *Gitea) CreatePullRequest(ctx context.Context, repo scm.Repository, prRe
 		index:       pr.Index,
 		webURL:      pr.HTMLURL,
 	}, nil
+}
+
+func (g *Gitea) getLabelsFromStrings(ctx context.Context, repo repository, labelNames []string) ([]int64, error) {
+	if len(labelNames) == 0 {
+		return nil, nil
+	}
+
+	labels, _, err := g.giteaClient(ctx).ListRepoLabels(repo.ownerName, repo.name, gitea.ListLabelsOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map for quick lookup
+	labelMap := map[string]int64{}
+	for _, label := range labels {
+		labelMap[label.Name] = label.ID
+	}
+
+	// Get the ids of all labels, if the label-name does not exist, simply skip it
+	var ret []int64
+	for _, name := range labelNames {
+		if id, ok := labelMap[name]; ok {
+			ret = append(ret, id)
+		}
+	}
+
+	return ret, nil
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
