@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.43.0](https://www.github.com/lindell/multi-gitter/compare/v0.42.4...v0.43.0) (2022-10-18)
+
+
+### Features
+
+* added option to add labels to creates pull requests ([#292](https://www.github.com/lindell/multi-gitter/issues/292)) ([fccf678](https://www.github.com/lindell/multi-gitter/commit/fccf678c384ff01cd0247c35860acf0d257e41a7))
+
 ### [0.42.4](https://www.github.com/lindell/multi-gitter/compare/v0.42.3...v0.42.4) (2022-10-17)
 
 
