@@ -7,13 +7,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gdamore/tcell/v2"
 	"github.com/lindell/go-ordered-set/orderedset"
 	mgerrors "github.com/lindell/multi-gitter/internal/multigitter/errors"
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 	"github.com/lindell/multi-gitter/internal/scm"
-	"github.com/sirupsen/logrus"
 )
 
 const descriptionLen = 11
@@ -202,8 +200,6 @@ func (r *Counter) waitForEvent() tcell.Event {
 }
 
 func (r *Counter) handleEvent(event tcell.Event) {
-	logrus.Info(spew.Sdump(event))
-
 	if event, ok := event.(*tcell.EventKey); ok {
 		if event.Key() == tcell.KeyCtrlC {
 			r.abort()
@@ -334,7 +330,7 @@ func (r *Counter) ttyRender() {
 	emitStr(r.screen, r.columnStart(2), 0, headerStyle, "PROGRESS")
 
 	// Determine the size of each category, completed/in progress/to be started
-	totalSize := screenHeight - 3
+	totalSize := minInt(len(r.repositoriesList), screenHeight-3)
 	inProgressSize := minInt(r.inProgress.Size(), totalSize) // In progress takes priority, but can't still be bigger than the screen
 	completedSize := minInt((totalSize-inProgressSize)/2, r.completed.Size())
 	toBeStartedSize := minInt(totalSize-inProgressSize-completedSize, r.toBeStarted.Size())
