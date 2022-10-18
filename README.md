@@ -164,6 +164,10 @@ insecure: false
 # Take manual decision before committing any change. Requires git to be installed.
 interactive: false
 
+# Labels to be added to any created pull request.
+labels:
+  - example
+
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
@@ -562,6 +566,7 @@ Flags:
       --include-subgroups          Include GitLab subgroups when using the --group flag.
       --insecure                   Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
   -i, --interactive                Take manual decision before committing any change. Requires git to be installed.
+      --labels strings             Labels to be added to any created pull request.
       --log-file string            The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string          The formating of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
