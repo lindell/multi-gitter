@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.43.1](https://www.github.com/lindell/multi-gitter/compare/v0.43.0...v0.43.1) (2022-10-25)
+
+
+### Bug Fixes
+
+* **github:** add retry mechanism to all requests ([#289](https://www.github.com/lindell/multi-gitter/issues/289)) ([89a642c](https://www.github.com/lindell/multi-gitter/commit/89a642c551fa032d4389883acd26146109ebfa99))
+* added support for cancellation of git remote commands ([#296](https://www.github.com/lindell/multi-gitter/issues/296)) ([83bfbc7](https://www.github.com/lindell/multi-gitter/commit/83bfbc764a920ffbbedc5a80028b889391360dfd))
+
 ## [0.43.0](https://www.github.com/lindell/multi-gitter/compare/v0.42.4...v0.43.0) (2022-10-18)
 
 
