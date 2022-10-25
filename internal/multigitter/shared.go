@@ -1,6 +1,7 @@
 package multigitter
 
 import (
+	"context"
 	"fmt"
 	"syscall"
 
@@ -24,12 +25,12 @@ func transformExecError(err error) error {
 
 // Git is a git implementation
 type Git interface {
-	Clone(url string, baseName string) error
+	Clone(ctx context.Context, url string, baseName string) error
 	ChangeBranch(branchName string) error
 	Changes() (bool, error)
 	Commit(commitAuthor *git.CommitAuthor, commitMessage string) error
 	BranchExist(remoteName, branchName string) (bool, error)
-	Push(remoteName string, force bool) error
+	Push(ctx context.Context, remoteName string, force bool) error
 	AddRemote(name, url string) error
 }
 

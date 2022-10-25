@@ -77,14 +77,14 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 
 	sourceController := r.CreateGit(tmpDir)
 
-	err = sourceController.Clone(repo.CloneURL(), repo.DefaultBranch())
+	err = sourceController.Clone(ctx, repo.CloneURL(), repo.DefaultBranch())
 	if err != nil {
 		return err
 	}
 
 	// Run the command that might or might not change the content of the repo
 	// If the command return a non zero exit code, abort.
-	cmd := exec.Command(r.ScriptPath, r.Arguments...)
+	cmd := exec.CommandContext(ctx, r.ScriptPath, r.Arguments...)
 	cmd.Dir = tmpDir
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
