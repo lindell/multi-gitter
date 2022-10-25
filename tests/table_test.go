@@ -880,6 +880,30 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "labels",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--labels", "label1,label2",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, []string{"label1", "label2"}, vcMock.PullRequests[0].Labels)
+			},
+		},
+
+		{
 			name: "remove files",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				repo := createRepo(t, "owner", "should-delete", "i like apples")

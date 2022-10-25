@@ -61,6 +61,8 @@ type Runner struct {
 
 	Draft bool // If set, creates Pull Requests as draft
 
+	Labels []string // Labels to be added to the pull request
+
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
 	CreateGit func(dir string) Git
@@ -227,7 +229,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.R
 		return nil, errors.Errorf("both the feature branch and base branch was named %s, if you intended to push directly into the base branch, please use the `skip-pr` option", baseBranch)
 	}
 
-	err = sourceController.Clone(repo.CloneURL(), baseBranch)
+	err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +246,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.R
 
 	// Run the command that might or might not change the content of the repo
 	// If the command return a non zero exit code, abort.
-	cmd := exec.Command(r.ScriptPath, r.Arguments...)
+	cmd := exec.CommandContext(ctx, r.ScriptPath, r.Arguments...)
 	cmd.Dir = tmpDir
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
@@ -317,7 +319,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.R
 	log.Info("Pushing changes to remote")
 	r.repocounter.SetRepoAction(repo, repocounter.ActionPush)
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
-	err = sourceController.Push(remoteName, forcePush)
+	err = sourceController.Push(ctx, remoteName, forcePush)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
 	}
@@ -352,6 +354,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.R
 			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
 			Assignees: r.Assignees,
 			Draft:     r.Draft,
+			Labels:    r.Labels,
 		})
 		if err != nil {
 			return nil, err
