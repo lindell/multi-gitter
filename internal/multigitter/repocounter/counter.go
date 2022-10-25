@@ -17,6 +17,8 @@ import (
 const descriptionLen = 11
 const maxRepoNameLen = 50
 
+const maxRefreshRate = time.Second / 30
+
 // Counter keeps track of succeeded and failed repositories
 type Counter struct {
 	// Used for quick lookups
@@ -26,8 +28,6 @@ type Counter struct {
 	repoMaxLength    int
 
 	columnsLengths []int
-
-	done int // Either successful or faulty runs
 
 	lock sync.RWMutex
 
@@ -39,6 +39,7 @@ type Counter struct {
 	completed   *orderedset.OrderedSet[*repoStatus]
 
 	screen            tcell.Screen
+	screenLock        sync.Mutex
 	quitCh            chan struct{}
 	eventCallback     func(tcell.Event)
 	eventCallbackLock sync.Mutex
@@ -47,6 +48,7 @@ type Counter struct {
 	abortListenersLock sync.Mutex
 
 	lastRender      time.Time
+	queuedRender    bool
 	renderQueueLock sync.Mutex
 }
 
@@ -132,12 +134,17 @@ func (r *Counter) OpenTTY() error {
 		}
 	}()
 
+	r.screenLock.Lock()
 	r.screen = s
+	r.screenLock.Unlock()
 
 	return nil
 }
 
 func (r *Counter) CloseTTY() error {
+	r.screenLock.Lock()
+	defer r.screenLock.Unlock()
+
 	r.quitCh <- struct{}{}
 	r.screen.Fini()
 	return nil
@@ -199,6 +206,40 @@ func (r *Counter) waitForEvent() tcell.Event {
 	return event
 }
 
+func (r *Counter) setRepoAction(repo scm.Repository, action Action) {
+	status := r.repositoriesMap[repo.FullName()]
+
+	// Get the set in which the repository currently resides
+	currentPercentage := status.action.Percentage()
+	var currentSet *orderedset.OrderedSet[*repoStatus]
+	if currentPercentage == 0 {
+		currentSet = r.toBeStarted
+	} else if currentPercentage == 1 {
+		currentSet = r.completed
+	} else {
+		currentSet = r.inProgress
+	}
+
+	// Get the set in which the repository should reside
+	newPercentage := action.Percentage()
+	var newSet *orderedset.OrderedSet[*repoStatus]
+	if newPercentage == 0 {
+		newSet = r.toBeStarted
+	} else if newPercentage == 1 {
+		newSet = r.completed
+	} else {
+		newSet = r.inProgress
+	}
+
+	// Move between sets if needed
+	if currentSet != newSet {
+		currentSet.Delete(status)
+		newSet.Add(status)
+	}
+
+	status.action = action
+}
+
 func (r *Counter) handleEvent(event tcell.Event) {
 	if event, ok := event.(*tcell.EventKey); ok {
 		if event.Key() == tcell.KeyCtrlC {
@@ -217,20 +258,6 @@ func (r *Counter) handleEvent(event tcell.Event) {
 		r.eventCallback(event)
 	}
 	r.eventCallbackLock.Unlock()
-}
-
-func (r *Counter) setRepoAction(repo scm.Repository, action Action) {
-	status := r.repositoriesMap[repo.FullName()]
-	status.action = action
-	percentage := action.Percentage()
-	if percentage == 1 {
-		r.inProgress.Delete(status)
-		r.completed.Add(status)
-		r.done++
-	} else if percentage > 0 {
-		r.toBeStarted.Delete(status)
-		r.inProgress.Add(status)
-	}
 }
 
 // AddSuccessPullRequest adds a pullrequest that succeeded
@@ -260,7 +287,7 @@ func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 	}
 
 	for {
-		r.ttyRender()
+		r.queueRender()
 		event := r.waitForEvent()
 		if event, ok := event.(*tcell.EventKey); ok {
 			runeKey := event.Rune()
@@ -288,33 +315,55 @@ func (r *Counter) AskQuestion(text string, options []QuestionOption) int {
 }
 
 func (r *Counter) SuspendTTY() {
+	r.screenLock.Lock()
+	defer r.screenLock.Unlock()
+
 	_ = r.screen.Suspend()
 }
 
 func (r *Counter) ResumeTTY() {
+	r.screenLock.Lock()
+	defer r.screenLock.Unlock()
+
 	_ = r.screen.Resume()
 }
 
 func (r *Counter) queueRender() {
 	r.renderQueueLock.Lock()
 	defer r.renderQueueLock.Unlock()
-	// TODO: This is not working (as expected)
 
-	sinceLastRender := time.Since(r.lastRender)
-	if sinceLastRender > time.Millisecond*1 {
-		r.ttyRender()
+	if r.queuedRender {
 		return
 	}
-	time.Sleep(time.Millisecond*1 - sinceLastRender)
-	r.ttyRender()
+
+	sinceLastRender := time.Since(r.lastRender)
+	if sinceLastRender > maxRefreshRate {
+		go r.ttyRender()
+		r.lastRender = time.Now()
+		return
+	}
+
+	r.queuedRender = true
+
+	go func() {
+		time.Sleep(maxRefreshRate - sinceLastRender)
+		r.renderQueueLock.Lock()
+		defer r.renderQueueLock.Unlock()
+		go r.ttyRender()
+		r.queuedRender = false
+		r.lastRender = time.Now()
+	}()
 }
 
 func (r *Counter) ttyRender() {
+	r.screenLock.Lock()
+	defer r.screenLock.Unlock()
+	r.lock.RLock()
+	defer r.lock.RUnlock()
+
 	if r.screen == nil {
 		return
 	}
-
-	r.lastRender = time.Now()
 
 	r.screen.Clear()
 
@@ -360,7 +409,7 @@ func (r *Counter) ttyRender() {
 		r.screen,
 		screenWidth,
 		len(r.repositoriesList),
-		r.done,
+		r.completed.Size(),
 		0,
 		screenHeight-1,
 	)
