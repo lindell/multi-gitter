@@ -2,6 +2,7 @@ package gogit
 
 import (
 	"bytes"
+	"context"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -24,8 +25,8 @@ type Git struct {
 }
 
 // Clone a repository
-func (g *Git) Clone(url string, baseName string) error {
-	r, err := git.PlainClone(g.Directory, false, &git.CloneOptions{
+func (g *Git) Clone(ctx context.Context, url string, baseName string) error {
+	r, err := git.PlainCloneContext(ctx, g.Directory, false, &git.CloneOptions{
 		URL:           url,
 		RemoteName:    "origin",
 		Depth:         g.FetchDepth,
@@ -202,8 +203,8 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(remoteName string, force bool) error {
-	return g.repo.Push(&git.PushOptions{
+func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
+	return g.repo.PushContext(ctx, &git.PushOptions{
 		RemoteName: remoteName,
 		Force:      force,
 	})

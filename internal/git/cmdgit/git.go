@@ -2,6 +2,7 @@ package cmdgit
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os/exec"
 	"regexp"
@@ -45,14 +46,14 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 }
 
 // Clone a repository
-func (g *Git) Clone(url string, baseName string) error {
+func (g *Git) Clone(ctx context.Context, url string, baseName string) error {
 	args := []string{"clone", url, "--branch", baseName, "--single-branch"}
 	if g.FetchDepth > 0 {
 		args = append(args, "--depth", fmt.Sprint(g.FetchDepth))
 	}
 	args = append(args, g.Directory)
 
-	cmd := exec.Command("git", args...)
+	cmd := exec.CommandContext(ctx, "git", args...)
 	_, err := g.run(cmd)
 	return err
 }
@@ -129,14 +130,14 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(remoteName string, force bool) error {
+func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
 	args := []string{"push", "--no-verify", remoteName}
 	if force {
 		args = append(args, "--force")
 	}
 	args = append(args, "HEAD")
 
-	cmd := exec.Command("git", args...)
+	cmd := exec.CommandContext(ctx, "git", args...)
 	_, err := g.run(cmd)
 	return err
 }
