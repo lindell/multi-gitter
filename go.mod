@@ -14,7 +14,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/xanzy/go-gitlab v0.73.1
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 )
