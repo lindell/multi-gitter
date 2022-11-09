@@ -114,13 +114,10 @@ func (r *Runner) Run(ctx context.Context) error {
 	log.Infof("Running on %d repositories", len(repos))
 
 	if r.TTY {
-		err := r.repocounter.OpenTTY()
+		err := r.repocounter.OpenTTY(ctx)
 		if err != nil {
 			return err
 		}
-		r.repocounter.OnAbort(func() {
-			cancel()
-		})
 		defer func() { _ = r.repocounter.CloseTTY() }()
 	}
 
@@ -204,11 +201,13 @@ func getReviewers(reviewers []string, maxReviewers int) []string {
 }
 
 func (r *Runner) runSingleRepo(ctx context.Context, cancelAll func(), repo scm.Repository) (scm.PullRequest, error) {
+	log := log.WithField("repo", repo.FullName())
+
 	if ctx.Err() != nil {
+		log.Trace("Skip run because of cancelled context")
 		return nil, mgerrors.ErrAborted
 	}
 
-	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
 	r.repocounter.SetRepoAction(repo, repocounter.ActionClone)
 

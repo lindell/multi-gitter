@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
@@ -171,8 +172,11 @@ func run(cmd *cobra.Command, args []string) error {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println("Finishing up ongoing runs. Press CTRL+C again to abort now.")
+
 		cancel()
+		time.Sleep(time.Millisecond * 50) // Wait briefly to potentially let TTY finish
+		fmt.Println("Finishing up ongoing runs. Press CTRL+C again to abort now.")
+
 		<-c
 		os.Exit(1)
 	}()

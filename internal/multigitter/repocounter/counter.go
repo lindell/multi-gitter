@@ -1,10 +1,13 @@
 package repocounter
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -40,12 +43,10 @@ type Counter struct {
 
 	screen            tcell.Screen
 	screenLock        sync.Mutex
+	screenClosed      bool
 	quitCh            chan struct{}
 	eventCallback     func(tcell.Event)
 	eventCallbackLock sync.Mutex
-
-	abortListeners     []func()
-	abortListenersLock sync.Mutex
 
 	lastRender      time.Time
 	queuedRender    bool
@@ -114,7 +115,7 @@ func (r *Counter) columnStart(columnI int) int {
 	return start
 }
 
-func (r *Counter) OpenTTY() error {
+func (r *Counter) OpenTTY(ctx context.Context) error {
 	s, err := tcell.NewScreen()
 	if err != nil {
 		return err
@@ -133,6 +134,10 @@ func (r *Counter) OpenTTY() error {
 			r.handleEvent(event)
 		}
 	}()
+	go func() {
+		<-ctx.Done()
+		r.CloseTTY()
+	}()
 
 	r.screenLock.Lock()
 	r.screen = s
@@ -145,25 +150,14 @@ func (r *Counter) CloseTTY() error {
 	r.screenLock.Lock()
 	defer r.screenLock.Unlock()
 
-	r.quitCh <- struct{}{}
+	if r.screenClosed {
+		return nil
+	}
+
+	close(r.quitCh)
+	r.screenClosed = true
 	r.screen.Fini()
 	return nil
-}
-
-func (r *Counter) OnAbort(fn func()) {
-	r.abortListenersLock.Lock()
-	defer r.abortListenersLock.Unlock()
-
-	r.abortListeners = append(r.abortListeners, fn)
-}
-
-func (r *Counter) abort() {
-	r.abortListenersLock.Lock()
-	defer r.abortListenersLock.Unlock()
-
-	for _, fn := range r.abortListeners {
-		fn()
-	}
 }
 
 // AddError add a failing repository together with the error that caused it
@@ -243,7 +237,7 @@ func (r *Counter) setRepoAction(repo scm.Repository, action Action) {
 func (r *Counter) handleEvent(event tcell.Event) {
 	if event, ok := event.(*tcell.EventKey); ok {
 		if event.Key() == tcell.KeyCtrlC {
-			r.abort()
+			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			return
 		}
 	}
@@ -260,7 +254,7 @@ func (r *Counter) handleEvent(event tcell.Event) {
 	r.eventCallbackLock.Unlock()
 }
 
-// AddSuccessPullRequest adds a pullrequest that succeeded
+// AddSuccessPullRequest adds a pull request that succeeded
 func (r *Counter) AddSuccessPullRequest(repo scm.Repository, pr scm.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
@@ -358,12 +352,13 @@ func (r *Counter) queueRender() {
 func (r *Counter) ttyRender() {
 	r.screenLock.Lock()
 	defer r.screenLock.Unlock()
-	r.lock.RLock()
-	defer r.lock.RUnlock()
 
-	if r.screen == nil {
+	if r.screen == nil || r.screenClosed {
 		return
 	}
+
+	r.lock.RLock()
+	defer r.lock.RUnlock()
 
 	r.screen.Clear()
 
@@ -458,7 +453,8 @@ func (r *Counter) Info() string {
 	errMap := map[string][]*repoStatus{}
 	for _, repo := range r.repositoriesList {
 		if repo.err != nil {
-			errMap[repo.err.Error()] = append(errMap[repo.err.Error()], repo)
+			errMsg := getErrorMessage(repo.err)
+			errMap[errMsg] = append(errMap[errMsg], repo)
 		}
 	}
 
@@ -492,6 +488,14 @@ func (r *Counter) Info() string {
 	}
 
 	return exitInfo
+}
+
+func getErrorMessage(err error) string {
+	if errors.Is(err, context.Canceled) {
+		return "aborted"
+	}
+
+	return err.Error()
 }
 
 // TTYSupported checks if TTY is supported
