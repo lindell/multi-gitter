@@ -58,6 +58,7 @@ Available values:
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
+	cmd.Flags().BoolP("tty", "", false, "[BETA] Use a TTY interface.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	configureGit(cmd)
@@ -94,6 +95,7 @@ func run(cmd *cobra.Command, args []string) error {
 	assignees, _ := flag.GetStringSlice("assignees")
 	draft, _ := flag.GetBool("draft")
 	labels, _ := flag.GetStringSlice("labels")
+	ttyEnabled, _ := flag.GetBool("tty")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -104,7 +106,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	useTTY := repocounter.TTYSupported()
+	useTTY := ttyEnabled && repocounter.TTYSupported()
 
 	if useTTY {
 		logOutput := log.StandardLogger().Out
