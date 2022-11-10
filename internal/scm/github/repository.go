@@ -17,8 +17,8 @@ func (g *Github) convertRepo(r *github.Repository) (repository, error) {
 		if err != nil {
 			return repository{}, errors.Wrap(err, "could not parse github clone error")
 		}
-		// Set the token as https://TOKEN@url
-		u.User = url.User(g.token)
+		// Set the token as https://oauth2@TOKEN@url
+		u.User = url.UserPassword("oauth2", g.token)
 		repoURL = u.String()
 	}
 
