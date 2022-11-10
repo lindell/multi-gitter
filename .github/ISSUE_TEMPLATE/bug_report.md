@@ -21,3 +21,4 @@ A clear and concise description of what you expected to happen.
 
 **Additional context**
 Add any other context about the problem here.
+It is for example often useful to include detailed logs from a run with `--log-level=trace`.
