@@ -146,18 +146,17 @@ func (r *Counter) OpenTTY(ctx context.Context) error {
 	return nil
 }
 
-func (r *Counter) CloseTTY() error {
+func (r *Counter) CloseTTY() {
 	r.screenLock.Lock()
 	defer r.screenLock.Unlock()
 
 	if r.screenClosed {
-		return nil
+		return
 	}
 
 	close(r.quitCh)
 	r.screenClosed = true
 	r.screen.Fini()
-	return nil
 }
 
 // AddError add a failing repository together with the error that caused it
@@ -237,7 +236,7 @@ func (r *Counter) setRepoAction(repo scm.Repository, action Action) {
 func (r *Counter) handleEvent(event tcell.Event) {
 	if event, ok := event.(*tcell.EventKey); ok {
 		if event.Key() == tcell.KeyCtrlC {
-			syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			return
 		}
 	}

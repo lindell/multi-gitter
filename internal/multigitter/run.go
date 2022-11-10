@@ -118,7 +118,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		defer func() { _ = r.repocounter.CloseTTY() }()
+		defer r.repocounter.CloseTTY()
 	}
 
 	runInParallel(func(i int) {
