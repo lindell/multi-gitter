@@ -1,5 +1,19 @@
 # Changelog
 
+### [0.43.2](https://www.github.com/lindell/multi-gitter/compare/v0.43.1...v0.43.2) (2022-11-10)
+
+
+### Bug Fixes
+
+* **github:** made sure GraphQL requests, with non-GraphQL errors is reported properly ([#301](https://www.github.com/lindell/multi-gitter/issues/301)) ([d7e1fda](https://www.github.com/lindell/multi-gitter/commit/d7e1fda392d1046fa93c2f0304295c0fd7872292))
+* **github:** use other format when cloning with token to support more token formats ([#302](https://www.github.com/lindell/multi-gitter/issues/302)) ([a74cc60](https://www.github.com/lindell/multi-gitter/commit/a74cc60d8257e69a99f224150f45400223b5911b))
+
+
+### Dependencies
+
+* update module github.com/spf13/cobra to v1.6.1 ([cfc2861](https://www.github.com/lindell/multi-gitter/commit/cfc2861089ac4e8697202c6bcf5daf01021fd8bf))
+* update module github.com/stretchr/testify to v1.8.1 ([e5158dc](https://www.github.com/lindell/multi-gitter/commit/e5158dc7b3536ec681d090ae18d5db88feb19fe0))
+
 ### [0.43.1](https://www.github.com/lindell/multi-gitter/compare/v0.43.0...v0.43.1) (2022-10-25)
 
 
