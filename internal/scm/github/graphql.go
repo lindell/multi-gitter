@@ -50,6 +50,7 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 		Errors []struct {
 			Message string `json:"message"`
 		} `json:"errors"`
+		Message string `json:"message"`
 	}{}
 
 	if err := json.NewDecoder(resp.Body).Decode(&resultData); err != nil {
@@ -65,6 +66,10 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 			errors.New(strings.Join(errorsMsgs, "\n")),
 			"encountered error during GraphQL query",
 		)
+	}
+
+	if resp.StatusCode >= 400 {
+		return errors.Errorf("could not make GitHub GraphQL request: %s", resultData.Message)
 	}
 
 	if err := json.Unmarshal(resultData.Data, res); err != nil {
