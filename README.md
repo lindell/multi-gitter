@@ -171,7 +171,7 @@ labels:
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
-# The formating of the logs. Available values: text, json, json-pretty.
+# The formatting of the logs. Available values: text, json, json-pretty.
 log-format: text
 
 # The level of logging that should be made. Available values: trace, debug, info, error.
@@ -261,7 +261,7 @@ insecure: false
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
-# The formating of the logs. Available values: text, json, json-pretty.
+# The formatting of the logs. Available values: text, json, json-pretty.
 log-format: text
 
 # The level of logging that should be made. Available values: trace, debug, info, error.
@@ -334,7 +334,7 @@ insecure: false
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
-# The formating of the logs. Available values: text, json, json-pretty.
+# The formatting of the logs. Available values: text, json, json-pretty.
 log-format: text
 
 # The level of logging that should be made. Available values: trace, debug, info, error.
@@ -404,7 +404,7 @@ insecure: false
 # The file where all logs should be printed to. "-" means stdout.
 log-file: "-"
 
-# The formating of the logs. Available values: text, json, json-pretty.
+# The formatting of the logs. Available values: text, json, json-pretty.
 log-format: text
 
 # The level of logging that should be made. Available values: trace, debug, info, error.
@@ -477,7 +477,7 @@ insecure: false
 # The file where all logs should be printed to. "-" means stdout.
 log-file:
 
-# The formating of the logs. Available values: text, json, json-pretty.
+# The formatting of the logs. Available values: text, json, json-pretty.
 log-format: text
 
 # The level of logging that should be made. Available values: trace, debug, info, error.
@@ -568,7 +568,7 @@ Flags:
   -i, --interactive                Take manual decision before committing any change. Requires git to be installed.
       --labels strings             Labels to be added to any created pull request.
       --log-file string            The file where all logs should be printed to. "-" means stdout. (default "-")
-      --log-format string          The formating of the logs. Available values: text, json, json-pretty. (default "text")
+      --log-format string          The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
@@ -604,7 +604,7 @@ Flags:
       --include-subgroups    Include GitLab subgroups when using the --group flag.
       --insecure             Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string      The file where all logs should be printed to. "-" means stdout. (default "-")
-      --log-format string    The formating of the logs. Available values: text, json, json-pretty. (default "text")
+      --log-format string    The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
       --merge-type strings   The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
@@ -634,7 +634,7 @@ Flags:
       --include-subgroups   Include GitLab subgroups when using the --group flag.
       --insecure            Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
-      --log-format string   The formating of the logs. Available values: text, json, json-pretty. (default "text")
+      --log-format string   The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string       The file that the output of the script should be outputted to. "-" means stdout. (default "-")
@@ -664,7 +664,7 @@ Flags:
       --include-subgroups   Include GitLab subgroups when using the --group flag.
       --insecure            Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
-      --log-format string   The formating of the logs. Available values: text, json, json-pretty. (default "text")
+      --log-format string   The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
@@ -702,7 +702,7 @@ Flags:
       --include-subgroups     Include GitLab subgroups when using the --group flag.
       --insecure              Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string       The file where all logs should be printed to. "-" means stdout.
-      --log-format string     The formating of the logs. Available values: text, json, json-pretty. (default "text")
+      --log-format string     The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string      The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings           The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string         The file that the output of the script should be outputted to. "-" means stdout. (default "-")
