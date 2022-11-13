@@ -8,12 +8,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// NewCensorFormatter creates a new formater that censors sensitive logs.
+// NewCensorFormatter creates a new formatter that censors sensitive logs.
 // It contains some default censoring rules, but additional items may be used
-func NewCensorFormatter(underlyingFormater log.Formatter, additionalCensoring ...CensorItem) *CensorFormatter {
+func NewCensorFormatter(underlyingFormatter log.Formatter, additionalCensoring ...CensorItem) *CensorFormatter {
 	return &CensorFormatter{
 		CensorItems:         append(defaultCensorItems, additionalCensoring...),
-		UnderlyingFormatter: underlyingFormater,
+		UnderlyingFormatter: underlyingFormatter,
 	}
 }
 

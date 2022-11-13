@@ -655,7 +655,7 @@ func (g *Github) GetAutocompleteRepositories(ctx context.Context, str string) ([
 	var q string
 
 	// If the user has already provided a org/user, it's much more effective to search based on that
-	// comparared to a complete freetext search
+	// comparared to a complete free text search
 	splitted := strings.SplitN(str, "/", 2)
 	switch {
 	case len(splitted) == 2:

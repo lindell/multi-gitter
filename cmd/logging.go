@@ -19,7 +19,7 @@ func configureLogging(cmd *cobra.Command, logFile string) {
 		return []string{"trace", "debug", "info", "error"}, cobra.ShellCompDirectiveDefault
 	})
 
-	flags.StringP("log-format", "", "text", `The formating of the logs. Available values: text, json, json-pretty.`)
+	flags.StringP("log-format", "", "text", `The formatting of the logs. Available values: text, json, json-pretty.`)
 	_ = cmd.RegisterFlagCompletionFunc("log-format", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"text", "json", "json-pretty"}, cobra.ShellCompDirectiveDefault
 	})

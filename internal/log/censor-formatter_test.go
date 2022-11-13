@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type dummyFormater struct {
+type dummyFormatter struct {
 	entry logrus.Entry
 }
 
-func (f *dummyFormater) Format(entry *logrus.Entry) ([]byte, error) {
+func (f *dummyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	f.entry = *entry
 	return []byte{}, nil
 }
@@ -119,16 +119,16 @@ Some Data`),
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			dummyFormater := &dummyFormater{}
+			dummyFormatter := &dummyFormatter{}
 			formatter := CensorFormatter{
 				CensorItems:         test.items,
-				UnderlyingFormatter: dummyFormater,
+				UnderlyingFormatter: dummyFormatter,
 			}
 			_, err := formatter.Format(&test.entry)
 			assert.NoError(t, err)
 
-			assert.Equal(t, test.expectedData, dummyFormater.entry.Data)
-			assert.Equal(t, test.expectedMessage, dummyFormater.entry.Message)
+			assert.Equal(t, test.expectedData, dummyFormatter.entry.Data)
+			assert.Equal(t, test.expectedMessage, dummyFormatter.entry.Message)
 		})
 	}
 }

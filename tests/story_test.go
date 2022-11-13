@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestStory tests the common usecase: run, status, merge, status
+// TestStory tests the common use case: run, status, merge, status
 func TestStory(t *testing.T) {
 	vcMock := &vcmock.VersionController{}
 	defer vcMock.Clean()
