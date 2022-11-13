@@ -48,7 +48,7 @@ multi-gitter run [script path] [flags]
   -i, --interactive                Take manual decision before committing any change. Requires git to be installed.
       --labels strings             Labels to be added to any created pull request.
       --log-file string            The file where all logs should be printed to. "-" means stdout. (default "-")
-      --log-format string          The formating of the logs. Available values: text, json, json-pretty. (default "text")
+      --log-format string          The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.

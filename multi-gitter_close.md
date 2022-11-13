@@ -23,7 +23,7 @@ multi-gitter close [flags]
       --include-subgroups   Include GitLab subgroups when using the --group flag.
       --insecure            Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
       --log-file string     The file where all logs should be printed to. "-" means stdout. (default "-")
-      --log-format string   The formating of the logs. Available values: text, json, json-pretty. (default "text")
+      --log-format string   The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
