@@ -1,7 +1,7 @@
 Contributing Guide
 ----
 
-We welcome dontributions in multiple forms. This file describes some of the ways how you can help out in various ways.
+We welcome contributions in multiple forms. This file describes some of the ways how you can help out in various ways.
 
 ## Bug fixes or new feature
 

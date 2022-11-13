@@ -49,7 +49,7 @@ func (r *Counter) AddSuccessPullRequest(repo scm.PullRequest) {
 	r.successPullRequests = append(r.successPullRequests, repo)
 }
 
-// Info returns a formated string about all repositories
+// Info returns a formatted string about all repositories
 func (r *Counter) Info() string {
 	defer r.lock.RUnlock()
 	r.lock.RLock()
