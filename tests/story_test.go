@@ -25,7 +25,7 @@ func TestStory(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
 
-	changerBinaryPath := filepath.ToSlash(filepath.Join(workingDir, changerBinaryPath))
+	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
 
 	changeRepo := createRepo(t, "owner", "should-change", "i like apples")
 	changeRepo2 := createRepo(t, "owner", "should-change-2", "i like my apple")

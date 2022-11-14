@@ -39,7 +39,7 @@ func TestPrint(t *testing.T) {
 		"--log-file", filepath.ToSlash(runLogFile),
 		"--output", filepath.ToSlash(outFile),
 		"--error-output", filepath.ToSlash(errOutFile),
-		fmt.Sprintf(`go run %s`, filepath.ToSlash(filepath.Join(workingDir, "scripts/printer/main.go"))),
+		fmt.Sprintf(`go run %s`, normalizePath(filepath.Join(workingDir, "scripts/printer/main.go"))),
 	})
 	err = command.Execute()
 	assert.NoError(t, err)
