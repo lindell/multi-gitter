@@ -72,7 +72,7 @@ func TestTable(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
 
-	changerBinaryPath := filepath.ToSlash(filepath.Join(workingDir, changerBinaryPath))
+	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
 
 	tests := []struct {
 		name        string
@@ -135,7 +135,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s", filepath.ToSlash(filepath.Join(workingDir, "scripts/changer/main.go"))),
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/changer/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -546,7 +546,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", filepath.ToSlash(filepath.Join(workingDir, "scripts/adder/main.go"))),
+				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", normalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -573,7 +573,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", filepath.ToSlash(filepath.Join(workingDir, "scripts/adder/main.go"))),
+				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", normalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -920,7 +920,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s", filepath.ToSlash(filepath.Join(workingDir, "scripts/remover/main.go"))),
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/remover/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
