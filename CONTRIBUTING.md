@@ -19,7 +19,11 @@ You would like to help out with code? Great! Before you get started, please read
 
 ### Get started coding
 
-The only dependency needed for multi-gitter development is `go`. By forking and cloning the repo you are ready to go.
+The only dependency needed for multi-gitter development is `go`. By forking and cloning the repo you are ready to go. You can run the code by replacing `multi-gitter` with `go run main.go`, for example:
+
+```sh
+go run main.go run ./examples/general/replace.sh -R my-org/test-repo -m "Test message"
+```
 
 ### Test your code
 
