@@ -21,7 +21,7 @@ jobs:
         env:
           BINDIR: ${{ github.workspace }}/bin
         run: |
-          curl -s https://raw.githubusercontent.com/lindell/multi-gitter/${{ github.ref_name }}/install.sh | sh -s -- -d
+          ./install.sh -d
           echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
         shell: sh
       - name: Print version
