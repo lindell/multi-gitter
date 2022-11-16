@@ -21,7 +21,7 @@ jobs:
         env:
           BINDIR: ${{ github.workspace }}/bin
         run: |
-          ./install.sh -d
+          sudo ./install.sh -d
           echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
         shell: sh
       - name: Print version
