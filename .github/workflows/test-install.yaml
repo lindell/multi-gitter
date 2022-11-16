@@ -24,7 +24,7 @@ jobs:
         env:
           BINDIR: ${{ github.workspace }}/bin
         run: |
-          curl -s https://raw.githubusercontent.com/lindell/multi-gitter/master/install.sh | sh -s -- -d
+          curl -s https://raw.githubusercontent.com/${{ github.event.pull_request.head.repo.full_name }}/${{ github.head_ref }}/install.sh | sh -s -- -d
           echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
         shell: sh
       - name: Print version
