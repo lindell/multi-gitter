@@ -1,0 +1,29 @@
+---
+name: Test install.sh
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/test-install.yaml
+      - install.sh
+
+jobs:
+  test-install-sh:
+    name: Test install.sh
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install multi-gitter
+        env:
+          BINDIR: ${{ github.workspace }}/bin
+        run: |
+          curl -s https://raw.githubusercontent.com/fabasoad/multi-gitter/${{ github.ref_name }}/install.sh | sh -s -- -d
+          echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
+        shell: sh
+      - name: Print version
+        run: multi-gitter version
+        shell: sh
