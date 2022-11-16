@@ -18,7 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Dump GitHub context
-        run: echo '${{ toJSON(github) }}'
+        run: echo "${{ toJSON(github) }}"
+        shell: sh
       - name: Install multi-gitter
         env:
           BINDIR: ${{ github.workspace }}/bin
