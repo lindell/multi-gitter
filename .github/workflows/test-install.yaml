@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Dump GitHub context
-        run: echo "${{ toJSON(github) }}"
+        run: echo "https://raw.githubusercontent.com/${{ github.event.pull_request.head.repo.full_name }}/${{ github.head_ref }}/install.sh"
         shell: sh
       - name: Install multi-gitter
         env:
