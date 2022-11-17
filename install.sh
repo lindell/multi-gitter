@@ -54,7 +54,12 @@ execute() {
     if [ "$OS" = "Windows" ]; then
       binexe="${binexe}.exe"
     fi
-    install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+    if [ "$OS" = "Windows" ] || [ test -w "${BINDIR}/${binexe}" ]; then
+      install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+    else
+      log_info "not allowed to install binary without higher privilege"
+      sudo install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+    fi
     log_info "installed ${BINDIR}/${binexe}"
   done
   rm -rf "${tmpdir}"
