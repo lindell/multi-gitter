@@ -52,13 +52,14 @@ execute() {
   test ! -d "${BINDIR}" && install -d "${BINDIR}"
   for binexe in $BINARIES; do
     if [ "$OS" = "Windows" ]; then
-      binexe="${binexe}.exe"
-    fi
-    if [ "$OS" = "Windows" ] || [ test -w "${BINDIR}/${binexe}" ]; then
-      install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+      install "${srcdir}/${binexe}.exe" "${BINDIR}/${binexe}.exe"
     else
-      log_info "not allowed to install binary without higher privilege"
-      sudo install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+      if test -w "${BINDIR}/${binexe}"; then
+        install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+      else
+        log_info "not allowed to install binary without higher privilege"
+        sudo install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+      fi
     fi
     log_info "installed ${BINDIR}/${binexe}"
   done
