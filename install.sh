@@ -8,7 +8,7 @@ usage() {
 $this: download go binaries for lindell/multi-gitter
 
 Usage: $this [-b] bindir [-d] [tag]
-  -b sets bindir or installation directory, Defaults to ./bin
+  -b sets bindir or installation directory, Defaults to /usr/local/bin
   -d turns on debug logging
    [tag] is a tag from
    https://github.com/lindell/multi-gitter/releases
@@ -51,14 +51,15 @@ execute() {
   (cd "${tmpdir}" && untar "${TARBALL}")
   test ! -d "${BINDIR}" && install -d "${BINDIR}"
   for binexe in $BINARIES; do
-    if [ "$OS" = "windows" ]; then
-      binexe="${binexe}.exe"
-    fi
-    if test -w "${BINDIR}/${binexe}"; then
-      install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+    if [ "$OS" = "Windows" ]; then
+      install "${srcdir}/${binexe}.exe" "${BINDIR}/${binexe}.exe"
     else
-      log_info "not allowed to install binary without higher privilege"
-      sudo install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+      if test -w "${BINDIR}/${binexe}"; then
+        install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+      else
+        log_info "not allowed to install binary without higher privilege"
+        sudo install "${srcdir}/${binexe}" "${BINDIR}/${binexe}"
+      fi
     fi
     log_info "installed ${BINDIR}/${binexe}"
   done
@@ -98,13 +99,6 @@ tag_to_version() {
   # if version starts with 'v', remove it
   TAG="$REALTAG"
   VERSION=${TAG#v}
-}
-adjust_format() {
-  # change format based on OS
-  case ${OS} in
-    windows) FORMAT=.exe ;;
-  esac
-  true
 }
 adjust_os() {
   # adjust archive name based on OS
@@ -387,8 +381,6 @@ parse_args "$@"
 get_binaries
 
 tag_to_version
-
-adjust_format
 
 adjust_os
 
