@@ -31,10 +31,12 @@ func (s Merger) Merge(ctx context.Context) error {
 	log.Infof("Merging %d pull requests", len(successPrs))
 
 	for _, pr := range successPrs {
-		log.WithField("pr", pr.String()).Infof("Merging")
+		log := log.WithField("pr", pr.String())
+
+		log.Infof("Merging")
 		err := s.VersionController.MergePullRequest(ctx, pr)
 		if err != nil {
-			return err
+			log.Errorf("Error occured while merging: %s", err.Error())
 		}
 	}
 
