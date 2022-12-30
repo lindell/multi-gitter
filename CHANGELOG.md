@@ -1,5 +1,19 @@
 # Changelog
 
+### [0.43.3](https://www.github.com/lindell/multi-gitter/compare/v0.43.2...v0.43.3) (2022-12-30)
+
+
+### Bug Fixes
+
+* allow individual merge failures without aborting all merges ([#310](https://www.github.com/lindell/multi-gitter/issues/310)) ([e067502](https://www.github.com/lindell/multi-gitter/commit/e067502f2366e86ce6b979130233d41017f40caf))
+* typos in docs and code ([#303](https://www.github.com/lindell/multi-gitter/issues/303)) ([45ddb60](https://www.github.com/lindell/multi-gitter/commit/45ddb60cd438e9251b670c0884cc851c29f09d8f))
+
+
+### Dependencies
+
+* update module github.com/spf13/viper to v1.14.0 ([294eced](https://www.github.com/lindell/multi-gitter/commit/294eced3db7de848f4c721a651e4833007bb3281))
+* update module github.com/xanzy/go-gitlab to v0.76.0 ([0ce73dc](https://www.github.com/lindell/multi-gitter/commit/0ce73dc36d03ea6fa94a7203c0825028e1a97c0b))
+
 ### [0.43.2](https://www.github.com/lindell/multi-gitter/compare/v0.43.1...v0.43.2) (2022-11-10)
 
 
