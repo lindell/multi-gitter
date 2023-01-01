@@ -4,7 +4,6 @@ package vcmock
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,6 +11,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/lindell/multi-gitter/internal/scm"
+	"github.com/pkg/errors"
 )
 
 // VersionController is a mock of an version controller (Github/Gitlab/etc.)
@@ -157,7 +157,7 @@ func (vc *VersionController) ForkRepository(ctx context.Context, repo scm.Reposi
 	newPath := fmt.Sprintf("%s-forked-%s", r.Path, newOwner)
 
 	_, err := git.PlainCloneContext(ctx, newPath, false, &git.CloneOptions{
-		URL: fmt.Sprintf(`file://"%s"`, filepath.ToSlash(r.Path)),
+		URL: fmt.Sprintf(`file://%s`, filepath.ToSlash(r.Path)),
 	})
 	if err != nil {
 		return nil, err
