@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-github/v48/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
