@@ -27,6 +27,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
+	flags.StringSliceP("topic", "", nil, "The topic of a GitHub repository. All repositories having that topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
@@ -119,6 +120,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
 	sshAuth, _ := flag.GetBool("ssh-auth")
@@ -149,6 +151,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
+		Topics:        topics,
 	}, mergeTypes, forkMode, forkOwner, sshAuth, readOnly)
 	if err != nil {
 		return nil, err

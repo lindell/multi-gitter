@@ -35,3 +35,15 @@ func stripSuffixIfExist(str string, suffix string) string {
 	}
 	return str
 }
+
+func compareStringSlice(slice1 []string, slice2 []string) bool {
+	for _, v1 := range slice1 {
+		for _, v2 := range slice2 {
+			if v1 == v2 {
+				return true
+			}
+		}
+	}
+
+	return false
+}
