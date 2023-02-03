@@ -9,7 +9,6 @@ import (
 
 	"code.gitea.io/sdk/gitea"
 	"github.com/lindell/multi-gitter/internal/scm"
-	"github.com/lindell/multi-gitter/internal/scm/utils"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -106,7 +105,7 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	for _, repo := range allRepos {
 		log := log.WithField("repo", repo.FullName)
 
-		if len(g.Topics) != 0 && !utils.SliceContainsEntryFromSlice(repo.Topics, g.Topics) {
+		if len(g.Topics) != 0 && !scm.RepoContainsTopic(repo.Topics, g.Topics) {
 			log.Debug("Skipping repository since it does not match repository topics")
 			continue
 		}
