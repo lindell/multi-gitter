@@ -17,7 +17,7 @@ multi-gitter print [script path] [flags]
 ### Options
 
 ```
-  -g, --base-url string       Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string       Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
   -C, --concurrent int        The maximum number of concurrent runs. (default 1)
       --config string         Path of the config file.
   -E, --error-output string   The file that the output of the script should be outputted to. "-" means stderr. (default "-")
@@ -40,7 +40,7 @@ multi-gitter print [script path] [flags]
   -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --ssh-auth              Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string          The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+  -T, --token string          The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings          The name of a user. All repositories owned by that user will be used.
   -u, --username string       The Bitbucket server username.
 ```

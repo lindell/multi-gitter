@@ -21,7 +21,7 @@ multi-gitter run [script path] [flags]
       --author-email string        Email of the committer. If not set, the global git config setting will be used.
       --author-name string         Name of the committer. If not set, the global git config setting will be used.
       --base-branch string         The branch which the changes will be based on.
-  -g, --base-url string            Base URL of the GitHub API, needs to be changed if GitHub enterprise is used. Or the url to a self-hosted GitLab instance.
+  -g, --base-url string            Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
   -B, --branch string              The name of the branch where changes are committed. (default "multi-gitter-branch")
   -m, --commit-message string      The commit message. Will default to title + body if none is set.
   -C, --concurrent int             The maximum number of concurrent runs. (default 1)
@@ -62,7 +62,7 @@ multi-gitter run [script path] [flags]
       --skip-pr                    Skip pull request and directly push to the branch.
   -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string               The GitHub/GitLab personal access token. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+  -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
   -U, --user strings               The name of a user. All repositories owned by that user will be used.
   -u, --username string            The Bitbucket server username.
 ```
