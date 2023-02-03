@@ -11,7 +11,7 @@ type Repository interface {
 }
 
 func RepoContainsTopic(slice1 []string, slice2 []string) bool {
-	slice1Map := make(map[string]struct{}, len(slice1))
+	slice1Map := map[string]struct{}{}
 	for _, v := range slice1 {
 		slice1Map[v] = struct{}{}
 	}
