@@ -9,7 +9,9 @@ import (
 
 	"code.gitea.io/sdk/gitea"
 	"github.com/lindell/multi-gitter/internal/scm"
+	"github.com/lindell/multi-gitter/internal/scm/utils"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 )
@@ -67,12 +69,18 @@ type RepositoryListing struct {
 	Organizations []string
 	Users         []string
 	Repositories  []RepositoryReference
+	Topics        []string
 }
 
 // RepositoryReference contains information to be able to reference a repository
 type RepositoryReference struct {
 	OwnerName string
 	Name      string
+}
+
+type constructedRepo struct {
+	*gitea.Repository
+	Topics []string
 }
 
 // ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
@@ -96,7 +104,14 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 
 	repos := make([]scm.Repository, 0, len(allRepos))
 	for _, repo := range allRepos {
-		convertedRepo, err := g.convertRepository(repo)
+		log := log.WithField("repo", repo.FullName)
+
+		if len(g.Topics) != 0 && !utils.SliceContainsEntryFromSlice(repo.Topics, g.Topics) {
+			log.Debug("Skipping repository since it does not match repository topics")
+			continue
+		}
+
+		convertedRepo, err := g.convertRepository(repo.Repository)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +121,12 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	return repos, nil
 }
 
-func (g *Gitea) getRepositories(ctx context.Context) ([]*gitea.Repository, error) {
+func (g *Gitea) getRepoTopics(ctx context.Context, repo *gitea.Repository) ([]string, error) {
+	topics, _, err := g.giteaClient(ctx).ListRepoTopics(repo.Owner.UserName, repo.Name, gitea.ListRepoTopicsOptions{})
+	return topics, err
+}
+
+func (g *Gitea) getRepositories(ctx context.Context) ([]*constructedRepo, error) {
 	allRepos := []*gitea.Repository{}
 
 	for _, group := range g.Organizations {
@@ -138,15 +158,26 @@ func (g *Gitea) getRepositories(ctx context.Context) ([]*gitea.Repository, error
 	for _, repo := range allRepos {
 		repoMap[repo.ID] = repo
 	}
-	allRepos = make([]*gitea.Repository, 0, len(repoMap))
+
+	allConstructedRepos := make([]*constructedRepo, 0, len(repoMap))
 	for _, repo := range repoMap {
-		allRepos = append(allRepos, repo)
+
+		topics, err := g.getRepoTopics(ctx, repo)
+		if err != nil {
+			return allConstructedRepos, fmt.Errorf("could not fetch repository topics: %w", err)
+		}
+
+		allConstructedRepos = append(allConstructedRepos, &constructedRepo{
+			Repository: repo,
+			Topics:     topics,
+		})
 	}
-	sort.Slice(allRepos, func(i, j int) bool {
-		return allRepos[i].ID < allRepos[j].ID
+
+	sort.Slice(allConstructedRepos, func(i, j int) bool {
+		return allConstructedRepos[i].ID < allRepos[j].ID
 	})
 
-	return allRepos, nil
+	return allConstructedRepos, nil
 }
 
 func (g *Gitea) getGroupRepositories(ctx context.Context, groupName string) ([]*gitea.Repository, error) {

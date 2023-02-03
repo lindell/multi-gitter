@@ -11,6 +11,8 @@ import (
 
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/scm"
+	"github.com/lindell/multi-gitter/internal/scm/utils"
+	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
 
@@ -54,6 +56,7 @@ type RepositoryListing struct {
 	Groups   []string
 	Users    []string
 	Projects []ProjectReference
+	Topics   []string
 }
 
 // Config includes extra config parameters for the GitLab client
@@ -89,6 +92,12 @@ func (g *Gitlab) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 
 	repos := make([]scm.Repository, 0, len(allProjects))
 	for _, project := range allProjects {
+		log := log.WithField("repo", project.NameWithNamespace)
+		if len(g.Topics) != 0 && !utils.SliceContainsEntryFromSlice(project.Topics, g.Topics) {
+			log.Debug("Skipping repository since it does not match repository topics")
+			continue
+		}
+
 		p, err := g.convertProject(project)
 		if err != nil {
 			return nil, err
@@ -124,6 +133,7 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		allProjects = append(allProjects, project)
 	}
 
