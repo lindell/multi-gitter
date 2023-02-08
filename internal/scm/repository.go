@@ -10,14 +10,14 @@ type Repository interface {
 	FullName() string
 }
 
-func RepoContainsTopic(slice1 []string, slice2 []string) bool {
-	slice1Map := map[string]struct{}{}
-	for _, v := range slice1 {
-		slice1Map[v] = struct{}{}
+func RepoContainsTopic(repoTopics []string, filterTopics []string) bool {
+	repoTopicsMap := map[string]struct{}{}
+	for _, v := range repoTopics {
+		repoTopicsMap[v] = struct{}{}
 	}
 
-	for _, v := range slice2 {
-		if _, ok := slice1Map[v]; ok {
+	for _, v := range filterTopics {
+		if _, ok := repoTopicsMap[v]; ok {
 			return true
 		}
 	}
