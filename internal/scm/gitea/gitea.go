@@ -77,11 +77,6 @@ type RepositoryReference struct {
 	Name      string
 }
 
-type constructedRepo struct {
-	*gitea.Repository
-	Topics []string
-}
-
 // ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
 func ParseRepositoryReference(val string) (RepositoryReference, error) {
 	split := strings.Split(val, "/")
@@ -105,12 +100,19 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	for _, repo := range allRepos {
 		log := log.WithField("repo", repo.FullName)
 
-		if len(g.Topics) != 0 && !scm.RepoContainsTopic(repo.Topics, g.Topics) {
-			log.Debug("Skipping repository since it does not match repository topics")
-			continue
+		if len(g.Topics) != 0 {
+			topics, err := g.getRepoTopics(ctx, repo)
+			if err != nil {
+				return repos, fmt.Errorf("could not fetch repository topics: %w", err)
+			}
+
+			if !scm.RepoContainsTopic(topics, g.Topics) {
+				log.Debug("Skipping repository since it does not match repository topics")
+				continue
+			}
 		}
 
-		convertedRepo, err := g.convertRepository(repo.Repository)
+		convertedRepo, err := g.convertRepository(repo)
 		if err != nil {
 			return nil, err
 		}
@@ -125,7 +127,7 @@ func (g *Gitea) getRepoTopics(ctx context.Context, repo *gitea.Repository) ([]st
 	return topics, err
 }
 
-func (g *Gitea) getRepositories(ctx context.Context) ([]*constructedRepo, error) {
+func (g *Gitea) getRepositories(ctx context.Context) ([]*gitea.Repository, error) {
 	allRepos := []*gitea.Repository{}
 
 	for _, group := range g.Organizations {
@@ -157,26 +159,15 @@ func (g *Gitea) getRepositories(ctx context.Context) ([]*constructedRepo, error)
 	for _, repo := range allRepos {
 		repoMap[repo.ID] = repo
 	}
-
-	allConstructedRepos := make([]*constructedRepo, 0, len(repoMap))
+	allRepos = make([]*gitea.Repository, 0, len(repoMap))
 	for _, repo := range repoMap {
-
-		topics, err := g.getRepoTopics(ctx, repo)
-		if err != nil {
-			return allConstructedRepos, fmt.Errorf("could not fetch repository topics: %w", err)
-		}
-
-		allConstructedRepos = append(allConstructedRepos, &constructedRepo{
-			Repository: repo,
-			Topics:     topics,
-		})
+		allRepos = append(allRepos, repo)
 	}
-
-	sort.Slice(allConstructedRepos, func(i, j int) bool {
-		return allConstructedRepos[i].ID < allRepos[j].ID
+	sort.Slice(allRepos, func(i, j int) bool {
+		return allRepos[i].ID < allRepos[j].ID
 	})
 
-	return allConstructedRepos, nil
+	return allRepos, nil
 }
 
 func (g *Gitea) getGroupRepositories(ctx context.Context, groupName string) ([]*gitea.Repository, error) {
