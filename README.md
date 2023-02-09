@@ -382,7 +382,7 @@ username:
 # Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
 base-url:
 
-# The name of the branch where changes are rwasddsaar.
+# The name of the branch where changes are rwasddasddsasaar.
 branch: multi-gitter-branch
 
 # Use pull requests made from forks instead of from the same repository.
@@ -656,7 +656,7 @@ Usage:
 
 Flags:
   -g, --base-url string     Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
-  -B, --branch string       The name of the branch where changes are rwasddsaar. (default "multi-gitter-branch")
+  -B, --branch string       The name of the branch where changes are rwasddasddsasaar. (default "multi-gitter-branch")
       --config string       Path of the config file.
       --fork                Use pull requests made from forks instead of from the same repository.
       --fork-owner string   If set, use forks from the defined value instead of the logged in user.
