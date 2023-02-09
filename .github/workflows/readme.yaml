@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+      - readme-test
 
 name: Generate readme
 
@@ -25,11 +25,10 @@ jobs:
       - name: Commit changes
         continue-on-error: true
         run: |
-          git checkout master
-          git config user.email "johan@lindell.me"
-          git config user.name "Johan Lindell"
+          git checkout readme-test
           git add README.md
-          git commit -m "docs: updated readme"
+          COAUTHOR=`git log -1 --pretty=format:'Co-authored-by: %an <%ae>'`
+          git commit -m "docs: updated readme\n\n$COAUTHOR"
 
       - name: Push changes
         if: ${{ success() }}
