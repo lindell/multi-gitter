@@ -18,7 +18,7 @@ func CloseCmd() *cobra.Command {
 		RunE:    close,
 	}
 
-	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are rwasddsaar.")
+	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are rwasddasddsasaar.")
 	configurePlatform(cmd)
 	configureRunPlatform(cmd, false)
 	configureLogging(cmd, "-")
