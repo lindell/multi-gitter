@@ -26,10 +26,11 @@ jobs:
         continue-on-error: true
         run: |
           git checkout master
-          git config user.email "johan@lindell.me"
-          git config user.name "Johan Lindell"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
           git add README.md
-          git commit -m "docs: updated readme"
+          COAUTHOR=`git log -1 --pretty=format:'Co-authored-by: %an <%ae>'`
+          git commit -m "docs: updated readme" -m "$COAUTHOR"
 
       - name: Push changes
         if: ${{ success() }}
