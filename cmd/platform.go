@@ -27,6 +27,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
+	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
@@ -119,6 +120,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
 	sshAuth, _ := flag.GetBool("ssh-auth")
@@ -149,6 +151,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
+		Topics:        topics,
 	}, mergeTypes, forkMode, forkOwner, sshAuth, readOnly)
 	if err != nil {
 		return nil, err
@@ -162,6 +165,7 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 	groups, _ := flag.GetStringSlice("group")
 	users, _ := flag.GetStringSlice("user")
 	projects, _ := flag.GetStringSlice("project")
+	topics, _ := flag.GetStringSlice("topic")
 	includeSubgroups, _ := flag.GetBool("include-subgroups")
 	sshAuth, _ := flag.GetBool("ssh-auth")
 
@@ -186,6 +190,7 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		Groups:   groups,
 		Users:    users,
 		Projects: projRefs,
+		Topics:   topics,
 	}, gitlab.Config{
 		IncludeSubgroups: includeSubgroups,
 		SSHAuth:          sshAuth,
@@ -202,6 +207,7 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	topics, _ := flag.GetStringSlice("topic")
 	sshAuth, _ := flag.GetBool("ssh-auth")
 
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
@@ -234,6 +240,7 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 		Organizations: orgs,
 		Users:         users,
 		Repositories:  repoRefs,
+		Topics:        topics,
 	}, mergeTypes, sshAuth)
 	if err != nil {
 		return nil, err

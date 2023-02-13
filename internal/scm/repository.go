@@ -9,3 +9,18 @@ type Repository interface {
 	// FullName returns the full id of the repository, usually ownerName/repoName
 	FullName() string
 }
+
+func RepoContainsTopic(repoTopics []string, filterTopics []string) bool {
+	repoTopicsMap := map[string]struct{}{}
+	for _, v := range repoTopics {
+		repoTopicsMap[v] = struct{}{}
+	}
+
+	for _, v := range filterTopics {
+		if _, ok := repoTopicsMap[v]; ok {
+			return true
+		}
+	}
+
+	return false
+}

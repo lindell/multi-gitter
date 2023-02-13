@@ -10,6 +10,7 @@ import (
 	"code.gitea.io/sdk/gitea"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 )
@@ -67,6 +68,7 @@ type RepositoryListing struct {
 	Organizations []string
 	Users         []string
 	Repositories  []RepositoryReference
+	Topics        []string
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -96,6 +98,20 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 
 	repos := make([]scm.Repository, 0, len(allRepos))
 	for _, repo := range allRepos {
+		log := log.WithField("repo", repo.FullName)
+
+		if len(g.Topics) != 0 {
+			topics, err := g.getRepoTopics(ctx, repo)
+			if err != nil {
+				return repos, fmt.Errorf("could not fetch repository topics: %w", err)
+			}
+
+			if !scm.RepoContainsTopic(topics, g.Topics) {
+				log.Debug("Skipping repository since it does not match repository topics")
+				continue
+			}
+		}
+
 		convertedRepo, err := g.convertRepository(repo)
 		if err != nil {
 			return nil, err
@@ -104,6 +120,11 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	}
 
 	return repos, nil
+}
+
+func (g *Gitea) getRepoTopics(ctx context.Context, repo *gitea.Repository) ([]string, error) {
+	topics, _, err := g.giteaClient(ctx).ListRepoTopics(repo.Owner.UserName, repo.Name, gitea.ListRepoTopicsOptions{})
+	return topics, err
 }
 
 func (g *Gitea) getRepositories(ctx context.Context) ([]*gitea.Repository, error) {

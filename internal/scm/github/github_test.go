@@ -49,6 +49,9 @@ func Test_GetRepositories(t *testing.T) {
 					"name": "test1",
 					"full_name": "test-org/test1",
 					"private": false,
+					"topics": [
+						"frontend"
+					],
 					"owner": {
 						"login": "test-org",
 						"type": "Organization",
@@ -93,6 +96,10 @@ func Test_GetRepositories(t *testing.T) {
 					"name": "test2",
 					"full_name": "lindell/test2",
 					"private": false,
+					"topics": [
+						"backend",
+						"go"
+					],
 					"owner": {
 						"login": "lindell",
 						"type": "User",
@@ -160,6 +167,22 @@ func Test_GetRepositories(t *testing.T) {
 		if assert.Len(t, repos, 1) {
 			assert.Equal(t, "main", repos[0].DefaultBranch())
 			assert.Equal(t, "lindell/test2", repos[0].FullName())
+		}
+	}
+
+	// Topics
+	{
+		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
+			Organizations: []string{"test-org"},
+			Topics:        []string{"frontend", "backend"},
+		}, []scm.MergeType{scm.MergeTypeMerge}, false, "", false, false)
+		require.NoError(t, err)
+
+		repos, err := gh.GetRepositories(context.Background())
+		assert.NoError(t, err)
+		if assert.Len(t, repos, 1) {
+			assert.Equal(t, "master", repos[0].DefaultBranch())
+			assert.Equal(t, "test-org/test1", repos[0].FullName())
 		}
 	}
 
