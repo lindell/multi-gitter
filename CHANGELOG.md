@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.44.0](https://www.github.com/lindell/multi-gitter/compare/v0.43.3...v0.44.0) (2023-02-13)
+
+
+### Features
+
+* filter repositories using topics ([#320](https://www.github.com/lindell/multi-gitter/issues/320)) ([d3c5403](https://www.github.com/lindell/multi-gitter/commit/d3c54034d56f7826dfa7dbc13851b152334fbf58))
+
+
+### Bug Fixes
+
+* input description for platform args ([#321](https://www.github.com/lindell/multi-gitter/issues/321)) ([6816c86](https://www.github.com/lindell/multi-gitter/commit/6816c86ea534112ef55c24036940f2c44b50e1ab))
+
+
+### Dependencies
+
+* update module github.com/go-git/go-git/v5 to v5.5.1 ([#312](https://www.github.com/lindell/multi-gitter/issues/312)) ([7c9136c](https://www.github.com/lindell/multi-gitter/commit/7c9136c7427fcb1d103c0f1e004059f7a793f25d))
+* update module github.com/go-git/go-git/v5 to v5.5.2 ([83032fb](https://www.github.com/lindell/multi-gitter/commit/83032fb7e4cd197c703c7eb8e272938a315c5ef5))
+* update module github.com/google/go-github/v47 to v48 ([#311](https://www.github.com/lindell/multi-gitter/issues/311)) ([c3ffe09](https://www.github.com/lindell/multi-gitter/commit/c3ffe095a56d450ea2d5aa81384a4578cc069a12))
+* update module github.com/google/go-github/v48 to v50 ([#319](https://www.github.com/lindell/multi-gitter/issues/319)) ([6f1fe90](https://www.github.com/lindell/multi-gitter/commit/6f1fe9009131d1d0326c7f63cf6d07b2cd1983f3))
+* update module github.com/xanzy/go-gitlab to v0.77.0 ([5e39817](https://www.github.com/lindell/multi-gitter/commit/5e3981748c08e5ee4d63b0a1de1b8b4df50b84fc))
+* update module golang.org/x/oauth2 to v0.3.0 ([4ae8184](https://www.github.com/lindell/multi-gitter/commit/4ae81844ffe59a397753f046ae9cb87e2c1bac48))
+
 ### [0.43.3](https://www.github.com/lindell/multi-gitter/compare/v0.43.2...v0.43.3) (2022-12-30)
 
 
