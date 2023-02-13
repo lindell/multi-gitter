@@ -32,6 +32,7 @@ multi-gitter status [flags]
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --ssh-auth            Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string        The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+      --topic strings       The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
   -u, --username string     The Bitbucket server username.
 ```
