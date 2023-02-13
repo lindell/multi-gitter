@@ -222,6 +222,10 @@ ssh-auth: false
 # The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
+# The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
+topic:
+  - example
+
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
@@ -295,6 +299,10 @@ ssh-auth: false
 # The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
+# The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
+topic:
+  - example
+
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
@@ -365,6 +373,10 @@ ssh-auth: false
 # The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
+# The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
+topic:
+  - example
+
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
@@ -431,6 +443,10 @@ ssh-auth: false
 
 # The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
+
+# The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
+topic:
+  - example
 
 # The name of a user. All repositories owned by that user will be used.
 user:
@@ -508,6 +524,10 @@ ssh-auth: false
 # The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
+# The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
+topic:
+  - example
+
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
@@ -583,6 +603,7 @@ Flags:
   -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+      --topic strings              The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings               The name of a user. All repositories owned by that user will be used.
   -u, --username string            The Bitbucket server username.
 ```
@@ -613,6 +634,7 @@ Flags:
   -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --ssh-auth             Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string         The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+      --topic strings        The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings         The name of a user. All repositories owned by that user will be used.
   -u, --username string      The Bitbucket server username.
 ```
@@ -643,6 +665,7 @@ Flags:
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --ssh-auth            Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string        The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+      --topic strings       The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
   -u, --username string     The Bitbucket server username.
 ```
@@ -672,6 +695,7 @@ Flags:
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --ssh-auth            Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string        The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+      --topic strings       The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings        The name of a user. All repositories owned by that user will be used.
   -u, --username string     The Bitbucket server username.
 ```
@@ -711,6 +735,7 @@ Flags:
   -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --ssh-auth              Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string          The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
+      --topic strings         The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings          The name of a user. All repositories owned by that user will be used.
   -u, --username string       The Bitbucket server username.
 ```
