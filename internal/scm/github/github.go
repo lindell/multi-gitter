@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	"golang.org/x/sync/errgroup"
 )
 
 // New create a new Github client
@@ -357,6 +358,31 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 		return nil, err
 	}
 
+	wg, ctx := errgroup.WithContext(ctx)
+	batches := chunkSlice(repos, 50)
+	var pullRequests []scm.PullRequest
+
+	for _, repos := range batches {
+		repos := repos
+		wg.Go(func() error {
+			result, err := g.getPullRequests(ctx, branchName, repos)
+			if err != nil {
+				return fmt.Errorf("failed to get pull request batch: %w", err)
+			}
+
+			pullRequests = append(pullRequests, result...)
+			return nil
+		})
+	}
+
+	if err := wg.Wait(); err != nil {
+		return nil, err
+	}
+
+	return pullRequests, nil
+}
+
+func (g *Github) getPullRequests(ctx context.Context, branchName string, repos []*github.Repository) ([]scm.PullRequest, error) {
 	// The fragment is all the data needed from every repository
 	const fragment = `fragment repoProperties on Repository {
 		pullRequests(headRefName: $branchName, last: 1) {
@@ -420,7 +446,7 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 	)
 
 	result := map[string]graphqlRepo{}
-	err = g.makeGraphQLRequest(ctx, query, queryVariables, &result)
+	err := g.makeGraphQLRequest(ctx, query, queryVariables, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +535,7 @@ func (g *Github) GetOpenPullRequest(ctx context.Context, repo scm.Repository, br
 		})
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get open pull requests: %w", err)
 	}
 	if len(prs) == 0 {
 		return nil, nil
