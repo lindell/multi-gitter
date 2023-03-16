@@ -14,7 +14,6 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	"golang.org/x/sync/errgroup"
 )
 
 // New create a new Github client
@@ -358,25 +357,18 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 		return nil, err
 	}
 
-	wg, ctx := errgroup.WithContext(ctx)
+	// github limits the amount of data which can be handled by the graphql api
+	// data needs to be chunked into multiple requests
 	batches := chunkSlice(repos, 50)
 	var pullRequests []scm.PullRequest
 
 	for _, repos := range batches {
-		repos := repos
-		wg.Go(func() error {
-			result, err := g.getPullRequests(ctx, branchName, repos)
-			if err != nil {
-				return fmt.Errorf("failed to get pull request batch: %w", err)
-			}
+		result, err := g.getPullRequests(ctx, branchName, repos)
+		if err != nil {
+			return pullRequests, fmt.Errorf("failed to get pull request batch: %w", err)
+		}
 
-			pullRequests = append(pullRequests, result...)
-			return nil
-		})
-	}
-
-	if err := wg.Wait(); err != nil {
-		return nil, err
+		pullRequests = append(pullRequests, result...)
 	}
 
 	return pullRequests, nil
