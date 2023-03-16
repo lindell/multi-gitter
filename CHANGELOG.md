@@ -1,5 +1,20 @@
 # Changelog
 
+### [0.44.1](https://www.github.com/lindell/multi-gitter/compare/v0.44.0...v0.44.1) (2023-03-16)
+
+
+### Bug Fixes
+
+* **github:** chunk get pull requests ([#330](https://www.github.com/lindell/multi-gitter/issues/330)) ([488cd63](https://www.github.com/lindell/multi-gitter/commit/488cd6339bd659e88cd89d207ae1d5eb5e40b988))
+
+
+### Dependencies
+
+* bump golang.org/x/net from 0.3.0 to 0.7.0 ([#325](https://www.github.com/lindell/multi-gitter/issues/325)) ([9d0ea43](https://www.github.com/lindell/multi-gitter/commit/9d0ea43c5ad46a76d8a596e0d33082ce51579aa6))
+* update module github.com/google/go-github/v50 to v50.1.0 ([366f201](https://www.github.com/lindell/multi-gitter/commit/366f201f77bc46aaeedfa34fd6ed40dc99a007f6))
+* update module github.com/stretchr/testify to v1.8.2 ([4f3ce98](https://www.github.com/lindell/multi-gitter/commit/4f3ce98307815934149fbef6da211280bbd581dd))
+* update module golang.org/x/oauth2 to v0.5.0 ([#327](https://www.github.com/lindell/multi-gitter/issues/327)) ([fefceee](https://www.github.com/lindell/multi-gitter/commit/fefceeea27305bb94702b53ad5cfa0bfb6cf973f))
+
 ## [0.44.0](https://www.github.com/lindell/multi-gitter/compare/v0.43.3...v0.44.0) (2023-02-13)
 
 
