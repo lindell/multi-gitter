@@ -35,3 +35,12 @@ func stripSuffixIfExist(str string, suffix string) string {
 	}
 	return str
 }
+
+func chunkSlice[T any](stack []T, chunkSize int) [][]T {
+	var chunks = make([][]T, 0, (len(stack)/chunkSize)+1)
+	for chunkSize < len(stack) {
+		stack, chunks = stack[chunkSize:], append(chunks, stack[0:chunkSize:chunkSize])
+	}
+
+	return append(chunks, stack)
+}

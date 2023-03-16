@@ -357,6 +357,24 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 		return nil, err
 	}
 
+	// github limits the amount of data which can be handled by the graphql api
+	// data needs to be chunked into multiple requests
+	batches := chunkSlice(repos, 50)
+	var pullRequests []scm.PullRequest
+
+	for _, repos := range batches {
+		result, err := g.getPullRequests(ctx, branchName, repos)
+		if err != nil {
+			return pullRequests, fmt.Errorf("failed to get pull request batch: %w", err)
+		}
+
+		pullRequests = append(pullRequests, result...)
+	}
+
+	return pullRequests, nil
+}
+
+func (g *Github) getPullRequests(ctx context.Context, branchName string, repos []*github.Repository) ([]scm.PullRequest, error) {
 	// The fragment is all the data needed from every repository
 	const fragment = `fragment repoProperties on Repository {
 		pullRequests(headRefName: $branchName, last: 1) {
@@ -420,7 +438,7 @@ func (g *Github) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 	)
 
 	result := map[string]graphqlRepo{}
-	err = g.makeGraphQLRequest(ctx, query, queryVariables, &result)
+	err := g.makeGraphQLRequest(ctx, query, queryVariables, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -509,7 +527,7 @@ func (g *Github) GetOpenPullRequest(ctx context.Context, repo scm.Repository, br
 		})
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get open pull requests: %w", err)
 	}
 	if len(prs) == 0 {
 		return nil, nil

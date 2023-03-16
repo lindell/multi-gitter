@@ -21,6 +21,7 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 		Query: query,
 		Data:  data,
 	})
+
 	if err != nil {
 		return errors.WithMessage(err, "could not marshal graphql request")
 	}
