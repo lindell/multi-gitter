@@ -528,7 +528,7 @@ func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq s
 }
 
 // RejectPullRequest requests changes
-func (b *BitbucketServer) RejectPullRequest(_ context.Context, pullReq scm.PullRequest, comment string) error {
+func (b *BitbucketServer) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
 	pr := pullReq.(pullRequest)
 
 	if err := b.CommentPullRequest(ctx, pullReq, comment); err != nil {
