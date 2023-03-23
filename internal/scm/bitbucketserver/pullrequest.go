@@ -16,6 +16,7 @@ func newPullRequest(pr bitbucketv1.PullRequest) pullRequest {
 		prProject:  pr.FromRef.Repository.Project.Key,
 		prRepoName: pr.FromRef.Repository.Slug,
 		number:     pr.ID,
+		reviewers:  pr.Reviewers,
 		guiURL:     pr.Links.Self[0].Href,
 	}
 }
@@ -26,6 +27,7 @@ type pullRequest struct {
 	branchName string
 	prProject  string
 	prRepoName string
+	reviewers  []bitbucketv1.UserWithMetadata
 	number     int
 	version    int32
 	guiURL     string

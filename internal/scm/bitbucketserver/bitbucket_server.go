@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -478,6 +479,73 @@ func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr scm.PullReque
 	}
 
 	return b.deleteBranch(ctx, bitbucketPR)
+}
+
+// DiffPullRequest returns a diff of the pull request
+func (b *BitbucketServer) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (string, error) {
+	pr := pullReq.(pullRequest)
+
+	client := newClient(ctx, b.config)
+	response, err := client.DefaultApi.GetPullRequestDiffRaw(pr.project, pr.repoName, pr.number, map[string]interface{}{})
+
+	if err != nil {
+		return "", err
+	}
+
+	diff, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(diff), nil
+}
+
+// ApprovePullRequest approves a pull request
+func (b *BitbucketServer) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+
+	if err := b.CommentPullRequest(ctx, pullReq, comment); err != nil {
+		return err
+	}
+
+	client := newClient(ctx, b.config)
+	_, err := client.DefaultApi.Approve(pr.project, pr.repoName, int64(pr.number))
+	return err
+}
+
+// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq scm.PullRequest) (bool, error) {
+	pr := pullReq.(pullRequest)
+	loggedInUser := b.username
+
+	for _, reviewer := range pr.reviewers {
+		if reviewer.User.Name == loggedInUser && reviewer.Approved == true {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// RejectPullRequest requests changes
+func (b *BitbucketServer) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+	client := newClient(ctx, b.config)
+	_, err := client.DefaultApi.Decline(pr.project, pr.repoName, int64(pr.number), map[string]interface{}{})
+	return err
+}
+
+// CommentPullRequest leaves a comment (unimplemented for bitbucket)
+func (b *BitbucketServer) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+	client := newClient(ctx, b.config)
+
+	commentBody := bitbucketv1.Comment{
+		Text: comment,
+	}
+
+	_, err := client.DefaultApi.CreatePullRequestComment(pr.project, pr.repoName, pr.number, commentBody, []string{})
+	return err
 }
 
 // ClosePullRequest Close a pull request, the pr parameter will always originate from the same package

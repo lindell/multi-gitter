@@ -446,6 +446,71 @@ func (g *Gitea) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) e
 	return nil
 }
 
+// DiffPullRequest returns a diff of the pull request
+func (g *Gitea) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (string, error) {
+	pr := pullReq.(pullRequest)
+
+	b, _, err := g.giteaClient(ctx).GetPullRequestDiff(pr.ownerName, pr.repoName, pr.index)
+	if err != nil {
+		return "", nil
+	}
+
+	return string(b), nil
+}
+
+// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+func (g *Gitea) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullRequest) (bool, error) {
+	pr := pullReq.(pullRequest)
+	loggedInUser, err := g.getUser(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	reviews, _, err := g.giteaClient(ctx).ListPullReviews(pr.ownerName, pr.repoName, pr.index, gitea.ListPullReviewsOptions{})
+
+	for _, review := range reviews {
+		if review.Reviewer != nil && review.Reviewer.ID == loggedInUser.ID && review.State == gitea.ReviewStateApproved {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// ApprovePullRequest approves a pull request
+func (g *Gitea) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+
+	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{
+		Body:  comment,
+		State: gitea.ReviewStateApproved,
+	})
+
+	return err
+}
+
+// RejectPullRequest requests changes
+func (g *Gitea) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{
+		Body:  comment,
+		State: gitea.ReviewStateRequestChanges,
+	})
+
+	return err
+}
+
+// CommentPullRequest leaves a comment
+func (g *Gitea) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{
+		Body:  comment,
+		State: gitea.ReviewStateComment,
+	})
+
+	return err
+}
+
 // ClosePullRequest closes a pull request
 func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
