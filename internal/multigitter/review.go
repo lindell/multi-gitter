@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -55,7 +54,7 @@ func (s Reviewer) Review(ctx context.Context) error {
 			continue
 		}
 
-		if approved == true && !s.IncludeApproved {
+		if approved && !s.IncludeApproved {
 			continue
 		}
 
@@ -107,7 +106,7 @@ func (s Reviewer) printDiff(r io.ReadSeeker) error {
 	// if paging failed (or is diabled) the diff gets dumped to stdout instead
 	if err != nil || s.DisablePaging {
 		_, _ = r.Seek(0, 0)
-		b, err := ioutil.ReadAll(r)
+		b, err := io.ReadAll(r)
 		if err != nil {
 			return err
 		}
@@ -120,7 +119,7 @@ func (s Reviewer) printDiff(r io.ReadSeeker) error {
 
 // write file to tmp file so a pager can also be a tool which can't directly read from stdin
 func (s Reviewer) pageTmpFile(r io.Reader) error {
-	file, err := ioutil.TempFile(os.TempDir(), "*.diff")
+	file, err := os.CreateTemp(os.TempDir(), "*.diff")
 	if err != nil {
 		return err
 	}
