@@ -467,9 +467,9 @@ func (g *Gitea) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullR
 	}
 
 	reviews, _, err := g.giteaClient(ctx).ListPullReviews(pr.ownerName, pr.repoName, pr.index, gitea.ListPullReviewsOptions{})
-  if err != nil {
-    return false, err
-  }
+	if err != nil {
+		return false, err
+	}
 
 	for _, review := range reviews {
 		if review.Reviewer != nil && review.Reviewer.ID == loggedInUser.ID && review.State == gitea.ReviewStateApproved {
