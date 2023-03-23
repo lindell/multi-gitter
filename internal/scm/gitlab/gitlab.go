@@ -470,6 +470,9 @@ func (g *Gitlab) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.Pull
 	}
 
 	reviews, _, err := g.glClient.MergeRequests.GetMergeRequestApprovals(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
+	if err != nil {
+		return false, err
+	}
 
 	for _, review := range reviews.ApprovedBy {
 		if review.User.ID == loggedInUser.ID {

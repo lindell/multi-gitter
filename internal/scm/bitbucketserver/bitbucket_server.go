@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -492,7 +492,7 @@ func (b *BitbucketServer) DiffPullRequest(ctx context.Context, pullReq scm.PullR
 		return "", err
 	}
 
-	diff, err := ioutil.ReadAll(response.Body)
+	diff, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}
