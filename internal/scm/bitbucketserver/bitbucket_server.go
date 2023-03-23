@@ -519,7 +519,7 @@ func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq s
 	loggedInUser := b.username
 
 	for _, reviewer := range pr.reviewers {
-		if reviewer.User.Name == loggedInUser && reviewer.Approved == true {
+		if reviewer.User.Name == loggedInUser && reviewer.Approved {
 			return true, nil
 		}
 	}
@@ -528,8 +528,13 @@ func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq s
 }
 
 // RejectPullRequest requests changes
-func (b *BitbucketServer) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+func (b *BitbucketServer) RejectPullRequest(_ context.Context, pullReq scm.PullRequest, comment string) error {
 	pr := pullReq.(pullRequest)
+
+	if err := b.CommentPullRequest(ctx, pullReq, comment); err != nil {
+		return err
+	}
+
 	client := newClient(ctx, b.config)
 	_, err := client.DefaultApi.Decline(pr.project, pr.repoName, int64(pr.number), map[string]interface{}{})
 	return err

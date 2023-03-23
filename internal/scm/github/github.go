@@ -601,6 +601,9 @@ func (g *Github) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.Pull
 	reviews, _, err := retry(ctx, func() ([]*github.PullRequestReview, *github.Response, error) {
 		return g.ghClient.PullRequests.ListReviews(ctx, pr.ownerName, pr.repoName, pr.number, &github.ListOptions{})
 	})
+  if err != nil {
+    return false, err
+  }
 
 	for _, review := range reviews {
 		if review.User.GetLogin() == loggedInUser && *review.State == "APPROVED" {

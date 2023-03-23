@@ -423,7 +423,7 @@ func (g *Gitlab) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (
 	pr := pullReq.(pullRequest)
 
 	var diff string
-	mr, _, err := g.glClient.MergeRequests.GetMergeRequestChanges(pr.targetPID, pr.iid, &gitlab.GetMergeRequestChangesOptions{})
+	mr, _, err := g.glClient.MergeRequests.GetMergeRequestChanges(pr.targetPID, pr.iid, nil, gitlab.WithContext(ctx))
 	if err != nil {
 		return "", err
 	}
@@ -464,7 +464,7 @@ func (g *Gitlab) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.Pull
 		return false, err
 	}
 
-	reviews, _, err := g.glClient.MergeRequests.GetMergeRequestApprovals(pr.targetPID, pr.iid)
+	reviews, _, err := g.glClient.MergeRequests.GetMergeRequestApprovals(pr.targetPID, pr.iid, gitlab.WithContext(ctx))
 
 	for _, review := range reviews.ApprovedBy {
 		if review.User.ID == loggedInUser.ID {
@@ -483,14 +483,13 @@ func (g *Gitlab) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest
 		return err
 	}
 
-	_, _, err := g.glClient.MergeRequestApprovals.ApproveMergeRequest(pr.targetPID, pr.iid, &gitlab.ApproveMergeRequestOptions{})
+	_, _, err := g.glClient.MergeRequestApprovals.ApproveMergeRequest(pr.targetPID, pr.iid, nil, gitlab.WithContext(ctx))
 	return err
 }
 
 // RejectPullRequest requests changes (Note for gitlab this just leaves a comment)
 func (g *Gitlab) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
 	return g.CommentPullRequest(ctx, pullReq, comment)
-
 }
 
 // CommentPullRequest leaves a comment
@@ -499,7 +498,7 @@ func (g *Gitlab) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest
 
 	_, _, err := g.glClient.Notes.CreateMergeRequestNote(pr.targetPID, pr.iid, &gitlab.CreateMergeRequestNoteOptions{
 		Body: &comment,
-	})
+	}, gitlab.WithContext(ctx))
 
 	return err
 }
