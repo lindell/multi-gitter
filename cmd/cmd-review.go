@@ -34,7 +34,7 @@ func ReviewCmd() *cobra.Command {
 	return cmd
 }
 
-func review(cmd *cobra.Command, args []string) error {
+func review(cmd *cobra.Command, _ []string) error {
 	flag := cmd.Flags()
 
 	branchName, _ := flag.GetString("branch")
