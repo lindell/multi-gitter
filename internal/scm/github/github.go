@@ -16,29 +16,33 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type Config struct {
+	Token               string
+	BaseURL             string
+	TransportMiddleware func(http.RoundTripper) http.RoundTripper
+	RepoListing         RepositoryListing
+	MergeTypes          []scm.MergeType
+	ForkMode            bool
+	ForkOwner           string
+	SSHAuth             bool
+	ReadOnly            bool
+}
+
 // New create a new Github client
 func New(
-	token string,
-	baseURL string,
-	transportMiddleware func(http.RoundTripper) http.RoundTripper,
-	repoListing RepositoryListing,
-	mergeTypes []scm.MergeType,
-	forkMode bool,
-	forkOwner string,
-	sshAuth bool,
-	readOnly bool,
+	config Config,
 ) (*Github, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
+		&oauth2.Token{AccessToken: config.Token},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-	tc.Transport = transportMiddleware(tc.Transport)
+	tc.Transport = config.TransportMiddleware(tc.Transport)
 
 	var client *github.Client
-	if baseURL != "" {
+	if config.BaseURL != "" {
 		var err error
-		client, err = github.NewEnterpriseClient(baseURL, "", tc)
+		client, err = github.NewEnterpriseClient(config.BaseURL, "", tc)
 		if err != nil {
 			return nil, err
 		}
@@ -47,17 +51,17 @@ func New(
 	}
 
 	return &Github{
-		RepositoryListing: repoListing,
-		MergeTypes:        mergeTypes,
-		token:             token,
-		baseURL:           baseURL,
-		Fork:              forkMode,
-		ForkOwner:         forkOwner,
-		SSHAuth:           sshAuth,
+		RepositoryListing: config.RepoListing,
+		MergeTypes:        config.MergeTypes,
+		token:             config.Token,
+		baseURL:           config.BaseURL,
+		Fork:              config.ForkMode,
+		ForkOwner:         config.ForkOwner,
+		SSHAuth:           config.SSHAuth,
 		ghClient:          client,
-		ReadOnly:          readOnly,
+		ReadOnly:          config.ReadOnly,
 		httpClient: &http.Client{
-			Transport: transportMiddleware(http.DefaultTransport),
+			Transport: config.TransportMiddleware(http.DefaultTransport),
 		},
 	}, nil
 }
