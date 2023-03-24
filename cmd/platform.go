@@ -147,12 +147,22 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 		return nil, err
 	}
 
-	vc, err := github.New(token, gitBaseURL, http.NewLoggingRoundTripper, github.RepositoryListing{
-		Organizations: orgs,
-		Users:         users,
-		Repositories:  repoRefs,
-		Topics:        topics,
-	}, mergeTypes, forkMode, forkOwner, sshAuth, readOnly)
+	vc, err := github.New(github.Config{
+		Token:               token,
+		BaseURL:             gitBaseURL,
+		TransportMiddleware: http.NewLoggingRoundTripper,
+		RepoListing: github.RepositoryListing{
+			Organizations: orgs,
+			Users:         users,
+			Repositories:  repoRefs,
+			Topics:        topics,
+		},
+		MergeTypes: mergeTypes,
+		ForkMode:   forkMode,
+		ForkOwner:  forkOwner,
+		SSHAuth:    sshAuth,
+		ReadOnly:   readOnly,
+	})
 	if err != nil {
 		return nil, err
 	}

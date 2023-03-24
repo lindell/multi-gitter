@@ -122,9 +122,13 @@ func Test_GetRepositories(t *testing.T) {
 
 	// Organization
 	{
-		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
-			Organizations: []string{"test-org"},
-		}, []scm.MergeType{scm.MergeTypeMerge}, false, "", false, false)
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				Organizations: []string{"test-org"},
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -137,14 +141,18 @@ func Test_GetRepositories(t *testing.T) {
 
 	// repository
 	{
-		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
-			Repositories: []github.RepositoryReference{
-				{
-					OwnerName: "test-org",
-					Name:      "test1",
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				Repositories: []github.RepositoryReference{
+					{
+						OwnerName: "test-org",
+						Name:      "test1",
+					},
 				},
 			},
-		}, []scm.MergeType{scm.MergeTypeMerge}, false, "", false, false)
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -157,9 +165,13 @@ func Test_GetRepositories(t *testing.T) {
 
 	// User
 	{
-		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
-			Users: []string{"test-user"},
-		}, []scm.MergeType{scm.MergeTypeMerge}, false, "", false, false)
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				Users: []string{"test-user"},
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -172,10 +184,14 @@ func Test_GetRepositories(t *testing.T) {
 
 	// Topics
 	{
-		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
-			Organizations: []string{"test-org"},
-			Topics:        []string{"frontend", "backend"},
-		}, []scm.MergeType{scm.MergeTypeMerge}, false, "", false, false)
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				Organizations: []string{"test-org"},
+				Topics:        []string{"frontend", "backend"},
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
@@ -188,16 +204,20 @@ func Test_GetRepositories(t *testing.T) {
 
 	// Multiple
 	{
-		gh, err := github.New("", "", transport.Wrapper, github.RepositoryListing{
-			Organizations: []string{"test-org"},
-			Users:         []string{"test-user"},
-			Repositories: []github.RepositoryReference{
-				{
-					OwnerName: "test-org",
-					Name:      "test1",
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				Organizations: []string{"test-org"},
+				Users:         []string{"test-user"},
+				Repositories: []github.RepositoryReference{
+					{
+						OwnerName: "test-org",
+						Name:      "test1",
+					},
 				},
 			},
-		}, []scm.MergeType{scm.MergeTypeMerge}, false, "", false, false)
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
 		require.NoError(t, err)
 
 		repos, err := gh.GetRepositories(context.Background())
