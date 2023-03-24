@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
@@ -134,6 +135,15 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 		return nil, err
 	}
 
+	// Permissions returned from GitHub does not represent reality for some token types,
+	// see https://github.com/lindell/multi-gitter/issues/224 for more information.
+	// In those cases, we don't check permissions, and let errors occur if
+	// repositories are inaccessible.
+	checkPermissions := true
+	if strings.HasPrefix(token, "ghs_") {
+		checkPermissions = false
+	}
+
 	repoRefs := make([]github.RepositoryReference, len(repos))
 	for i := range repos {
 		repoRefs[i], err = github.ParseRepositoryReference(repos[i])
@@ -157,11 +167,12 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 			Repositories:  repoRefs,
 			Topics:        topics,
 		},
-		MergeTypes: mergeTypes,
-		ForkMode:   forkMode,
-		ForkOwner:  forkOwner,
-		SSHAuth:    sshAuth,
-		ReadOnly:   readOnly,
+		MergeTypes:       mergeTypes,
+		ForkMode:         forkMode,
+		ForkOwner:        forkOwner,
+		SSHAuth:          sshAuth,
+		ReadOnly:         readOnly,
+		CheckPermissions: checkPermissions,
 	})
 	if err != nil {
 		return nil, err
