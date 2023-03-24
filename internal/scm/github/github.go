@@ -155,6 +155,9 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 		case r.GetDisabled():
 			log.Debug("Skipping repository since it's disabled")
 			continue
+		case len(g.Topics) != 0 && !scm.RepoContainsTopic(r.Topics, g.Topics):
+			log.Debug("Skipping repository since it does not match repository topics")
+			continue
 		}
 
 		if g.checkPermissions {
@@ -164,9 +167,6 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 				continue
 			case !g.Fork && !g.ReadOnly && !permissions["push"]:
 				log.Debug("Skipping repository since the token does not have push permissions and the run will not fork")
-				continue
-			case len(g.Topics) != 0 && !scm.RepoContainsTopic(r.Topics, g.Topics):
-				log.Debug("Skipping repository since it does not match repository topics")
 				continue
 			}
 		}
