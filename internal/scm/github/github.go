@@ -26,6 +26,7 @@ type Config struct {
 	ForkOwner           string
 	SSHAuth             bool
 	ReadOnly            bool
+	CheckPermissions    bool
 }
 
 // New create a new Github client
@@ -60,6 +61,7 @@ func New(
 		SSHAuth:           config.SSHAuth,
 		ghClient:          client,
 		ReadOnly:          config.ReadOnly,
+		checkPermissions:  config.CheckPermissions,
 		httpClient: &http.Client{
 			Transport: config.TransportMiddleware(http.DefaultTransport),
 		},
@@ -96,6 +98,9 @@ type Github struct {
 	// Used to make sure request that modifies state does not happen to often
 	modMutex       sync.Mutex
 	lastModRequest time.Time
+
+	// If set, the permissions of each repository is checked before using it
+	checkPermissions bool
 }
 
 // RepositoryListing contains information about which repositories that should be fetched
@@ -150,15 +155,20 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 		case r.GetDisabled():
 			log.Debug("Skipping repository since it's disabled")
 			continue
-		case !permissions["pull"]:
-			log.Debug("Skipping repository since the token does not have pull permissions")
-			continue
-		case !g.Fork && !g.ReadOnly && !permissions["push"]:
-			log.Debug("Skipping repository since the token does not have push permissions and the run will not fork")
-			continue
 		case len(g.Topics) != 0 && !scm.RepoContainsTopic(r.Topics, g.Topics):
 			log.Debug("Skipping repository since it does not match repository topics")
 			continue
+		}
+
+		if g.checkPermissions {
+			switch {
+			case !permissions["pull"]:
+				log.Debug("Skipping repository since the token does not have pull permissions")
+				continue
+			case !g.Fork && !g.ReadOnly && !permissions["push"]:
+				log.Debug("Skipping repository since the token does not have push permissions and the run will not fork")
+				continue
+			}
 		}
 
 		newRepo, err := g.convertRepo(r)
