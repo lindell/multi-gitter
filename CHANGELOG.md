@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.44.2](https://www.github.com/lindell/multi-gitter/compare/v0.44.1...v0.44.2) (2023-03-25)
+
+
+### Bug Fixes
+
+* **github:** allow GitHub app tokens to be used ([#334](https://www.github.com/lindell/multi-gitter/issues/334)) ([8d86544](https://www.github.com/lindell/multi-gitter/commit/8d865447765d70c6bdde393ef3ee450355b61ae0))
+
 ### [0.44.1](https://www.github.com/lindell/multi-gitter/compare/v0.44.0...v0.44.1) (2023-03-16)
 
 
