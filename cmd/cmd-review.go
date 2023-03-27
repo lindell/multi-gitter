@@ -24,6 +24,10 @@ func ReviewCmd() *cobra.Command {
 	cmd.Flags().StringP("comment", "c", "", "Leave a review comment.")
 	cmd.Flags().BoolP("all", "a", false, "Review all pull requests in one go instead each individually.")
 	cmd.Flags().StringP("batch", "", "", "Review all pull requests without confirmation (--all is not required). Batch accepts one of [approve, reject, comment].")
+	_ = cmd.RegisterFlagCompletionFunc("batch", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"approve", "reject", "comment"}, cobra.ShellCompDirectiveNoFileComp
+	})
+
 	cmd.Flags().BoolP("no-pager", "", false, "Do not use a pager for reviewing pull request diffs.")
 	cmd.Flags().BoolP("include-approved", "", false, "Include pull requests already approved by you.")
 	configurePlatform(cmd)
@@ -44,6 +48,11 @@ func review(cmd *cobra.Command, _ []string) error {
 	disablePaging, _ := flag.GetBool("no-pager")
 	includeApproved, _ := flag.GetBool("include-approved")
 
+	batchOperation, err := multigitter.ParseBatchOperation(batch)
+	if err != nil {
+		return err
+	}
+
 	vc, err := getVersionController(flag, true, false)
 	if err != nil {
 		return err
@@ -54,7 +63,7 @@ func review(cmd *cobra.Command, _ []string) error {
 		FeatureBranch:     branchName,
 		Comment:           comment,
 		All:               all,
-		Batch:             batch,
+		BatchOperation:    batchOperation,
 		Pager:             getPager(),
 		DisablePaging:     disablePaging,
 		IncludeApproved:   includeApproved,

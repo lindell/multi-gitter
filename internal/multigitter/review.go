@@ -19,7 +19,7 @@ type Reviewer struct {
 	FeatureBranch     string
 	Comment           string
 	All               bool
-	Batch             string
+	BatchOperation    BatchOperation
 	Pager             string
 	DisablePaging     bool
 	IncludeApproved   bool
@@ -28,9 +28,6 @@ type Reviewer struct {
 const (
 	header        = "# *********************************************************"
 	reviewOptions = "[a/r/c/n/d/h (help)]"
-	batchApprove  = "approve"
-	batchReject   = "reject"
-	batchComment  = "comment"
 )
 
 type approvedPR struct {
@@ -43,6 +40,11 @@ func (s Reviewer) Review(ctx context.Context) error {
 	prs, err := s.VersionController.GetPullRequests(ctx, s.FeatureBranch)
 	if err != nil {
 		return err
+	}
+
+	if len(prs) == 0 {
+		fmt.Printf("No open pull requests found matching the branch %s", s.FeatureBranch)
+		return nil
 	}
 
 	var approvedPrs []approvdPr
@@ -81,7 +83,7 @@ func (s Reviewer) Review(ctx context.Context) error {
 			continue
 		}
 
-		if !s.All && s.Batch == "" {
+		if !s.All && s.BatchOperation == 0 {
 			if err := s.leaveReview(ctx, strings.NewReader(fmt.Sprintf("%s\n# %s\n%s\n%s", header, pr.String(), header, diff)), pr); err != nil {
 				log.Errorf("Error occurred while reviewing pr: %s", err.Error())
 			}
@@ -90,7 +92,7 @@ func (s Reviewer) Review(ctx context.Context) error {
 		}
 	}
 
-	if s.All || s.Batch != "" {
+	if s.All || s.BatchOperation != 0 {
 		return s.leaveReviews(ctx, strings.NewReader(reviewDiffs), approvedPrs...)
 	}
 
@@ -162,15 +164,15 @@ func (s Reviewer) leaveReviews(ctx context.Context, r io.ReadSeeker, prs ...appr
 		return err
 	}
 
-	if s.Batch != "" {
-		switch s.Batch {
-		case batchApprove:
+	if s.BatchOperation != 0 {
+		switch s.BatchOperation {
+		case BatchOperationApprove:
 			_, err := s.reviewAction(ctx, r, "a", prs...)
 			return err
-		case batchReject:
+		case BatchOperationReject:
 			_, err := s.reviewAction(ctx, r, "r", prs...)
 			return err
-		case batchComment:
+		case BatchOperationComment:
 			_, err := s.reviewAction(ctx, r, "c", prs...)
 			return err
 		default:
@@ -245,7 +247,7 @@ func (s Reviewer) approve(ctx context.Context, pr approvdPr, comment string) err
 }
 
 func (s Reviewer) getComment() string {
-	if s.Batch != "" {
+	if s.BatchOperation != 0 {
 		return s.Comment
 	}
 
