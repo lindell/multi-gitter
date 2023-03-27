@@ -85,7 +85,6 @@ const (
 
 // ParseBatchOperation parses a batch operation from a string
 func ParseBatchOperation(str string) (BatchOperation, error) {
-
 	switch str {
 	default:
 		return BatchOperation(0), fmt.Errorf("could not parse \"%s\" as batch operation", str)

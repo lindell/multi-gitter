@@ -42,7 +42,7 @@ func (s Reviewer) Review(ctx context.Context) error {
 	}
 
 	if len(prs) == 0 {
-		return fmt.Errorf("No open pull requests found matching the branch %s", s.FeatureBranch)
+		return fmt.Errorf("no open pull requests found matching the branch %s", s.FeatureBranch)
 	}
 
 	var reviewPrs []reviewPR
