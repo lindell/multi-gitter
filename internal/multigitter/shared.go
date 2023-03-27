@@ -70,3 +70,29 @@ func ParseConflictStrategy(str string) (ConflictStrategy, error) {
 		return ConflictStrategyReplace, nil
 	}
 }
+
+// BatchOperation defines automated actions executed on review
+type BatchOperation int
+
+const (
+	// BatchOperationApprove approves pr's
+	BatchOperationApprove BatchOperation = iota + 1
+	// BatchOperationReject declines pr's
+	BatchOperationReject
+	// BatchOperationComment comments pr's (neither approve nor decline)
+	BatchOperationComment
+)
+
+// ParseBatchOperation parses a batch operation from a string
+func ParseBatchOperation(str string) (BatchOperation, error) {
+	switch str {
+	default:
+		return BatchOperation(0), fmt.Errorf("could not parse \"%s\" as batch operation", str)
+	case "approve":
+		return BatchOperationApprove, nil
+	case "reject":
+		return BatchOperationReject, nil
+	case "comment":
+		return BatchOperationComment, nil
+	}
+}
