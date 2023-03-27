@@ -48,9 +48,14 @@ func review(cmd *cobra.Command, _ []string) error {
 	disablePaging, _ := flag.GetBool("no-pager")
 	includeApproved, _ := flag.GetBool("include-approved")
 
-	batchOperation, err := multigitter.ParseBatchOperation(batch)
-	if err != nil {
-		return err
+	var batchOperation *multigitter.BatchOperation
+	if batch != "" {
+		b, err := multigitter.ParseBatchOperation(batch)
+		if err != nil {
+			return err
+		}
+
+		batchOperation = &b
 	}
 
 	vc, err := getVersionController(flag, true, false)
