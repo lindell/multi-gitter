@@ -73,6 +73,8 @@ func (s Reviewer) Review(ctx context.Context) error {
 	var reviewDiffs string
 
 	for _, pr := range approvedPrs {
+		log := log.WithField("pr", pr.String())
+		
 		diff, err := s.VersionController.DiffPullRequest(ctx, pr.PullRequest)
 		if err != nil {
 			log.Errorf("Error occurred while retrieving diff: %s", err.Error())
