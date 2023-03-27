@@ -48,6 +48,7 @@ func (s Reviewer) Review(ctx context.Context) error {
 	var approvedPrs []approvdPr
 
 	for _, pr := range prs {
+		log := log.WithField("pr", pr.String())
 		approved, err := s.VersionController.IsPullRequestApprovedByMe(ctx, pr)
 		if err != nil {
 			log.Errorf("Failed to retrieve pull request reviews: %s", err.Error())
