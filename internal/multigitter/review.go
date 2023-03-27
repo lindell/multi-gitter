@@ -33,7 +33,7 @@ const (
 	batchComment  = "comment"
 )
 
-type approvdPr struct {
+type approvedPR struct {
 	scm.PullRequest
 	approved bool
 }
