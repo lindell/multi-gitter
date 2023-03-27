@@ -3,7 +3,6 @@ package multigitter
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -19,7 +18,7 @@ type Reviewer struct {
 	FeatureBranch     string
 	Comment           string
 	All               bool
-	BatchOperation    BatchOperation
+	BatchOperation    *BatchOperation
 	Pager             string
 	DisablePaging     bool
 	IncludeApproved   bool
@@ -30,7 +29,7 @@ const (
 	reviewOptions = "[a/r/c/n/d/h (help)]"
 )
 
-type approvedPR struct {
+type reviewPR struct {
 	scm.PullRequest
 	approved bool
 }
@@ -43,11 +42,10 @@ func (s Reviewer) Review(ctx context.Context) error {
 	}
 
 	if len(prs) == 0 {
-		fmt.Printf("No open pull requests found matching the branch %s", s.FeatureBranch)
-		return nil
+		return fmt.Errorf("No open pull requests found matching the branch %s", s.FeatureBranch)
 	}
 
-	var approvedPrs []approvdPr
+	var reviewPrs []reviewPR
 
 	for _, pr := range prs {
 		log := log.WithField("pr", pr.String())
@@ -61,69 +59,60 @@ func (s Reviewer) Review(ctx context.Context) error {
 			continue
 		}
 
-		approvedPrs = append(approvedPrs, approvdPr{
+		reviewPrs = append(reviewPrs, reviewPR{
 			PullRequest: pr,
 			approved:    approved,
 		})
 	}
 
-	if len(approvedPrs) == 0 {
+	if len(reviewPrs) == 0 {
 		fmt.Println("All pull requests are approved by you. You can still view and comment them by using review --include-approved")
 		return nil
 	}
 
-	var reviewDiffs string
-
-	for _, pr := range approvedPrs {
-		log := log.WithField("pr", pr.String())
-		
+	var reviewDiffs strings.Builder
+	for _, pr := range reviewPrs {
 		diff, err := s.VersionController.DiffPullRequest(ctx, pr.PullRequest)
 		if err != nil {
 			log.Errorf("Error occurred while retrieving diff: %s", err.Error())
 			continue
 		}
-
-		if !s.All && s.BatchOperation == 0 {
-			if err := s.leaveReview(ctx, strings.NewReader(fmt.Sprintf("%s\n# %s\n%s\n%s", header, pr.String(), header, diff)), pr); err != nil {
+		reviewDiff := fmt.Sprintf("%s\n# %s\n%s\n%s", header, pr.String(), header, diff)
+		if !s.All && s.BatchOperation == nil {
+			if err := s.leaveReview(ctx, reviewDiff, pr); err != nil {
 				log.Errorf("Error occurred while reviewing pr: %s", err.Error())
 			}
 		} else {
-			reviewDiffs = fmt.Sprintf("%s\n%s\n# %s\n%s\n%s", reviewDiffs, header, pr.String(), header, diff)
+			reviewDiffs.WriteString("\n")
+			reviewDiffs.WriteString(reviewDiff)
 		}
 	}
 
-	if s.All || s.BatchOperation != 0 {
-		return s.leaveReviews(ctx, strings.NewReader(reviewDiffs), approvedPrs...)
+	if s.All || s.BatchOperation != nil {
+		return s.leaveReviews(ctx, reviewDiffs.String(), reviewPrs...)
 	}
 
 	return nil
 }
 
-func (s Reviewer) printDiff(r io.ReadSeeker) error {
+func (s Reviewer) printDiff(diff string) error {
 	var err error
 
 	// attempt to page the diff
 	if !s.DisablePaging {
-		_, _ = r.Seek(0, 0)
-		err = s.pageTmpFile(r)
+		err = s.pageTmpFile(diff)
 	}
 
 	// if paging failed (or is diabled) the diff gets dumped to stdout instead
 	if err != nil || s.DisablePaging {
-		_, _ = r.Seek(0, 0)
-		b, err := io.ReadAll(r)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(string(b))
+		fmt.Println(diff)
 	}
 
 	return nil
 }
 
 // write file to tmp file so a pager can also be a tool which can't directly read from stdin
-func (s Reviewer) pageTmpFile(r io.Reader) error {
+func (s Reviewer) pageTmpFile(diff string) error {
 	file, err := os.CreateTemp(os.TempDir(), "*.diff")
 	if err != nil {
 		return err
@@ -131,7 +120,7 @@ func (s Reviewer) pageTmpFile(r io.Reader) error {
 
 	defer os.Remove(file.Name())
 
-	_, err = io.Copy(file, r)
+	_, err = file.Write([]byte(diff))
 	if err != nil {
 		return err
 	}
@@ -142,8 +131,8 @@ func (s Reviewer) pageTmpFile(r io.Reader) error {
 	return cmd.Run()
 }
 
-func (s Reviewer) leaveReview(ctx context.Context, r io.ReadSeeker, pr approvdPr) error {
-	if err := s.printDiff(r); err != nil {
+func (s Reviewer) leaveReview(ctx context.Context, diff string, pr reviewPR) error {
+	if err := s.printDiff(diff); err != nil {
 		return err
 	}
 
@@ -151,7 +140,7 @@ func (s Reviewer) leaveReview(ctx context.Context, r io.ReadSeeker, pr approvdPr
 	for {
 		fmt.Printf("Leave a review on %s %s: ", pr.String(), reviewOptions)
 		fmt.Scanln(&action)
-		if repeat, _ := s.reviewAction(ctx, r, action, pr); !repeat {
+		if repeat, _ := s.reviewAction(ctx, diff, action, pr); !repeat {
 			break
 		}
 	}
@@ -159,21 +148,21 @@ func (s Reviewer) leaveReview(ctx context.Context, r io.ReadSeeker, pr approvdPr
 	return nil
 }
 
-func (s Reviewer) leaveReviews(ctx context.Context, r io.ReadSeeker, prs ...approvdPr) error {
-	if err := s.printDiff(r); err != nil {
-		return err
-	}
-
-	if s.BatchOperation != 0 {
-		switch s.BatchOperation {
+func (s Reviewer) leaveReviews(ctx context.Context, diff string, prs ...reviewPR) error {
+	if s.BatchOperation == nil {
+		if err := s.printDiff(diff); err != nil {
+			return err
+		}
+	} else {
+		switch *s.BatchOperation {
 		case BatchOperationApprove:
-			_, err := s.reviewAction(ctx, r, "a", prs...)
+			_, err := s.reviewAction(ctx, diff, "a", prs...)
 			return err
 		case BatchOperationReject:
-			_, err := s.reviewAction(ctx, r, "r", prs...)
+			_, err := s.reviewAction(ctx, diff, "r", prs...)
 			return err
 		case BatchOperationComment:
-			_, err := s.reviewAction(ctx, r, "c", prs...)
+			_, err := s.reviewAction(ctx, diff, "c", prs...)
 			return err
 		default:
 			return errors.New("unknown batch operation")
@@ -185,7 +174,7 @@ func (s Reviewer) leaveReviews(ctx context.Context, r io.ReadSeeker, prs ...appr
 		fmt.Printf("Leave a review on all pull requests %s: ", reviewOptions)
 		fmt.Scanln(&action)
 
-		if repeat, _ := s.reviewAction(ctx, r, action, prs...); !repeat {
+		if repeat, _ := s.reviewAction(ctx, diff, action, prs...); !repeat {
 			break
 		}
 	}
@@ -193,7 +182,7 @@ func (s Reviewer) leaveReviews(ctx context.Context, r io.ReadSeeker, prs ...appr
 	return nil
 }
 
-func (s Reviewer) reviewAction(ctx context.Context, r io.ReadSeeker, action string, prs ...approvdPr) (bool, error) {
+func (s Reviewer) reviewAction(ctx context.Context, diff string, action string, prs ...reviewPR) (bool, error) {
 	switch action {
 	case "a", "r", "c":
 		comment := s.getComment()
@@ -224,7 +213,7 @@ func (s Reviewer) reviewAction(ctx context.Context, r io.ReadSeeker, action stri
 	case "n":
 		return false, nil
 	case "d":
-		return true, s.printDiff(r)
+		return true, s.printDiff(diff)
 	default:
 		fmt.Println("a - Approve pull request")
 		fmt.Println("r - Request changes")
@@ -237,7 +226,7 @@ func (s Reviewer) reviewAction(ctx context.Context, r io.ReadSeeker, action stri
 }
 
 // approve gates double approvement submits
-func (s Reviewer) approve(ctx context.Context, pr approvdPr, comment string) error {
+func (s Reviewer) approve(ctx context.Context, pr reviewPR, comment string) error {
 	if pr.approved {
 		log.Debug("Skip approved pull request", pr.String())
 		return nil
@@ -247,7 +236,7 @@ func (s Reviewer) approve(ctx context.Context, pr approvdPr, comment string) err
 }
 
 func (s Reviewer) getComment() string {
-	if s.BatchOperation != 0 {
+	if s.BatchOperation != nil {
 		return s.Comment
 	}
 
