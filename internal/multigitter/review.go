@@ -49,6 +49,8 @@ func (s Reviewer) Review(ctx context.Context) error {
 
 	for _, pr := range prs {
 		log := log.WithField("pr", pr.String())
+		log.Debug("Retrieving pull request reviews")
+
 		approved, err := s.VersionController.IsPullRequestApprovedByMe(ctx, pr)
 		if err != nil {
 			log.Errorf("Failed to retrieve pull request reviews: %s", err.Error())
@@ -72,6 +74,9 @@ func (s Reviewer) Review(ctx context.Context) error {
 
 	var reviewDiffs strings.Builder
 	for _, pr := range reviewPrs {
+		log := log.WithField("pr", pr.String())
+		log.Debug("Retrieving pull request diff")
+
 		diff, err := s.VersionController.DiffPullRequest(ctx, pr.PullRequest)
 		if err != nil {
 			log.Errorf("Error occurred while retrieving diff: %s", err.Error())
