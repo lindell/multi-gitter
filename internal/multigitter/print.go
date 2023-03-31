@@ -3,11 +3,9 @@ package multigitter
 import (
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
-	"os/exec"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/scm"
@@ -82,13 +80,7 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 		return err
 	}
 
-	// Run the command that might or might not change the content of the repo
-	// If the command return a non zero exit code, abort.
-	cmd := exec.CommandContext(ctx, r.ScriptPath, r.Arguments...)
-	cmd.Dir = tmpDir
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
-	)
+	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments, false)
 
 	cmd.Stdout = r.Stdout
 	cmd.Stderr = r.Stderr
