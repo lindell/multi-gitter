@@ -18,7 +18,6 @@ This command will clone down multiple repositories. For each of those repositori
 
 When the script is invoked, these environment variables are set:
 - ` + "```REPOSITORY```" + ` will be set to the name of the repository currently being executed
-- ` + "```DRY_RUN```" + ` will be set ` + "```=true```" + `, when running in with the --dry-run flag, else it's absent
 `
 
 // PrintCmd is the main command that runs a script for multiple repositories and print the output of each run
