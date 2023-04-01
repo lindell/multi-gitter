@@ -229,16 +229,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
-	// Run the command that might or might not change the content of the repo
-	// If the command return a non-zero exit code, abort.
-	cmd := exec.CommandContext(ctx, r.ScriptPath, r.Arguments...)
-	cmd.Dir = tmpDir
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
-	)
-	if r.DryRun {
-		cmd.Env = append(cmd.Env, "DRY_RUN=true")
-	}
+	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments, r.DryRun)
 
 	// Setup logger that transfers stdout and stderr from the run to logs
 	writer := logger.NewLogger(log)
