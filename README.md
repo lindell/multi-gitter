@@ -551,9 +551,7 @@ username:
 
 This command will clone down multiple repositories. For each of those repositories, the script will be run in the context of that repository. If the script finished with a zero exit code, and the script resulted in file changes, a pull request will be created with.
 
-When the script is invoked, these environment variables are set:
-- ```REPOSITORY``` will be set to the name of the repository currently being executed
-- ```DRY_RUN``` will be set ```=true```, when running in with the --dry-run flag, else it's absent
+The environment variable REPOSITORY will be set to the name of the repository currently being executed by the script.
 
 ```
 Usage:
@@ -707,8 +705,7 @@ Flags:
 
 This command will clone down multiple repositories. For each of those repositories, the script will be run in the context of that repository. The output of each script run in each repo will be printed, by default to stdout and stderr, but it can be configured to files as well.
 
-When the script is invoked, these environment variables are set:
-- ```REPOSITORY``` will be set to the name of the repository currently being executed
+The environment variable REPOSITORY will be set to the name of the repository currently being executed by the script.
 
 ```
 Usage:
