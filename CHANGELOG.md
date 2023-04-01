@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.45.0](https://www.github.com/lindell/multi-gitter/compare/v0.44.2...v0.45.0) (2023-04-01)
+
+
+### Features
+
+* set DRY_RUN when --dry-run is used ([#337](https://www.github.com/lindell/multi-gitter/issues/337)) ([e4390ee](https://www.github.com/lindell/multi-gitter/commit/e4390ee8eddc8a37ea73fd5f29d3e9151221900e))
+
 ### [0.44.2](https://www.github.com/lindell/multi-gitter/compare/v0.44.1...v0.44.2) (2023-03-25)
 
 
