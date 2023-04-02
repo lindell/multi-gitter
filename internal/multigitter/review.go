@@ -32,17 +32,103 @@ const (
 type reviewPR struct {
 	scm.PullRequest
 	approved bool
+	diff     string
+}
+
+func (pr reviewPR) formatReviewDiff() string {
+	return fmt.Sprintf("%s\n# %s\n%s\n%s", header, pr.String(), header, pr.diff)
 }
 
 // Reviewer reviews pull requests in an organization
 func (s Reviewer) Review(ctx context.Context) error {
-	prs, err := s.VersionController.GetPullRequests(ctx, s.FeatureBranch)
+	if s.BatchOperation != nil {
+		return s.reviewAllPrs(ctx, *s.BatchOperation)
+	} else if s.All {
+		return s.reviewAllPrsWithQuestion(ctx)
+	} else {
+		return s.reviewAllPrsIndividually(ctx)
+	}
+}
+
+func (s Reviewer) reviewAllPrsIndividually(ctx context.Context) error {
+	prs, err := s.getReviewablePRs(ctx)
 	if err != nil {
 		return err
 	}
 
+	for _, pr := range prs {
+		if err := s.leaveReview(ctx, pr.diff, pr); err != nil {
+			log.Errorf("Error occurred while reviewing pr: %s", err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (s Reviewer) reviewAllPrs(ctx context.Context, batchOperation BatchOperation) error {
+	prs, err := s.getReviewablePRs(ctx)
+	if err != nil {
+		return err
+	}
+
+	diff := prDiffs(prs)
+
+	switch batchOperation {
+	case BatchOperationApprove:
+		_, err := s.reviewAction(ctx, diff, "a", prs...)
+		return err
+	case BatchOperationReject:
+		_, err := s.reviewAction(ctx, diff, "r", prs...)
+		return err
+	case BatchOperationComment:
+		_, err := s.reviewAction(ctx, diff, "c", prs...)
+		return err
+	default:
+		return errors.New("unknown batch operation")
+	}
+}
+
+func (s Reviewer) reviewAllPrsWithQuestion(ctx context.Context) error {
+	prs, err := s.getReviewablePRs(ctx)
+	if err != nil {
+		return err
+	}
+
+	diff := prDiffs(prs)
+	if err := s.printDiff(diff); err != nil {
+		return err
+	}
+
+	var action string
+	for {
+		fmt.Printf("Leave a review on all pull requests %s: ", reviewOptions)
+		fmt.Scanln(&action)
+
+		if repeat, _ := s.reviewAction(ctx, diff, action, prs...); !repeat {
+			break
+		}
+	}
+
+	return nil
+}
+
+func prDiffs(prs []reviewPR) string {
+	var reviewDiffs strings.Builder
+	for _, pr := range prs {
+		reviewDiffs.WriteString(pr.formatReviewDiff())
+		reviewDiffs.WriteString("\n")
+	}
+	return reviewDiffs.String()
+}
+
+func (s Reviewer) getReviewablePRs(ctx context.Context) ([]reviewPR, error) {
+	prs, err := s.VersionController.GetPullRequests(ctx, s.FeatureBranch)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(prs) == 0 {
-		return fmt.Errorf("no open pull requests found matching the branch %s", s.FeatureBranch)
+		return nil, fmt.Errorf("no open pull requests found matching the branch %s", s.FeatureBranch)
 	}
 
 	var reviewPrs []reviewPR
@@ -61,43 +147,26 @@ func (s Reviewer) Review(ctx context.Context) error {
 			continue
 		}
 
-		reviewPrs = append(reviewPrs, reviewPR{
-			PullRequest: pr,
-			approved:    approved,
-		})
-	}
-
-	if len(reviewPrs) == 0 {
-		fmt.Println("All pull requests are approved by you. You can still view and comment them by using review --include-approved")
-		return nil
-	}
-
-	var reviewDiffs strings.Builder
-	for _, pr := range reviewPrs {
-		log := log.WithField("pr", pr.String())
 		log.Debug("Retrieving pull request diff")
 
-		diff, err := s.VersionController.DiffPullRequest(ctx, pr.PullRequest)
+		diff, err := s.VersionController.DiffPullRequest(ctx, pr)
 		if err != nil {
 			log.Errorf("Error occurred while retrieving diff: %s", err.Error())
 			continue
 		}
-		reviewDiff := fmt.Sprintf("%s\n# %s\n%s\n%s", header, pr.String(), header, diff)
-		if !s.All && s.BatchOperation == nil {
-			if err := s.leaveReview(ctx, reviewDiff, pr); err != nil {
-				log.Errorf("Error occurred while reviewing pr: %s", err.Error())
-			}
-		} else {
-			reviewDiffs.WriteString("\n")
-			reviewDiffs.WriteString(reviewDiff)
-		}
+
+		reviewPrs = append(reviewPrs, reviewPR{
+			PullRequest: pr,
+			approved:    approved,
+			diff:        diff,
+		})
 	}
 
-	if s.All || s.BatchOperation != nil {
-		return s.leaveReviews(ctx, reviewDiffs.String(), reviewPrs...)
+	if len(reviewPrs) == 0 {
+		return nil, fmt.Errorf("all pull requests are approved by you. You can still view and comment them by using review --include-approved")
 	}
 
-	return nil
+	return reviewPrs, nil
 }
 
 func (s Reviewer) printDiff(diff string) error {
@@ -146,40 +215,6 @@ func (s Reviewer) leaveReview(ctx context.Context, diff string, pr reviewPR) err
 		fmt.Printf("Leave a review on %s %s: ", pr.String(), reviewOptions)
 		fmt.Scanln(&action)
 		if repeat, _ := s.reviewAction(ctx, diff, action, pr); !repeat {
-			break
-		}
-	}
-
-	return nil
-}
-
-func (s Reviewer) leaveReviews(ctx context.Context, diff string, prs ...reviewPR) error {
-	if s.BatchOperation == nil {
-		if err := s.printDiff(diff); err != nil {
-			return err
-		}
-	} else {
-		switch *s.BatchOperation {
-		case BatchOperationApprove:
-			_, err := s.reviewAction(ctx, diff, "a", prs...)
-			return err
-		case BatchOperationReject:
-			_, err := s.reviewAction(ctx, diff, "r", prs...)
-			return err
-		case BatchOperationComment:
-			_, err := s.reviewAction(ctx, diff, "c", prs...)
-			return err
-		default:
-			return errors.New("unknown batch operation")
-		}
-	}
-
-	var action string
-	for {
-		fmt.Printf("Leave a review on all pull requests %s: ", reviewOptions)
-		fmt.Scanln(&action)
-
-		if repeat, _ := s.reviewAction(ctx, diff, action, prs...); !repeat {
 			break
 		}
 	}
