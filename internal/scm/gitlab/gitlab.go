@@ -52,10 +52,11 @@ type Gitlab struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	Groups   []string
-	Users    []string
-	Projects []ProjectReference
-	Topics   []string
+	Groups    []string
+	Users     []string
+	Projects  []ProjectReference
+	Topics    []string
+	SkipForks bool
 }
 
 // Config includes extra config parameters for the GitLab client
@@ -94,6 +95,10 @@ func (g *Gitlab) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 		log := log.WithField("repo", project.NameWithNamespace)
 		if len(g.Topics) != 0 && !scm.RepoContainsTopic(project.Topics, g.Topics) {
 			log.Debug("Skipping repository since it does not match repository topics")
+			continue
+		}
+		if g.SkipForks && project.ForkedFromProject != nil {
+			log.Debug("Skipping repository since it's a fork")
 			continue
 		}
 

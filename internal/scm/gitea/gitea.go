@@ -69,6 +69,7 @@ type RepositoryListing struct {
 	Users         []string
 	Repositories  []RepositoryReference
 	Topics        []string
+	SkipForks     bool
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -99,6 +100,11 @@ func (g *Gitea) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	repos := make([]scm.Repository, 0, len(allRepos))
 	for _, repo := range allRepos {
 		log := log.WithField("repo", repo.FullName)
+
+		if g.SkipForks && repo.Fork {
+			log.Debug("Skipping repository since it's a fork")
+			continue
+		}
 
 		if len(g.Topics) != 0 {
 			topics, err := g.getRepoTopics(ctx, repo)
