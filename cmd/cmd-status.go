@@ -29,7 +29,7 @@ func StatusCmd() *cobra.Command {
 	return cmd
 }
 
-func status(cmd *cobra.Command, args []string) error {
+func status(cmd *cobra.Command, _ []string) error {
 	flag := cmd.Flags()
 
 	branchName, _ := flag.GetString("branch")

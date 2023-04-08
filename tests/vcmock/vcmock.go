@@ -24,7 +24,7 @@ type VersionController struct {
 }
 
 // GetRepositories returns mock repositories
-func (vc *VersionController) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
+func (vc *VersionController) GetRepositories(_ context.Context) ([]scm.Repository, error) {
 	ret := make([]scm.Repository, len(vc.Repositories))
 	for i := range vc.Repositories {
 		ret[i] = vc.Repositories[i]
@@ -33,7 +33,7 @@ func (vc *VersionController) GetRepositories(ctx context.Context) ([]scm.Reposit
 }
 
 // CreatePullRequest stores a mock pull request
-func (vc *VersionController) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
+func (vc *VersionController) CreatePullRequest(_ context.Context, repo scm.Repository, _ scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	repository := repo.(Repository)
 
 	vc.prLock.Lock()
@@ -52,7 +52,7 @@ func (vc *VersionController) CreatePullRequest(ctx context.Context, repo scm.Rep
 }
 
 // GetPullRequests gets mock pull request statuses
-func (vc *VersionController) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
+func (vc *VersionController) GetPullRequests(_ context.Context, branchName string) ([]scm.PullRequest, error) {
 	vc.prLock.RLock()
 	defer vc.prLock.RUnlock()
 
@@ -66,7 +66,7 @@ func (vc *VersionController) GetPullRequests(ctx context.Context, branchName str
 }
 
 // GetOpenPullRequest gets mock open pull request
-func (vc *VersionController) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
+func (vc *VersionController) GetOpenPullRequest(_ context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
 	vc.prLock.RLock()
 	defer vc.prLock.RUnlock()
 
@@ -85,7 +85,7 @@ func openPullRequest(pr PullRequest) bool {
 }
 
 // MergePullRequest sets the status of a mock pull requests to merged
-func (vc *VersionController) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
+func (vc *VersionController) MergePullRequest(_ context.Context, pr scm.PullRequest) error {
 	vc.prLock.Lock()
 	defer vc.prLock.Unlock()
 
@@ -100,7 +100,7 @@ func (vc *VersionController) MergePullRequest(ctx context.Context, pr scm.PullRe
 }
 
 // ClosePullRequest sets the status of a mock pull requests to closed
-func (vc *VersionController) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error {
+func (vc *VersionController) ClosePullRequest(_ context.Context, pr scm.PullRequest) error {
 	vc.prLock.Lock()
 	defer vc.prLock.Unlock()
 
@@ -132,17 +132,17 @@ func (vc *VersionController) SetPRStatus(repoName string, branchName string, new
 }
 
 // GetAutocompleteOrganizations gets organizations for autocompletion
-func (vc *VersionController) GetAutocompleteOrganizations(ctx context.Context, str string) ([]string, error) {
+func (vc *VersionController) GetAutocompleteOrganizations(_ context.Context, str string) ([]string, error) {
 	return []string{"static-org", str}, nil
 }
 
 // GetAutocompleteUsers gets users for autocompletion
-func (vc *VersionController) GetAutocompleteUsers(ctx context.Context, str string) ([]string, error) {
+func (vc *VersionController) GetAutocompleteUsers(_ context.Context, str string) ([]string, error) {
 	return []string{"static-user", str}, nil
 }
 
 // GetAutocompleteRepositories gets repositories for autocompletion
-func (vc *VersionController) GetAutocompleteRepositories(ctx context.Context, str string) ([]string, error) {
+func (vc *VersionController) GetAutocompleteRepositories(_ context.Context, str string) ([]string, error) {
 	return []string{"static-repo", str}, nil
 }
 

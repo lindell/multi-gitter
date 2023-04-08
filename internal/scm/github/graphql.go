@@ -74,7 +74,7 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 	}
 
 	if err := json.Unmarshal(resultData.Data, res); err != nil {
-		return err
+		return errors.WithMessage(err, "could not unmarshal graphQL result")
 	}
 
 	return nil

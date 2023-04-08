@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//nolint:lll
 const printHelp = `
 This command will clone down multiple repositories. For each of those repositories, the script will be run in the context of that repository. The output of each script run in each repo will be printed, by default to stdout and stderr, but it can be configured to files as well.
 
@@ -28,7 +29,7 @@ func PrintCmd() *cobra.Command {
 		Long:    printHelp,
 		Args:    cobra.ExactArgs(1),
 		PreRunE: logFlagInit,
-		RunE:    print,
+		RunE:    printCMD,
 	}
 
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
@@ -42,7 +43,7 @@ func PrintCmd() *cobra.Command {
 	return cmd
 }
 
-func print(cmd *cobra.Command, args []string) error {
+func printCMD(cmd *cobra.Command, _ []string) error {
 	flag := cmd.Flags()
 
 	concurrent, _ := flag.GetInt("concurrent")

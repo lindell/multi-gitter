@@ -121,7 +121,7 @@ func (g *Git) logDiff() error {
 
 // BranchExist checks if the new branch exists
 func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
-	cmd := exec.Command("git", "ls-remote", "-q", "-h")
+	cmd := exec.Command("git", "ls-remote", "-q", "-h", remoteName)
 	stdOut, err := g.run(cmd)
 	if err != nil {
 		return false, err

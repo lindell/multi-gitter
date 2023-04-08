@@ -15,7 +15,7 @@ func CloseCmd() *cobra.Command {
 		Long:    "Close pull requests with a specified branch name in an organization and with specified conditions.",
 		Args:    cobra.NoArgs,
 		PreRunE: logFlagInit,
-		RunE:    close,
+		RunE:    closeCMD,
 	}
 
 	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
@@ -27,7 +27,7 @@ func CloseCmd() *cobra.Command {
 	return cmd
 }
 
-func close(cmd *cobra.Command, args []string) error {
+func closeCMD(cmd *cobra.Command, _ []string) error {
 	flag := cmd.Flags()
 
 	branchName, _ := flag.GetString("branch")
