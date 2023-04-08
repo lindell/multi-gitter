@@ -1,0 +1,20 @@
+{
+    "name": "multi-gitter development",
+    "customizations": {
+        "codespaces": {
+            "openFiles": [
+                "CONTRIBUTING.md"
+            ]
+        },
+        "vscode": {
+            "extensions": [
+                "golang.go"
+            ],
+            "settings": {
+                "go.lintTool": "golangci-lint"
+            }
+        }
+    },
+    "image": "mcr.microsoft.com/vscode/devcontainers/go:1",
+    "updateContentCommand": "go get"
+}
