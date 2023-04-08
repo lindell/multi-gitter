@@ -27,7 +27,7 @@ func configureLogging(cmd *cobra.Command, logFile string) {
 	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout.`)
 }
 
-func logFlagInit(cmd *cobra.Command, args []string) error {
+func logFlagInit(cmd *cobra.Command, _ []string) error {
 	// Parse and set log level
 	strLevel, _ := cmd.Flags().GetString("log-level")
 	logLevel, err := log.ParseLevel(strLevel)
