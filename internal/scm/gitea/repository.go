@@ -49,7 +49,3 @@ func (r repository) DefaultBranch() string {
 func (r repository) FullName() string {
 	return fmt.Sprintf("%s/%s", r.ownerName, r.name)
 }
-
-func (r repository) Fork() bool {
-	return r.fork
-}
