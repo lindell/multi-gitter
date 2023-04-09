@@ -26,7 +26,6 @@ func (g *Gitea) convertRepository(repo *gitea.Repository) (repository, error) {
 		name:          repo.Name,
 		ownerName:     repo.Owner.UserName,
 		defaultBranch: repo.DefaultBranch,
-		fork:          repo.Fork,
 	}, nil
 }
 
@@ -35,7 +34,6 @@ type repository struct {
 	name          string
 	ownerName     string
 	defaultBranch string
-	fork          bool
 }
 
 func (r repository) CloneURL() string {
