@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.46.0](https://www.github.com/lindell/multi-gitter/compare/v0.45.0...v0.46.0) (2023-04-09)
+
+
+### Features
+
+* option to skip repositories that are forks ([#341](https://www.github.com/lindell/multi-gitter/issues/341)) ([941731b](https://www.github.com/lindell/multi-gitter/commit/941731bfc0a9a89b2abef18286a7a3b06ab5d1db))
+
 ## [0.45.0](https://www.github.com/lindell/multi-gitter/compare/v0.44.2...v0.45.0) (2023-04-01)
 
 
