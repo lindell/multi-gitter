@@ -30,6 +30,7 @@ multi-gitter status [flags]
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --skip-forks          Skip repositories which are forks.
       --ssh-auth            Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string        The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings       The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.

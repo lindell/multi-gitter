@@ -61,6 +61,7 @@ multi-gitter run [script path] [flags]
   -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings               The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings          The username of the reviewers to be added on the pull request.
+      --skip-forks                 Skip repositories which are forks.
       --skip-pr                    Skip pull request and directly push to the branch.
   -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
