@@ -209,6 +209,9 @@ repo:
 reviewers:
   - example
 
+# Skip repositories which are forks.
+skip-forks: false
+
 # Skip pull request and directly push to the branch.
 skip-pr: false
 
@@ -293,6 +296,9 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
+# Skip repositories which are forks.
+skip-forks: false
+
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
@@ -367,6 +373,9 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
+# Skip repositories which are forks.
+skip-forks: false
+
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
@@ -437,6 +446,9 @@ project:
 repo:
   - my-org/js-repo
   - other-org/python-repo
+
+# Skip repositories which are forks.
+skip-forks: false
 
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
@@ -517,6 +529,9 @@ project:
 repo:
   - my-org/js-repo
   - other-org/python-repo
+
+# Skip repositories which are forks.
+skip-forks: false
 
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
@@ -601,6 +616,7 @@ Flags:
   -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings               The name, including owner of a GitHub repository in the format "ownerName/repoName".
   -r, --reviewers strings          The username of the reviewers to be added on the pull request.
+      --skip-forks                 Skip repositories which are forks.
       --skip-pr                    Skip pull request and directly push to the branch.
   -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
@@ -634,6 +650,7 @@ Flags:
   -p, --platform string      The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --skip-forks           Skip repositories which are forks.
       --ssh-auth             Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string         The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings        The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -665,6 +682,7 @@ Flags:
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --skip-forks          Skip repositories which are forks.
       --ssh-auth            Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string        The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings       The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -695,6 +713,7 @@ Flags:
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --skip-forks          Skip repositories which are forks.
       --ssh-auth            Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string        The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings       The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -736,6 +755,7 @@ Flags:
   -p, --platform string       The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --skip-forks            Skip repositories which are forks.
       --ssh-auth              Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
   -T, --token string          The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings         The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
