@@ -109,6 +109,7 @@ type RepositoryListing struct {
 	Users         []string
 	Repositories  []RepositoryReference
 	Topics        []string
+	SkipForks     bool
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -157,6 +158,9 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 			continue
 		case len(g.Topics) != 0 && !scm.RepoContainsTopic(r.Topics, g.Topics):
 			log.Debug("Skipping repository since it does not match repository topics")
+			continue
+		case g.SkipForks && r.GetFork():
+			log.Debug("Skipping repository since it's a fork")
 			continue
 		}
 

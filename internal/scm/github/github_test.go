@@ -58,6 +58,7 @@ func Test_GetRepositories(t *testing.T) {
 						"site_admin": false
 					},
 					"html_url": "https://github.com/test-org/test1",
+					"fork": false,
 					"archived": false,
 					"disabled": false,
 					"default_branch": "master",
@@ -80,6 +81,7 @@ func Test_GetRepositories(t *testing.T) {
 					"site_admin": false
 				},
 				"html_url": "https://github.com/test-org/test1",
+				"fork": false,
 				"archived": false,
 				"disabled": false,
 				"default_branch": "master",
@@ -106,6 +108,7 @@ func Test_GetRepositories(t *testing.T) {
 						"site_admin": false
 					},
 					"html_url": "https://github.com/lindell/test2",
+					"fork": true,
 					"archived": false,
 					"disabled": false,
 					"default_branch": "main",
@@ -227,6 +230,32 @@ func Test_GetRepositories(t *testing.T) {
 			assert.Equal(t, "test-org/test1", repos[0].FullName())
 			assert.Equal(t, "main", repos[1].DefaultBranch())
 			assert.Equal(t, "lindell/test2", repos[1].FullName())
+		}
+	}
+
+	// Forks
+	{
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				Organizations: []string{"test-org"},
+				Users:         []string{"test-user"},
+				Repositories: []github.RepositoryReference{
+					{
+						OwnerName: "test-org",
+						Name:      "test1",
+					},
+				},
+				SkipForks: true,
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
+
+		repos, err := gh.GetRepositories(context.Background())
+		assert.NoError(t, err)
+		if assert.Len(t, repos, 1) {
+			assert.Equal(t, "test-org/test1", repos[0].FullName())
 		}
 	}
 }
