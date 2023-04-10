@@ -8,7 +8,11 @@ import (
 	"os/exec"
 )
 
-func prepareScriptCommand(ctx context.Context, repo scm.Repository, workDir string, scriptPath string, arguments []string, dryRun bool) (cmd *exec.Cmd) {
+func prepareScriptCommand(ctx context.Context,
+	repo scm.Repository,
+	workDir string,
+	scriptPath string,
+	arguments []string) (cmd *exec.Cmd) {
 	// Run the command that might or might not change the content of the repo
 	// If the command return a non-zero exit code, abort.
 	cmd = exec.CommandContext(ctx, scriptPath, arguments...)
@@ -16,8 +20,5 @@ func prepareScriptCommand(ctx context.Context, repo scm.Repository, workDir stri
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
 	)
-	if dryRun {
-		cmd.Env = append(cmd.Env, "DRY_RUN=true")
-	}
 	return cmd
 }

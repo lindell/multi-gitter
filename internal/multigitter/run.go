@@ -229,7 +229,10 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
-	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments, r.DryRun)
+	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
+	if r.DryRun {
+		cmd.Env = append(cmd.Env, "DRY_RUN=true")
+	}
 
 	// Setup logger that transfers stdout and stderr from the run to logs
 	writer := logger.NewLogger(log)

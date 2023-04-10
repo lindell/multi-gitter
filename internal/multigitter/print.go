@@ -79,7 +79,7 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 		return err
 	}
 
-	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments, false)
+	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
 
 	cmd.Stdout = r.Stdout
 	cmd.Stderr = r.Stderr
