@@ -8,11 +8,13 @@ import (
 	"os/exec"
 )
 
-func prepareScriptCommand(ctx context.Context,
+func prepareScriptCommand(
+	ctx context.Context,
 	repo scm.Repository,
 	workDir string,
 	scriptPath string,
-	arguments []string) (cmd *exec.Cmd) {
+	arguments []string,
+) (cmd *exec.Cmd) {
 	// Run the command that might or might not change the content of the repo
 	// If the command return a non-zero exit code, abort.
 	cmd = exec.CommandContext(ctx, scriptPath, arguments...)
