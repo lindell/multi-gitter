@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.46.1](https://www.github.com/lindell/multi-gitter/compare/v0.46.0...v0.46.1) (2023-04-11)
+
+
+### Bug Fixes
+
+* update error message to fix grammar ([#345](https://www.github.com/lindell/multi-gitter/issues/345)) ([5a4c990](https://www.github.com/lindell/multi-gitter/commit/5a4c990b7f9325d1a5c5b4ee619e792478517754))
+
 ## [0.46.0](https://www.github.com/lindell/multi-gitter/compare/v0.45.0...v0.46.0) (2023-04-09)
 
 
