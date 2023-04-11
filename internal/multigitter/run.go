@@ -59,7 +59,7 @@ type Runner struct {
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
-	ConflictStrategy ConflictStrategy // Defines what will happen if a branch does already exist
+	ConflictStrategy ConflictStrategy // Defines what will happen if a branch already exists
 
 	Draft bool // If set, creates Pull Requests as draft
 
@@ -73,7 +73,7 @@ type Runner struct {
 var errAborted = errors.New("run was never started because of aborted execution")
 var errRejected = errors.New("changes were not included since they were manually rejected")
 var errNoChange = errors.New("no data was changed")
-var errBranchExist = errors.New("the new branch does already exist")
+var errBranchExist = errors.New("the new branch already exists")
 
 type dryRunPullRequest struct {
 	status     scm.PullRequestStatus
@@ -287,12 +287,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		remoteName = "fork"
 	}
 
-	// Determine if a branch already exist and (depending on the conflict strategy) skip making changes
+	// Determine if a branch already exists and (depending on the conflict strategy) skip making changes
 	featureBranchExist := false
 	if !r.SkipPullRequest {
 		featureBranchExist, err = sourceController.BranchExist(remoteName, r.FeatureBranch)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not verify if branch already exist")
+			return nil, errors.Wrap(err, "could not verify if branch already exists")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
 			return nil, errBranchExist
 		}
