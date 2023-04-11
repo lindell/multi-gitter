@@ -371,7 +371,7 @@ func TestTable(t *testing.T) {
 				assert.Contains(t, runData.logOut, "Running on 2 repositories")
 				assert.Contains(t, runData.logOut, "Cloning and running script")
 
-				assert.Equal(t, `The new branch does already exist:
+				assert.Equal(t, `The new branch already exists:
   owner/already-existing-branch
 Repositories with a successful run:
   owner/should-change #1
