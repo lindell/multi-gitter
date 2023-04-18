@@ -41,6 +41,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
 	cmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
 	cmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
+	cmd.Flags().StringSliceP("team-reviewers", "", nil, "Github team names of the reviewers, in format: 'org/team'")
 	cmd.Flags().StringSliceP("assignees", "a", nil, "The username of the assignees to be added on the pull request.")
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
@@ -79,6 +80,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	prBody, _ := flag.GetString("pr-body")
 	commitMessage, _ := flag.GetString("commit-message")
 	reviewers, _ := flag.GetStringSlice("reviewers")
+	teamReviewers, _ := flag.GetStringSlice("team-reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
@@ -185,6 +187,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		PullRequestTitle: prTitle,
 		PullRequestBody:  prBody,
 		Reviewers:        reviewers,
+		TeamReviewers:    teamReviewers,
 		MaxReviewers:     maxReviewers,
 		Interactive:      interactive,
 		DryRun:           dryRun,

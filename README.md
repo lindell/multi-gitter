@@ -222,6 +222,10 @@ skip-repo:
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
+# Github team names of the reviewers, in format: 'org/team'
+team-reviewers:
+  - example
+
 # The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
 
@@ -620,6 +624,7 @@ Flags:
       --skip-pr                    Skip pull request and directly push to the branch.
   -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
+      --team-reviewers strings     Github team names of the reviewers, in format: 'org/team'
   -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings              The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings               The name of a user. All repositories owned by that user will be used.

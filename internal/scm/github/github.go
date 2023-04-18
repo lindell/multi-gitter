@@ -340,9 +340,11 @@ func (g *Github) addReviewers(ctx context.Context, repo repository, newPR scm.Ne
 	if len(newPR.Reviewers) == 0 {
 		return nil
 	}
+
 	_, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
 		return g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
-			Reviewers: newPR.Reviewers,
+			Reviewers:     newPR.Reviewers,
+			TeamReviewers: newPR.TeamReviewers,
 		})
 	})
 	return err
