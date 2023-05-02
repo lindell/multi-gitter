@@ -46,7 +46,9 @@ type Runner struct {
 	PullRequestTitle string
 	PullRequestBody  string
 	Reviewers        []string
-	MaxReviewers     int // If set to zero, all reviewers will be used
+	TeamReviewers    []string
+	MaxReviewers     int // If set to zero, all reviewers will be use
+	MaxTeamReviewers int // If set to zero, all team-reviewers will be used
 	DryRun           bool
 	CommitAuthor     *git.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
@@ -326,14 +328,15 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	} else {
 		log.Info("Creating pull request")
 		pr, err = r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
-			Title:     r.PullRequestTitle,
-			Body:      r.PullRequestBody,
-			Head:      r.FeatureBranch,
-			Base:      baseBranch,
-			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
-			Assignees: r.Assignees,
-			Draft:     r.Draft,
-			Labels:    r.Labels,
+			Title:         r.PullRequestTitle,
+			Body:          r.PullRequestBody,
+			Head:          r.FeatureBranch,
+			Base:          baseBranch,
+			Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
+			TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
+			Assignees:     r.Assignees,
+			Draft:         r.Draft,
+			Labels:        r.Labels,
 		})
 		if err != nil {
 			return nil, err

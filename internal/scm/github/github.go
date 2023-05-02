@@ -337,12 +337,14 @@ func (g *Github) createPullRequest(ctx context.Context, repo repository, prRepo 
 }
 
 func (g *Github) addReviewers(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
-	if len(newPR.Reviewers) == 0 {
+	if len(newPR.Reviewers) == 0 && len(newPR.TeamReviewers) == 0 {
 		return nil
 	}
+
 	_, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
 		return g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
-			Reviewers: newPR.Reviewers,
+			Reviewers:     newPR.Reviewers,
+			TeamReviewers: newPR.TeamReviewers,
 		})
 	})
 	return err
