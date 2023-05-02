@@ -44,6 +44,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().StringSliceP("team-reviewers", "", nil, "Github team names of the reviewers, in format: 'org/team'")
 	cmd.Flags().StringSliceP("assignees", "a", nil, "The username of the assignees to be added on the pull request.")
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
+	cmd.Flags().IntP("max-team-reviewers", "", 0, "If this value is set, team reviewers will be randomized")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
 	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
@@ -82,6 +83,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	reviewers, _ := flag.GetStringSlice("reviewers")
 	teamReviewers, _ := flag.GetStringSlice("team-reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
+	maxTeamReviewers, _ := flag.GetInt("max-team-reviewers")
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	skipRepository, _ := flag.GetStringSlice("skip-repo")
@@ -189,6 +191,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		Reviewers:        reviewers,
 		TeamReviewers:    teamReviewers,
 		MaxReviewers:     maxReviewers,
+		MaxTeamReviewers: maxTeamReviewers,
 		Interactive:      interactive,
 		DryRun:           dryRun,
 		Fork:             forkMode,

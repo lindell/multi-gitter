@@ -47,7 +47,8 @@ type Runner struct {
 	PullRequestBody  string
 	Reviewers        []string
 	TeamReviewers    []string
-	MaxReviewers     int // If set to zero, all reviewers will be used
+	MaxReviewers     int // If set to zero, all reviewers will be use
+	MaxTeamReviewers int // If set to zero, all team-reviewers will be used
 	DryRun           bool
 	CommitAuthor     *git.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
@@ -332,7 +333,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			Head:          r.FeatureBranch,
 			Base:          baseBranch,
 			Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
-			TeamReviewers: r.TeamReviewers,
+			TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
 			Assignees:     r.Assignees,
 			Draft:         r.Draft,
 			Labels:        r.Labels,

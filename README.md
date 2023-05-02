@@ -180,6 +180,9 @@ log-level: info
 # If this value is set, reviewers will be randomized.
 max-reviewers: 0
 
+# If this value is set, team reviewers will be randomized
+max-team-reviewers: 0
+
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
   - example
@@ -612,6 +615,7 @@ Flags:
       --log-format string          The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
+      --max-team-reviewers int     If this value is set, team reviewers will be randomized
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string              The file that the output of the script should be outputted to. "-" means stdout. (default "-")
   -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
