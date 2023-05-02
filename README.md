@@ -180,6 +180,9 @@ log-level: info
 # If this value is set, reviewers will be randomized.
 max-reviewers: 0
 
+# If this value is set, team reviewers will be randomized
+max-team-reviewers: 0
+
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
   - example
@@ -221,6 +224,10 @@ skip-repo:
 
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
+
+# Github team names of the reviewers, in format: 'org/team'
+team-reviewers:
+  - example
 
 # The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
 token:
@@ -608,6 +615,7 @@ Flags:
       --log-format string          The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
+      --max-team-reviewers int     If this value is set, team reviewers will be randomized
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string              The file that the output of the script should be outputted to. "-" means stdout. (default "-")
   -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
@@ -620,6 +628,7 @@ Flags:
       --skip-pr                    Skip pull request and directly push to the branch.
   -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
+      --team-reviewers strings     Github team names of the reviewers, in format: 'org/team'
   -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings              The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings               The name of a user. All repositories owned by that user will be used.
