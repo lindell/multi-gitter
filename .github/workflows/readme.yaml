@@ -10,14 +10,14 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: "^1.15.5"
         id: go
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
 
       - name: Generate readme
         run: go run ./tools/readme-docs/main.go
