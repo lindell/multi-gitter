@@ -251,6 +251,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-m", "custom message",
 				"-r", "reviewer1,reviewer2",
+				"--team-reviewers", "team-1,team-2",
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
@@ -258,6 +259,8 @@ func TestTable(t *testing.T) {
 				assert.Len(t, vcMock.PullRequests[0].Reviewers, 2)
 				assert.Contains(t, vcMock.PullRequests[0].Reviewers, "reviewer1")
 				assert.Contains(t, vcMock.PullRequests[0].Reviewers, "reviewer2")
+				assert.Contains(t, vcMock.PullRequests[0].TeamReviewers, "team-1")
+				assert.Contains(t, vcMock.PullRequests[0].TeamReviewers, "team-2")
 			},
 		},
 
@@ -282,6 +285,30 @@ func TestTable(t *testing.T) {
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
 				assert.Len(t, vcMock.PullRequests[0].Reviewers, 2)
+			},
+		},
+
+		{
+			name: "random  team reviewers",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-m", "custom message",
+				"--team-reviewers", "team1,team2,team3",
+				"--max-team-reviewers", "2",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Len(t, vcMock.PullRequests[0].TeamReviewers, 2)
 			},
 		},
 
