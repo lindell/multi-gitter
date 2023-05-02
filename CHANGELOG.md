@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.47.0](https://www.github.com/lindell/multi-gitter/compare/v0.46.0...v0.47.0) (2023-05-02)
+
+
+### Features
+
+* **github:** added option to add team reviewers ([#351](https://www.github.com/lindell/multi-gitter/issues/351)) ([bfe05b9](https://www.github.com/lindell/multi-gitter/commit/bfe05b9b5c53307a8c429278b6491bafe57a2f26))
+* OS and Arch info added to the version command ([#348](https://www.github.com/lindell/multi-gitter/issues/348)) ([12c0422](https://www.github.com/lindell/multi-gitter/commit/12c04221fa678bf230a50f4a4386aebe4cfa593f))
+
+
+### Bug Fixes
+
+* update error message to fix grammar ([#345](https://www.github.com/lindell/multi-gitter/issues/345)) ([5a4c990](https://www.github.com/lindell/multi-gitter/commit/5a4c990b7f9325d1a5c5b4ee619e792478517754))
+
+
+### Dependencies
+
+* update module github.com/go-git/go-git/v5 to v5.6.1 ([1fddf2e](https://www.github.com/lindell/multi-gitter/commit/1fddf2e26cd3cb9f201325decc356d26a1f1444e))
+
 ## [0.46.0](https://www.github.com/lindell/multi-gitter/compare/v0.45.0...v0.46.0) (2023-04-09)
 
 
