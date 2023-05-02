@@ -337,7 +337,7 @@ func (g *Github) createPullRequest(ctx context.Context, repo repository, prRepo 
 }
 
 func (g *Github) addReviewers(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
-	if len(newPR.Reviewers) == 0 {
+	if len(newPR.Reviewers) == 0 && len(newPR.TeamReviewers) == 0 {
 		return nil
 	}
 
