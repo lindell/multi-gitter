@@ -20,7 +20,7 @@
             "automerge": true,
             "automergeType": "branch",
             "schedule": [
-                "before 6pm on the first day of the month"
+                "on the first day of the month also on the 2nd day of the month before 5pm"
             ]
         },
         {
@@ -28,7 +28,7 @@
                 "major"
             ],
             "schedule": [
-                "before 6pm on the first day of the month"
+                "on the first day of the month also on the 2nd day of the month before 5pm"
             ]
         }
     ],
