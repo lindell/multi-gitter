@@ -21,6 +21,7 @@ type Printer struct {
 	Stderr io.Writer
 
 	Concurrent int
+	CloneDir   string
 
 	CreateGit func(dir string) Git
 }
@@ -66,11 +67,11 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
 
-	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-changer-")
+	tmpDir, err := CreateTempDir(r.CloneDir)
+	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tmpDir)
 
 	sourceController := r.CreateGit(tmpDir)
 

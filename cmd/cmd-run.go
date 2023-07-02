@@ -62,6 +62,7 @@ Available values:
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
+	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. The directory cannot be inside another git repository. If not set, the default os temporary directory will be used.")
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureRunPlatform(cmd, true)
@@ -98,6 +99,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	assignees, _ := flag.GetStringSlice("assignees")
 	draft, _ := flag.GetBool("draft")
 	labels, _ := flag.GetStringSlice("labels")
+	cloneDir, _ := flag.GetString("clone-dir")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -204,6 +206,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		ConflictStrategy: conflictStrategy,
 		Draft:            draft,
 		Labels:           labels,
+		CloneDir:         cloneDir,
 
 		Concurrent: concurrent,
 

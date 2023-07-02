@@ -3,6 +3,9 @@ package multigitter
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
@@ -69,4 +72,74 @@ func ParseConflictStrategy(str string) (ConflictStrategy, error) {
 	case "replace":
 		return ConflictStrategyReplace, nil
 	}
+}
+
+// CreateTempDir creates a temporary directory in the given directory.
+// If the given directory is an empty string, it will use the os.TempDir()
+func CreateTempDir(cloneDir string) (string, error) {
+	if cloneDir == "" {
+		cloneDir = os.TempDir()
+	}
+
+	absDir, err := createAbsolutePath(cloneDir)
+	if err != nil {
+		return "", err
+	}
+
+	err = createDirectoryIfDoesntExist(absDir)
+	if err != nil {
+		return "", err
+	}
+
+	tmpDir, err := os.MkdirTemp(absDir, "multi-git-changer-")
+	if err != nil {
+		return "", err
+	}
+
+	return tmpDir, nil
+}
+
+func createDirectoryIfDoesntExist(directoryPath string) error {
+	// Check if the directory exists
+	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
+		// Create the directory
+		err := os.MkdirAll(directoryPath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return nil
+}
+
+func createAbsolutePath(path string) (string, error) {
+	// Handle empty path
+	if path == "" {
+		return os.TempDir(), nil
+	}
+
+	// Check if it is an absolute path
+	if filepath.IsAbs(path) {
+		return path, nil
+	}
+
+	// Handle ~ to root directory
+	if strings.HasPrefix(path, "~/") {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(homeDir, path[2:])
+		return path, nil
+	}
+
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	absPath := filepath.Join(workingDir, path)
+
+	return absPath, nil
 }

@@ -11,6 +11,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,7 +20,7 @@ import (
 const fileName = "test.txt"
 
 func createRepo(t *testing.T, ownerName string, repoName string, dataInFile string) vcmock.Repository {
-	tmpDir, err := createDummyRepo(dataInFile)
+	tmpDir, err := createDummyRepo(dataInFile, os.TempDir())
 	require.NoError(t, err)
 
 	return vcmock.Repository{
@@ -29,8 +30,22 @@ func createRepo(t *testing.T, ownerName string, repoName string, dataInFile stri
 	}
 }
 
-func createDummyRepo(dataInFile string) (string, error) {
-	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-test-*.git")
+func createRepoWithCloneDir(t *testing.T, ownerName string, repoName string, dataInFile string, dir string) vcmock.Repository {
+	dir, err := multigitter.CreateTempDir(dir)
+	require.NoError(t, err)
+
+	tmpDir, err := createDummyRepo(dataInFile, dir)
+	require.NoError(t, err)
+
+	return vcmock.Repository{
+		OwnerName: ownerName,
+		RepoName:  repoName,
+		Path:      tmpDir,
+	}
+}
+
+func createDummyRepo(dataInFile string, dir string) (string, error) {
+	tmpDir, err := os.MkdirTemp(dir, "multi-git-test-*.git")
 	if err != nil {
 		return "", err
 	}
@@ -177,4 +192,13 @@ func fileExist(t *testing.T, basePath string, fn string) bool {
 
 func normalizePath(path string) string {
 	return strings.ReplaceAll(filepath.ToSlash(path), " ", "\\ ")
+}
+
+func indexOf(arr []string, target string) int {
+	for i, element := range arr {
+		if element == target {
+			return i
+		}
+	}
+	return -1
 }
