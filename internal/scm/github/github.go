@@ -416,7 +416,6 @@ func (g *Github) getRepository(ctx context.Context, repoRef RepositoryReference)
 	repo, _, err := retry(ctx, func() (*github.Repository, *github.Response, error) {
 		return g.ghClient.Repositories.Get(ctx, repoRef.OwnerName, repoRef.Name)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -498,6 +497,39 @@ func (g *Github) addLabels(ctx context.Context, repo repository, newPR scm.NewPu
 		return g.ghClient.Issues.AddLabelsToIssue(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Labels)
 	})
 	return err
+}
+
+// UpdatePullRequest updates an existing pull request
+func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
+	r := repo.(repository)
+	pr := pullReq.(pullRequest)
+
+	g.modLock()
+	defer g.modUnlock()
+
+	ghPR, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
+		return g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
+			Title: &updatedPR.Title,
+			Body:  &updatedPR.Body,
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := g.addReviewers(ctx, r, updatedPR, ghPR); err != nil {
+		return nil, err
+	}
+
+	if err := g.addAssignees(ctx, r, updatedPR, ghPR); err != nil {
+		return nil, err
+	}
+
+	if err := g.addLabels(ctx, r, updatedPR, ghPR); err != nil {
+		return nil, err
+	}
+
+	return convertPullRequest(ghPR), nil
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
@@ -761,7 +793,6 @@ func (g *Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 			Organization: newOwner,
 		})
 	})
-
 	if err != nil {
 		if _, isAccepted := err.(*github.AcceptedError); !isAccepted {
 			return nil, err

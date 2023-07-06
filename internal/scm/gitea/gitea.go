@@ -305,6 +305,49 @@ func (g *Gitea) getLabelsFromStrings(ctx context.Context, repo repository, label
 	return ret, nil
 }
 
+// UpdatePullRequest updates an existing pull request
+func (g *Gitea) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
+	r := repo.(repository)
+	pr := pullReq.(pullRequest)
+
+	prTitle := updatedPR.Title
+	if updatedPR.Draft {
+		prTitle = "WIP: " + prTitle // See https://docs.gitea.io/en-us/pull-request/
+	}
+
+	labels, err := g.getLabelsFromStrings(ctx, r, updatedPR.Labels)
+	if err != nil {
+		return nil, errors.WithMessage(err, "could not map labels")
+	}
+
+	giteaPr, _, err := g.giteaClient(ctx).EditPullRequest(r.ownerName, r.name, pr.index, gitea.EditPullRequestOption{
+		Title:     prTitle,
+		Body:      updatedPR.Body,
+		Assignees: updatedPR.Assignees,
+		Labels:    labels,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not update pull request")
+	}
+
+	_, err = g.giteaClient(ctx).CreateReviewRequests(r.ownerName, r.name, giteaPr.Index, gitea.PullReviewRequestOptions{
+		Reviewers: updatedPR.Reviewers,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "could not add reviewer to pull request")
+	}
+
+	return pullRequest{
+		repoName:    r.name,
+		ownerName:   r.ownerName,
+		branchName:  giteaPr.Head.Name,
+		prOwnerName: giteaPr.Head.Repository.Owner.UserName,
+		prRepoName:  giteaPr.Head.Repository.Name,
+		index:       giteaPr.Index,
+		webURL:      giteaPr.HTMLURL,
+	}, nil
+}
+
 // GetPullRequests gets all pull requests of with a specific branch
 func (g *Gitea) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	repos, err := g.getRepositories(ctx)
