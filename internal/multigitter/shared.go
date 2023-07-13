@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
@@ -81,7 +80,7 @@ func CreateTempDir(cloneDir string) (string, error) {
 		cloneDir = os.TempDir()
 	}
 
-	absDir, err := createAbsolutePath(cloneDir)
+	absDir, err := makeAbsolutePath(cloneDir)
 	if err != nil {
 		return "", err
 	}
@@ -101,45 +100,29 @@ func CreateTempDir(cloneDir string) (string, error) {
 
 func createDirectoryIfDoesntExist(directoryPath string) error {
 	// Check if the directory exists
-	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
-		// Create the directory
-		err := os.MkdirAll(directoryPath, os.ModePerm)
-		if err != nil {
-			return err
-		}
+	if _, err := os.Stat(directoryPath); !os.IsNotExist(err) {
 		return nil
+	}
+
+	// Create the directory
+	err := os.MkdirAll(directoryPath, os.ModePerm)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func createAbsolutePath(path string) (string, error) {
-	// Handle empty path
-	if path == "" {
-		return os.TempDir(), nil
-	}
-
-	// Check if it is an absolute path
-	if filepath.IsAbs(path) {
-		return path, nil
-	}
-
-	// Handle ~ to root directory
-	if strings.HasPrefix(path, "~/") {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-		path = filepath.Join(homeDir, path[2:])
-		return path, nil
-	}
-
+// CreateAbsolutePath creates an absolute path from a relative path
+func makeAbsolutePath(path string) (string, error) {
 	workingDir, err := os.Getwd()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "could not get the working directory")
 	}
 
-	absPath := filepath.Join(workingDir, path)
+	if !filepath.IsAbs(path) {
+		return filepath.Join(workingDir, path), nil
+	}
 
-	return absPath, nil
+	return path, nil
 }

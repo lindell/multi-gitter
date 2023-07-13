@@ -34,7 +34,7 @@ func PrintCmd() *cobra.Command {
 
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr.`)
-	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. The directory cannot be inside another git repository. If not set, the default os temporary directory will be used.")
+	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.")
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureLogging(cmd, "")
