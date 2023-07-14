@@ -66,14 +66,14 @@ func (r *Counter) Info() string {
 
 	for errMsg := range r.errors {
 		exitInfo += fmt.Sprintf("%s:\n", strings.ToUpper(errMsg[0:1])+errMsg[1:])
-		for _, err := range r.errors[errMsg] {
-			if err.pullRequest == nil {
-				exitInfo += fmt.Sprintf("  %s\n", err.repository.FullName())
+		for _, errInfo := range r.errors[errMsg] {
+			if errInfo.pullRequest == nil {
+				exitInfo += fmt.Sprintf("  %s\n", errInfo.repository.FullName())
 			} else {
-				if urler, ok := err.pullRequest.(urler); ok {
-					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(err.pullRequest.String(), urler.URL()))
+				if urler, ok := errInfo.pullRequest.(urler); ok {
+					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(errInfo.pullRequest.String(), urler.URL()))
 				} else {
-					exitInfo += fmt.Sprintf("  %s\n", err.pullRequest.String())
+					exitInfo += fmt.Sprintf("  %s\n", errInfo.pullRequest.String())
 				}
 			}
 		}
