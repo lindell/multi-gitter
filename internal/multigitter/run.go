@@ -297,13 +297,11 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exists")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
-			var pr scm.PullRequest
-			if p, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist); err != nil {
+			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+			if  err != nil {
 				return nil, err
-			} else {
-				pr = p
 			}
-
+			
 			return pr, errBranchExist
 		}
 	}
