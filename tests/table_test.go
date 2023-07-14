@@ -378,10 +378,27 @@ func TestTable(t *testing.T) {
 				changeBranch(t, repo.Path, "custom-branch-name", true)
 				changeTestFile(t, repo.Path, "i like apple", "test change")
 				changeBranch(t, repo.Path, "master", false)
+
+				repoExistingPR := createRepo(t, "owner", "already-existing-branch-and-pr", "i like apples")
+				changeBranch(t, repoExistingPR.Path, "custom-branch-name", true)
+				changeTestFile(t, repoExistingPR.Path, "i like apple", "test change")
+				changeBranch(t, repoExistingPR.Path, "master", false)
+
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
 						repo,
+						repoExistingPR,
 						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+					PullRequests: []vcmock.PullRequest{
+						{
+							PRStatus:   scm.PullRequestStatusPending,
+							PRNumber:   10,
+							Repository: repoExistingPR,
+							NewPullRequest: scm.NewPullRequest{
+								Head: "custom-branch-name",
+							},
+						},
 					},
 				}
 			},
@@ -394,14 +411,15 @@ func TestTable(t *testing.T) {
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				require.Len(t, vcMock.PullRequests, 1)
-				assert.Contains(t, runData.logOut, "Running on 2 repositories")
+				require.Len(t, vcMock.PullRequests, 3)
+				assert.Contains(t, runData.logOut, "Running on 3 repositories")
 				assert.Contains(t, runData.logOut, "Cloning and running script")
 
 				assert.Equal(t, `The new branch already exists:
-  owner/already-existing-branch
+  owner/already-existing-branch #1
+  owner/already-existing-branch-and-pr #10
 Repositories with a successful run:
-  owner/should-change #1
+  owner/should-change #2
 `, runData.out)
 			},
 		},
