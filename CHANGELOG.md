@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.47.1](https://github.com/lindell/multi-gitter/compare/v0.47.0...v0.47.1) (2023-07-15)
+
+
+### Bug Fixes
+
+* ensure pull request exists during conflict resolution ([#369](https://github.com/lindell/multi-gitter/issues/369)) ([2b7166a](https://github.com/lindell/multi-gitter/commit/2b7166a203ddd7d939bc28a90ee26e08adb5a771))
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 digest to 8d7be58 ([1d8a19f](https://github.com/lindell/multi-gitter/commit/1d8a19f8316dd8874a0755189902dce24acd09c5))
+* update module github.com/go-git/go-git/v5 to v5.7.0 ([d407eb9](https://github.com/lindell/multi-gitter/commit/d407eb9ef7bb06ca54b0d28ad992c8832ecb6c41))
+* update module github.com/google/go-github/v50 to v50.2.0 ([#359](https://github.com/lindell/multi-gitter/issues/359)) ([481c5da](https://github.com/lindell/multi-gitter/commit/481c5da7223eb798bd04b21eb839aa6aa563a763))
+* update module github.com/google/go-github/v50 to v53 ([#362](https://github.com/lindell/multi-gitter/issues/362)) ([ff85919](https://github.com/lindell/multi-gitter/commit/ff85919b1a264ce042e9e2bbca24e356be15e623))
+* update module github.com/sirupsen/logrus to v1.9.3 ([3f0d4c7](https://github.com/lindell/multi-gitter/commit/3f0d4c707636a595404839deecc6be9204cf0407))
+* update module github.com/spf13/cobra to v1.7.0 ([#360](https://github.com/lindell/multi-gitter/issues/360)) ([212a9b6](https://github.com/lindell/multi-gitter/commit/212a9b686db37c58205d7f2e20778ec592e15388))
+* update module github.com/spf13/viper to v1.16.0 ([#364](https://github.com/lindell/multi-gitter/issues/364)) ([af41308](https://github.com/lindell/multi-gitter/commit/af4130863a62217bcf2c5f4fda163b521112a7a0))
+* update module github.com/stretchr/testify to v1.8.4 ([#361](https://github.com/lindell/multi-gitter/issues/361)) ([2686055](https://github.com/lindell/multi-gitter/commit/2686055d74f2f2af416ff6ed05eb4f47647648be))
+* update module github.com/xanzy/go-gitlab to v0.86.0 ([#365](https://github.com/lindell/multi-gitter/issues/365)) ([79b9a0e](https://github.com/lindell/multi-gitter/commit/79b9a0e57a45ca5c55af310d1a619018166d2362))
+* update module golang.org/x/oauth2 to v0.9.0 ([#363](https://github.com/lindell/multi-gitter/issues/363)) ([58030bd](https://github.com/lindell/multi-gitter/commit/58030bd778db562dedcb6cf48eef9dbb2a8039d9))
+
 ## [0.47.0](https://www.github.com/lindell/multi-gitter/compare/v0.46.0...v0.47.0) (2023-05-02)
 
 
