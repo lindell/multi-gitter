@@ -8,13 +8,15 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: GoogleCloudPlatform/release-please-action@v2.7.0
+      - uses: GoogleCloudPlatform/release-please-action@v3.7.10
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: simple
           package-name: multi-gitter
           changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false},{"type":"dep","section":"Dependencies","hidden":false}]'
+          release-as: "0.47.1"
+          last-release-sha: c5a67305f810c87ec8a2973aedd9e2c002d29314
 
       - uses: actions/checkout@v3
         with:
