@@ -121,16 +121,17 @@ func (r *Runner) Run(ctx context.Context) error {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Error(r)
-				rc.AddError(errors.New("run paniced"), repos[i])
+				rc.AddError(errors.New("run paniced"), repos[i], nil)
 			}
 		}()
 
 		pr, err := r.runSingleRepo(ctx, repos[i])
+
 		if err != nil {
 			if err != errAborted {
 				logger.Info(err)
 			}
-			rc.AddError(err, repos[i])
+			rc.AddError(err, repos[i], pr)
 
 			if log.IsLevelEnabled(log.TraceLevel) {
 				if stackTrace := getStackTrace(err); stackTrace != "" {
@@ -296,7 +297,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exists")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
-			return nil, errBranchExist
+			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+			if err != nil {
+				return nil, err
+			}
+
+			return pr, errBranchExist
 		}
 	}
 
@@ -307,6 +313,10 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errors.Wrap(err, "could not push changes")
 	}
 
+	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+}
+
+func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogger, repo scm.Repository, prRepo scm.Repository, baseBranch string, featureBranchExist bool) (scm.PullRequest, error) {
 	if r.SkipPullRequest {
 		return nil, nil
 	}
@@ -321,29 +331,23 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		existingPullRequest = pr
 	}
 
-	var pr scm.PullRequest
 	if existingPullRequest != nil {
 		log.Info("Skip creating pull requests since one is already open")
-		pr = existingPullRequest
-	} else {
-		log.Info("Creating pull request")
-		pr, err = r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
-			Title:         r.PullRequestTitle,
-			Body:          r.PullRequestBody,
-			Head:          r.FeatureBranch,
-			Base:          baseBranch,
-			Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
-			TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
-			Assignees:     r.Assignees,
-			Draft:         r.Draft,
-			Labels:        r.Labels,
-		})
-		if err != nil {
-			return nil, err
-		}
+		return existingPullRequest, nil
 	}
 
-	return pr, nil
+	log.Info("Creating pull request")
+	return r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
+		Title:         r.PullRequestTitle,
+		Body:          r.PullRequestBody,
+		Head:          r.FeatureBranch,
+		Base:          baseBranch,
+		Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
+		TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
+		Assignees:     r.Assignees,
+		Draft:         r.Draft,
+		Labels:        r.Labels,
+	})
 }
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`

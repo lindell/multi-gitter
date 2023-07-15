@@ -13,24 +13,32 @@ import (
 type Counter struct {
 	successPullRequests []scm.PullRequest
 	successRepositories []scm.Repository
-	errorRepositories   map[string][]scm.Repository
+	errors              map[string][]errorInfo
 	lock                sync.RWMutex
+}
+
+type errorInfo struct {
+	repository  scm.Repository
+	pullRequest scm.PullRequest
 }
 
 // NewCounter create a new repo counter
 func NewCounter() *Counter {
 	return &Counter{
-		errorRepositories: map[string][]scm.Repository{},
+		errors: map[string][]errorInfo{},
 	}
 }
 
 // AddError add a failing repository together with the error that caused it
-func (r *Counter) AddError(err error, repo scm.Repository) {
+func (r *Counter) AddError(err error, repo scm.Repository, pr scm.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
 	msg := err.Error()
-	r.errorRepositories[msg] = append(r.errorRepositories[msg], repo)
+	r.errors[msg] = append(r.errors[msg], errorInfo{
+		repository:  repo,
+		pullRequest: pr,
+	})
 }
 
 // AddSuccessRepositories adds a repository that succeeded
@@ -42,11 +50,11 @@ func (r *Counter) AddSuccessRepositories(repo scm.Repository) {
 }
 
 // AddSuccessPullRequest adds a pullrequest that succeeded
-func (r *Counter) AddSuccessPullRequest(repo scm.PullRequest) {
+func (r *Counter) AddSuccessPullRequest(pr scm.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
-	r.successPullRequests = append(r.successPullRequests, repo)
+	r.successPullRequests = append(r.successPullRequests, pr)
 }
 
 // Info returns a formatted string about all repositories
@@ -56,10 +64,18 @@ func (r *Counter) Info() string {
 
 	var exitInfo string
 
-	for errMsg := range r.errorRepositories {
+	for errMsg := range r.errors {
 		exitInfo += fmt.Sprintf("%s:\n", strings.ToUpper(errMsg[0:1])+errMsg[1:])
-		for _, repo := range r.errorRepositories[errMsg] {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
+		for _, errInfo := range r.errors[errMsg] {
+			if errInfo.pullRequest == nil {
+				exitInfo += fmt.Sprintf("  %s\n", errInfo.repository.FullName())
+			} else {
+				if urler, ok := errInfo.pullRequest.(urler); ok {
+					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(errInfo.pullRequest.String(), urler.URL()))
+				} else {
+					exitInfo += fmt.Sprintf("  %s\n", errInfo.pullRequest.String())
+				}
+			}
 		}
 	}
 
