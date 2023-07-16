@@ -1,0 +1,22 @@
+name: Check GoReleaser config
+on: [pull_request]
+
+jobs:
+  verify-goreleaser:
+    name: Check GoReleaser config
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.head.ref == 'release-please--branches--master--components--multi-gitter'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+
+      - name: Check GoReleaser config
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          version: latest
+          args: check
