@@ -11,13 +11,12 @@ import (
 
 // Counter keeps track of succeeded and failed repositories
 type Counter struct {
-	successPullRequests []scm.PullRequest
-	successRepositories []scm.Repository
-	errors              map[string][]errorInfo
+	successRepositories []repoInfo
+	errors              map[string][]repoInfo
 	lock                sync.RWMutex
 }
 
-type errorInfo struct {
+type repoInfo struct {
 	repository  scm.Repository
 	pullRequest scm.PullRequest
 }
@@ -25,7 +24,7 @@ type errorInfo struct {
 // NewCounter create a new repo counter
 func NewCounter() *Counter {
 	return &Counter{
-		errors: map[string][]errorInfo{},
+		errors: map[string][]repoInfo{},
 	}
 }
 
@@ -35,7 +34,7 @@ func (r *Counter) AddError(err error, repo scm.Repository, pr scm.PullRequest) {
 	r.lock.Lock()
 
 	msg := err.Error()
-	r.errors[msg] = append(r.errors[msg], errorInfo{
+	r.errors[msg] = append(r.errors[msg], repoInfo{
 		repository:  repo,
 		pullRequest: pr,
 	})
@@ -46,15 +45,20 @@ func (r *Counter) AddSuccessRepositories(repo scm.Repository) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
-	r.successRepositories = append(r.successRepositories, repo)
+	r.successRepositories = append(r.successRepositories, repoInfo{
+		repository: repo,
+	})
 }
 
 // AddSuccessPullRequest adds a pullrequest that succeeded
-func (r *Counter) AddSuccessPullRequest(pr scm.PullRequest) {
+func (r *Counter) AddSuccessPullRequest(repo scm.Repository, pr scm.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
-	r.successPullRequests = append(r.successPullRequests, pr)
+	r.successRepositories = append(r.successRepositories, repoInfo{
+		repository:  repo,
+		pullRequest: pr,
+	})
 }
 
 // Info returns a formatted string about all repositories
@@ -79,21 +83,18 @@ func (r *Counter) Info() string {
 		}
 	}
 
-	if len(r.successPullRequests) > 0 {
-		exitInfo += "Repositories with a successful run:\n"
-		for _, pr := range r.successPullRequests {
-			if urler, ok := pr.(urler); ok {
-				exitInfo += fmt.Sprintf("  %s\n", terminal.Link(pr.String(), urler.URL()))
-			} else {
-				exitInfo += fmt.Sprintf("  %s\n", pr.String())
-			}
-		}
-	}
-
 	if len(r.successRepositories) > 0 {
 		exitInfo += "Repositories with a successful run:\n"
 		for _, repo := range r.successRepositories {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
+			if repo.pullRequest != nil {
+				if urler, ok := repo.pullRequest.(urler); ok {
+					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(repo.pullRequest.String(), urler.URL()))
+				} else {
+					exitInfo += fmt.Sprintf("  %s\n", repo.pullRequest.String())
+				}
+			} else {
+				exitInfo += fmt.Sprintf("  %s\n", repo.repository.FullName())
+			}
 		}
 	}
 
