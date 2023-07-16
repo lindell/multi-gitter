@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.47.2](https://github.com/lindell/multi-gitter/compare/v0.47.1...v0.47.2) (2023-07-16)
+
+
+### Bug Fixes
+
+* fixed archive release names ([1462b90](https://github.com/lindell/multi-gitter/commit/1462b901c373c0a1f04c73f38784fac01cb65189))
+
 ## [0.47.1](https://github.com/lindell/multi-gitter/compare/v0.47.0...v0.47.1) (2023-07-15)
 
 
