@@ -143,7 +143,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 
 		if pr != nil {
-			rc.AddSuccessPullRequest(pr)
+			rc.AddSuccessPullRequest(repos[i], pr)
 		} else {
 			rc.AddSuccessRepositories(repos[i])
 		}
