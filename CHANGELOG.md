@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.47.3](https://github.com/lindell/multi-gitter/compare/v0.47.2...v0.47.3) (2023-07-16)
+
+
+### Bug Fixes
+
+* changed the order of version and os in the released archives ([656e9de](https://github.com/lindell/multi-gitter/commit/656e9de09c0bdb9064d47bd2b6adeb23f971eea3))
+
 ## [0.47.2](https://github.com/lindell/multi-gitter/compare/v0.47.1...v0.47.2) (2023-07-16)
 
 
