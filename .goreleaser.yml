@@ -62,7 +62,7 @@ changelog:
       - "^test:"
 brews:
   - name: multi-gitter
-    tap:
+    repository:
       owner: lindell
       name: homebrew-multi-gitter
     goarm: 6
