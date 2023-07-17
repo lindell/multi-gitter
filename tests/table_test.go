@@ -977,6 +977,53 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "formats urls",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "has-url", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "Repositories with a successful run:\n  \x1b]8;;https://github.com/owner/has-url/pull/1\aowner/has-url #1\x1b]8;;\a\n", runData.out)
+			},
+		},
+
+		{
+			name: "does not format urls when --plain-output is used",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "has-url", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--plain-output",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, `Repositories with a successful run:
+  owner/has-url #1
+`, runData.out)
+			},
+		},
+
+		{
 			name: "same feature and base branch name",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{

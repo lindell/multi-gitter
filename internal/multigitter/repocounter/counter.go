@@ -74,7 +74,7 @@ func (r *Counter) Info() string {
 			if errInfo.pullRequest == nil {
 				exitInfo += fmt.Sprintf("  %s\n", errInfo.repository.FullName())
 			} else {
-				if urler, ok := errInfo.pullRequest.(urler); ok {
+				if urler, hasURL := errInfo.pullRequest.(urler); hasURL && urler.URL() != "" {
 					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(errInfo.pullRequest.String(), urler.URL()))
 				} else {
 					exitInfo += fmt.Sprintf("  %s\n", errInfo.pullRequest.String())
@@ -87,7 +87,7 @@ func (r *Counter) Info() string {
 		exitInfo += "Repositories with a successful run:\n"
 		for _, repo := range r.successRepositories {
 			if repo.pullRequest != nil {
-				if urler, ok := repo.pullRequest.(urler); ok {
+				if urler, hasURL := repo.pullRequest.(urler); hasURL && urler.URL() != "" {
 					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(repo.pullRequest.String(), urler.URL()))
 				} else {
 					exitInfo += fmt.Sprintf("  %s\n", repo.pullRequest.String())
