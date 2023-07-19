@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 
@@ -173,8 +172,4 @@ func fileExist(t *testing.T, basePath string, fn string) bool {
 
 	require.NoError(t, err)
 	return true
-}
-
-func normalizePath(path string) string {
-	return strings.ReplaceAll(filepath.ToSlash(path), " ", "\\ ")
 }

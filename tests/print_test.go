@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/lindell/multi-gitter/cmd"
+	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -35,11 +36,12 @@ func TestPrint(t *testing.T) {
 	errOutFile := filepath.Join(tmpDir, "err-out.txt")
 
 	command := cmd.RootCmd()
-	command.SetArgs([]string{"print",
+	command.SetArgs([]string{
+		"print",
 		"--log-file", filepath.ToSlash(runLogFile),
 		"--output", filepath.ToSlash(outFile),
 		"--error-output", filepath.ToSlash(errOutFile),
-		fmt.Sprintf(`go run %s`, normalizePath(filepath.Join(workingDir, "scripts/printer/main.go"))),
+		fmt.Sprintf(`go run %s`, multigitter.NormalizePath(filepath.Join(workingDir, "scripts/printer/main.go"))),
 	})
 	err = command.Execute()
 	assert.NoError(t, err)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
@@ -125,4 +126,8 @@ func makeAbsolutePath(path string) (string, error) {
 	}
 
 	return path, nil
+}
+
+func NormalizePath(path string) string {
+	return strings.ReplaceAll(filepath.ToSlash(path), " ", "\\ ")
 }

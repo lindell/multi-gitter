@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/lindell/multi-gitter/cmd"
+	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +26,7 @@ func TestStory(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
 
-	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
+	changerBinaryPath := multigitter.NormalizePath(filepath.Join(workingDir, changerBinaryPath))
 
 	changeRepo := createRepo(t, "owner", "should-change", "i like apples")
 	changeRepo2 := createRepo(t, "owner", "should-change-2", "i like my apple")
@@ -37,7 +38,8 @@ func TestStory(t *testing.T) {
 	runOutFile := filepath.Join(tmpDir, "run-log.txt")
 
 	command := cmd.RootCmd()
-	command.SetArgs([]string{"run",
+	command.SetArgs([]string{
+		"run",
 		"--output", runOutFile,
 		"--author-name", "Test Author",
 		"--author-email", "test@example.com",
@@ -75,7 +77,8 @@ Repositories with a successful run:
 	statusOutFile := filepath.Join(tmpDir, "status-log.txt")
 
 	command = cmd.RootCmd()
-	command.SetArgs([]string{"status",
+	command.SetArgs([]string{
+		"status",
 		"--output", statusOutFile,
 		"-B", "custom-branch-name",
 	})
@@ -96,7 +99,8 @@ Repositories with a successful run:
 	mergeLogFile := filepath.Join(tmpDir, "merge-log.txt")
 
 	command = cmd.RootCmd()
-	command.SetArgs([]string{"merge",
+	command.SetArgs([]string{
+		"merge",
 		"--log-file", mergeLogFile,
 		"-B", "custom-branch-name",
 	})
@@ -115,7 +119,8 @@ Repositories with a successful run:
 	afterMergeStatusOutFile := filepath.Join(tmpDir, "after-merge-status-log.txt")
 
 	command = cmd.RootCmd()
-	command.SetArgs([]string{"status",
+	command.SetArgs([]string{
+		"status",
 		"--output", afterMergeStatusOutFile,
 		"-B", "custom-branch-name",
 	})
@@ -133,7 +138,8 @@ Repositories with a successful run:
 	closeLogFile := filepath.Join(tmpDir, "close-log.txt")
 
 	command = cmd.RootCmd()
-	command.SetArgs([]string{"close",
+	command.SetArgs([]string{
+		"close",
 		"--log-file", closeLogFile,
 		"-B", "custom-branch-name",
 	})
@@ -152,7 +158,8 @@ Repositories with a successful run:
 	afterCloseStatusOutFile := filepath.Join(tmpDir, "after-close-status-log.txt")
 
 	command = cmd.RootCmd()
-	command.SetArgs([]string{"status",
+	command.SetArgs([]string{
+		"status",
 		"--output", afterCloseStatusOutFile,
 		"-B", "custom-branch-name",
 	})

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/lindell/multi-gitter/cmd"
+	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
@@ -72,7 +73,7 @@ func TestTable(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
 
-	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
+	changerBinaryPath := multigitter.NormalizePath(filepath.Join(workingDir, changerBinaryPath))
 
 	tests := []struct {
 		name        string
@@ -135,7 +136,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/changer/main.go"))),
+				fmt.Sprintf("go run %s", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/changer/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -573,7 +574,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", normalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
+				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -600,7 +601,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", normalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
+				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -947,7 +948,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/remover/main.go"))),
+				fmt.Sprintf("go run %s", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/remover/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -1001,7 +1002,7 @@ Repositories with a successful run:
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
 				assert.True(t, fileExist(t, workingDir, "tmp-test"))
-				assert.Contains(t, runData.logOut, normalizePath(filepath.Join(workingDir, "tmp-test/")))
+				assert.Contains(t, runData.logOut, multigitter.NormalizePath(filepath.Join(workingDir, "tmp-test/")))
 			},
 		},
 	}
