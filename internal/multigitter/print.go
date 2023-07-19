@@ -67,7 +67,9 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
 
-	tmpDir, err := CreateTempDir(r.CloneDir)
+	tmpDir, err := createTempDir(r.CloneDir)
+	log.Info("Cloning into directory ", tmpDir)
+
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		return err

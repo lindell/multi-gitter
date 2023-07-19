@@ -73,9 +73,9 @@ func ParseConflictStrategy(str string) (ConflictStrategy, error) {
 	}
 }
 
-// CreateTempDir creates a temporary directory in the given directory.
+// createTempDir creates a temporary directory in the given directory.
 // If the given directory is an empty string, it will use the os.TempDir()
-func CreateTempDir(cloneDir string) (string, error) {
+func createTempDir(cloneDir string) (string, error) {
 	if cloneDir == "" {
 		cloneDir = os.TempDir()
 	}
@@ -113,7 +113,7 @@ func createDirectoryIfDoesntExist(directoryPath string) error {
 	return nil
 }
 
-// CreateAbsolutePath creates an absolute path from a relative path
+// makeAbsolutePath creates an absolute path from a relative path
 func makeAbsolutePath(path string) (string, error) {
 	workingDir, err := os.Getwd()
 	if err != nil {

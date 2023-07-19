@@ -1001,6 +1001,7 @@ Repositories with a successful run:
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
 				assert.True(t, fileExist(t, workingDir, "tmp-test"))
+				assert.Contains(t, runData.logOut, normalizePath(filepath.Join(workingDir, "tmp-test/")))
 			},
 		},
 	}
