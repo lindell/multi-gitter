@@ -981,7 +981,7 @@ Repositories with a successful run:
 			},
 		},
 		{
-			name: "custom clone dir",
+			name: "custom clone dir with relative path",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -996,11 +996,47 @@ Repositories with a successful run:
 				"-B", "clone-dir-branch-name",
 				"-m", "clone dir message",
 				"--clone-dir", "./tmp-test",
-				changerBinaryPath,
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/pwd/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
-				assert.True(t, fileExist(t, workingDir, "tmp-test"))
+				expectedPath := filepath.Join(workingDir, "tmp-test")
+
+				// Check the path in the logs
+				assert.Contains(t, runData.logOut, "Current path: "+strings.ReplaceAll(expectedPath, `\`, `\\`))
+
+				// Check the committed path
+				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
+				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
+				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
+			},
+		},
+		{
+			name: "custom clone dir with absolute path",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "clone-dir-branch-name",
+				"-m", "clone dir message",
+				"--clone-dir", filepath.Join(os.TempDir(), "tmp-test"),
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/pwd/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				assert.Contains(t, runData.logOut, "tmp-test")
+
+				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
+				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
+				assert.Contains(t, pathInFile, "tmp-test")
 			},
 		},
 	}
