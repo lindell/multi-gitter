@@ -6,12 +6,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/lindell/multi-gitter/cmd"
-	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
@@ -73,7 +73,7 @@ func TestTable(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
 
-	changerBinaryPath := multigitter.NormalizePath(filepath.Join(workingDir, changerBinaryPath))
+	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
 
 	tests := []struct {
 		name        string
@@ -136,7 +136,7 @@ func TestTable(t *testing.T) {
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/changer/main.go"))),
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/changer/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -574,7 +574,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
+				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", normalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -601,7 +601,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
+				fmt.Sprintf("go run %s -filenames node_modules/react/README.md,src/index.js -data test", normalizePath(filepath.Join(workingDir, "scripts/adder/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -948,7 +948,7 @@ Repositories with a successful run:
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
 				"-m", "custom message",
-				fmt.Sprintf("go run %s", multigitter.NormalizePath(filepath.Join(workingDir, "scripts/remover/main.go"))),
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/remover/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
@@ -982,7 +982,7 @@ Repositories with a successful run:
 			},
 		},
 		{
-			name: "custom clone dir",
+			name: "custom clone dir with relative path",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -997,12 +997,55 @@ Repositories with a successful run:
 				"-B", "clone-dir-branch-name",
 				"-m", "clone dir message",
 				"--clone-dir", "./tmp-test",
-				changerBinaryPath,
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/pwd/main.go"))),
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				require.Len(t, vcMock.PullRequests, 1)
-				assert.True(t, fileExist(t, workingDir, "tmp-test"))
-				assert.Contains(t, runData.logOut, multigitter.NormalizePath(filepath.Join(workingDir, "tmp-test/")))
+				expectedPath := filepath.Join(workingDir, "tmp-test")
+
+				// Check the path in the logs
+				assert.Contains(t, runData.logOut, "Current path: "+strings.ReplaceAll(expectedPath, `\`, `\\`))
+
+				// Check the path in
+				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
+				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
+				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
+			},
+		},
+		{
+			name: "custom clone dir with absolute path",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "clone-dir-branch-name",
+				"-m", "clone dir message",
+				"--clone-dir", filepath.Join(os.TempDir(), "tmp-test"),
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/pwd/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				tmpDir := os.TempDir()
+				// Fix for MacOS (darwin) where the tmp directory is aliased under two different directories
+				if runtime.GOOS == "darwin" {
+					tmpDir = filepath.Join("/private", tmpDir)
+				}
+
+				expectedPath := filepath.Join(tmpDir, "tmp-test")
+
+				assert.Contains(t, runData.logOut, "Current path: "+strings.ReplaceAll(expectedPath, `\`, `\\`))
+
+				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
+				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
+				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
 			},
 		},
 	}
@@ -1071,3 +1114,4 @@ Repositories with a successful run:
 		}
 	}
 }
+

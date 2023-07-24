@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
@@ -106,7 +105,7 @@ func createDirectoryIfDoesntExist(directoryPath string) error {
 	}
 
 	// Create the directory
-	err := os.MkdirAll(directoryPath, os.ModePerm)
+	err := os.MkdirAll(directoryPath, 0600)
 	if err != nil {
 		return err
 	}
@@ -126,8 +125,4 @@ func makeAbsolutePath(path string) (string, error) {
 	}
 
 	return path, nil
-}
-
-func NormalizePath(path string) string {
-	return strings.ReplaceAll(filepath.ToSlash(path), " ", "\\ ")
 }

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/lindell/multi-gitter/cmd"
-	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestStory(t *testing.T) {
 	workingDir, err := os.Getwd()
 	assert.NoError(t, err)
 
-	changerBinaryPath := multigitter.NormalizePath(filepath.Join(workingDir, changerBinaryPath))
+	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
 
 	changeRepo := createRepo(t, "owner", "should-change", "i like apples")
 	changeRepo2 := createRepo(t, "owner", "should-change-2", "i like my apple")

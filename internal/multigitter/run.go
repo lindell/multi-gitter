@@ -201,9 +201,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
-
 	tmpDir, err := createTempDir(r.CloneDir)
-	log.Info("Cloning into directory ", NormalizePath(tmpDir))
 
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
