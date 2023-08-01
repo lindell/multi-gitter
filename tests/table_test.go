@@ -1006,7 +1006,6 @@ Repositories with a successful run:
 				// Check the path in the logs
 				assert.Contains(t, runData.logOut, "Current path: "+strings.ReplaceAll(expectedPath, `\`, `\\`))
 
-				// Check the path in
 				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
 				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
 				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
@@ -1114,4 +1113,3 @@ Repositories with a successful run:
 		}
 	}
 }
-
