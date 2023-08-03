@@ -13,10 +13,8 @@ type VersionController interface {
 	GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error)
 	GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr scm.PullRequest) error
-	IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullRequest) (bool, error)
-	ApprovePullRequest(ctx context.Context, pr scm.PullRequest, comment string) error
-	RejectPullRequest(ctx context.Context, pr scm.PullRequest, comment string) error
-	CommentPullRequest(ctx context.Context, pr scm.PullRequest, comment string) error
+	IsPullRequestApprovedByMe(ctx context.Context, pr scm.PullRequest) (bool, error)
+	ReviewPullRequest(ctx context.Context, pr scm.PullRequest, action scm.Review, comment string) error
 	DiffPullRequest(ctx context.Context, pr scm.PullRequest) (string, error)
 	ClosePullRequest(ctx context.Context, pr scm.PullRequest) error
 	ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error)

@@ -500,19 +500,6 @@ func (b *BitbucketServer) DiffPullRequest(ctx context.Context, pullReq scm.PullR
 	return string(diff), nil
 }
 
-// ApprovePullRequest approves a pull request
-func (b *BitbucketServer) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	pr := pullReq.(pullRequest)
-
-	if err := b.CommentPullRequest(ctx, pullReq, comment); err != nil {
-		return err
-	}
-
-	client := newClient(ctx, b.config)
-	_, err := client.DefaultApi.Approve(pr.project, pr.repoName, int64(pr.number))
-	return err
-}
-
 // IsPullRequestApprovedByMe returns true if the pr is approved by the current user
 func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq scm.PullRequest) (bool, error) {
 	pr := pullReq.(pullRequest)
@@ -527,29 +514,37 @@ func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq s
 	return false, nil
 }
 
-// RejectPullRequest requests changes
-func (b *BitbucketServer) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+// ReviewPullRequest reviews a pull request
+func (g *Gitea) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
 	pr := pullReq.(pullRequest)
 
-	if err := b.CommentPullRequest(ctx, pullReq, comment); err != nil {
-		return err
-	}
-
-	client := newClient(ctx, b.config)
-	_, err := client.DefaultApi.Decline(pr.project, pr.repoName, int64(pr.number), map[string]interface{}{})
-	return err
-}
-
-// CommentPullRequest leaves a comment (unimplemented for bitbucket)
-func (b *BitbucketServer) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	pr := pullReq.(pullRequest)
 	client := newClient(ctx, b.config)
 
-	commentBody := bitbucketv1.Comment{
-		Text: comment,
+	if comment != "" {
+		commentBody := bitbucketv1.Comment{
+			Text: comment,
+		}
+
+		_, err := client.DefaultApi.CreatePullRequestComment(pr.project, pr.repoName, pr.number, commentBody, []string{})
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err := client.DefaultApi.CreatePullRequestComment(pr.project, pr.repoName, pr.number, commentBody, []string{})
+	var state gitea.ReviewStateType 
+	switch action {
+	case scm.ReviewApprove:
+		_, err := client.DefaultApi.Approve(pr.project, pr.repoName, int64(pr.number))
+		if err != nil {
+			return err
+		}
+	case scm.ReviewDecline:
+		_, err := client.DefaultApi.Decline(pr.project, pr.repoName, int64(pr.number), map[string]interface{}{})
+		if err != nil {
+			return err
+		}
+	}
+
 	return err
 }
 

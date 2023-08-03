@@ -486,35 +486,23 @@ func (g *Gitea) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullR
 	return false, nil
 }
 
-// ApprovePullRequest approves a pull request
-func (g *Gitea) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+// ReviewPullRequest reviews a pull request
+func (g *Gitea) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
 	pr := pullReq.(pullRequest)
+
+	var state gitea.ReviewStateType 
+	switch action {
+	case scm.ReviewComment:
+		event = gitea.ReviewStateComment
+	case scm.ReviewApprove:
+		event = gitea.ReviewStateApproved
+	case scm.ReviewDecline:
+		event = gitea.ReviewStateRequestChanges
+	}
 
 	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{
 		Body:  comment,
-		State: gitea.ReviewStateApproved,
-	})
-
-	return err
-}
-
-// RejectPullRequest requests changes
-func (g *Gitea) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	pr := pullReq.(pullRequest)
-	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{
-		Body:  comment,
-		State: gitea.ReviewStateRequestChanges,
-	})
-
-	return err
-}
-
-// CommentPullRequest leaves a comment
-func (g *Gitea) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	pr := pullReq.(pullRequest)
-	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{
-		Body:  comment,
-		State: gitea.ReviewStateComment,
+		State: state,
 	})
 
 	return err

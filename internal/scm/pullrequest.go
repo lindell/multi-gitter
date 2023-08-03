@@ -93,3 +93,13 @@ func MergeTypeIntersection(mergeTypes1, mergeTypes2 []MergeType) []MergeType {
 	}
 	return res
 }
+
+// Review defines how a pull request is reviewed
+type Review int
+
+// All Review types
+const (
+	ReviewComment Review = iota
+	ReviewApprove
+	ReviewDecline
+)

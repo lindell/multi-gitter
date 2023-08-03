@@ -634,40 +634,19 @@ func (g *Github) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.Pull
 	return false, nil
 }
 
-// ApprovePullRequest approves a pull request
-func (g *Github) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+// ReviewPullRequest reviews a pull request
+func (g *Github) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
 	pr := pullReq.(pullRequest)
-	event := "APPROVE"
 
-	_, _, err := retry(ctx, func() (*github.PullRequestReview, *github.Response, error) {
-		return g.ghClient.PullRequests.CreateReview(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequestReviewRequest{
-			Body:  &comment,
-			Event: &event,
-		})
-	})
-
-	return err
-}
-
-// RejectPullRequest requests changes
-func (g *Github) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	pr := pullReq.(pullRequest)
-	event := "REQUEST_CHANGES"
-
-	_, _, err := retry(ctx, func() (*github.PullRequestReview, *github.Response, error) {
-		return g.ghClient.PullRequests.CreateReview(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequestReviewRequest{
-			Body:  &comment,
-			Event: &event,
-		})
-	})
-
-	return err
-}
-
-// CommentPullRequest leaves a comment
-func (g *Github) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	pr := pullReq.(pullRequest)
-	event := "COMMENT"
+	var event string 
+	switch action {
+	case scm.ReviewComment:
+		event = "COMMENT"
+	case scm.ReviewApprove:
+		event = "APPROVE"
+	case scm.ReviewDecline:
+		event = "REQUEST_CHANGES"
+	}
 
 	_, _, err := retry(ctx, func() (*github.PullRequestReview, *github.Response, error) {
 		return g.ghClient.PullRequests.CreateReview(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequestReviewRequest{

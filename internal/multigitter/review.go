@@ -202,12 +202,12 @@ func (s Reviewer) reviewAction(ctx context.Context, diff string, action string, 
 				}
 
 			case "r":
-				err := s.VersionController.RejectPullRequest(ctx, pr.PullRequest, comment)
+				err := s.VersionController.ReviewPullRequest(ctx, pr.PullRequest, scm.ReviewDecline, comment)
 				if err != nil {
 					log.Errorf("Error occurred while rejecting: %s", err.Error())
 				}
 			case "c":
-				err := s.VersionController.CommentPullRequest(ctx, pr.PullRequest, comment)
+				err := s.VersionController.ReviewPullRequest(ctx, pr.PullRequest, scm.ReviewComment, comment)
 				if err != nil {
 					log.Errorf("Error occurred while commenting: %s", err.Error())
 				}
@@ -237,7 +237,7 @@ func (s Reviewer) approve(ctx context.Context, pr reviewPR, comment string) erro
 		return nil
 	}
 
-	return s.VersionController.ApprovePullRequest(ctx, pr.PullRequest, comment)
+	return s.VersionController.ReviewPullRequest(ctx, pr.PullRequest, scm.ReviewApprove, comment)
 }
 
 func (s Reviewer) getComment() string {
