@@ -21,17 +21,6 @@ import (
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
-// VersionController fetches repositories
-type VersionController interface {
-	GetRepositories(ctx context.Context) ([]scm.Repository, error)
-	CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error)
-	GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error)
-	GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error)
-	MergePullRequest(ctx context.Context, pr scm.PullRequest) error
-	ClosePullRequest(ctx context.Context, pr scm.PullRequest) error
-	ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error)
-}
-
 // Runner contains fields to be able to do the run
 type Runner struct {
 	VersionController VersionController

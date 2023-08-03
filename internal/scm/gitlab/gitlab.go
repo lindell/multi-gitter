@@ -412,6 +412,103 @@ func (g *Gitlab) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 	return nil
 }
 
+type mrChange struct {
+	OldPath     string
+	NewPath     string
+	AMode       string
+	BMode       string
+	Diff        string
+	NewFile     bool
+	RenamedFile bool
+	DeletedFile bool
+}
+
+// DiffPullRequest returns a diff of the pull request
+func (g *Gitlab) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (string, error) {
+	pr := pullReq.(pullRequest)
+
+	var diff string
+	mr, _, err := g.glClient.MergeRequests.GetMergeRequestChanges(pr.targetPID, pr.iid, &gitlab.GetMergeRequestChangesOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	for _, change := range mr.Changes {
+		var changeDiff = mrChange{
+			OldPath:     change.OldPath,
+			NewPath:     change.NewPath,
+			AMode:       change.AMode,
+			BMode:       change.BMode,
+			Diff:        change.Diff,
+			NewFile:     change.NewFile,
+			RenamedFile: change.RenamedFile,
+			DeletedFile: change.DeletedFile,
+		}
+
+		diff = fmt.Sprintf("%s\n%s", diff, convertToPatch(changeDiff))
+	}
+
+	return diff, nil
+}
+
+// TODO: it there a built-in api for this?
+func convertToPatch(changeDiff mrChange) string {
+	var newFile string
+	if changeDiff.NewFile {
+		newFile = fmt.Sprintf("new file mode %s\n", changeDiff.BMode)
+	}
+
+	return fmt.Sprintf("diff %s %s\n%s%s", changeDiff.OldPath, changeDiff.NewPath, newFile, changeDiff.Diff)
+}
+
+// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+func (g *Gitlab) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullRequest) (bool, error) {
+	pr := pullReq.(pullRequest)
+	loggedInUser, err := g.getCurrentUser(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	reviews, _, err := g.glClient.MergeRequests.GetMergeRequestApprovals(pr.targetPID, pr.iid)
+
+	for _, review := range reviews.ApprovedBy {
+		if review.User.ID == loggedInUser.ID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// ApprovePullRequest approves a pull request
+func (g *Gitlab) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+
+	if err := g.CommentPullRequest(ctx, pullReq, comment); err != nil {
+		return err
+	}
+
+	_, _, err := g.glClient.MergeRequestApprovals.ApproveMergeRequest(pr.targetPID, pr.iid, &gitlab.ApproveMergeRequestOptions{})
+	return err
+}
+
+// RejectPullRequest requests changes (Note for gitlab this just leaves a comment)
+func (g *Gitlab) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	return g.CommentPullRequest(ctx, pullReq, comment)
+
+}
+
+// CommentPullRequest leaves a comment
+func (g *Gitlab) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+
+	_, _, err := g.glClient.Notes.CreateMergeRequestNote(pr.targetPID, pr.iid, &gitlab.CreateMergeRequestNoteOptions{
+		Body: &comment,
+	})
+
+	return err
+}
+
 // ClosePullRequest closes a pull request
 func (g *Gitlab) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)

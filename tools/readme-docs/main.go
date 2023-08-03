@@ -64,6 +64,10 @@ func main() {
 			cmd:     commandByName(subCommands, "run"),
 		},
 		{
+			imgIcon: "docs/img/fa/thumb.svg",
+			cmd:     commandByName(subCommands, "review"),
+		},
+		{
 			imgIcon: "docs/img/fa/code-merge.svg",
 			cmd:     commandByName(subCommands, "merge"),
 		},

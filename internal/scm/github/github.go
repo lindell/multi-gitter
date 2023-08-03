@@ -597,6 +597,85 @@ func (g *Github) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) 
 	return nil
 }
 
+// DiffPullRequest returns a diff of the pull request
+func (g *Github) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (string, error) {
+	pr := pullReq.(pullRequest)
+
+	raw, _, err := retry(ctx, func() (string, *github.Response, error) {
+		return g.ghClient.PullRequests.GetRaw(ctx, pr.ownerName, pr.repoName, pr.number, github.RawOptions{
+			Type: github.Diff,
+		})
+	})
+
+	return raw, err
+}
+
+// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+func (g *Github) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullRequest) (bool, error) {
+	pr := pullReq.(pullRequest)
+	loggedInUser, err := g.loggedInUser(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	reviews, _, err := retry(ctx, func() ([]*github.PullRequestReview, *github.Response, error) {
+		return g.ghClient.PullRequests.ListReviews(ctx, pr.ownerName, pr.repoName, pr.number, &github.ListOptions{})
+	})
+
+	for _, review := range reviews {
+		if review.User.GetLogin() == loggedInUser && *review.State == "APPROVED" {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// ApprovePullRequest approves a pull request
+func (g *Github) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+	event := "APPROVE"
+
+	_, _, err := retry(ctx, func() (*github.PullRequestReview, *github.Response, error) {
+		return g.ghClient.PullRequests.CreateReview(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequestReviewRequest{
+			Body:  &comment,
+			Event: &event,
+		})
+	})
+
+	return err
+}
+
+// RejectPullRequest requests changes
+func (g *Github) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+	event := "REQUEST_CHANGES"
+
+	_, _, err := retry(ctx, func() (*github.PullRequestReview, *github.Response, error) {
+		return g.ghClient.PullRequests.CreateReview(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequestReviewRequest{
+			Body:  &comment,
+			Event: &event,
+		})
+	})
+
+	return err
+}
+
+// CommentPullRequest leaves a comment
+func (g *Github) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+	pr := pullReq.(pullRequest)
+	event := "COMMENT"
+
+	_, _, err := retry(ctx, func() (*github.PullRequestReview, *github.Response, error) {
+		return g.ghClient.PullRequests.CreateReview(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequestReviewRequest{
+			Body:  &comment,
+			Event: &event,
+		})
+	})
+
+	return err
+}
+
 // ClosePullRequest closes a pull request
 func (g *Github) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)
