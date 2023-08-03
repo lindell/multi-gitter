@@ -483,32 +483,24 @@ func (g *Gitlab) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.Pull
 	return false, nil
 }
 
-// ApprovePullRequest approves a pull request
-func (g *Gitlab) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	pr := pullReq.(pullRequest)
-
-	if err := g.CommentPullRequest(ctx, pullReq, comment); err != nil {
-		return err
-	}
-
-	_, _, err := g.glClient.MergeRequestApprovals.ApproveMergeRequest(pr.targetPID, pr.iid, nil, gitlab.WithContext(ctx))
-	return err
-}
-
-// RejectPullRequest requests changes (Note for gitlab this just leaves a comment)
-func (g *Gitlab) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	return g.CommentPullRequest(ctx, pullReq, comment)
-}
-
-// CommentPullRequest leaves a comment
-func (g *Gitlab) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+// ReviewPullRequest reviews a pull request
+func (g *Gitlab) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
 	pr := pullReq.(pullRequest)
 
 	_, _, err := g.glClient.Notes.CreateMergeRequestNote(pr.targetPID, pr.iid, &gitlab.CreateMergeRequestNoteOptions{
 		Body: &comment,
 	}, gitlab.WithContext(ctx))
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if action == scm.ReviewApprove {
+		_, _, err := g.glClient.MergeRequestApprovals.ApproveMergeRequest(pr.targetPID, pr.iid, nil, gitlab.WithContext(ctx))
+		return err
+	}
+
+	return nil
 }
 
 // ClosePullRequest closes a pull request

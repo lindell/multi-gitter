@@ -493,11 +493,11 @@ func (g *Gitea) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, 
 	var state gitea.ReviewStateType 
 	switch action {
 	case scm.ReviewComment:
-		event = gitea.ReviewStateComment
+		state = gitea.ReviewStateComment
 	case scm.ReviewApprove:
-		event = gitea.ReviewStateApproved
+		state = gitea.ReviewStateApproved
 	case scm.ReviewDecline:
-		event = gitea.ReviewStateRequestChanges
+		state = gitea.ReviewStateRequestChanges
 	}
 
 	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{

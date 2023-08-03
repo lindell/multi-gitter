@@ -515,23 +515,20 @@ func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq s
 }
 
 // ReviewPullRequest reviews a pull request
-func (g *Gitea) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
+func (b *BitbucketServer) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
 	pr := pullReq.(pullRequest)
 
 	client := newClient(ctx, b.config)
 
-	if comment != "" {
-		commentBody := bitbucketv1.Comment{
-			Text: comment,
-		}
+  commentBody := bitbucketv1.Comment{
+    Text: comment,
+  }
 
-		_, err := client.DefaultApi.CreatePullRequestComment(pr.project, pr.repoName, pr.number, commentBody, []string{})
-		if err != nil {
-			return err
-		}
-	}
+  _, err := client.DefaultApi.CreatePullRequestComment(pr.project, pr.repoName, pr.number, commentBody, []string{})
+  if err != nil {
+    return err
+  }
 
-	var state gitea.ReviewStateType 
 	switch action {
 	case scm.ReviewApprove:
 		_, err := client.DefaultApi.Approve(pr.project, pr.repoName, int64(pr.number))
@@ -545,7 +542,7 @@ func (g *Gitea) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, 
 		}
 	}
 
-	return err
+	return nil
 }
 
 // ClosePullRequest Close a pull request, the pr parameter will always originate from the same package
