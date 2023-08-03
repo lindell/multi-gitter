@@ -109,18 +109,8 @@ func (vc *VersionController) IsPullRequestApprovedByMe(ctx context.Context, pull
 	return false, nil
 }
 
-// ApprovePullRequest approves a pull request
-func (vc *VersionController) ApprovePullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	return nil
-}
-
-// RejectPullRequest requests changes
-func (vc *VersionController) RejectPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
-	return nil
-}
-
-// CommentPullRequest leaves a comment
-func (vc *VersionController) CommentPullRequest(ctx context.Context, pullReq scm.PullRequest, comment string) error {
+// ReviewPullRequest reviews a pull request
+func (vc *VersionController) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
 	return nil
 }
 
