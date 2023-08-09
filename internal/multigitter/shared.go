@@ -105,7 +105,7 @@ func createDirectoryIfDoesntExist(directoryPath string) error {
 	}
 
 	// Create the directory
-	err := os.MkdirAll(directoryPath, 0600)
+	err := os.MkdirAll(directoryPath, 0700)
 	if err != nil {
 		return err
 	}
