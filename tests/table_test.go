@@ -980,7 +980,8 @@ Repositories with a successful run:
 				require.Len(t, vcMock.PullRequests, 0)
 				assert.Equal(t, "Both the feature branch and base branch was named master, if you intended to push directly into the base branch, please use the `skip-pr` option:\n  owner/should-not-change\n", runData.out)
 			},
-		},
+        },
+
 		{
 			name: "custom clone dir with relative path",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
@@ -1011,6 +1012,7 @@ Repositories with a successful run:
 				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
 			},
 		},
+
 		{
 			name: "custom clone dir with absolute path",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
