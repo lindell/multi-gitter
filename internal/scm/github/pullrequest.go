@@ -21,7 +21,12 @@ func convertPullRequest(pr *github.PullRequest) pullRequest {
 }
 
 func convertGraphQLPullRequest(pr graphqlPR) pullRequest {
-	combinedStatus := pr.Commits.Nodes[0].Commit.StatusCheckRollup.State
+	var combinedStatus *graphqlPullRequestState
+	nodes := pr.Commits.Nodes
+	if len(nodes) > 0 {
+		combinedStatus = nodes[0].Commit.StatusCheckRollup.State
+	}
+
 	status := scm.PullRequestStatusUnknown
 
 	if pr.Merged {
