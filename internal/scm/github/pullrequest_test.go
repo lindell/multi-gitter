@@ -8,7 +8,6 @@ import (
 )
 
 func Test_convertGraphQLPullRequest(t *testing.T) {
-
 	scenarios := []struct {
 		name     string
 		pr       graphqlPR
