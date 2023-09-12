@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.47.4](https://github.com/lindell/multi-gitter/compare/v0.47.3...v0.47.4) (2023-09-12)
+
+
+### Bug Fixes
+
+* don't panic when a PR branch is deleted ([#385](https://github.com/lindell/multi-gitter/issues/385)) ([fca98e1](https://github.com/lindell/multi-gitter/commit/fca98e134a6640d79aae6bffbe154d42b3393d40))
+
+
+### Dependencies
+
+* update module github.com/go-git/go-git/v5 to v5.8.1 ([8de2001](https://github.com/lindell/multi-gitter/commit/8de20010a3c8c7ac5eecb6c366975d164e9a8409))
+* update module github.com/xanzy/go-gitlab to v0.88.0 ([c0f0bb4](https://github.com/lindell/multi-gitter/commit/c0f0bb4ba45c9834fe67a44774a96a984a16913c))
+* update module github.com/xanzy/go-gitlab to v0.90.0 ([fd66cd2](https://github.com/lindell/multi-gitter/commit/fd66cd200c08b911fb19dae40dafa6c91170a269))
+* update module golang.org/x/oauth2 to v0.10.0 ([a82fc38](https://github.com/lindell/multi-gitter/commit/a82fc380c95ab1bec3a20a2da0465444b8d91cd2))
+* update module golang.org/x/oauth2 to v0.11.0 ([7820c22](https://github.com/lindell/multi-gitter/commit/7820c228f69386a12df3ddc4c908bb1940b9aa2e))
+
 ## [0.47.3](https://github.com/lindell/multi-gitter/compare/v0.47.2...v0.47.3) (2023-07-16)
 
 
