@@ -318,7 +318,7 @@ func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 			continue
 		}
 
-		prs = append(prs, convertMergeRequest(mr, project.Path, project.Namespace.Path))
+		prs = append(prs, convertMergeRequest(mr, project.Path, project.Namespace.FullPath))
 	}
 
 	return prs, nil
