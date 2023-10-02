@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
 )
@@ -18,13 +19,18 @@ func MergeCmd() *cobra.Command {
 		RunE:    merge,
 	}
 
-	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	cmd.Flags().StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"},
+	fss := namedflag.New(cmd)
+	flags := fss.FlagSet("Merge")
+
+	flags.StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	flags.StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"},
 		"The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.")
-	configurePlatform(cmd)
-	configureRunPlatform(cmd, false)
-	configureLogging(cmd, "-")
-	configureConfig(cmd)
+	configurePlatform(cmd, fss.FlagSet("Platform"))
+	configureRunPlatform(fss.FlagSet("Platform"), false)
+	configureLogging(fss.FlagSet("Logging"), "-")
+	configureConfig(fss.FlagSet("Config"))
+
+	namedflag.SetUsageAndHelpFunc(cmd, fss)
 
 	return cmd
 }

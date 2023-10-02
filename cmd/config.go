@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
-func configureConfig(cmd *cobra.Command) {
-	cmd.Flags().StringP("config", "", "", "Path of the config file.")
+func configureConfig(flags namedflag.Set) {
+	flags.StringP("config", "", "", "Path of the config file.")
 }
 
 func initializeConfig(cmd *cobra.Command) error {

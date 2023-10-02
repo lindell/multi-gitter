@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/git/cmdgit"
 	"github.com/lindell/multi-gitter/internal/git/gogit"
 	"github.com/lindell/multi-gitter/internal/multigitter"
@@ -9,14 +10,14 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-func configureGit(cmd *cobra.Command) {
-	cmd.Flags().IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit.")
-	cmd.Flags().StringP("git-type", "", "go", `The type of git implementation to use.
+func configureGit(flags namedflag.Set) {
+	flags.IntP("fetch-depth", "f", 1, "Limit fetching to the specified number of commits. Set to 0 for no limit.")
+	flags.StringP("git-type", "", "go", `The type of git implementation to use.
 Available values:
   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
   cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
 `)
-	_ = cmd.RegisterFlagCompletionFunc("git-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	_ = flags.RegisterFlagCompletionFunc("git-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"go", "cmd"}, cobra.ShellCompDirectiveDefault
 	})
 }

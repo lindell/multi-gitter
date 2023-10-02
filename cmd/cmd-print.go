@@ -9,6 +9,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
 )
@@ -32,13 +33,18 @@ func PrintCmd() *cobra.Command {
 		RunE:    printCMD,
 	}
 
-	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
-	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr.`)
-	configureGit(cmd)
-	configurePlatform(cmd)
-	configureLogging(cmd, "")
-	configureConfig(cmd)
-	cmd.Flags().AddFlagSet(outputFlag())
+	fss := namedflag.New(cmd)
+	flags := fss.FlagSet("Print")
+
+	flags.IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
+	flags.StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr.`)
+	configureGit(fss.FlagSet("Git"))
+	configurePlatform(cmd, fss.FlagSet("Platform"))
+	configureLogging(fss.FlagSet("Logging"), "")
+	configureConfig(fss.FlagSet("Config"))
+	outputFlag(fss.FlagSet("Output"))
+
+	namedflag.SetUsageAndHelpFunc(cmd, fss)
 
 	return cmd
 }

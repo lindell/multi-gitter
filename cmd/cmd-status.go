@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
 )
@@ -19,12 +20,17 @@ func StatusCmd() *cobra.Command {
 		RunE:    status,
 	}
 
-	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	configurePlatform(cmd)
-	configureRunPlatform(cmd, false)
-	configureLogging(cmd, "-")
-	configureConfig(cmd)
-	cmd.Flags().AddFlagSet(outputFlag())
+	fss := namedflag.New(cmd)
+	flags := fss.FlagSet("Status")
+
+	flags.StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	configurePlatform(cmd, fss.FlagSet("Platform"))
+	configureRunPlatform(fss.FlagSet("Platform"), false)
+	configureLogging(fss.FlagSet("Logging"), "-")
+	configureConfig(fss.FlagSet("Config"))
+	outputFlag(fss.FlagSet("Output"))
+
+	namedflag.SetUsageAndHelpFunc(cmd, fss)
 
 	return cmd
 }

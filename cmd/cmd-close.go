@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/spf13/cobra"
 )
@@ -18,11 +19,16 @@ func CloseCmd() *cobra.Command {
 		RunE:    closeCMD,
 	}
 
-	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	configurePlatform(cmd)
-	configureRunPlatform(cmd, false)
-	configureLogging(cmd, "-")
-	configureConfig(cmd)
+	fss := namedflag.New(cmd)
+	flags := fss.FlagSet("Close")
+
+	flags.StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	configurePlatform(cmd, fss.FlagSet("Platform"))
+	configureRunPlatform(fss.FlagSet("Platform"), false)
+	configureLogging(fss.FlagSet("Logging"), "-")
+	configureConfig(fss.FlagSet("Config"))
+
+	namedflag.SetUsageAndHelpFunc(cmd, fss)
 
 	return cmd
 }

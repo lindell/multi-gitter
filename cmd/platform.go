@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm/bitbucketserver"
@@ -16,31 +17,31 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-func configurePlatform(cmd *cobra.Command) {
-	flags := cmd.Flags()
-
+func configurePlatform(cmd *cobra.Command, flags namedflag.Set) {
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.")
 	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.")
-	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
-	flags.StringP("username", "u", "", "The Bitbucket server username.")
 	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
 
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
+	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
-	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
-	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
 	flags.BoolP("skip-forks", "", false, `Skip repositories which are forks.`)
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.")
-	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
+
+	flags.StringP("username", "u", "", "The Bitbucket server username.")
+	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
+
+	_ = flags.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"github", "gitlab", "gitea", "bitbucket_server"}, cobra.ShellCompDirectiveDefault
 	})
 
 	// Autocompletion for organizations
-	versionControllerCompletion(cmd, "org", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
+	versionControllerCompletion(flags, "org", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
 		g, ok := vc.(interface {
 			GetAutocompleteOrganizations(ctx context.Context, _ string) ([]string, error)
 		})
@@ -51,7 +52,7 @@ func configurePlatform(cmd *cobra.Command) {
 	})
 
 	// Autocompletion for users
-	versionControllerCompletion(cmd, "user", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
+	versionControllerCompletion(flags, "user", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
 		g, ok := vc.(interface {
 			GetAutocompleteUsers(ctx context.Context, _ string) ([]string, error)
 		})
@@ -62,7 +63,7 @@ func configurePlatform(cmd *cobra.Command) {
 	})
 
 	// Autocompletion for repositories
-	versionControllerCompletion(cmd, "repo", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
+	versionControllerCompletion(flags, "repo", func(vc multigitter.VersionController, toComplete string) ([]string, error) {
 		g, ok := vc.(interface {
 			GetAutocompleteRepositories(ctx context.Context, _ string) ([]string, error)
 		})
@@ -74,9 +75,7 @@ func configurePlatform(cmd *cobra.Command) {
 }
 
 // configureRunPlatform defines platform flags that are relevant for commands that either make changes, or handling changes made
-func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
-	flags := cmd.Flags()
-
+func configureRunPlatform(flags namedflag.Set, prCreating bool) {
 	forkDesc := "Fork the repository instead of creating a new branch on the same owner."
 	if !prCreating {
 		forkDesc = "Use pull requests made from forks instead of from the same repository."
@@ -324,8 +323,8 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 }
 
 // versionControllerCompletion is a helper function to allow for easier implementation of Cobra autocompletions that depend on a version controller
-func versionControllerCompletion(cmd *cobra.Command, flagName string, fn func(vc multigitter.VersionController, toComplete string) ([]string, error)) {
-	_ = cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+func versionControllerCompletion(flags namedflag.Set, flagName string, fn func(vc multigitter.VersionController, toComplete string) ([]string, error)) {
+	_ = flags.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		// Make sure config files are loaded
 		_ = initializeConfig(cmd)
 

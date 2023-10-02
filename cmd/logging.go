@@ -8,19 +8,18 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	internallog "github.com/lindell/multi-gitter/internal/log"
 )
 
-func configureLogging(cmd *cobra.Command, logFile string) {
-	flags := cmd.Flags()
-
+func configureLogging(flags namedflag.Set, logFile string) {
 	flags.StringP("log-level", "L", "info", "The level of logging that should be made. Available values: trace, debug, info, error.")
-	_ = cmd.RegisterFlagCompletionFunc("log-level", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	_ = flags.RegisterFlagCompletionFunc("log-level", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"trace", "debug", "info", "error"}, cobra.ShellCompDirectiveDefault
 	})
 
 	flags.StringP("log-format", "", "text", `The formatting of the logs. Available values: text, json, json-pretty.`)
-	_ = cmd.RegisterFlagCompletionFunc("log-format", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	_ = flags.RegisterFlagCompletionFunc("log-format", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"text", "json", "json-pretty"}, cobra.ShellCompDirectiveDefault
 	})
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/git"
 
 	"github.com/lindell/multi-gitter/internal/multigitter"
@@ -35,39 +36,45 @@ func RunCmd() *cobra.Command {
 		RunE:    run,
 	}
 
-	cmd.Flags().StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
-	cmd.Flags().StringP("base-branch", "", "", "The branch which the changes will be based on.")
-	cmd.Flags().StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
-	cmd.Flags().StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
-	cmd.Flags().StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
-	cmd.Flags().StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
-	cmd.Flags().StringSliceP("team-reviewers", "", nil, "Github team names of the reviewers, in format: 'org/team'")
-	cmd.Flags().StringSliceP("assignees", "a", nil, "The username of the assignees to be added on the pull request.")
-	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
-	cmd.Flags().IntP("max-team-reviewers", "", 0, "If this value is set, team reviewers will be randomized")
-	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
-	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
-	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
-	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
+	fss := namedflag.New(cmd)
+	flags := fss.FlagSet("Run")
+	gitFlags := fss.FlagSet("Git")
+
+	gitFlags.StringP("branch", "B", "multi-gitter-branch", "The name of the branch where changes are committed.")
+	gitFlags.StringP("base-branch", "", "", "The branch which the changes will be based on.")
+	flags.StringP("pr-title", "t", "", "The title of the PR. Will default to the first line of the commit message if none is set.")
+	flags.StringP("pr-body", "b", "", "The body of the commit message. Will default to everything but the first line of the commit message if none is set.")
+	gitFlags.StringP("commit-message", "m", "", "The commit message. Will default to title + body if none is set.")
+	flags.StringSliceP("reviewers", "r", nil, "The username of the reviewers to be added on the pull request.")
+	flags.StringSliceP("team-reviewers", "", nil, "Github team names of the reviewers, in format: 'org/team'")
+	flags.StringSliceP("assignees", "a", nil, "The username of the assignees to be added on the pull request.")
+	flags.IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
+	flags.IntP("max-team-reviewers", "", 0, "If this value is set, team reviewers will be randomized")
+	flags.IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
+	flags.BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
+	flags.StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
+	flags.BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
-	cmd.Flags().StringP("conflict-strategy", "", "skip", `What should happen if the branch already exist.
+	flags.StringP("conflict-strategy", "", "skip", `What should happen if the branch already exist.
 Available values:
   skip: Skip making any changes to the existing branch and do not create a new pull request.
   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
 `)
-	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
-	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	_ = flags.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
-	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
-	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
-	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
-	configureGit(cmd)
-	configurePlatform(cmd)
-	configureRunPlatform(cmd, true)
-	configureLogging(cmd, "-")
-	configureConfig(cmd)
-	cmd.Flags().AddFlagSet(outputFlag())
+	flags.BoolP("draft", "", false, "Create pull request(s) as draft.")
+	flags.StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
+	gitFlags.StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
+	gitFlags.StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
+	configureGit(gitFlags)
+	configurePlatform(cmd, fss.FlagSet("Platform"))
+	configureRunPlatform(fss.FlagSet("Platform"), true)
+	configureLogging(fss.FlagSet("Logging"), "-")
+	configureConfig(fss.FlagSet("Config"))
+	outputFlag(fss.FlagSet("Output"))
+
+	namedflag.SetUsageAndHelpFunc(cmd, fss)
 
 	return cmd
 }

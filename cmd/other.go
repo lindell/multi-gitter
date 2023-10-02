@@ -4,17 +4,14 @@ import (
 	"io"
 	"os"
 
+	"github.com/lindell/multi-gitter/cmd/namedflag"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	flag "github.com/spf13/pflag"
 )
 
-func outputFlag() *flag.FlagSet {
-	flags := flag.NewFlagSet("output", flag.ExitOnError)
-
+func outputFlag(flags namedflag.Set) {
 	flags.StringP("output", "o", "-", `The file that the output of the script should be outputted to. "-" means stdout.`)
-
-	return flags
 }
 
 func getToken(flag *flag.FlagSet) (string, error) {
