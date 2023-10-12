@@ -197,6 +197,14 @@ func (pr PullRequest) String() string {
 	return fmt.Sprintf("%s #%d", pr.Repository.FullName(), pr.PRNumber)
 }
 
+func (pr PullRequest) URL() string {
+	if pr.Repository.RepoName == "has-url" {
+		return "https://github.com/owner/has-url/pull/1"
+	}
+
+	return ""
+}
+
 // Repository is a mock repository
 type Repository struct {
 	OwnerName string

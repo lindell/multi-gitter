@@ -25,7 +25,7 @@ func (s Statuser) Statuses(ctx context.Context) error {
 	}
 
 	for _, pr := range prs {
-		if urler, ok := pr.(urler); ok {
+		if urler, hasURL := pr.(urler); hasURL && urler.URL() != "" {
 			fmt.Fprintf(s.Output, "%s: %s\n", terminal.Link(pr.String(), urler.URL()), pr.Status())
 		} else {
 			fmt.Fprintf(s.Output, "%s: %s\n", pr.String(), pr.Status())
