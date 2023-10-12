@@ -190,6 +190,9 @@ org:
 # The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
 
+# Don't use any terminal formatting when printing the output.
+plain-output: false
+
 # The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
@@ -291,6 +294,9 @@ merge-type:
 org:
   - example
 
+# Don't use any terminal formatting when printing the output.
+plain-output: false
+
 # The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
@@ -368,6 +374,9 @@ org:
 # The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
 
+# Don't use any terminal formatting when printing the output.
+plain-output: false
+
 # The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
 
@@ -441,6 +450,9 @@ log-level: info
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
   - example
+
+# Don't use any terminal formatting when printing the output.
+plain-output: false
 
 # The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
@@ -524,6 +536,9 @@ org:
 
 # The file that the output of the script should be outputted to. "-" means stdout.
 output: "-"
+
+# Don't use any terminal formatting when printing the output.
+plain-output: false
 
 # The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.
 platform: github
@@ -618,6 +633,7 @@ Flags:
       --max-team-reviewers int     If this value is set, team reviewers will be randomized
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string              The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+      --plain-output               Don't use any terminal formatting when printing the output.
   -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -b, --pr-body string             The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string            The title of the PR. Will default to the first line of the commit message if none is set.
@@ -656,6 +672,7 @@ Flags:
   -L, --log-level string     The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
       --merge-type strings   The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings          The name of a GitHub organization. All repositories in that organization will be used.
+      --plain-output         Don't use any terminal formatting when printing the output.
   -p, --platform string      The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings      The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings         The name, including owner of a GitHub repository in the format "ownerName/repoName".
@@ -688,6 +705,7 @@ Flags:
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string       The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+      --plain-output        Don't use any terminal formatting when printing the output.
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
@@ -719,6 +737,7 @@ Flags:
       --log-format string   The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string    The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings         The name of a GitHub organization. All repositories in that organization will be used.
+      --plain-output        Don't use any terminal formatting when printing the output.
   -p, --platform string     The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings     The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings        The name, including owner of a GitHub repository in the format "ownerName/repoName".
@@ -761,6 +780,7 @@ Flags:
   -L, --log-level string      The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings           The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string         The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+      --plain-output          Don't use any terminal formatting when printing the output.
   -p, --platform string       The platform that is used. Available values: github, gitlab, gitea, bitbucket_server. (default "github")
   -P, --project strings       The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings          The name, including owner of a GitHub repository in the format "ownerName/repoName".
