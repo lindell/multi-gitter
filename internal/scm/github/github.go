@@ -105,11 +105,12 @@ type Github struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	Organizations []string
-	Users         []string
-	Repositories  []RepositoryReference
-	Topics        []string
-	SkipForks     bool
+	Organizations    []string
+	Users            []string
+	Repositories     []RepositoryReference
+	RepositorySearch string
+	Topics           []string
+	SkipForks        bool
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -213,6 +214,14 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		allRepos = append(allRepos, repo)
 	}
 
+	if len(g.RepositorySearch) > 0 {
+		repos, err := g.getSearchRepositories(ctx, g.RepositorySearch)
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not get repository search results for '%s'", g.RepositorySearch)
+		}
+		allRepos = append(allRepos, repos...)
+	}
+
 	// Remove duplicate repos
 	repoMap := map[string]*github.Repository{}
 	for _, repo := range allRepos {
@@ -269,6 +278,44 @@ func (g *Github) getUserRepositories(ctx context.Context, user string) ([]*githu
 				},
 			})
 		})
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, rr...)
+		if len(rr) != 100 {
+			break
+		}
+		i++
+	}
+
+	return repos, nil
+}
+
+func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*github.Repository, error) {
+	var repos []*github.Repository
+	i := 1
+	for {
+		rr, _, err := retry(ctx, func() ([]*github.Repository, *github.Response, error) {
+			rr, resp, err := g.ghClient.Search.Repositories(ctx, search, &github.SearchOptions{
+				ListOptions: github.ListOptions{
+					Page:    i,
+					PerPage: 100,
+				},
+			})
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if rr.IncompleteResults != nil && *rr.IncompleteResults {
+				// can occur when search times out on the server: for now, fail instead
+				// of handling the issue
+				return nil, nil, fmt.Errorf("search results incomplete")
+			}
+
+			return rr.Repositories, resp, nil
+		})
+
 		if err != nil {
 			return nil, err
 		}
