@@ -1,19 +1,22 @@
 package github
 
 import (
+	"bufio"
 	"context"
 	"fmt"
-	"net/http"
-	"sort"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/google/go-github/v55/github"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	"net/http"
+	"os"
+	"regexp"
+	"slices"
+	"sort"
+	"strings"
+	"sync"
+	"time"
 )
 
 type Config struct {
@@ -105,11 +108,13 @@ type Github struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	Organizations []string
-	Users         []string
-	Repositories  []RepositoryReference
-	Topics        []string
-	SkipForks     bool
+	Organizations    []string
+	Users            []string
+	Repositories     []RepositoryReference
+	RepositorySearch string
+	Topics           []string
+	SkipForks        bool
+	FilterFile       string
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -213,6 +218,13 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		allRepos = append(allRepos, repo)
 	}
 
+	if len(g.RepositorySearch) > 0 {
+		repos, err := g.getSearchRepositories(ctx, g.RepositorySearch)
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not get repository search results for '%s'", g.RepositorySearch)
+		}
+		allRepos = append(allRepos, repos...)
+	}
 	// Remove duplicate repos
 	repoMap := map[string]*github.Repository{}
 	for _, repo := range allRepos {
@@ -279,6 +291,82 @@ func (g *Github) getUserRepositories(ctx context.Context, user string) ([]*githu
 		i++
 	}
 
+	return repos, nil
+}
+
+func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*github.Repository, error) {
+	var repos []*github.Repository
+	i := 1
+	for {
+		rr, _, err := retry(ctx, func() ([]*github.Repository, *github.Response, error) {
+			rr, resp, err := g.ghClient.Search.Repositories(ctx, search, &github.SearchOptions{
+				ListOptions: github.ListOptions{
+					Page:    i,
+					PerPage: 100,
+				},
+			})
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if rr.IncompleteResults != nil && *rr.IncompleteResults {
+				// can occur when search times out on the server: for now, fail instead
+				// of handling the issue
+				return nil, nil, fmt.Errorf("search results incomplete")
+			}
+
+			return rr.Repositories, resp, nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		repos = append(repos, rr...)
+		if len(rr) != 100 {
+			break
+		}
+		i++
+	}
+
+	/*
+			TODO:
+			* Generate Repositories that match name with Repository search | Done from @jamestelfer
+			* Verify returned repositories match repo name using regular expression, if not remove them from list
+		    * In addition if a a ignore file exist, use that before returning the set of found repositories
+	*/
+	var ignoreList []string
+	if len(g.FilterFile) > 0 {
+		/// Go ahead and fill ignore_list with excluded repositories
+		file, openErr := os.Open(g.FilterFile)
+		defer func() {
+			err := file.Close()
+			if err != nil {
+				fmt.Printf("Error closing file: %s", err)
+			}
+		}()
+		if openErr != nil {
+			fmt.Printf("Error: %s", openErr)
+		} else {
+			FilterScanner := bufio.NewScanner(file)
+			for FilterScanner.Scan() {
+				line := FilterScanner.Text()
+				ignoreList = append(ignoreList, line)
+			}
+			scanError := FilterScanner.Err()
+			if scanError != nil {
+				fmt.Printf("Error reading file: %s", scanError)
+			}
+		}
+	}
+	for index := len(repos) - 1; index > 0; index-- {
+		matchPattern := fmt.Sprintf("^%s", search)
+		match, _ := regexp.MatchString(matchPattern, *repos[index].FullName)
+		if !match || slices.Contains(ignoreList, *repos[index].FullName) {
+			repos = append(repos[:index], repos[index+1:]...)
+		}
+	}
 	return repos, nil
 }
 

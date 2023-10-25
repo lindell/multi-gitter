@@ -28,6 +28,8 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
+	flags.StringP("repo-search", "", "", "Use a repository search to find repositories to target.")
+	flags.StringP("filter-file", "", "", "Point to a file to filter out certain target repositories")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
@@ -122,14 +124,16 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
+	repoSearch, _ := flag.GetString("repo-search")
+	filterFile, _ := flag.GetString("filter-file")
 	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
 	sshAuth, _ := flag.GetBool("ssh-auth")
 	skipForks, _ := flag.GetBool("skip-forks")
 
-	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 {
-		return nil, errors.New("no organization, user or repo set")
+	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 && repoSearch == "" {
+		return nil, errors.New("no organization, user, repo or repo-search set")
 	}
 
 	token, err := getToken(flag)
@@ -164,11 +168,13 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 		BaseURL:             gitBaseURL,
 		TransportMiddleware: http.NewLoggingRoundTripper,
 		RepoListing: github.RepositoryListing{
-			Organizations: orgs,
-			Users:         users,
-			Repositories:  repoRefs,
-			Topics:        topics,
-			SkipForks:     skipForks,
+			Organizations:    orgs,
+			Users:            users,
+			Repositories:     repoRefs,
+			RepositorySearch: repoSearch,
+			Topics:           topics,
+			SkipForks:        skipForks,
+			FilterFile:       filterFile,
 		},
 		MergeTypes:       mergeTypes,
 		ForkMode:         forkMode,
