@@ -4,11 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/google/go-github/v55/github"
-	"github.com/lindell/multi-gitter/internal/scm"
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 	"net/http"
 	"os"
 	"regexp"
@@ -17,6 +12,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/go-github/v55/github"
+	"github.com/lindell/multi-gitter/internal/scm"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 )
 
 type Config struct {
