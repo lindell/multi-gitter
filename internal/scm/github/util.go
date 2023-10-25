@@ -44,3 +44,17 @@ func chunkSlice[T any](stack []T, chunkSize int) [][]T {
 
 	return append(chunks, stack)
 }
+
+// mapValues returns a new array containing all the values of the supplied map,
+// in iteration (i.e. non-deterministic) order.
+func mapValues[K comparable, V any](source map[K]V) []V {
+	values := make([]V, len(source))
+
+	i := 0
+	for _, v := range source {
+		values[i] = v
+		i++
+	}
+
+	return values
+}
