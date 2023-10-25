@@ -236,7 +236,6 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 			match, _ := regexp.MatchString(g.RepoExclude, *allRepos[index].FullName)
 			ignoreRepo = match
 		}
-		fmt.Printf("State: %s\n", state)
 		if allRepos[index].GetArchived() || allRepos[index].GetDisabled() || ignoreRepo || strings.ToLower(*allRepos[index].FullName) == state {
 			state = *allRepos[index].FullName
 			allRepos = append(allRepos[:index], allRepos[index+1:]...) // Remove element
