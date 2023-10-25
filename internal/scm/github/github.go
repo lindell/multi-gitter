@@ -335,37 +335,6 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 		}
 		i++
 	}
-	//var ignoreList []string
-	//if len(g.FilterFile) > 0 {
-	//	//fill ignore_list with excluded repositories
-	//	file, openErr := os.Open(g.FilterFile)
-	//	defer func() {
-	//		err := file.Close()
-	//		if err != nil {
-	//			fmt.Printf("Error closing file: %s", err)
-	//		}
-	//	}()
-	//	if openErr != nil {
-	//		fmt.Printf("Error: %s", openErr)
-	//	} else {
-	//		FilterScanner := bufio.NewScanner(file)
-	//		for FilterScanner.Scan() {
-	//			line := FilterScanner.Text()
-	//			ignoreList = append(ignoreList, line)
-	//		}
-	//		scanError := FilterScanner.Err()
-	//		if scanError != nil {
-	//			fmt.Printf("Error reading file: %s", scanError)
-	//		}
-	//	}
-	//}
-	//for index := len(repos) - 1; index > 0; index-- {
-	//	matchPattern := fmt.Sprintf("^%s", search)
-	//	match, _ := regexp.MatchString(matchPattern, *repos[index].FullName)
-	//	if !match || slices.Contains(ignoreList, *repos[index].FullName) {
-	//		repos = append(repos[:index], repos[index+1:]...)
-	//	}
-	//}
 	return repos, nil
 }
 
