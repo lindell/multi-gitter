@@ -120,6 +120,38 @@ func Test_GetRepositories(t *testing.T) {
 					"created_at": "2020-01-03T16:49:16Z"
 				}
 			]`,
+			"/search/repositories": `{
+					"total_count": 1,
+					"incomplete_results": false,
+					"items": [
+					{
+						"id": 3,
+						"name": "search-repo1",
+						"full_name": "lindell/search-repo1",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/search-repo1",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:16Z"
+					}
+				]
+			}`,
 		},
 	}
 
@@ -205,6 +237,25 @@ func Test_GetRepositories(t *testing.T) {
 		}
 	}
 
+	// Repo search
+	{
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				RepositorySearch: "search-string",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
+
+		repos, err := gh.GetRepositories(context.Background())
+		assert.NoError(t, err)
+		if assert.Len(t, repos, 1) {
+			assert.Equal(t, "main", repos[0].DefaultBranch())
+			assert.Equal(t, "lindell/search-repo1", repos[0].FullName())
+		}
+	}
+
 	// Multiple
 	{
 		gh, err := github.New(github.Config{
@@ -218,6 +269,7 @@ func Test_GetRepositories(t *testing.T) {
 						Name:      "test1",
 					},
 				},
+				RepositorySearch: "test-search",
 			},
 			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
 		})
@@ -225,11 +277,12 @@ func Test_GetRepositories(t *testing.T) {
 
 		repos, err := gh.GetRepositories(context.Background())
 		assert.NoError(t, err)
-		if assert.Len(t, repos, 2) {
+		if assert.Len(t, repos, 3) {
 			assert.Equal(t, "master", repos[0].DefaultBranch())
 			assert.Equal(t, "test-org/test1", repos[0].FullName())
 			assert.Equal(t, "main", repos[1].DefaultBranch())
 			assert.Equal(t, "lindell/test2", repos[1].FullName())
+			assert.Equal(t, "lindell/search-repo1", repos[2].FullName())
 		}
 	}
 
