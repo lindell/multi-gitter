@@ -90,7 +90,7 @@ func Test_GetRepositories(t *testing.T) {
 					"push": true,
 					"pull": true
 				},
-				"created_at": "2020-01-02T16:49:16Z"
+				"created_at": "2020-01-02T16:49:17Z"
 			}`,
 			"/users/test-user/repos": `[
 				{
@@ -117,7 +117,7 @@ func Test_GetRepositories(t *testing.T) {
 						"push": true,
 						"pull": true
 					},
-					"created_at": "2020-01-03T16:49:16Z"
+					"created_at": "2020-01-03T16:49:18Z"
 				}
 			]`,
 			"/search/repositories": `{
@@ -148,7 +148,7 @@ func Test_GetRepositories(t *testing.T) {
 							"push": true,
 							"pull": true
 						},
-						"created_at": "2020-01-03T16:49:16Z"
+						"created_at": "2020-01-03T16:49:19Z"
 					}
 				]
 			}`,
