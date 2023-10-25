@@ -329,16 +329,9 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 		}
 		i++
 	}
-
-	/*
-			TODO:
-			* Generate Repositories that match name with Repository search | Done from @jamestelfer
-			* Verify returned repositories match repo name using regular expression, if not remove them from list
-		    * In addition if a a ignore file exist, use that before returning the set of found repositories
-	*/
 	var ignoreList []string
 	if len(g.FilterFile) > 0 {
-		/// Go ahead and fill ignore_list with excluded repositories
+		//fill ignore_list with excluded repositories
 		file, openErr := os.Open(g.FilterFile)
 		defer func() {
 			err := file.Close()
