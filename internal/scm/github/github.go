@@ -296,7 +296,11 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 	i := 1
 	for {
 		rr, _, err := retry(ctx, func() ([]*github.Repository, *github.Response, error) {
-			rr, resp, err := g.ghClient.Search.Repositories(ctx, search, &github.SearchOptions{
+			// Include forks in the search: these are filtered if needed. We could
+			// filter in the search but this would not log that the fork had been
+			// skipped, which is different behaviour to the other types of retrieval.
+			query := "fork:true " + search
+			rr, resp, err := g.ghClient.Search.Repositories(ctx, query, &github.SearchOptions{
 				ListOptions: github.ListOptions{
 					Page:    i,
 					PerPage: 100,
