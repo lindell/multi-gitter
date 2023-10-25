@@ -29,7 +29,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
 	flags.StringP("repo-search", "", "", "Use a repository search to find repositories to target.")
-	flags.StringP("filter-file", "", "", "Point to a file to filter out certain target repositories")
+	flags.StringP("repo-exclude", "", "", "Exclude certain repositories with a regex string")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
@@ -125,7 +125,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
 	repoSearch, _ := flag.GetString("repo-search")
-	filterFile, _ := flag.GetString("filter-file")
+	repoExclude, _ := flag.GetString("repo-exclude")
 	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
@@ -174,7 +174,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 			RepositorySearch: repoSearch,
 			Topics:           topics,
 			SkipForks:        skipForks,
-			FilterFile:       filterFile,
+			RepoExclude:      repoExclude,
 		},
 		MergeTypes:       mergeTypes,
 		ForkMode:         forkMode,

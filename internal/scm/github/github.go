@@ -1,11 +1,11 @@
 package github
 
 import (
-	"bufio"
+	"cmp"
 	"context"
 	"fmt"
+	"golang.org/x/oauth2"
 	"net/http"
-	"os"
 	"regexp"
 	"slices"
 	"sort"
@@ -17,7 +17,6 @@ import (
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 type Config struct {
@@ -115,7 +114,7 @@ type RepositoryListing struct {
 	RepositorySearch string
 	Topics           []string
 	SkipForks        bool
-	FilterFile       string
+	RepoExclude      string
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -227,21 +226,27 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		allRepos = append(allRepos, repos...)
 	}
 	// Remove duplicate repos
-	repoMap := map[string]*github.Repository{}
-	for _, repo := range allRepos {
-		repoMap[repo.GetFullName()] = repo
-	}
-	allRepos = make([]*github.Repository, 0, len(repoMap))
-	for _, repo := range repoMap {
-		if repo.GetArchived() || repo.GetDisabled() {
-			continue
+	var state string // Will be used to detect duplicates
+	slices.SortFunc(allRepos, func(a, b *github.Repository) int {
+		return cmp.Compare(strings.ToLower(*a.FullName), strings.ToLower(*b.FullName))
+	})
+	for index := len(allRepos) - 1; index >= 0; index-- {
+		ignoreRepo := false
+		if g.RepoExclude != "" { // Exclude repositories if --repo-exclude is used
+			match, _ := regexp.MatchString(g.RepoExclude, *allRepos[index].FullName)
+			ignoreRepo = match
 		}
-		allRepos = append(allRepos, repo)
+		fmt.Printf("State: %s\n", state)
+		if allRepos[index].GetArchived() || allRepos[index].GetDisabled() || ignoreRepo || strings.ToLower(*allRepos[index].FullName) == state {
+			state = *allRepos[index].FullName
+			allRepos = append(allRepos[:index], allRepos[index+1:]...) // Remove element
+		} else {
+			state = strings.ToLower(*allRepos[index].FullName)
+		}
 	}
 	sort.Slice(allRepos, func(i, j int) bool {
 		return allRepos[i].GetCreatedAt().Before(allRepos[j].GetCreatedAt().Time)
 	})
-
 	return allRepos, nil
 }
 
@@ -330,37 +335,37 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 		}
 		i++
 	}
-	var ignoreList []string
-	if len(g.FilterFile) > 0 {
-		//fill ignore_list with excluded repositories
-		file, openErr := os.Open(g.FilterFile)
-		defer func() {
-			err := file.Close()
-			if err != nil {
-				fmt.Printf("Error closing file: %s", err)
-			}
-		}()
-		if openErr != nil {
-			fmt.Printf("Error: %s", openErr)
-		} else {
-			FilterScanner := bufio.NewScanner(file)
-			for FilterScanner.Scan() {
-				line := FilterScanner.Text()
-				ignoreList = append(ignoreList, line)
-			}
-			scanError := FilterScanner.Err()
-			if scanError != nil {
-				fmt.Printf("Error reading file: %s", scanError)
-			}
-		}
-	}
-	for index := len(repos) - 1; index > 0; index-- {
-		matchPattern := fmt.Sprintf("^%s", search)
-		match, _ := regexp.MatchString(matchPattern, *repos[index].FullName)
-		if !match || slices.Contains(ignoreList, *repos[index].FullName) {
-			repos = append(repos[:index], repos[index+1:]...)
-		}
-	}
+	//var ignoreList []string
+	//if len(g.FilterFile) > 0 {
+	//	//fill ignore_list with excluded repositories
+	//	file, openErr := os.Open(g.FilterFile)
+	//	defer func() {
+	//		err := file.Close()
+	//		if err != nil {
+	//			fmt.Printf("Error closing file: %s", err)
+	//		}
+	//	}()
+	//	if openErr != nil {
+	//		fmt.Printf("Error: %s", openErr)
+	//	} else {
+	//		FilterScanner := bufio.NewScanner(file)
+	//		for FilterScanner.Scan() {
+	//			line := FilterScanner.Text()
+	//			ignoreList = append(ignoreList, line)
+	//		}
+	//		scanError := FilterScanner.Err()
+	//		if scanError != nil {
+	//			fmt.Printf("Error reading file: %s", scanError)
+	//		}
+	//	}
+	//}
+	//for index := len(repos) - 1; index > 0; index-- {
+	//	matchPattern := fmt.Sprintf("^%s", search)
+	//	match, _ := regexp.MatchString(matchPattern, *repos[index].FullName)
+	//	if !match || slices.Contains(ignoreList, *repos[index].FullName) {
+	//		repos = append(repos[:index], repos[index+1:]...)
+	//	}
+	//}
 	return repos, nil
 }
 

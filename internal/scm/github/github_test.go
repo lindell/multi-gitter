@@ -3,9 +3,9 @@ package github_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 
@@ -153,7 +153,7 @@ func Test_GetRepositories(t *testing.T) {
 					},
 					{
 						"id": 3,
-						"name": "repo-1",
+						"name": "repo-2",
 						"full_name": "lindell/repo-2",
 						"private": false,
 						"topics": [
@@ -166,6 +166,32 @@ func Test_GetRepositories(t *testing.T) {
 							"site_admin": false
 						},
 						"html_url": "https://github.com/lindell/repo-2",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:16Z"
+					},
+					{
+						"id": 4,
+						"name": "repo-1",
+						"full_name": "lindell/repo-1",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/repo-1",
 						"fork": true,
 						"archived": false,
 						"disabled": false,
@@ -231,28 +257,14 @@ func Test_GetRepositories(t *testing.T) {
 			TransportMiddleware: transport.Wrapper,
 			RepoListing: github.RepositoryListing{
 				RepositorySearch: "lindell/repo-",
-				FilterFile:       "ignore.txt",
+				RepoExclude:      "^lindell/repo-2$",
 			},
 			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
 		})
 		require.NoError(t, err)
-		testFile, err := os.Create("ignore.txt")
-		assert.NoError(t, err)
-		ignore_repositories := []string{
-			"lindell/repo-2", // Will remove lindell/repo-2 from repos slice
-		}
-		defer func() {
-			closeErr := testFile.Close()
-			assert.NoError(t, closeErr)
-			removeErr := os.Remove(testFile.Name())
-			assert.NoError(t, removeErr)
-		}()
-		for _, line := range ignore_repositories {
-			_, writeErr := io.WriteString(testFile, line)
-			assert.NoError(t, writeErr)
-		}
 		repos, err := gh.GetRepositories(context.Background())
 		assert.NoError(t, err)
+		fmt.Println(repos)
 		assert.Equal(t, len(repos), 1)
 
 	}
