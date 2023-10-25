@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 
@@ -120,6 +121,64 @@ func Test_GetRepositories(t *testing.T) {
 					"created_at": "2020-01-03T16:49:16Z"
 				}
 			]`,
+			"/search/repositories": `{
+					"total_count": 1,
+					"incomplete_results": false,
+					"items": [
+					{
+						"id": 3,
+						"name": "repo-1",
+						"full_name": "lindell/repo-1",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/repo-1",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:16Z"
+					},
+					{
+						"id": 3,
+						"name": "repo-1",
+						"full_name": "lindell/repo-2",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/repo-2",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:16Z"
+					}
+				]
+			}`,
 		},
 	}
 
@@ -164,6 +223,38 @@ func Test_GetRepositories(t *testing.T) {
 			assert.Equal(t, "master", repos[0].DefaultBranch())
 			assert.Equal(t, "test-org/test1", repos[0].FullName())
 		}
+	}
+
+	// repository with filter-file
+	{
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				RepositorySearch: "lindell/repo-",
+				FilterFile:       "ignore.txt",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
+		testFile, err := os.Create("ignore.txt")
+		assert.NoError(t, err)
+		ignore_repositories := []string{
+			"lindell/repo-2", // Will remove lindell/repo-2 from repos slice
+		}
+		defer func() {
+			closeErr := testFile.Close()
+			assert.NoError(t, closeErr)
+			removeErr := os.Remove(testFile.Name())
+			assert.NoError(t, removeErr)
+		}()
+		for _, line := range ignore_repositories {
+			_, writeErr := io.WriteString(testFile, line)
+			assert.NoError(t, writeErr)
+		}
+		repos, err := gh.GetRepositories(context.Background())
+		assert.NoError(t, err)
+		assert.Equal(t, len(repos), 1)
+
 	}
 
 	// User
