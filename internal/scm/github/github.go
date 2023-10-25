@@ -310,7 +310,7 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 			if rr.IncompleteResults != nil && *rr.IncompleteResults {
 				// can occur when search times out on the server: for now, fail instead
 				// of handling the issue
-				return nil, nil, fmt.Errorf("search results incomplete")
+				return nil, nil, fmt.Errorf("search timed out on GitHub and was marked incomplete: try refining the search to return fewer results or be less complex")
 			}
 
 			return rr.Repositories, resp, nil
