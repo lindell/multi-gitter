@@ -313,6 +313,10 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 				return nil, nil, fmt.Errorf("search timed out on GitHub and was marked incomplete: try refining the search to return fewer results or be less complex")
 			}
 
+			if rr.GetTotal() > 1000 {
+				return nil, nil, fmt.Errorf("%d results for this search, but only the first 1000 results will be returned: try refining your search terms", rr.GetTotal())
+			}
+
 			return rr.Repositories, resp, nil
 		})
 

@@ -364,3 +364,55 @@ func Test_GetSearchRepository_Incomplete(t *testing.T) {
 	assert.ErrorContains(t, err, "search timed out on GitHub and was marked incomplete")
 	assert.Len(t, repos, 0)
 }
+
+func Test_GetSearchRepository_TooManyResults(t *testing.T) {
+	transport := testTransport{
+		pathBodies: map[string]string{
+			"/search/repositories": `{
+					"total_count": 2054,
+					"incomplete_results": false,
+					"items": [
+					{
+						"id": 3,
+						"name": "search-repo1",
+						"full_name": "lindell/search-repo1",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/search-repo1",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:16Z"
+					}
+				]
+			}`,
+		},
+	}
+
+	gh, err := github.New(github.Config{
+		TransportMiddleware: transport.Wrapper,
+		RepoListing: github.RepositoryListing{
+			RepositorySearch: "search-string",
+		},
+		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+	})
+	require.NoError(t, err)
+
+	repos, err := gh.GetRepositories(context.Background())
+	assert.ErrorContains(t, err, "only the first 1000 results will be returned")
+	assert.Len(t, repos, 0)
+}
