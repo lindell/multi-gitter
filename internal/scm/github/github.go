@@ -232,7 +232,7 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 	// Filter repositories
 	filteredRepos = slices.DeleteFunc(allRepos, func(repo *github.Repository) bool {
 		regExMatch := repoRegEx != nil && repoRegEx.MatchString(repo.GetFullName())
-		return regExMatch || (repo.GetArchived() || repo.GetDisabled())
+		return (!regExMatch && repoRegEx != nil) || (repo.GetArchived() || repo.GetDisabled())
 	})
 	// Remove duplicates
 	allRepos = make([]*github.Repository, 0, len(filteredRepos))
