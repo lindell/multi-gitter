@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.48.0](https://github.com/lindell/multi-gitter/compare/v0.47.4...v0.48.0) (2023-10-27)
+
+
+### Features
+
+* added --plain-output flag ([#378](https://github.com/lindell/multi-gitter/issues/378)) ([356f471](https://github.com/lindell/multi-gitter/commit/356f471f720e6efe0146bfabcb99b2c214d9c4db))
+* use repo search to select repositories ([#397](https://github.com/lindell/multi-gitter/issues/397)) ([0f8c2dc](https://github.com/lindell/multi-gitter/commit/0f8c2dcceeb9b635c7405e878df608318b518de4))
+
+
+### Bug Fixes
+
+* **gitlab:** make sure entire project path is shown ([#392](https://github.com/lindell/multi-gitter/issues/392)) ([280dfc7](https://github.com/lindell/multi-gitter/commit/280dfc7b6ed5c8a5345f2207e58e81202a451e33))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.16.0 ([ff04448](https://github.com/lindell/multi-gitter/commit/ff0444885bfbf657b4813efdb53986af67b0ac58))
+* update module github.com/go-git/go-git/v5 to v5.9.0 ([a954c7c](https://github.com/lindell/multi-gitter/commit/a954c7c0c20cb0a930203c92143456c1571d2e2f))
+* update module github.com/google/go-github/v53 to v55 ([#390](https://github.com/lindell/multi-gitter/issues/390)) ([d92cb29](https://github.com/lindell/multi-gitter/commit/d92cb29cc96e8a78d19ccdd1816643510169f6c9))
+* update module github.com/xanzy/go-gitlab to v0.92.1 ([19c2925](https://github.com/lindell/multi-gitter/commit/19c292523f3442766f09d5811ec9b38ecb26c9bf))
+* update module github.com/xanzy/go-gitlab to v0.92.3 ([3e6cd75](https://github.com/lindell/multi-gitter/commit/3e6cd75ad0923ad535f2125f1c94cba6b9072f05))
+* update module golang.org/x/oauth2 to v0.12.0 ([b9c258a](https://github.com/lindell/multi-gitter/commit/b9c258a2b2924ebafa37864159154dc7ed09449c))
+
+
+### Miscellaneous
+
+* update to Go 1.21 ([#402](https://github.com/lindell/multi-gitter/issues/402)) ([d454e5b](https://github.com/lindell/multi-gitter/commit/d454e5b17e90fa2b2d36fa60d15b51df3e7701fa))
+
 ## [0.47.4](https://github.com/lindell/multi-gitter/compare/v0.47.3...v0.47.4) (2023-09-12)
 
 
