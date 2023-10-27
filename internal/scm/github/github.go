@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"golang.org/x/oauth2"
 	"net/http"
 	"regexp"
 	"slices"
@@ -17,6 +16,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 )
 
 type Config struct {
