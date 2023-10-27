@@ -373,7 +373,7 @@ func Test_RepositoryFilter(t *testing.T) {
 					"incomplete_results": false,
 					"items": [
 					{
-						"id": 3,
+						"id": 1,
 						"name": "search-repo1",
 						"full_name": "lindell/search-repo1",
 						"private": false,
@@ -399,7 +399,7 @@ func Test_RepositoryFilter(t *testing.T) {
 						"created_at": "2020-01-03T16:49:19Z"
 					},
 					{
-						"id": 4,
+						"id": 2,
 						"name": "search-repo-2",
 						"full_name": "lindell/search-repo-2",
 						"private": false,
