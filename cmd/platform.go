@@ -28,8 +28,8 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
-	flags.StringP("repo-search", "", "", "Use a repository search to find repositories to target.")
-	flags.StringP("repo-exclude", "", "", "Exclude certain repositories with a regex string")
+	flags.StringSliceP("repo-search", "", nil, "Use a repository search to find repositories to target.")
+	flags.StringP("repo-filter", "", "", "Filter repositories with a Regular expression")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
@@ -125,14 +125,13 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
 	repoSearch, _ := flag.GetString("repo-search")
-	repoExclude, _ := flag.GetString("repo-exclude")
+	repoFilter, _ := flag.GetString("repo-filter")
 	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
 	sshAuth, _ := flag.GetBool("ssh-auth")
 	skipForks, _ := flag.GetBool("skip-forks")
-
-	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 && repoSearch == "" {
+	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 && len(repoSearch) == 0 {
 		return nil, errors.New("no organization, user, repo or repo-search set")
 	}
 
@@ -174,7 +173,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 			RepositorySearch: repoSearch,
 			Topics:           topics,
 			SkipForks:        skipForks,
-			RepoExclude:      repoExclude,
+			RepositoryFilter: repoFilter,
 		},
 		MergeTypes:       mergeTypes,
 		ForkMode:         forkMode,

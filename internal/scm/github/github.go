@@ -114,7 +114,7 @@ type RepositoryListing struct {
 	RepositorySearch string
 	Topics           []string
 	SkipForks        bool
-	RepoExclude      string
+	RepositoryFilter string
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -193,7 +193,10 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 
 func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
 	allRepos := []*github.Repository{}
-
+	var repoRegEx *regexp.Regexp // repoFilter flag will filter all collected repositories
+	if g.RepositoryFilter != "" {
+		repoRegEx = regexp.MustCompile(g.RepositoryFilter)
+	}
 	for _, org := range g.Organizations {
 		repos, err := g.getOrganizationRepositories(ctx, org)
 		if err != nil {
@@ -225,24 +228,21 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		}
 		allRepos = append(allRepos, repos...)
 	}
-	// Remove duplicate repos
-	var state string // Will be used to detect duplicates
-	slices.SortFunc(allRepos, func(a, b *github.Repository) int {
-		return cmp.Compare(strings.ToLower(*a.FullName), strings.ToLower(*b.FullName))
+	filteredRepos := make([]*github.Repository, 0, len(allRepos))
+	// Filter repositories
+	filteredRepos = slices.DeleteFunc(allRepos, func(repo *github.Repository) bool {
+		regExMatch := repoRegEx != nil && repoRegEx.MatchString(repo.GetFullName())
+		return regExMatch || (repo.GetArchived() || repo.GetDisabled())
 	})
-	for index := len(allRepos) - 1; index >= 0; index-- {
-		ignoreRepo := false
-		if g.RepoExclude != "" { // Exclude repositories if --repo-exclude is used
-			match, _ := regexp.MatchString(g.RepoExclude, *allRepos[index].FullName)
-			ignoreRepo = match
-		}
-		if allRepos[index].GetArchived() || allRepos[index].GetDisabled() || ignoreRepo || strings.ToLower(*allRepos[index].FullName) == state {
-			state = *allRepos[index].FullName
-			allRepos = append(allRepos[:index], allRepos[index+1:]...) // Remove element
-		} else {
-			state = strings.ToLower(*allRepos[index].FullName)
-		}
-	}
+	// Remove duplicates
+	allRepos = make([]*github.Repository, 0, len(filteredRepos))
+	slices.SortFunc(filteredRepos, func(a, b *github.Repository) int {
+		return cmp.Compare(a.GetFullName(), b.GetFullName())
+	})
+	allRepos = slices.CompactFunc(filteredRepos, func(g2 *github.Repository, g *github.Repository) bool {
+		return g2.GetFullName() == g.GetFullName()
+	})
+	// Sort by Datetime
 	sort.Slice(allRepos, func(i, j int) bool {
 		return allRepos[i].GetCreatedAt().Before(allRepos[j].GetCreatedAt().Time)
 	})

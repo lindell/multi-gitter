@@ -257,7 +257,7 @@ func Test_GetRepositories(t *testing.T) {
 			TransportMiddleware: transport.Wrapper,
 			RepoListing: github.RepositoryListing{
 				RepositorySearch: "lindell/repo-",
-				RepoExclude:      "^lindell/repo-2$",
+				RepositoryFilter: "^lindell/repo-2$",
 			},
 			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
 		})
@@ -265,7 +265,7 @@ func Test_GetRepositories(t *testing.T) {
 		repos, err := gh.GetRepositories(context.Background())
 		assert.NoError(t, err)
 		fmt.Println(repos)
-		assert.Equal(t, len(repos), 1)
+		assert.Equal(t, 1, len(repos))
 
 	}
 
