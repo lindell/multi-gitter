@@ -221,7 +221,7 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		allRepos = append(allRepos, repo)
 	}
 
-	if len(g.RepositorySearch) > 0 {
+	if g.RepositorySearch != "" {
 		repos, err := g.getSearchRepositories(ctx, g.RepositorySearch)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not get repository search results for '%s'", g.RepositorySearch)
@@ -236,8 +236,8 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 	})
 	// Remove duplicates
 	allRepos = make([]*github.Repository, 0, len(filteredRepos))
-	slices.SortFunc(filteredRepos, func(a, b *github.Repository) int {
-		return cmp.Compare(a.GetFullName(), b.GetFullName())
+	slices.SortFunc(filteredRepos, func(g2, g *github.Repository) int {
+		return cmp.Compare(g2.GetFullName(), g.GetFullName())
 	})
 	allRepos = slices.CompactFunc(filteredRepos, func(g2 *github.Repository, g *github.Repository) bool {
 		return g2.GetFullName() == g.GetFullName()
@@ -314,11 +314,14 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 			if err != nil {
 				return nil, nil, err
 			}
-
-			if rr.IncompleteResults != nil && *rr.IncompleteResults {
+			if rr.GetIncompleteResults() {
 				// can occur when search times out on the server: for now, fail instead
 				// of handling the issue
-				return nil, nil, fmt.Errorf("search results incomplete")
+				return nil, nil, fmt.Errorf("search timed out on GitHub and was marked incomplete: try refining the search to return fewer results or be less complex")
+			}
+
+			if rr.GetTotal() > 1000 {
+				return nil, nil, fmt.Errorf("%d results for this search, but only the first 1000 results will be returned: try refining your search terms", rr.GetTotal())
 			}
 
 			return rr.Repositories, resp, nil
@@ -327,7 +330,6 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 		if err != nil {
 			return nil, err
 		}
-
 		repos = append(repos, rr...)
 		if len(rr) != 100 {
 			break

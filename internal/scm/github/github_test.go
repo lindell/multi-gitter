@@ -3,7 +3,6 @@ package github_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -91,7 +90,7 @@ func Test_GetRepositories(t *testing.T) {
 					"push": true,
 					"pull": true
 				},
-				"created_at": "2020-01-02T16:49:16Z"
+				"created_at": "2020-01-02T16:49:17Z"
 			}`,
 			"/users/test-user/repos": `[
 				{
@@ -118,7 +117,7 @@ func Test_GetRepositories(t *testing.T) {
 						"push": true,
 						"pull": true
 					},
-					"created_at": "2020-01-03T16:49:16Z"
+					"created_at": "2020-01-03T16:49:18Z"
 				}
 			]`,
 			"/search/repositories": `{
@@ -127,8 +126,8 @@ func Test_GetRepositories(t *testing.T) {
 					"items": [
 					{
 						"id": 3,
-						"name": "repo-1",
-						"full_name": "lindell/repo-1",
+						"name": "search-repo1",
+						"full_name": "lindell/search-repo1",
 						"private": false,
 						"topics": [
 							"backend",
@@ -139,7 +138,7 @@ func Test_GetRepositories(t *testing.T) {
 							"type": "User",
 							"site_admin": false
 						},
-						"html_url": "https://github.com/lindell/repo-1",
+						"html_url": "https://github.com/lindell/search-repo1",
 						"fork": true,
 						"archived": false,
 						"disabled": false,
@@ -149,59 +148,7 @@ func Test_GetRepositories(t *testing.T) {
 							"push": true,
 							"pull": true
 						},
-						"created_at": "2020-01-03T16:49:16Z"
-					},
-					{
-						"id": 3,
-						"name": "repo-2",
-						"full_name": "lindell/repo-2",
-						"private": false,
-						"topics": [
-							"backend",
-							"go"
-						],
-						"owner": {
-							"login": "lindell",
-							"type": "User",
-							"site_admin": false
-						},
-						"html_url": "https://github.com/lindell/repo-2",
-						"fork": true,
-						"archived": false,
-						"disabled": false,
-						"default_branch": "main",
-						"permissions": {
-							"admin": true,
-							"push": true,
-							"pull": true
-						},
-						"created_at": "2020-01-03T16:49:16Z"
-					},
-					{
-						"id": 4,
-						"name": "repo-1",
-						"full_name": "lindell/repo-1",
-						"private": false,
-						"topics": [
-							"backend",
-							"go"
-						],
-						"owner": {
-							"login": "lindell",
-							"type": "User",
-							"site_admin": false
-						},
-						"html_url": "https://github.com/lindell/repo-1",
-						"fork": true,
-						"archived": false,
-						"disabled": false,
-						"default_branch": "main",
-						"permissions": {
-							"admin": true,
-							"push": true,
-							"pull": true
-						},
-						"created_at": "2020-01-03T16:49:16Z"
+						"created_at": "2020-01-03T16:49:19Z"
 					}
 				]
 			}`,
@@ -251,24 +198,6 @@ func Test_GetRepositories(t *testing.T) {
 		}
 	}
 
-	// repository with filter-file
-	{
-		gh, err := github.New(github.Config{
-			TransportMiddleware: transport.Wrapper,
-			RepoListing: github.RepositoryListing{
-				RepositorySearch: "lindell/repo-",
-				RepositoryFilter: "^lindell/repo-2$",
-			},
-			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
-		})
-		require.NoError(t, err)
-		repos, err := gh.GetRepositories(context.Background())
-		assert.NoError(t, err)
-		fmt.Println(repos)
-		assert.Equal(t, 1, len(repos))
-
-	}
-
 	// User
 	{
 		gh, err := github.New(github.Config{
@@ -308,6 +237,25 @@ func Test_GetRepositories(t *testing.T) {
 		}
 	}
 
+	// Repo search
+	{
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				RepositorySearch: "search-string",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
+
+		repos, err := gh.GetRepositories(context.Background())
+		assert.NoError(t, err)
+		if assert.Len(t, repos, 1) {
+			assert.Equal(t, "main", repos[0].DefaultBranch())
+			assert.Equal(t, "lindell/search-repo1", repos[0].FullName())
+		}
+	}
+
 	// Multiple
 	{
 		gh, err := github.New(github.Config{
@@ -321,6 +269,7 @@ func Test_GetRepositories(t *testing.T) {
 						Name:      "test1",
 					},
 				},
+				RepositorySearch: "test-search",
 			},
 			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
 		})
@@ -328,11 +277,12 @@ func Test_GetRepositories(t *testing.T) {
 
 		repos, err := gh.GetRepositories(context.Background())
 		assert.NoError(t, err)
-		if assert.Len(t, repos, 2) {
+		if assert.Len(t, repos, 3) {
 			assert.Equal(t, "master", repos[0].DefaultBranch())
 			assert.Equal(t, "test-org/test1", repos[0].FullName())
 			assert.Equal(t, "main", repos[1].DefaultBranch())
 			assert.Equal(t, "lindell/test2", repos[1].FullName())
+			assert.Equal(t, "lindell/search-repo1", repos[2].FullName())
 		}
 	}
 
@@ -361,4 +311,187 @@ func Test_GetRepositories(t *testing.T) {
 			assert.Equal(t, "test-org/test1", repos[0].FullName())
 		}
 	}
+}
+
+func Test_GetSearchRepository_Incomplete(t *testing.T) {
+	transport := testTransport{
+		pathBodies: map[string]string{
+			"/search/repositories": `{
+					"total_count": 1,
+					"incomplete_results": true,
+					"items": [
+					{
+						"id": 3,
+						"name": "search-repo1",
+						"full_name": "lindell/search-repo1",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/search-repo1",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:16Z"
+					}
+				]
+			}`,
+		},
+	}
+
+	gh, err := github.New(github.Config{
+		TransportMiddleware: transport.Wrapper,
+		RepoListing: github.RepositoryListing{
+			RepositorySearch: "search-string",
+		},
+		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+	})
+	require.NoError(t, err)
+
+	repos, err := gh.GetRepositories(context.Background())
+	assert.ErrorContains(t, err, "search timed out on GitHub and was marked incomplete")
+	assert.Len(t, repos, 0)
+}
+
+func Test_RepositoryFilter(t *testing.T) {
+	transport := testTransport{
+		pathBodies: map[string]string{
+			"/search/repositories": `{
+					"total_count": 2,
+					"incomplete_results": false,
+					"items": [
+					{
+						"id": 3,
+						"name": "search-repo1",
+						"full_name": "lindell/search-repo1",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/search-repo1",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:19Z"
+					},
+					{
+						"id": 4,
+						"name": "search-repo-2",
+						"full_name": "lindell/search-repo-2",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/search-repo-2",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:19Z"
+					}
+				]
+			}`,
+		},
+	}
+
+	gh, err := github.New(github.Config{
+		TransportMiddleware: transport.Wrapper,
+		RepoListing: github.RepositoryListing{
+			RepositorySearch: "search-string",
+			RepositoryFilter: "search-repo(-)",
+		},
+		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+	})
+	require.NoError(t, err)
+
+	repos, err := gh.GetRepositories(context.Background())
+	assert.Len(t, repos, 1)
+
+}
+
+func Test_GetSearchRepository_TooManyResults(t *testing.T) {
+	transport := testTransport{
+		pathBodies: map[string]string{
+			"/search/repositories": `{
+					"total_count": 2054,
+					"incomplete_results": false,
+					"items": [
+					{
+						"id": 3,
+						"name": "search-repo1",
+						"full_name": "lindell/search-repo1",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/search-repo1",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:16Z"
+					}
+				]
+			}`,
+		},
+	}
+
+	gh, err := github.New(github.Config{
+		TransportMiddleware: transport.Wrapper,
+		RepoListing: github.RepositoryListing{
+			RepositorySearch: "search-string",
+		},
+		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+	})
+	require.NoError(t, err)
+
+	repos, err := gh.GetRepositories(context.Background())
+	assert.ErrorContains(t, err, "only the first 1000 results will be returned")
+	assert.Len(t, repos, 0)
 }
