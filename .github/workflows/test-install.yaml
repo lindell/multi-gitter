@@ -20,9 +20,11 @@ jobs:
       - name: Install multi-gitter
         env:
           BINDIR: ${{ github.workspace }}/bin
+          FULL_NAME: ${{ github.event.pull_request.head.repo.full_name }}
+          REF: ${{ github.head_ref }}
         run: |
-          curl -s https://raw.githubusercontent.com/${{ github.event.pull_request.head.repo.full_name }}/${{ github.head_ref }}/install.sh | sh -s -- -d
-          echo "${{ github.workspace }}/bin" >> $GITHUB_PATH
+          curl -s https://raw.githubusercontent.com/$FULL_NAME/$REF/install.sh | sh -s -- -d
+          echo "$BINDIR" >> $GITHUB_PATH
         shell: sh
       - name: Print version
         run: multi-gitter version
