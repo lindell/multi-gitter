@@ -4,6 +4,9 @@ on:
     branches:
       - 'release-please--**'
 
+permissions:
+  contents: read
+
 jobs:
   verify-goreleaser:
     name: Check GoReleaser config
