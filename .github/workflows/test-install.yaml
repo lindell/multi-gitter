@@ -7,6 +7,9 @@ on:
       - .github/workflows/test-install.yaml
       - install.sh
 
+permissions:
+  contents: read
+
 jobs:
   test-install-sh:
     name: Test install.sh

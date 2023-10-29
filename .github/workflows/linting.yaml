@@ -1,7 +1,13 @@
 name: reviewdog
 on: [pull_request]
+permissions:
+  contents: read
+
 jobs:
   golangci-lint:
+    permissions:
+      checks: write  # for reviewdog/action-golangci-lint to report issues using checks
+      contents: read  # for actions/checkout to fetch code
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
