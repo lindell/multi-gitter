@@ -423,6 +423,32 @@ func Test_RepositoryFilter(t *testing.T) {
 							"pull": true
 						},
 						"created_at": "2020-01-03T16:49:19Z"
+					},
+					{
+						"id": 3,
+						"name": "search-repo-3",
+						"full_name": "lindell/search-repo-3",
+						"private": false,
+						"topics": [
+							"backend",
+							"go"
+						],
+						"owner": {
+							"login": "lindell",
+							"type": "User",
+							"site_admin": false
+						},
+						"html_url": "https://github.com/lindell/search-repo-3",
+						"fork": true,
+						"archived": false,
+						"disabled": false,
+						"default_branch": "main",
+						"permissions": {
+							"admin": true,
+							"push": true,
+							"pull": true
+						},
+						"created_at": "2020-01-03T16:49:19Z"
 					}
 				]
 			}`,
@@ -432,8 +458,9 @@ func Test_RepositoryFilter(t *testing.T) {
 	gh, err := github.New(github.Config{
 		TransportMiddleware: transport.Wrapper,
 		RepoListing: github.RepositoryListing{
-			RepositorySearch: "search-string",
-			RepositoryFilter: "search-repo(-)",
+			RepositorySearch:        "search-string",
+			RepositoryIncludeFilter: "search-repo(-)",
+			RepositoryExcludeFilter: "search-repo-3$",
 		},
 		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
 	})

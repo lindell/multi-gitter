@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -108,13 +107,16 @@ type Github struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	Organizations    []string
-	Users            []string
-	Repositories     []RepositoryReference
-	RepositorySearch string
-	Topics           []string
-	SkipForks        bool
-	RepositoryFilter string
+	Organizations                   []string
+	Users                           []string
+	Repositories                    []RepositoryReference
+	RepositorySearch                string
+	Topics                          []string
+	SkipForks                       bool
+	RepositoryIncludeFilter         string
+	RepositoryExcludeFilter         string
+	compiledRepositoryIncludeFilter *regexp.Regexp
+	compiledRepositoryExcludeFilter *regexp.Regexp
 }
 
 // RepositoryReference contains information to be able to reference a repository
@@ -191,12 +193,28 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 	return repos, nil
 }
 
+func (g *Github) excludeRepositoryFilter(repoName string) bool {
+	if g.RepositoryExcludeFilter == "" {
+		return false
+	}
+	if g.compiledRepositoryExcludeFilter == nil {
+		g.compiledRepositoryExcludeFilter = regexp.MustCompile(g.RepositoryExcludeFilter)
+	}
+	return g.compiledRepositoryExcludeFilter.MatchString(repoName)
+}
+
+func (g *Github) matchesRepositoryFilter(repoName string) bool {
+	if g.RepositoryIncludeFilter == "" {
+		return true
+	}
+	if g.compiledRepositoryIncludeFilter == nil {
+		g.compiledRepositoryIncludeFilter = regexp.MustCompile(g.RepositoryIncludeFilter)
+	}
+	return g.compiledRepositoryIncludeFilter.MatchString(repoName)
+}
+
 func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
 	allRepos := []*github.Repository{}
-	var repoRegEx *regexp.Regexp // repoFilter flag will filter all collected repositories
-	if g.RepositoryFilter != "" {
-		repoRegEx = regexp.MustCompile(g.RepositoryFilter)
-	}
 	for _, org := range g.Organizations {
 		repos, err := g.getOrganizationRepositories(ctx, org)
 		if err != nil {
@@ -228,23 +246,23 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		}
 		allRepos = append(allRepos, repos...)
 	}
-	filteredRepos := make([]*github.Repository, 0, len(allRepos))
 	// Filter repositories
-	filteredRepos = slices.DeleteFunc(allRepos, func(repo *github.Repository) bool {
-		regExMatch := repoRegEx != nil && repoRegEx.MatchString(repo.GetFullName())
-		return (!regExMatch && repoRegEx != nil) || (repo.GetArchived() || repo.GetDisabled())
+	filteredRepos := slices.DeleteFunc(allRepos, func(repo *github.Repository) bool {
+		regExMatch := g.matchesRepositoryFilter(repo.GetFullName())
+		regExExclude := g.excludeRepositoryFilter(repo.GetFullName())
+		return (!regExMatch || regExExclude) || (repo.GetArchived() || repo.GetDisabled())
 	})
 	// Remove duplicates
-	allRepos = make([]*github.Repository, 0, len(filteredRepos))
 	slices.SortFunc(filteredRepos, func(g2, g *github.Repository) int {
 		return cmp.Compare(g2.GetFullName(), g.GetFullName())
 	})
+
 	allRepos = slices.CompactFunc(filteredRepos, func(g2 *github.Repository, g *github.Repository) bool {
 		return g2.GetFullName() == g.GetFullName()
 	})
 	// Sort by Datetime
-	sort.Slice(allRepos, func(i, j int) bool {
-		return allRepos[i].GetCreatedAt().Before(allRepos[j].GetCreatedAt().Time)
+	slices.SortFunc(allRepos, func(g2, g *github.Repository) int {
+		return g2.GetCreatedAt().Time.Compare(g.GetCreatedAt().Time)
 	})
 	return allRepos, nil
 }

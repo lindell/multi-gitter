@@ -28,7 +28,8 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
-	flags.StringP("repo-filter", "", "", "Filter repositories with a Regular expression")
+	flags.StringP("repo-include", "", "", "Include repositories that match with a given Regular Expression")
+	flags.StringP("repo-exclude", "", "", "Exclude repositories that match with a given Regular Expression")
 	flags.StringP("repo-search", "", "", "Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use `fork:true` to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
@@ -125,7 +126,8 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
 	repoSearch, _ := flag.GetString("repo-search")
-	repoFilter, _ := flag.GetString("repo-filter")
+	repoIncludeFilter, _ := flag.GetString("repo-include")
+	repoExcludeFilter, _ := flag.GetString("repo-exclude")
 	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
@@ -167,13 +169,14 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 		BaseURL:             gitBaseURL,
 		TransportMiddleware: http.NewLoggingRoundTripper,
 		RepoListing: github.RepositoryListing{
-			Organizations:    orgs,
-			Users:            users,
-			Repositories:     repoRefs,
-			RepositorySearch: repoSearch,
-			Topics:           topics,
-			SkipForks:        skipForks,
-			RepositoryFilter: repoFilter,
+			Organizations:           orgs,
+			Users:                   users,
+			Repositories:            repoRefs,
+			RepositorySearch:        repoSearch,
+			Topics:                  topics,
+			SkipForks:               skipForks,
+			RepositoryIncludeFilter: repoIncludeFilter,
+			RepositoryExcludeFilter: repoExcludeFilter,
 		},
 		MergeTypes:       mergeTypes,
 		ForkMode:         forkMode,
