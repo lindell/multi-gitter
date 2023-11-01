@@ -3,10 +3,16 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 name: release
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed for release-please
+      pull-requests: write # needed for release-please and github-release-commenter
     steps:
       - uses: GoogleCloudPlatform/release-please-action@v3.7.10
         id: release
