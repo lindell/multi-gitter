@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # needed for release-please
+      issues: write # needed for github-release-commenter
       pull-requests: write # needed for release-please and github-release-commenter
     steps:
       - uses: GoogleCloudPlatform/release-please-action@v3.7.10
@@ -47,7 +48,6 @@ jobs:
         uses: apexskier/github-release-commenter@v1.3.2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          comment-template:
-            Included in release {release_link} 🎉
+          comment-template: Included in release {release_link} 🎉
           skip-label: "autorelease: tagged,autorelease: pending"
         if: ${{ steps.release.outputs.release_created }}
