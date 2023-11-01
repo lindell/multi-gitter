@@ -223,7 +223,7 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		allRepos = append(allRepos, repos...)
 	}
 
-	if len(g.CodeSearch) > 0 {
+	if g.CodeSearch != "" {
 		repos, err := g.getCodeSearchRepositories(ctx, g.CodeSearch)
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not get code search results for '%s'", g.CodeSearch)
