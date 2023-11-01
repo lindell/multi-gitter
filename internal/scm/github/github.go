@@ -105,11 +105,11 @@ type Github struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	CodeSearch       string
 	Organizations    []string
 	Users            []string
 	Repositories     []RepositoryReference
 	RepositorySearch string
+	CodeSearch       string
 	Topics           []string
 	SkipForks        bool
 }

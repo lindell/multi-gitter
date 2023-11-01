@@ -24,12 +24,12 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
 	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
 
-	flags.StringP("code-search", "", "", "Use a code search to find a set of repositories to target. Repeated results from a given repository will be ignored, forks are NOT included by default (use `fork:true` to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.")
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
 	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
 	flags.StringP("repo-search", "", "", "Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use `fork:true` to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.")
+	flags.StringP("code-search", "", "", "Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use `fork:true` to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
 	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
@@ -121,11 +121,11 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (
 
 func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (multigitter.VersionController, error) {
 	gitBaseURL, _ := flag.GetString("base-url")
-	codeSearch, _ := flag.GetString("code-search")
 	orgs, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
 	repoSearch, _ := flag.GetString("repo-search")
+	codeSearch, _ := flag.GetString("code-search")
 	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
