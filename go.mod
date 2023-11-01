@@ -16,7 +16,7 @@ require (
 	github.com/spf13/viper v1.17.0
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/go-gitlab v0.93.2
-	golang.org/x/oauth2 v0.12.0
+	golang.org/x/oauth2 v0.13.0
 )
 
 require (
