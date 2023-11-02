@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.48.1](https://github.com/lindell/multi-gitter/compare/v0.48.0...v0.48.1) (2023-11-02)
+
+
+### Bug Fixes
+
+* mitigated script injection in test install action ([#404](https://github.com/lindell/multi-gitter/issues/404)) ([f77ef91](https://github.com/lindell/multi-gitter/commit/f77ef91416f3b13080372bb00831824eea37c130))
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 digest to 6e30c57 ([#382](https://github.com/lindell/multi-gitter/issues/382)) ([c201f42](https://github.com/lindell/multi-gitter/commit/c201f425b4fbde46c3d27fa380ab099e0a6f8608))
+* update module github.com/go-git/go-git/v5 to v5.10.0 ([077d637](https://github.com/lindell/multi-gitter/commit/077d637789ce7943212ca01827dd06fe314ad75d))
+* update module github.com/google/go-github/v55 to v56 ([#412](https://github.com/lindell/multi-gitter/issues/412)) ([946afac](https://github.com/lindell/multi-gitter/commit/946afac76f4a1884823da591d04236daaf3fb795))
+* update module github.com/spf13/viper to v1.17.0 ([cfe3409](https://github.com/lindell/multi-gitter/commit/cfe3409acee757b78c542e106436e7ca177cf82b))
+* update module github.com/xanzy/go-gitlab to v0.93.2 ([76fd29b](https://github.com/lindell/multi-gitter/commit/76fd29b07a7561223adb474bf4fd5eedae6a4298))
+* update module golang.org/x/oauth2 to v0.13.0 ([3b3e9c0](https://github.com/lindell/multi-gitter/commit/3b3e9c009d1d4a3634ce8decb75625f2ed8e4d0d))
+
 ## [0.48.0](https://github.com/lindell/multi-gitter/compare/v0.47.4...v0.48.0) (2023-10-27)
 
 
