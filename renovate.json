@@ -11,10 +11,10 @@
             "security"
         ]
     },
-    "stabilityDays": 3,
+    "minimumReleaseAge": "3 days",
     "packageRules": [
         {
-            "updateTypes": [
+            "matchUpdateTypes": [
                 "minor",
                 "patch",
                 "digest"
@@ -26,7 +26,7 @@
             ]
         },
         {
-            "updateTypes": [
+            "matchUpdateTypes": [
                 "major"
             ],
             "schedule": [
