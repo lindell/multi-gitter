@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.48.2](https://github.com/lindell/multi-gitter/compare/v0.48.1...v0.48.2) (2023-11-04)
+
+
+### Bug Fixes
+
+* **typo:** fixed panicked typo ([#423](https://github.com/lindell/multi-gitter/issues/423)) ([9b5774a](https://github.com/lindell/multi-gitter/commit/9b5774ad8e95f849d9af0b76a58183c7bbdf0462))
+
 ## [0.48.1](https://github.com/lindell/multi-gitter/compare/v0.48.0...v0.48.1) (2023-11-02)
 
 
