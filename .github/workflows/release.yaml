@@ -35,10 +35,13 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Import GPG key for signing
-        run: echo "${GPG_PRIVATE_KEY}" | gpg --import
+        id: gpg
+        run: |
+          echo "${GPG_PRIVATE_KEY}" | gpg --import
+          fingerprint=$(echo "${GPG_PRIVATE_KEY}" | gpg --show-keys --with-colons | awk -F ":" '$1=="fpr" {print $10}')
+          echo "fingerprint=$fingerprint" >> $GITHUB_OUTPUT
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -47,7 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GENERAL_GITHUB_SECRET }} # The tokens needs access to another repo, so the secret.GITHUB_SECRET won't suffice
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }} # Gemfury token
-          GPG_FINGERPRINT: ${{ secrets.GPG_FINGERPRINT }} # Fingerprint of GPG signing key
+          GPG_FINGERPRINT: ${{ steps.gpg.outputs.fingerprint }} # Fingerprint of GPG signing key
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Comment on prs and issues
