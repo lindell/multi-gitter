@@ -78,7 +78,8 @@
     ],
     "github-actions": {
         "enabled": true,
-        "pinDigests": true
+        "pinDigests": true,
+        "semanticCommitType": "ci"
     },
     "gomod": {
         "enabled": true
