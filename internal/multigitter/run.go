@@ -121,7 +121,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Error(r)
-				rc.AddError(errors.New("run paniced"), repos[i], nil)
+				rc.AddError(errors.New("run panicked"), repos[i], nil)
 			}
 		}()
 
