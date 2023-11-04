@@ -86,3 +86,6 @@ publishers:
       - packages
     dir: "{{ dir .ArtifactPath }}"
     cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/multi-gitter/
+signs:
+  - artifacts: checksum
+    args: ["--batch", "-u", "{{ .Env.GPG_FINGERPRINT }}", "--output", "${signature}", "--detach-sign", "${artifact}"]
