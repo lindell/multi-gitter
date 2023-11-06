@@ -4,23 +4,26 @@ on:
     branches:
       - 'release-please--**'
 
+permissions:
+  contents: read
+
 jobs:
   verify-goreleaser:
     name: Check GoReleaser config
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
           go-version-file: "go.mod"
 
       - name: Check GoReleaser config
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
         with:
           version: latest
           args: check
