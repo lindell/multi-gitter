@@ -107,22 +107,26 @@ type Github struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	Organizations                   []string
-	Users                           []string
-	Repositories                    []RepositoryReference
-	RepositorySearch                string
-	Topics                          []string
-	SkipForks                       bool
-	RepositoryIncludeFilter         string
-	RepositoryExcludeFilter         string
-	compiledRepositoryIncludeFilter *regexp.Regexp
-	compiledRepositoryExcludeFilter *regexp.Regexp
+	Organizations           []string
+	Users                   []string
+	Repositories            []RepositoryReference
+	RepositorySearch        string
+	Topics                  []string
+	SkipForks               bool
+	RepositoryIncludeFilter RepositoryFilter
+	RepositoryExcludeFilter RepositoryFilter
 }
 
 // RepositoryReference contains information to be able to reference a repository
 type RepositoryReference struct {
 	OwnerName string
 	Name      string
+}
+
+// RepositoryFilter contains repository filter information using regular expression
+type RepositoryFilter struct {
+	Regex *regexp.Regexp
+	Err   error
 }
 
 // String returns the string representation of a repo reference
@@ -193,24 +197,32 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 	return repos, nil
 }
 
-func (g *Github) excludeRepositoryFilter(repoName string) bool {
-	if g.RepositoryExcludeFilter == "" {
-		return false
+func (g *Github) excludeRepositoryFilter(repoName string) (bool, error) {
+	if g.RepositoryExcludeFilter.Err != nil {
+		fmt.Println("repo-exclude RegEx Error: ", g.RepositoryExcludeFilter.Err)
+		return false, g.RepositoryExcludeFilter.Err
 	}
-	if g.compiledRepositoryExcludeFilter == nil {
-		g.compiledRepositoryExcludeFilter = regexp.MustCompile(g.RepositoryExcludeFilter)
+	if g.RepositoryExcludeFilter.Regex == nil {
+		return false, nil
 	}
-	return g.compiledRepositoryExcludeFilter.MatchString(repoName)
+	if g.RepositoryExcludeFilter.Regex.String() == "" {
+		return false, nil
+	}
+	return g.RepositoryExcludeFilter.Regex.MatchString(repoName), nil
 }
 
-func (g *Github) matchesRepositoryFilter(repoName string) bool {
-	if g.RepositoryIncludeFilter == "" {
-		return true
+func (g *Github) matchesRepositoryFilter(repoName string) (bool, error) {
+	if g.RepositoryIncludeFilter.Err != nil {
+		fmt.Println("repo-include RegEx Error: ", g.RepositoryIncludeFilter.Err)
+		return true, g.RepositoryIncludeFilter.Err
 	}
-	if g.compiledRepositoryIncludeFilter == nil {
-		g.compiledRepositoryIncludeFilter = regexp.MustCompile(g.RepositoryIncludeFilter)
+	if g.RepositoryIncludeFilter.Regex == nil {
+		return true, nil
 	}
-	return g.compiledRepositoryIncludeFilter.MatchString(repoName)
+	if g.RepositoryIncludeFilter.Regex.String() == "" {
+		return true, nil
+	}
+	return g.RepositoryIncludeFilter.Regex.MatchString(repoName), nil
 }
 
 func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
@@ -248,8 +260,8 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 	}
 	// Filter repositories
 	filteredRepos := slices.DeleteFunc(allRepos, func(repo *github.Repository) bool {
-		regExMatch := g.matchesRepositoryFilter(repo.GetFullName())
-		regExExclude := g.excludeRepositoryFilter(repo.GetFullName())
+		regExMatch, _ := g.matchesRepositoryFilter(repo.GetFullName())
+		regExExclude, _ := g.excludeRepositoryFilter(repo.GetFullName())
 		return (!regExMatch || regExExclude) || (repo.GetArchived() || repo.GetDisabled())
 	})
 	// Remove duplicates

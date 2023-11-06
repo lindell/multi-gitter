@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -454,13 +455,14 @@ func Test_RepositoryFilter(t *testing.T) {
 			}`,
 		},
 	}
-
+	repoIncludeFilterCompile, repoIncludeErr := regexp.Compile("search-repo(-)")
+	repoExcludeFilterCompile, repoExcludeErr := regexp.Compile("search-repo-3$")
 	gh, err := github.New(github.Config{
 		TransportMiddleware: transport.Wrapper,
 		RepoListing: github.RepositoryListing{
 			RepositorySearch:        "search-string",
-			RepositoryIncludeFilter: "search-repo(-)",
-			RepositoryExcludeFilter: "search-repo-3$",
+			RepositoryIncludeFilter: github.RepositoryFilter{Regex: repoIncludeFilterCompile, Err: repoIncludeErr},
+			RepositoryExcludeFilter: github.RepositoryFilter{Regex: repoExcludeFilterCompile, Err: repoExcludeErr},
 		},
 		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
 	})

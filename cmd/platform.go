@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/lindell/multi-gitter/internal/http"
@@ -163,7 +164,8 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	if err != nil {
 		return nil, err
 	}
-
+	repoIncludeFilterCompile, repoIncludeErr := regexp.Compile(repoIncludeFilter)
+	repoExcludeFilterCompile, repoExcludeErr := regexp.Compile(repoExcludeFilter)
 	vc, err := github.New(github.Config{
 		Token:               token,
 		BaseURL:             gitBaseURL,
@@ -175,8 +177,8 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 			RepositorySearch:        repoSearch,
 			Topics:                  topics,
 			SkipForks:               skipForks,
-			RepositoryIncludeFilter: repoIncludeFilter,
-			RepositoryExcludeFilter: repoExcludeFilter,
+			RepositoryIncludeFilter: github.RepositoryFilter{Regex: repoIncludeFilterCompile, Err: repoIncludeErr},
+			RepositoryExcludeFilter: github.RepositoryFilter{Regex: repoExcludeFilterCompile, Err: repoExcludeErr},
 		},
 		MergeTypes:       mergeTypes,
 		ForkMode:         forkMode,
