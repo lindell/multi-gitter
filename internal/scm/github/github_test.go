@@ -468,9 +468,8 @@ func Test_RepositoryFilter(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	repos, err := gh.GetRepositories(context.Background())
+	repos, _ := gh.GetRepositories(context.Background())
 	assert.Len(t, repos, 1)
-
 }
 
 func Test_GetSearchRepository_TooManyResults(t *testing.T) {
