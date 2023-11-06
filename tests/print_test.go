@@ -35,7 +35,8 @@ func TestPrint(t *testing.T) {
 	errOutFile := filepath.Join(tmpDir, "err-out.txt")
 
 	command := cmd.RootCmd()
-	command.SetArgs([]string{"print",
+	command.SetArgs([]string{
+		"print",
 		"--log-file", filepath.ToSlash(runLogFile),
 		"--output", filepath.ToSlash(outFile),
 		"--error-output", filepath.ToSlash(errOutFile),
