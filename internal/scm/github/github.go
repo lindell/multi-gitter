@@ -189,6 +189,7 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 
 func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
 	allRepos := []*github.Repository{}
+
 	for _, org := range g.Organizations {
 		repos, err := g.getOrganizationRepositories(ctx, org)
 		if err != nil {
@@ -220,6 +221,7 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		}
 		allRepos = append(allRepos, repos...)
 	}
+
 	// Remove duplicate repos
 	repoMap := map[string]*github.Repository{}
 	for _, repo := range allRepos {
