@@ -1,12 +1,9 @@
 package github
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"net/http"
-	"regexp"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -107,26 +104,18 @@ type Github struct {
 
 // RepositoryListing contains information about which repositories that should be fetched
 type RepositoryListing struct {
-	Organizations           []string
-	Users                   []string
-	Repositories            []RepositoryReference
-	RepositorySearch        string
-	Topics                  []string
-	SkipForks               bool
-	RepositoryIncludeFilter RepositoryFilter
-	RepositoryExcludeFilter RepositoryFilter
+	Organizations    []string
+	Users            []string
+	Repositories     []RepositoryReference
+	RepositorySearch string
+	Topics           []string
+	SkipForks        bool
 }
 
 // RepositoryReference contains information to be able to reference a repository
 type RepositoryReference struct {
 	OwnerName string
 	Name      string
-}
-
-// RepositoryFilter contains repository filter information using regular expression
-type RepositoryFilter struct {
-	Regex *regexp.Regexp
-	Err   error
 }
 
 // String returns the string representation of a repo reference
@@ -197,34 +186,6 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 	return repos, nil
 }
 
-func (g *Github) excludeRepositoryFilter(repoName string) (bool, error) {
-	if g.RepositoryExcludeFilter.Err != nil {
-		fmt.Println("repo-exclude RegEx Error: ", g.RepositoryExcludeFilter.Err)
-		return false, g.RepositoryExcludeFilter.Err
-	}
-	if g.RepositoryExcludeFilter.Regex == nil {
-		return false, nil
-	}
-	if g.RepositoryExcludeFilter.Regex.String() == "" {
-		return false, nil
-	}
-	return g.RepositoryExcludeFilter.Regex.MatchString(repoName), nil
-}
-
-func (g *Github) matchesRepositoryFilter(repoName string) (bool, error) {
-	if g.RepositoryIncludeFilter.Err != nil {
-		fmt.Println("repo-include RegEx Error: ", g.RepositoryIncludeFilter.Err)
-		return true, g.RepositoryIncludeFilter.Err
-	}
-	if g.RepositoryIncludeFilter.Regex == nil {
-		return true, nil
-	}
-	if g.RepositoryIncludeFilter.Regex.String() == "" {
-		return true, nil
-	}
-	return g.RepositoryIncludeFilter.Regex.MatchString(repoName), nil
-}
-
 func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, error) {
 	allRepos := []*github.Repository{}
 	for _, org := range g.Organizations {
@@ -258,24 +219,18 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		}
 		allRepos = append(allRepos, repos...)
 	}
-	// Filter repositories
-	filteredRepos := slices.DeleteFunc(allRepos, func(repo *github.Repository) bool {
-		regExMatch, _ := g.matchesRepositoryFilter(repo.GetFullName())
-		regExExclude, _ := g.excludeRepositoryFilter(repo.GetFullName())
-		return (!regExMatch || regExExclude) || (repo.GetArchived() || repo.GetDisabled())
-	})
 	// Remove duplicates
-	slices.SortFunc(filteredRepos, func(g2, g *github.Repository) int {
-		return cmp.Compare(g2.GetFullName(), g.GetFullName())
-	})
-
-	allRepos = slices.CompactFunc(filteredRepos, func(g2 *github.Repository, g *github.Repository) bool {
-		return g2.GetFullName() == g.GetFullName()
-	})
-	// Sort by Datetime
-	slices.SortFunc(allRepos, func(g2, g *github.Repository) int {
-		return g2.GetCreatedAt().Time.Compare(g.GetCreatedAt().Time)
-	})
+	repoMap := map[string]*github.Repository{}
+	for _, repo := range allRepos {
+		repoMap[repo.GetFullName()] = repo
+	}
+	allRepos = make([]*github.Repository, 0, len(repoMap))
+	for _, repo := range repoMap {
+		if repo.GetArchived() || repo.GetDisabled() {
+			continue
+		}
+		allRepos = append(allRepos, repo)
+	}
 	return allRepos, nil
 }
 
@@ -344,6 +299,7 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 			if err != nil {
 				return nil, nil, err
 			}
+
 			if rr.GetIncompleteResults() {
 				// can occur when search times out on the server: for now, fail instead
 				// of handling the issue

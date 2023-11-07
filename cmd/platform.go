@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/lindell/multi-gitter/internal/http"
@@ -127,8 +126,6 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	users, _ := flag.GetStringSlice("user")
 	repos, _ := flag.GetStringSlice("repo")
 	repoSearch, _ := flag.GetString("repo-search")
-	repoIncludeFilter, _ := flag.GetString("repo-include")
-	repoExcludeFilter, _ := flag.GetString("repo-exclude")
 	topics, _ := flag.GetStringSlice("topic")
 	forkMode, _ := flag.GetBool("fork")
 	forkOwner, _ := flag.GetString("fork-owner")
@@ -164,21 +161,17 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	if err != nil {
 		return nil, err
 	}
-	repoIncludeFilterCompile, repoIncludeErr := regexp.Compile(repoIncludeFilter)
-	repoExcludeFilterCompile, repoExcludeErr := regexp.Compile(repoExcludeFilter)
 	vc, err := github.New(github.Config{
 		Token:               token,
 		BaseURL:             gitBaseURL,
 		TransportMiddleware: http.NewLoggingRoundTripper,
 		RepoListing: github.RepositoryListing{
-			Organizations:           orgs,
-			Users:                   users,
-			Repositories:            repoRefs,
-			RepositorySearch:        repoSearch,
-			Topics:                  topics,
-			SkipForks:               skipForks,
-			RepositoryIncludeFilter: github.RepositoryFilter{Regex: repoIncludeFilterCompile, Err: repoIncludeErr},
-			RepositoryExcludeFilter: github.RepositoryFilter{Regex: repoExcludeFilterCompile, Err: repoExcludeErr},
+			Organizations:    orgs,
+			Users:            users,
+			Repositories:     repoRefs,
+			RepositorySearch: repoSearch,
+			Topics:           topics,
+			SkipForks:        skipForks,
 		},
 		MergeTypes:       mergeTypes,
 		ForkMode:         forkMode,

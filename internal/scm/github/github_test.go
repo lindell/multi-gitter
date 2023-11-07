@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -364,112 +363,6 @@ func Test_GetSearchRepository_Incomplete(t *testing.T) {
 	repos, err := gh.GetRepositories(context.Background())
 	assert.ErrorContains(t, err, "search timed out on GitHub and was marked incomplete")
 	assert.Len(t, repos, 0)
-}
-
-func Test_RepositoryFilter(t *testing.T) {
-	transport := testTransport{
-		pathBodies: map[string]string{
-			"/search/repositories": `{
-					"total_count": 2,
-					"incomplete_results": false,
-					"items": [
-					{
-						"id": 1,
-						"name": "search-repo1",
-						"full_name": "lindell/search-repo1",
-						"private": false,
-						"topics": [
-							"backend",
-							"go"
-						],
-						"owner": {
-							"login": "lindell",
-							"type": "User",
-							"site_admin": false
-						},
-						"html_url": "https://github.com/lindell/search-repo1",
-						"fork": true,
-						"archived": false,
-						"disabled": false,
-						"default_branch": "main",
-						"permissions": {
-							"admin": true,
-							"push": true,
-							"pull": true
-						},
-						"created_at": "2020-01-03T16:49:19Z"
-					},
-					{
-						"id": 2,
-						"name": "search-repo-2",
-						"full_name": "lindell/search-repo-2",
-						"private": false,
-						"topics": [
-							"backend",
-							"go"
-						],
-						"owner": {
-							"login": "lindell",
-							"type": "User",
-							"site_admin": false
-						},
-						"html_url": "https://github.com/lindell/search-repo-2",
-						"fork": true,
-						"archived": false,
-						"disabled": false,
-						"default_branch": "main",
-						"permissions": {
-							"admin": true,
-							"push": true,
-							"pull": true
-						},
-						"created_at": "2020-01-03T16:49:19Z"
-					},
-					{
-						"id": 3,
-						"name": "search-repo-3",
-						"full_name": "lindell/search-repo-3",
-						"private": false,
-						"topics": [
-							"backend",
-							"go"
-						],
-						"owner": {
-							"login": "lindell",
-							"type": "User",
-							"site_admin": false
-						},
-						"html_url": "https://github.com/lindell/search-repo-3",
-						"fork": true,
-						"archived": false,
-						"disabled": false,
-						"default_branch": "main",
-						"permissions": {
-							"admin": true,
-							"push": true,
-							"pull": true
-						},
-						"created_at": "2020-01-03T16:49:19Z"
-					}
-				]
-			}`,
-		},
-	}
-	repoIncludeFilterCompile, repoIncludeErr := regexp.Compile("search-repo(-)")
-	repoExcludeFilterCompile, repoExcludeErr := regexp.Compile("search-repo-3$")
-	gh, err := github.New(github.Config{
-		TransportMiddleware: transport.Wrapper,
-		RepoListing: github.RepositoryListing{
-			RepositorySearch:        "search-string",
-			RepositoryIncludeFilter: github.RepositoryFilter{Regex: repoIncludeFilterCompile, Err: repoIncludeErr},
-			RepositoryExcludeFilter: github.RepositoryFilter{Regex: repoExcludeFilterCompile, Err: repoExcludeErr},
-		},
-		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
-	})
-	require.NoError(t, err)
-
-	repos, _ := gh.GetRepositories(context.Background())
-	assert.Len(t, repos, 1)
 }
 
 func Test_GetSearchRepository_TooManyResults(t *testing.T) {

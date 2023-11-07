@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -175,7 +176,22 @@ func run(cmd *cobra.Command, _ []string) error {
 		<-c
 		os.Exit(1)
 	}()
-
+	repoInclude, _ := flag.GetString("repo-include")
+	repoExclude, _ := flag.GetString("repo-exclude")
+	var repoIncludeFilterCompile *regexp.Regexp
+	var repoExcludeFilterCompile *regexp.Regexp
+	if repoInclude != "" {
+		repoIncludeFilterCompile, err = regexp.Compile(repoInclude)
+		if err != nil {
+			return err
+		}
+	}
+	if repoExclude != "" {
+		repoExcludeFilterCompile, err = regexp.Compile(repoExclude)
+		if err != nil {
+			return err
+		}
+	}
 	runner := &multigitter.Runner{
 		ScriptPath:    executablePath,
 		Arguments:     arguments,
@@ -185,25 +201,27 @@ func run(cmd *cobra.Command, _ []string) error {
 
 		VersionController: vc,
 
-		CommitMessage:    commitMessage,
-		PullRequestTitle: prTitle,
-		PullRequestBody:  prBody,
-		Reviewers:        reviewers,
-		TeamReviewers:    teamReviewers,
-		MaxReviewers:     maxReviewers,
-		MaxTeamReviewers: maxTeamReviewers,
-		Interactive:      interactive,
-		DryRun:           dryRun,
-		Fork:             forkMode,
-		ForkOwner:        forkOwner,
-		SkipPullRequest:  skipPullRequest,
-		SkipRepository:   skipRepository,
-		CommitAuthor:     commitAuthor,
-		BaseBranch:       baseBranchName,
-		Assignees:        assignees,
-		ConflictStrategy: conflictStrategy,
-		Draft:            draft,
-		Labels:           labels,
+		CommitMessage:          commitMessage,
+		PullRequestTitle:       prTitle,
+		PullRequestBody:        prBody,
+		Reviewers:              reviewers,
+		TeamReviewers:          teamReviewers,
+		MaxReviewers:           maxReviewers,
+		MaxTeamReviewers:       maxTeamReviewers,
+		Interactive:            interactive,
+		DryRun:                 dryRun,
+		Fork:                   forkMode,
+		ForkOwner:              forkOwner,
+		SkipPullRequest:        skipPullRequest,
+		SkipRepository:         skipRepository,
+		RegExExcludeRepository: repoExcludeFilterCompile,
+		RegExIncludeRepository: repoIncludeFilterCompile,
+		CommitAuthor:           commitAuthor,
+		BaseBranch:             baseBranchName,
+		Assignees:              assignees,
+		ConflictStrategy:       conflictStrategy,
+		Draft:                  draft,
+		Labels:                 labels,
 
 		Concurrent: concurrent,
 
