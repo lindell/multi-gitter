@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -219,7 +220,7 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		}
 		allRepos = append(allRepos, repos...)
 	}
-	// Remove duplicates
+	// Remove duplicate repos
 	repoMap := map[string]*github.Repository{}
 	for _, repo := range allRepos {
 		repoMap[repo.GetFullName()] = repo
@@ -231,6 +232,10 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		}
 		allRepos = append(allRepos, repo)
 	}
+	sort.Slice(allRepos, func(i, j int) bool {
+		return allRepos[i].GetCreatedAt().Before(allRepos[j].GetCreatedAt().Time)
+	})
+
 	return allRepos, nil
 }
 
@@ -322,6 +327,7 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 		}
 		i++
 	}
+
 	return repos, nil
 }
 
