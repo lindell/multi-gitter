@@ -178,11 +178,14 @@ func filterRepositories(repos []scm.Repository, skipRepositoryNames []string, re
 
 	filteredRepos := make([]scm.Repository, 0, len(repos))
 	for _, r := range repos {
-		if _, shouldSkip := skipReposMap[r.FullName()]; !shouldSkip && (matchesRepositoryFilter(r.FullName(),
-			regExIncludeRepository) && !excludeRepositoryFilter(r.FullName(), regExExcludeRepository)) {
-			filteredRepos = append(filteredRepos, r)
+		if _, shouldSkip := skipReposMap[r.FullName()]; shouldSkip {
+			log.Infof("Skipping %s since it is in exclusion list", r.FullName())
+		} else if !matchesRepositoryFilter(r.FullName(), regExIncludeRepository) {
+			log.Infof("Skipping %s since it does not match the inclusion regexp", r.FullName())
+		} else if excludeRepositoryFilter(r.FullName(), regExExcludeRepository) {
+			log.Infof("Skipping %s since it match the exclusion regexp", r.FullName())
 		} else {
-			log.Infof("Skipping %s", r.FullName())
+			filteredRepos = append(filteredRepos, r)
 		}
 	}
 	return filteredRepos

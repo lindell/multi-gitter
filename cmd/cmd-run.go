@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -13,6 +12,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/git"
 
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -183,13 +183,13 @@ func run(cmd *cobra.Command, _ []string) error {
 	if repoInclude != "" {
 		repoIncludeFilterCompile, err = regexp.Compile(repoInclude)
 		if err != nil {
-			return err
+			return errors.WithMessage(err, "could not parse repo-include")
 		}
 	}
 	if repoExclude != "" {
 		repoExcludeFilterCompile, err = regexp.Compile(repoExclude)
 		if err != nil {
-			return err
+			return errors.WithMessage(err, "could not parse repo-exclude")
 		}
 	}
 	runner := &multigitter.Runner{
