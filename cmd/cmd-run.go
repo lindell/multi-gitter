@@ -148,6 +148,7 @@ func run(cmd *cobra.Command, _ []string) error {
 			Email: authorEmail,
 		}
 	}
+
 	var regExIncludeRepository *regexp.Regexp
 	var regExExcludeRepository *regexp.Regexp
 	if repoInclude != "" {

@@ -100,6 +100,7 @@ func (r *Runner) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
+
 	repos = filterRepositories(repos, r.SkipRepository, r.RegExIncludeRepository, r.RegExExcludeRepository)
 
 	if len(repos) == 0 {
