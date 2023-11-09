@@ -63,6 +63,8 @@ Available values:
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
+	cmd.Flags().StringP("repo-include", "", "", "Include repositories that match with a given Regular Expression")
+	cmd.Flags().StringP("repo-exclude", "", "", "Exclude repositories that match with a given Regular Expression")
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureRunPlatform(cmd, true)
@@ -99,6 +101,8 @@ func run(cmd *cobra.Command, _ []string) error {
 	assignees, _ := flag.GetStringSlice("assignees")
 	draft, _ := flag.GetBool("draft")
 	labels, _ := flag.GetStringSlice("labels")
+	repoInclude, _ := flag.GetString("repo-include")
+	repoExclude, _ := flag.GetString("repo-exclude")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -176,22 +180,6 @@ func run(cmd *cobra.Command, _ []string) error {
 		<-c
 		os.Exit(1)
 	}()
-	repoInclude, _ := flag.GetString("repo-include")
-	repoExclude, _ := flag.GetString("repo-exclude")
-	var repoIncludeFilterCompile *regexp.Regexp
-	var repoExcludeFilterCompile *regexp.Regexp
-	if repoInclude != "" {
-		repoIncludeFilterCompile, err = regexp.Compile(repoInclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-include")
-		}
-	}
-	if repoExclude != "" {
-		repoExcludeFilterCompile, err = regexp.Compile(repoExclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-exclude")
-		}
-	}
 	runner := &multigitter.Runner{
 		ScriptPath:    executablePath,
 		Arguments:     arguments,
@@ -201,33 +189,44 @@ func run(cmd *cobra.Command, _ []string) error {
 
 		VersionController: vc,
 
-		CommitMessage:          commitMessage,
-		PullRequestTitle:       prTitle,
-		PullRequestBody:        prBody,
-		Reviewers:              reviewers,
-		TeamReviewers:          teamReviewers,
-		MaxReviewers:           maxReviewers,
-		MaxTeamReviewers:       maxTeamReviewers,
-		Interactive:            interactive,
-		DryRun:                 dryRun,
-		Fork:                   forkMode,
-		ForkOwner:              forkOwner,
-		SkipPullRequest:        skipPullRequest,
-		SkipRepository:         skipRepository,
-		RegExExcludeRepository: repoExcludeFilterCompile,
-		RegExIncludeRepository: repoIncludeFilterCompile,
-		CommitAuthor:           commitAuthor,
-		BaseBranch:             baseBranchName,
-		Assignees:              assignees,
-		ConflictStrategy:       conflictStrategy,
-		Draft:                  draft,
-		Labels:                 labels,
+		CommitMessage:    commitMessage,
+		PullRequestTitle: prTitle,
+		PullRequestBody:  prBody,
+		Reviewers:        reviewers,
+		TeamReviewers:    teamReviewers,
+		MaxReviewers:     maxReviewers,
+		MaxTeamReviewers: maxTeamReviewers,
+		Interactive:      interactive,
+		DryRun:           dryRun,
+		Fork:             forkMode,
+		ForkOwner:        forkOwner,
+		SkipPullRequest:  skipPullRequest,
+		SkipRepository:   skipRepository,
+		CommitAuthor:     commitAuthor,
+		BaseBranch:       baseBranchName,
+		Assignees:        assignees,
+		ConflictStrategy: conflictStrategy,
+		Draft:            draft,
+		Labels:           labels,
 
 		Concurrent: concurrent,
 
 		CreateGit: gitCreator,
 	}
-
+	if repoInclude != "" {
+		repoIncludeFilterCompile, err := regexp.Compile(repoInclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-include")
+		}
+		runner.RegExIncludeRepository = repoIncludeFilterCompile
+	}
+	if repoExclude != "" {
+		repoExcludeFilterCompile, err := regexp.Compile(repoExclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-exclude")
+		}
+		runner.RegExExcludeRepository = repoExcludeFilterCompile
+	}
 	err = runner.Run(ctx)
 	if err != nil {
 		fmt.Println(err.Error())

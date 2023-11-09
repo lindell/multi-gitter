@@ -60,8 +60,9 @@ type Runner struct {
 	SkipRepository         []string // A list of repositories that run will skip
 	RegExIncludeRepository *regexp.Regexp
 	RegExExcludeRepository *regexp.Regexp
-	Fork                   bool   // If set, create a fork and make the pull request from it
-	ForkOwner              string // The owner of the new fork. If empty, the fork should happen on the logged in user
+
+	Fork      bool   // If set, create a fork and make the pull request from it
+	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
 	ConflictStrategy ConflictStrategy // Defines what will happen if a branch already exists
 
