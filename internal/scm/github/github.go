@@ -13,6 +13,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 	"golang.org/x/oauth2"
 )
 
@@ -109,6 +110,7 @@ type RepositoryListing struct {
 	Users            []string
 	Repositories     []RepositoryReference
 	RepositorySearch string
+	CodeSearch       string
 	Topics           []string
 	SkipForks        bool
 }
@@ -222,6 +224,14 @@ func (g *Github) getRepositories(ctx context.Context) ([]*github.Repository, err
 		allRepos = append(allRepos, repos...)
 	}
 
+	if g.CodeSearch != "" {
+		repos, err := g.getCodeSearchRepositories(ctx, g.CodeSearch)
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not get code search results for '%s'", g.CodeSearch)
+		}
+		allRepos = append(allRepos, repos...)
+	}
+
 	// Remove duplicate repos
 	repoMap := map[string]*github.Repository{}
 	for _, repo := range allRepos {
@@ -328,6 +338,75 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 			break
 		}
 		i++
+	}
+
+	return repos, nil
+}
+
+func (g *Github) getCodeSearchRepositories(ctx context.Context, search string) ([]*github.Repository, error) {
+	resultRepos := make(map[string]RepositoryReference)
+
+	i := 1
+	for {
+		rr, _, err := retry(ctx, func() ([]*github.CodeResult, *github.Response, error) {
+			rr, resp, err := g.ghClient.Search.Code(ctx, search, &github.SearchOptions{
+				ListOptions: github.ListOptions{
+					Page:    i,
+					PerPage: 100,
+				},
+			})
+
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if rr.GetIncompleteResults() {
+				// can occur when search times out on the server: for now, fail instead
+				// of handling the issue
+				return nil, nil, fmt.Errorf("search timed out on GitHub and was marked incomplete: try refining the search to return fewer results or be less complex")
+			}
+
+			if rr.GetTotal() > 1000 {
+				return nil, nil, fmt.Errorf("%d results for this search, but only the first 1000 results will be returned: try refining your search terms", rr.GetTotal())
+			}
+
+			return rr.CodeResults, resp, nil
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, r := range rr {
+			repo := r.Repository
+
+			resultRepos[repo.GetFullName()] = RepositoryReference{
+				OwnerName: repo.GetOwner().GetLogin(),
+				Name:      repo.GetName(),
+			}
+		}
+
+		if len(rr) != 100 {
+			break
+		}
+		i++
+	}
+
+	// Code search does not return full details (like permissions). So for each
+	// repo discovered, we have to query it again.
+	repoNames := maps.Values(resultRepos)
+	return g.getAllRepositories(ctx, repoNames)
+}
+
+func (g *Github) getAllRepositories(ctx context.Context, repoRefs []RepositoryReference) ([]*github.Repository, error) {
+	var repos []*github.Repository
+
+	for _, ref := range repoRefs {
+		r, err := g.getRepository(ctx, ref)
+		if err != nil {
+			return nil, err
+		}
+		repos = append(repos, r)
 	}
 
 	return repos, nil

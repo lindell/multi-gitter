@@ -152,6 +152,55 @@ func Test_GetRepositories(t *testing.T) {
 					}
 				]
 			}`,
+			"/search/code": `{
+				"total_count": 1,
+				"incomplete_results": false,
+				"items": [
+					{
+						"name": "classes.js",
+						"path": "src/attributes/classes.js",
+						"sha": "d7212f9dee2dcc18f084d7df8f417b80846ded5a",
+						"url": "https://api.github.com/repositories/167174/contents/src/attributes/classes.js?ref=825ac3773694e0cd23ee74895fd5aeb535b27da4",
+						"git_url": "https://api.github.com/repositories/167174/git/blobs/d7212f9dee2dcc18f084d7df8f417b80846ded5a",
+						"html_url": "https://github.com/jquery/jquery/blob/825ac3773694e0cd23ee74895fd5aeb535b27da4/src/attributes/classes.js",
+						"repository": {
+							"name": "search-code1",
+							"full_name": "test-org/search-code1",
+							"owner": {
+								"login": "test-org",
+								"type": "Organization",
+								"site_admin": false
+							},
+							"private": false,
+							"html_url": "https://github.com/test-org/search-code1",
+							"fork": false
+						},
+						"score": 1
+					}
+				]
+			}`,
+			"/repos/test-org/search-code1": `{
+				"id": 2,
+				"name": "search-code1",
+				"full_name": "test-org/search-code1",
+				"private": false,
+				"owner": {
+					"login": "test-org",
+					"type": "Organization",
+					"site_admin": false
+				},
+				"html_url": "https://github.com/test-org/search-code1",
+				"fork": false,
+				"archived": false,
+				"disabled": false,
+				"default_branch": "main",
+				"permissions": {
+					"admin": true,
+					"push": true,
+					"pull": true
+				},
+				"created_at": "2020-01-02T16:49:17Z"
+			}`,
 		},
 	}
 
@@ -256,6 +305,25 @@ func Test_GetRepositories(t *testing.T) {
 		}
 	}
 
+	// Code search
+	{
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				CodeSearch: "search-string",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
+
+		repos, err := gh.GetRepositories(context.Background())
+		assert.NoError(t, err)
+		if assert.Len(t, repos, 1) {
+			assert.Equal(t, "main", repos[0].DefaultBranch())
+			assert.Equal(t, "test-org/search-code1", repos[0].FullName())
+		}
+	}
+
 	// Multiple
 	{
 		gh, err := github.New(github.Config{
@@ -313,7 +381,7 @@ func Test_GetRepositories(t *testing.T) {
 	}
 }
 
-func Test_GetSearchRepository_Incomplete(t *testing.T) {
+func Test_SearchIncomplete(t *testing.T) {
 	transport := testTransport{
 		pathBodies: map[string]string{
 			"/search/repositories": `{
@@ -348,24 +416,68 @@ func Test_GetSearchRepository_Incomplete(t *testing.T) {
 					}
 				]
 			}`,
+			"/search/code": `{
+				"total_count": 1,
+				"incomplete_results": true,
+				"items": [
+					{
+						"name": "classes.js",
+						"path": "src/attributes/classes.js",
+						"sha": "d7212f9dee2dcc18f084d7df8f417b80846ded5a",
+						"url": "https://api.github.com/repositories/167174/contents/src/attributes/classes.js?ref=825ac3773694e0cd23ee74895fd5aeb535b27da4",
+						"git_url": "https://api.github.com/repositories/167174/git/blobs/d7212f9dee2dcc18f084d7df8f417b80846ded5a",
+						"html_url": "https://github.com/jquery/jquery/blob/825ac3773694e0cd23ee74895fd5aeb535b27da4/src/attributes/classes.js",
+						"repository": {
+							"name": "search-code1",
+							"full_name": "test-org/search-code1",
+							"owner": {
+								"login": "test-org",
+								"type": "Organization",
+								"site_admin": false
+							},
+							"private": false,
+							"html_url": "https://github.com/test-org/search-code1",
+							"fork": false
+						},
+						"score": 1
+					}
+				]
+			}`,
 		},
 	}
 
-	gh, err := github.New(github.Config{
-		TransportMiddleware: transport.Wrapper,
-		RepoListing: github.RepositoryListing{
-			RepositorySearch: "search-string",
-		},
-		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
-	})
-	require.NoError(t, err)
+	t.Run("getSearchRepositories", func(t *testing.T) {
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				RepositorySearch: "search-string",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
 
-	repos, err := gh.GetRepositories(context.Background())
-	assert.ErrorContains(t, err, "search timed out on GitHub and was marked incomplete")
-	assert.Len(t, repos, 0)
+		repos, err := gh.GetRepositories(context.Background())
+		assert.ErrorContains(t, err, "search timed out on GitHub and was marked incomplete")
+		assert.Len(t, repos, 0)
+	})
+
+	t.Run("getCodeSearchRepositories", func(t *testing.T) {
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				CodeSearch: "search-string",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
+
+		repos, err := gh.GetRepositories(context.Background())
+		assert.ErrorContains(t, err, "search timed out on GitHub and was marked incomplete")
+		assert.Len(t, repos, 0)
+	})
 }
 
-func Test_GetSearchRepository_TooManyResults(t *testing.T) {
+func Test_SearchTooManyResults(t *testing.T) {
 	transport := testTransport{
 		pathBodies: map[string]string{
 			"/search/repositories": `{
@@ -400,19 +512,62 @@ func Test_GetSearchRepository_TooManyResults(t *testing.T) {
 					}
 				]
 			}`,
+			"/search/code": `{
+				"total_count": 1532,
+				"incomplete_results": false,
+				"items": [
+					{
+						"name": "classes.js",
+						"path": "src/attributes/classes.js",
+						"sha": "d7212f9dee2dcc18f084d7df8f417b80846ded5a",
+						"url": "https://api.github.com/repositories/167174/contents/src/attributes/classes.js?ref=825ac3773694e0cd23ee74895fd5aeb535b27da4",
+						"git_url": "https://api.github.com/repositories/167174/git/blobs/d7212f9dee2dcc18f084d7df8f417b80846ded5a",
+						"html_url": "https://github.com/jquery/jquery/blob/825ac3773694e0cd23ee74895fd5aeb535b27da4/src/attributes/classes.js",
+						"repository": {
+							"name": "search-code1",
+							"full_name": "test-org/search-code1",
+							"owner": {
+								"login": "test-org",
+								"type": "Organization",
+								"site_admin": false
+							},
+							"private": false,
+							"html_url": "https://github.com/test-org/search-code1",
+							"fork": false
+						},
+						"score": 1
+					}
+				]
+			}`,
 		},
 	}
+	t.Run("getSearchRepositories", func(t *testing.T) {
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				RepositorySearch: "search-string",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
 
-	gh, err := github.New(github.Config{
-		TransportMiddleware: transport.Wrapper,
-		RepoListing: github.RepositoryListing{
-			RepositorySearch: "search-string",
-		},
-		MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		repos, err := gh.GetRepositories(context.Background())
+		assert.ErrorContains(t, err, "only the first 1000 results will be returned")
+		assert.Len(t, repos, 0)
 	})
-	require.NoError(t, err)
 
-	repos, err := gh.GetRepositories(context.Background())
-	assert.ErrorContains(t, err, "only the first 1000 results will be returned")
-	assert.Len(t, repos, 0)
+	t.Run("getCodeSearchRepositories", func(t *testing.T) {
+		gh, err := github.New(github.Config{
+			TransportMiddleware: transport.Wrapper,
+			RepoListing: github.RepositoryListing{
+				CodeSearch: "search-string",
+			},
+			MergeTypes: []scm.MergeType{scm.MergeTypeMerge},
+		})
+		require.NoError(t, err)
+
+		repos, err := gh.GetRepositories(context.Background())
+		assert.ErrorContains(t, err, "only the first 1000 results will be returned")
+		assert.Len(t, repos, 0)
+	})
 }
