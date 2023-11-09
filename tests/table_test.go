@@ -336,6 +336,108 @@ func TestTable(t *testing.T) {
 				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
 			},
 		},
+		{
+			name: "repo-include regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-include", "^owner/repo-",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.logOut, "Running on 3 repositories")
+			},
+		},
+		{
+			name: "repo-exclude regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-exclude", "\\d$",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+			},
+		},
+		{
+			name: "invalid repo-include regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-include", "(abc[def$",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.cmdOut, "could not parse repo-include")
+			},
+			expectErr: true,
+		},
+		{
+			name: "invalid repo-exclude regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-exclude", "(abc[def$",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.cmdOut, "could not parse repo-exclude")
+			},
+			expectErr: true,
+		},
 
 		{
 			name:      "parallel",

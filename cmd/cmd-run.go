@@ -2,16 +2,17 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
 
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -62,6 +63,8 @@ Available values:
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
+	cmd.Flags().StringP("repo-include", "", "", "Include repositories that match with a given Regular Expression")
+	cmd.Flags().StringP("repo-exclude", "", "", "Exclude repositories that match with a given Regular Expression")
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureRunPlatform(cmd, true)
@@ -98,6 +101,8 @@ func run(cmd *cobra.Command, _ []string) error {
 	assignees, _ := flag.GetStringSlice("assignees")
 	draft, _ := flag.GetBool("draft")
 	labels, _ := flag.GetStringSlice("labels")
+	repoInclude, _ := flag.GetString("repo-include")
+	repoExclude, _ := flag.GetString("repo-exclude")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -144,6 +149,23 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	var regExIncludeRepository *regexp.Regexp
+	var regExExcludeRepository *regexp.Regexp
+	if repoInclude != "" {
+		repoIncludeFilterCompile, err := regexp.Compile(repoInclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-include")
+		}
+		regExIncludeRepository = repoIncludeFilterCompile
+	}
+	if repoExclude != "" {
+		repoExcludeFilterCompile, err := regexp.Compile(repoExclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-exclude")
+		}
+		regExExcludeRepository = repoExcludeFilterCompile
+	}
+
 	vc, err := getVersionController(flag, true, false)
 	if err != nil {
 		return err
@@ -185,25 +207,27 @@ func run(cmd *cobra.Command, _ []string) error {
 
 		VersionController: vc,
 
-		CommitMessage:    commitMessage,
-		PullRequestTitle: prTitle,
-		PullRequestBody:  prBody,
-		Reviewers:        reviewers,
-		TeamReviewers:    teamReviewers,
-		MaxReviewers:     maxReviewers,
-		MaxTeamReviewers: maxTeamReviewers,
-		Interactive:      interactive,
-		DryRun:           dryRun,
-		Fork:             forkMode,
-		ForkOwner:        forkOwner,
-		SkipPullRequest:  skipPullRequest,
-		SkipRepository:   skipRepository,
-		CommitAuthor:     commitAuthor,
-		BaseBranch:       baseBranchName,
-		Assignees:        assignees,
-		ConflictStrategy: conflictStrategy,
-		Draft:            draft,
-		Labels:           labels,
+		CommitMessage:          commitMessage,
+		PullRequestTitle:       prTitle,
+		PullRequestBody:        prBody,
+		Reviewers:              reviewers,
+		TeamReviewers:          teamReviewers,
+		MaxReviewers:           maxReviewers,
+		MaxTeamReviewers:       maxTeamReviewers,
+		Interactive:            interactive,
+		DryRun:                 dryRun,
+		RegExIncludeRepository: regExIncludeRepository,
+		RegExExcludeRepository: regExExcludeRepository,
+		Fork:                   forkMode,
+		ForkOwner:              forkOwner,
+		SkipPullRequest:        skipPullRequest,
+		SkipRepository:         skipRepository,
+		CommitAuthor:           commitAuthor,
+		BaseBranch:             baseBranchName,
+		Assignees:              assignees,
+		ConflictStrategy:       conflictStrategy,
+		Draft:                  draft,
+		Labels:                 labels,
 
 		Concurrent: concurrent,
 
