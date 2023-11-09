@@ -215,6 +215,12 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
+# Exclude repositories that match with a given Regular Expression
+repo-exclude:
+
+# Include repositories that match with a given Regular Expression
+repo-include:
+
 # Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use `fork:true` to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
 repo-search:
 
@@ -671,6 +677,8 @@ Flags:
   -t, --pr-title string            The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings               The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --repo-exclude string        Exclude repositories that match with a given Regular Expression
+      --repo-include string        Include repositories that match with a given Regular Expression
       --repo-search fork:true      Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
   -r, --reviewers strings          The username of the reviewers to be added on the pull request.
       --skip-forks                 Skip repositories which are forks.
