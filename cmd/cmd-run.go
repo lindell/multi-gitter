@@ -148,7 +148,22 @@ func run(cmd *cobra.Command, _ []string) error {
 			Email: authorEmail,
 		}
 	}
-
+	var regExIncludeRepository *regexp.Regexp
+	var regExExcludeRepository *regexp.Regexp
+	if repoInclude != "" {
+		repoIncludeFilterCompile, err := regexp.Compile(repoInclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-include")
+		}
+		regExIncludeRepository = repoIncludeFilterCompile
+	}
+	if repoExclude != "" {
+		repoExcludeFilterCompile, err := regexp.Compile(repoExclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-exclude")
+		}
+		regExExcludeRepository = repoExcludeFilterCompile
+	}
 	vc, err := getVersionController(flag, true, false)
 	if err != nil {
 		return err
@@ -180,6 +195,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		<-c
 		os.Exit(1)
 	}()
+
 	runner := &multigitter.Runner{
 		ScriptPath:    executablePath,
 		Arguments:     arguments,
@@ -189,44 +205,33 @@ func run(cmd *cobra.Command, _ []string) error {
 
 		VersionController: vc,
 
-		CommitMessage:    commitMessage,
-		PullRequestTitle: prTitle,
-		PullRequestBody:  prBody,
-		Reviewers:        reviewers,
-		TeamReviewers:    teamReviewers,
-		MaxReviewers:     maxReviewers,
-		MaxTeamReviewers: maxTeamReviewers,
-		Interactive:      interactive,
-		DryRun:           dryRun,
-		Fork:             forkMode,
-		ForkOwner:        forkOwner,
-		SkipPullRequest:  skipPullRequest,
-		SkipRepository:   skipRepository,
-		CommitAuthor:     commitAuthor,
-		BaseBranch:       baseBranchName,
-		Assignees:        assignees,
-		ConflictStrategy: conflictStrategy,
-		Draft:            draft,
-		Labels:           labels,
+		CommitMessage:          commitMessage,
+		PullRequestTitle:       prTitle,
+		PullRequestBody:        prBody,
+		Reviewers:              reviewers,
+		TeamReviewers:          teamReviewers,
+		MaxReviewers:           maxReviewers,
+		MaxTeamReviewers:       maxTeamReviewers,
+		Interactive:            interactive,
+		DryRun:                 dryRun,
+		RegExIncludeRepository: regExIncludeRepository,
+		RegExExcludeRepository: regExExcludeRepository,
+		Fork:                   forkMode,
+		ForkOwner:              forkOwner,
+		SkipPullRequest:        skipPullRequest,
+		SkipRepository:         skipRepository,
+		CommitAuthor:           commitAuthor,
+		BaseBranch:             baseBranchName,
+		Assignees:              assignees,
+		ConflictStrategy:       conflictStrategy,
+		Draft:                  draft,
+		Labels:                 labels,
 
 		Concurrent: concurrent,
 
 		CreateGit: gitCreator,
 	}
-	if repoInclude != "" {
-		repoIncludeFilterCompile, err := regexp.Compile(repoInclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-include")
-		}
-		runner.RegExIncludeRepository = repoIncludeFilterCompile
-	}
-	if repoExclude != "" {
-		repoExcludeFilterCompile, err := regexp.Compile(repoExclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-exclude")
-		}
-		runner.RegExExcludeRepository = repoExcludeFilterCompile
-	}
+
 	err = runner.Run(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
