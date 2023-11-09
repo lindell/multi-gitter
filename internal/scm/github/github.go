@@ -13,6 +13,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
 	"golang.org/x/oauth2"
 )
 
@@ -393,8 +394,7 @@ func (g *Github) getCodeSearchRepositories(ctx context.Context, search string) (
 
 	// Code search does not return full details (like permissions). So for each
 	// repo discovered, we have to query it again.
-
-	repoNames := mapValues(resultRepos)
+	repoNames := maps.Values(resultRepos)
 	return g.getAllRepositories(ctx, repoNames)
 }
 
