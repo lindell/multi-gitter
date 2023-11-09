@@ -367,7 +367,7 @@ func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, proje
 		return scm.PullRequestStatusClosed, nil
 	}
 
-	response, err := client.DefaultApi.CanMerge(project, repoName, int64(pr.ID))
+	response, err := client.DefaultApi.CanMerge(project, repoName, pr.ID)
 	if err != nil {
 		return scm.PullRequestStatusUnknown, err
 	}
@@ -486,7 +486,7 @@ func (b *BitbucketServer) ClosePullRequest(ctx context.Context, pr scm.PullReque
 
 	client := newClient(ctx, b.config)
 
-	_, err := client.DefaultApi.DeleteWithVersion(bitbucketPR.project, bitbucketPR.repoName, int64(bitbucketPR.number), int64(bitbucketPR.version))
+	_, err := client.DefaultApi.DeleteWithVersion(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number, int(bitbucketPR.version))
 	if err != nil {
 		return err
 	}

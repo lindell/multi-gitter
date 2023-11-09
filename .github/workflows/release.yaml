@@ -3,12 +3,19 @@ on:
     branches:
       - master
 
+permissions:
+  contents: read
+
 name: release
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # needed for release-please
+      issues: write # needed for github-release-commenter
+      pull-requests: write # needed for release-please and github-release-commenter
     steps:
-      - uses: GoogleCloudPlatform/release-please-action@v3.7.10
+      - uses: GoogleCloudPlatform/release-please-action@8016a6649226f2ec88ed05441c11bb5410a22d29 # v3.7.10
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -16,32 +23,40 @@ jobs:
           package-name: multi-gitter
           changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false},{"type":"dep","section":"Dependencies","hidden":false}]'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
           go-version-file: "go.mod"
         if: ${{ steps.release.outputs.release_created }}
 
+      - name: Import GPG key for signing
+        id: gpg
+        run: |
+          echo "${GPG_PRIVATE_KEY}" | gpg --import
+          fingerprint=$(echo "${GPG_PRIVATE_KEY}" | gpg --show-keys --with-colons | awk -F ":" '$1=="fpr" {print $10}')
+          echo "fingerprint=$fingerprint" >> $GITHUB_OUTPUT
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GENERAL_GITHUB_SECRET }} # The tokens needs access to another repo, so the secret.GITHUB_SECRET won't suffice
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }} # Gemfury token
+          GPG_FINGERPRINT: ${{ steps.gpg.outputs.fingerprint }} # Fingerprint of GPG signing key
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Comment on prs and issues
-        uses: apexskier/github-release-commenter@v1.3.2
+        uses: apexskier/github-release-commenter@2c48bf8b39f414bc2f0c226e1f997e6207bb1942 # v1.3.2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          comment-template:
-            Included in release {release_link} 🎉
+          comment-template: Included in release {release_link} 🎉
           skip-label: "autorelease: tagged,autorelease: pending"
         if: ${{ steps.release.outputs.release_created }}
