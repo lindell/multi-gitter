@@ -129,6 +129,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	forkOwner, _ := flag.GetString("fork-owner")
 	sshAuth, _ := flag.GetBool("ssh-auth")
 	skipForks, _ := flag.GetBool("skip-forks")
+
 	if verifyFlags && len(orgs) == 0 && len(users) == 0 && len(repos) == 0 && repoSearch == "" {
 		return nil, errors.New("no organization, user, repo or repo-search set")
 	}
@@ -159,6 +160,7 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 	if err != nil {
 		return nil, err
 	}
+
 	vc, err := github.New(github.Config{
 		Token:               token,
 		BaseURL:             gitBaseURL,
