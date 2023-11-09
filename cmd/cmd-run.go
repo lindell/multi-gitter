@@ -165,6 +165,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 		regExExcludeRepository = repoExcludeFilterCompile
 	}
+
 	vc, err := getVersionController(flag, true, false)
 	if err != nil {
 		return err
