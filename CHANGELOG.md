@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.49.0](https://github.com/lindell/multi-gitter/compare/v0.48.2...v0.49.0) (2023-11-09)
+
+
+### Features
+
+* add repo-include and repo-exclude options ([#426](https://github.com/lindell/multi-gitter/issues/426)) ([faf0092](https://github.com/lindell/multi-gitter/commit/faf0092a4c5411420f721973595588f6303253da))
+* **github:** use code search to select repositories ([#399](https://github.com/lindell/multi-gitter/issues/399)) ([d8b75f4](https://github.com/lindell/multi-gitter/commit/d8b75f4ed173c2389dcb3dd89a4213fd8ce78f42))
+
 ## [0.48.2](https://github.com/lindell/multi-gitter/compare/v0.48.1...v0.48.2) (2023-11-04)
 
 
