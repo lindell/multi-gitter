@@ -149,6 +149,13 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	if maxReviewers < 0 {
+		return errors.New("max-reviewers cannot be negative")
+	}
+	if maxTeamReviewers < 0 {
+		return errors.New("max-team-reviewers cannot be negative")
+	}
+
 	var regExIncludeRepository *regexp.Regexp
 	var regExExcludeRepository *regexp.Regexp
 	if repoInclude != "" {
