@@ -126,7 +126,7 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return strings.Contains(stdOut, fmt.Sprintf("refs/heads/%s", branchName)), nil
+	return strings.Contains(stdOut, fmt.Sprintf("\trefs/heads/%s\n", branchName)), nil
 }
 
 // Push the committed changes to the remote
