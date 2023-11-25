@@ -237,6 +237,40 @@ func TestTable(t *testing.T) {
 		},
 
 		{
+			name: "existing branch with matching start",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "owner", "should-change", "i like apples")
+				changeBranch(t, repo.Path, "custom-branch-name-but-with-different-ending", true)
+				changeTestFile(t, repo.Path, "i like apple", "test change")
+				changeBranch(t, repo.Path, "master", false)
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"--branch", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path))
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name-but-with-different-ending", false)
+				assert.Equal(t, "i like apple", readTestFile(t, vcMock.Repositories[0].Path))
+			},
+		},
+
+		{
 			name: "reviewers",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
