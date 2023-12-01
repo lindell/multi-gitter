@@ -17,7 +17,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/xanzy/go-gitlab v0.94.0
 	golang.org/x/exp v0.0.0-20231127185646-65229373498e
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.15.0
 )
 
 require (
