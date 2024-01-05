@@ -13,3 +13,7 @@ assignees: ''
 **My use case**
 <!-- Please describe in detail how you intend to use this feature -->
 
+**Implementation**
+<!-- Mark one of the boxes below with an [X] -->
+- [ ] I would like to contribute this feature if it's a suitable addition to multi-gitter
+- [ ] I have no intention of adding this feature myself.
