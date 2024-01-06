@@ -22,8 +22,6 @@ jobs:
           release-type: simple
           package-name: multi-gitter
           changelog-types: '[{"type":"feat","section":"Features","hidden":false},{"type":"fix","section":"Bug Fixes","hidden":false},{"type":"chore","section":"Miscellaneous","hidden":false},{"type":"dep","section":"Dependencies","hidden":false}]'
-          release-as: "0.49.1"
-          last-release-sha: 56c176db19460962c6f61a5fa52715d861a1426b
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
