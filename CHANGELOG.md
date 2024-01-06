@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.49.1](https://github.com/lindell/multi-gitter/compare/v0.49.1...v0.49.1) (2024-01-06)
+
+
+### Bug Fixes
+
+* cmdgit BranchExist should match full branch name ([#433](https://github.com/lindell/multi-gitter/issues/433)) ([c7a6e69](https://github.com/lindell/multi-gitter/commit/c7a6e69aafb87efafa25248c73d7afa1a8ee76ac))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 02704c9 ([f7e273e](https://github.com/lindell/multi-gitter/commit/f7e273e6ebf4ee52d16e76e8472de87eb9c3a52e))
+* update golang.org/x/exp digest to 6522937 ([cab859f](https://github.com/lindell/multi-gitter/commit/cab859fdb40c181e9b1dc58448290eec800f6aae))
+* update module code.gitea.io/sdk/gitea to v0.17.0 ([3949d2f](https://github.com/lindell/multi-gitter/commit/3949d2f4a3d7f315ca48a6c8c18910a1bcce3443))
+* update module github.com/go-git/go-git/v5 to v5.10.1 ([40f62a1](https://github.com/lindell/multi-gitter/commit/40f62a11cacfd429e232451aeab9e11825de9ce3))
+* update module github.com/go-git/go-git/v5 to v5.11.0 [security] ([5fef1cc](https://github.com/lindell/multi-gitter/commit/5fef1ccc936c2d6f31a8d4ae7ac0ebed6409f2c1))
+* update module github.com/google/go-github/v56 to v57 ([#445](https://github.com/lindell/multi-gitter/issues/445)) ([28a3279](https://github.com/lindell/multi-gitter/commit/28a32793edd1c63bb66b2008ef333f2f7b31c07b))
+* update module github.com/spf13/cobra to v1.8.0 ([f976ac2](https://github.com/lindell/multi-gitter/commit/f976ac2d91254e92f5e937f9e0fad99802b8ce79))
+* update module github.com/spf13/viper to v1.18.2 ([29a205e](https://github.com/lindell/multi-gitter/commit/29a205e9db876a0baf6091415f47085bb2876b5e))
+* update module github.com/xanzy/go-gitlab to v0.94.0 ([38666d9](https://github.com/lindell/multi-gitter/commit/38666d9b5ae79783ea161a20ad566480e5c1b23a))
+* update module github.com/xanzy/go-gitlab to v0.95.2 ([#446](https://github.com/lindell/multi-gitter/issues/446)) ([61f0110](https://github.com/lindell/multi-gitter/commit/61f0110512e4ff464315e3791e6393e62830f112))
+* update module golang.org/x/oauth2 to v0.15.0 ([3874ccb](https://github.com/lindell/multi-gitter/commit/3874ccb93ab76c3a2724358f825880b750a5dbea))
+
+
+### Miscellaneous
+
+* **master:** release 0.49.0 ([#428](https://github.com/lindell/multi-gitter/issues/428)) ([89ef3b7](https://github.com/lindell/multi-gitter/commit/89ef3b77e51433735e667d0953c696b724f81b6f))
+* **master:** release 0.49.1 ([#434](https://github.com/lindell/multi-gitter/issues/434)) ([1693f01](https://github.com/lindell/multi-gitter/commit/1693f018a8ea273e3787b9d4e4606dc6a2f2a860))
+
 ## [0.49.1](https://github.com/lindell/multi-gitter/compare/v0.49.0...v0.49.1) (2024-01-05)
 
 
