@@ -5,7 +5,7 @@ go 1.21
 require (
 	code.gitea.io/sdk/gitea v0.17.0
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
-	github.com/gfleury/go-bitbucket-v1 v0.0.0-20230830121038-6e30c5760c87
+	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240131155556-0b41d7863037
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-github/v57 v57.0.0
 	github.com/mitchellh/mapstructure v1.5.0
