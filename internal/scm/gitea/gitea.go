@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/exp/slices"
+
 	"code.gitea.io/sdk/gitea"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
@@ -305,6 +307,45 @@ func (g *Gitea) getLabelsFromStrings(ctx context.Context, repo repository, label
 	return ret, nil
 }
 
+func (g *Gitea) setReviewers(ctx context.Context, repo scm.Repository, newPR scm.NewPullRequest, createdPR *gitea.PullRequest) error {
+	r := repo.(repository)
+
+	var addedReviewers, removedReviewers []string
+	if newPR.Reviewers != nil {
+		reviews, _, err := g.giteaClient(ctx).ListPullReviews(r.ownerName, r.name, createdPR.Index, gitea.ListPullReviewsOptions{})
+		if err != nil {
+			return errors.Wrap(err, "could not list existing reviews on pull request")
+		}
+		reviews = slices.DeleteFunc(reviews, func(review *gitea.PullReview) bool {
+			return review.State != gitea.ReviewStateRequestReview // can only remove reviews in requested state
+		})
+		existingReviewers := scm.Map(reviews, func(review *gitea.PullReview) string {
+			return review.Reviewer.UserName
+		})
+		addedReviewers, removedReviewers = scm.Diff(existingReviewers, newPR.Reviewers)
+	}
+
+	if len(addedReviewers) > 0 {
+		_, err := g.giteaClient(ctx).CreateReviewRequests(r.ownerName, r.name, createdPR.Index, gitea.PullReviewRequestOptions{
+			Reviewers: addedReviewers,
+		})
+		if err != nil {
+			return errors.Wrap(err, "could not add reviewers to pull request")
+		}
+	}
+
+	if len(removedReviewers) > 0 {
+		_, err := g.giteaClient(ctx).DeleteReviewRequests(r.ownerName, r.name, createdPR.Index, gitea.PullReviewRequestOptions{
+			Reviewers: removedReviewers,
+		})
+		if err != nil {
+			return errors.Wrap(err, "could not remove reviewers from pull request")
+		}
+	}
+
+	return nil
+}
+
 // UpdatePullRequest updates an existing pull request
 func (g *Gitea) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
 	r := repo.(repository)
@@ -330,11 +371,8 @@ func (g *Gitea) UpdatePullRequest(ctx context.Context, repo scm.Repository, pull
 		return nil, errors.Wrap(err, "could not update pull request")
 	}
 
-	_, err = g.giteaClient(ctx).CreateReviewRequests(r.ownerName, r.name, giteaPr.Index, gitea.PullReviewRequestOptions{
-		Reviewers: updatedPR.Reviewers,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "could not add reviewer to pull request")
+	if err := g.setReviewers(ctx, r, updatedPR, giteaPr); err != nil {
+		return nil, err
 	}
 
 	return pullRequest{
