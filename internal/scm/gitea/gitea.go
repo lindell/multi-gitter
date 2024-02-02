@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"sort"
 	"strings"
-
-	"golang.org/x/exp/slices"
 
 	"code.gitea.io/sdk/gitea"
 	"github.com/lindell/multi-gitter/internal/scm"

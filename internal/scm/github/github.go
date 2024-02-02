@@ -10,11 +10,12 @@ import (
 	"time"
 
 	"github.com/google/go-github/v58/github"
-	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
 	"golang.org/x/oauth2"
+
+	"github.com/lindell/multi-gitter/internal/scm"
 )
 
 type Config struct {
@@ -312,7 +313,6 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 					PerPage: 100,
 				},
 			})
-
 			if err != nil {
 				return nil, nil, err
 			}
@@ -329,7 +329,6 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 
 			return rr.Repositories, resp, nil
 		})
-
 		if err != nil {
 			return nil, err
 		}
@@ -355,7 +354,6 @@ func (g *Github) getCodeSearchRepositories(ctx context.Context, search string) (
 					PerPage: 100,
 				},
 			})
-
 			if err != nil {
 				return nil, nil, err
 			}
@@ -372,7 +370,6 @@ func (g *Github) getCodeSearchRepositories(ctx context.Context, search string) (
 
 			return rr.CodeResults, resp, nil
 		})
-
 		if err != nil {
 			return nil, err
 		}
