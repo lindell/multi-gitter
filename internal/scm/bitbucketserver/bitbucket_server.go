@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -478,6 +479,70 @@ func (b *BitbucketServer) MergePullRequest(ctx context.Context, pr scm.PullReque
 	}
 
 	return b.deleteBranch(ctx, bitbucketPR)
+}
+
+// DiffPullRequest returns a diff of the pull request
+func (b *BitbucketServer) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (string, error) {
+	pr := pullReq.(pullRequest)
+
+	client := newClient(ctx, b.config)
+	response, err := client.DefaultApi.GetPullRequestDiffRaw(pr.project, pr.repoName, pr.number, map[string]interface{}{})
+
+	if err != nil {
+		return "", err
+	}
+
+	diff, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(diff), nil
+}
+
+// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+func (b *BitbucketServer) IsPullRequestApprovedByMe(_ context.Context, pullReq scm.PullRequest) (bool, error) {
+	pr := pullReq.(pullRequest)
+	loggedInUser := b.username
+
+	for _, reviewer := range pr.reviewers {
+		if reviewer.User.Name == loggedInUser && reviewer.Approved {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// ReviewPullRequest reviews a pull request
+func (b *BitbucketServer) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
+	pr := pullReq.(pullRequest)
+
+	client := newClient(ctx, b.config)
+
+  commentBody := bitbucketv1.Comment{
+    Text: comment,
+  }
+
+  _, err := client.DefaultApi.CreatePullRequestComment(pr.project, pr.repoName, pr.number, commentBody, []string{})
+  if err != nil {
+    return err
+  }
+
+	switch action {
+	case scm.ReviewApprove:
+		_, err := client.DefaultApi.Approve(pr.project, pr.repoName, int64(pr.number))
+		if err != nil {
+			return err
+		}
+	case scm.ReviewDecline:
+		_, err := client.DefaultApi.Decline(pr.project, pr.repoName, int64(pr.number), map[string]interface{}{})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // ClosePullRequest Close a pull request, the pr parameter will always originate from the same package

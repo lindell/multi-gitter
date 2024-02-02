@@ -99,6 +99,21 @@ func (vc *VersionController) MergePullRequest(_ context.Context, pr scm.PullRequ
 	return errors.New("could not find pull request")
 }
 
+// DiffPullRequest returns a diff of the pull request
+func (vc *VersionController) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (string, error) {
+	return "", nil
+}
+
+// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+func (vc *VersionController) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullRequest) (bool, error) {
+	return false, nil
+}
+
+// ReviewPullRequest reviews a pull request
+func (vc *VersionController) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
+	return nil
+}
+
 // ClosePullRequest sets the status of a mock pull requests to closed
 func (vc *VersionController) ClosePullRequest(_ context.Context, pr scm.PullRequest) error {
 	vc.prLock.Lock()

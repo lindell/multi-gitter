@@ -452,6 +452,62 @@ func (g *Gitea) MergePullRequest(ctx context.Context, pullReq scm.PullRequest) e
 	return nil
 }
 
+// DiffPullRequest returns a diff of the pull request
+func (g *Gitea) DiffPullRequest(ctx context.Context, pullReq scm.PullRequest) (string, error) {
+	pr := pullReq.(pullRequest)
+
+	b, _, err := g.giteaClient(ctx).GetPullRequestDiff(pr.ownerName, pr.repoName, pr.index)
+	if err != nil {
+		return "", nil
+	}
+
+	return string(b), nil
+}
+
+// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+func (g *Gitea) IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullRequest) (bool, error) {
+	pr := pullReq.(pullRequest)
+	loggedInUser, err := g.getUser(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	reviews, _, err := g.giteaClient(ctx).ListPullReviews(pr.ownerName, pr.repoName, pr.index, gitea.ListPullReviewsOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	for _, review := range reviews {
+		if review.Reviewer != nil && review.Reviewer.ID == loggedInUser.ID && review.State == gitea.ReviewStateApproved {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// ReviewPullRequest reviews a pull request
+func (g *Gitea) ReviewPullRequest(ctx context.Context, pullReq scm.PullRequest, action scm.Review, comment string) error {
+	pr := pullReq.(pullRequest)
+
+	var state gitea.ReviewStateType 
+	switch action {
+	case scm.ReviewComment:
+		state = gitea.ReviewStateComment
+	case scm.ReviewApprove:
+		state = gitea.ReviewStateApproved
+	case scm.ReviewDecline:
+		state = gitea.ReviewStateRequestChanges
+	}
+
+	_, _, err := g.giteaClient(ctx).CreatePullReview(pr.ownerName, pr.repoName, pr.index, gitea.CreatePullReviewOptions{
+		Body:  comment,
+		State: state,
+	})
+
+	return err
+}
+
 // ClosePullRequest closes a pull request
 func (g *Gitea) ClosePullRequest(ctx context.Context, pullReq scm.PullRequest) error {
 	pr := pullReq.(pullRequest)

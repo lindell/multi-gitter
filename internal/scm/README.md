@@ -12,6 +12,16 @@ type VersionController interface {
 	GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error)
 	// Merges a pull request, the pr parameter will always originate from the same package
 	MergePullRequest(ctx context.Context, pr scm.PullRequest) error
+	// IsPullRequestApprovedByMe returns true if the pr is approved by the current user
+	IsPullRequestApprovedByMe(ctx context.Context, pullReq scm.PullRequest) (bool, error)
+	// ApprovePullRequest approves a pull request
+	ApprovePullRequest(ctx context.Context, pr scm.PullRequest, comment string) error
+	// RejectPullRequest requests changes (Note for gitlab this just leaves a comment)
+	RejectPullRequest(ctx context.Context, pr scm.PullRequest, comment string) error
+	// CommentPullRequest leaves a comment
+	CommentPullRequest(ctx context.Context, pr scm.PullRequest, comment string) error
+	// DiffPullRequest returns a diff of the pull request
+	DiffPullRequest(ctx context.Context, pr scm.PullRequest) (string, error)
 	// Close a pull request, the pr parameter will always originate from the same package
 	ClosePullRequest(ctx context.Context, pr scm.PullRequest) error
 	// ForkRepository forks a repository. If newOwner is set, use it, otherwise fork to the current user
