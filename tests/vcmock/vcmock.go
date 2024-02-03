@@ -51,6 +51,27 @@ func (vc *VersionController) CreatePullRequest(_ context.Context, repo scm.Repos
 	return pr, nil
 }
 
+// UpdatePullRequest updates an existing mock pull request
+func (vc *VersionController) UpdatePullRequest(_ context.Context, _ scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
+	pullRequest := pullReq.(PullRequest)
+
+	vc.prLock.Lock()
+	defer vc.prLock.Unlock()
+
+	for i := range vc.PullRequests {
+		if vc.PullRequests[i].PRNumber == pullRequest.PRNumber && vc.PullRequests[i].Repository.FullName() == pullRequest.Repository.FullName() {
+			vc.PullRequests[i].Title = updatedPR.Title
+			vc.PullRequests[i].Body = updatedPR.Body
+			vc.PullRequests[i].Reviewers = updatedPR.Reviewers
+			vc.PullRequests[i].TeamReviewers = updatedPR.TeamReviewers
+			vc.PullRequests[i].Assignees = updatedPR.Assignees
+			vc.PullRequests[i].Labels = updatedPR.Labels
+			return vc.PullRequests[i], nil
+		}
+	}
+	return nil, errors.New("could not find pull request")
+}
+
 // GetPullRequests gets mock pull request statuses
 func (vc *VersionController) GetPullRequests(_ context.Context, branchName string) ([]scm.PullRequest, error) {
 	vc.prLock.RLock()

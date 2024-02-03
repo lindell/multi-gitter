@@ -36,8 +36,9 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 			return "", errors.New(matches[3])
 		}
 
-		msg := fmt.Sprintf(`git command existed with %d`,
+		msg := fmt.Sprintf(`git command exited with %d (%s)`,
 			cmd.ProcessState.ExitCode(),
+			stderr.String(),
 		)
 
 		return "", errors.New(msg)

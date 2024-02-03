@@ -26,6 +26,7 @@ import (
 type VersionController interface {
 	GetRepositories(ctx context.Context) ([]scm.Repository, error)
 	CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error)
+	UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error)
 	GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error)
 	GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr scm.PullRequest) error
@@ -75,10 +76,12 @@ type Runner struct {
 	CreateGit func(dir string) Git
 }
 
-var errAborted = errors.New("run was never started because of aborted execution")
-var errRejected = errors.New("changes were not included since they were manually rejected")
-var errNoChange = errors.New("no data was changed")
-var errBranchExist = errors.New("the new branch already exists")
+var (
+	errAborted     = errors.New("run was never started because of aborted execution")
+	errRejected    = errors.New("changes were not included since they were manually rejected")
+	errNoChange    = errors.New("no data was changed")
+	errBranchExist = errors.New("the new branch already exists")
+)
 
 type dryRunPullRequest struct {
 	status     scm.PullRequestStatus
@@ -129,7 +132,6 @@ func (r *Runner) Run(ctx context.Context) error {
 		}()
 
 		pr, err := r.runSingleRepo(ctx, repos[i])
-
 		if err != nil {
 			if err != errAborted {
 				logger.Info(err)
@@ -172,7 +174,8 @@ func matchesRepositoryFilter(repoName string, regExp *regexp.Regexp) bool {
 }
 
 func filterRepositories(repos []scm.Repository, skipRepositoryNames []string, regExIncludeRepository *regexp.Regexp,
-	regExExcludeRepository *regexp.Regexp) []scm.Repository {
+	regExExcludeRepository *regexp.Regexp,
+) []scm.Repository {
 	skipReposMap := map[string]struct{}{}
 	for _, skipRepo := range skipRepositoryNames {
 		skipReposMap[skipRepo] = struct{}{}
@@ -298,7 +301,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	}
 
 	remoteName := "origin"
-	var prRepo = repo
+	prRepo := repo
 	if r.Fork {
 		log.Info("Forking repository")
 
@@ -356,6 +359,20 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 	}
 
 	if existingPullRequest != nil {
+		if r.ConflictStrategy == ConflictStrategyReplace {
+			log.Info("Updating pull request since one is already open")
+			return r.VersionController.UpdatePullRequest(ctx, repo, existingPullRequest, scm.NewPullRequest{
+				Title:         r.PullRequestTitle,
+				Body:          r.PullRequestBody,
+				Head:          r.FeatureBranch,
+				Base:          baseBranch,
+				Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
+				TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
+				Assignees:     r.Assignees,
+				Draft:         r.Draft,
+				Labels:        r.Labels,
+			})
+		}
 		log.Info("Skip creating pull requests since one is already open")
 		return existingPullRequest, nil
 	}

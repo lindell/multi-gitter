@@ -938,7 +938,9 @@ Repositories with a successful run:
 							PRNumber:   42,
 							Repository: repo3,
 							NewPullRequest: scm.NewPullRequest{
-								Head: "custom-branch-name",
+								Title: "original title",
+								Body:  "original body",
+								Head:  "custom-branch-name",
 							},
 						},
 					},
@@ -957,6 +959,9 @@ Repositories with a successful run:
 				fmt.Println(runData.logOut)
 
 				require.Len(t, vcMock.PullRequests, 3)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "", vcMock.PullRequests[0].Body)
+				assert.Equal(t, 42, vcMock.PullRequests[0].PRNumber)
 				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[1].Head)
 				assert.Equal(t, "master", vcMock.PullRequests[1].Base)
 				assert.Equal(t, "custom message", vcMock.PullRequests[1].Title)
@@ -968,7 +973,7 @@ Repositories with a successful run:
 				assert.Equal(t, 5, strings.Count(runData.logOut, "Cloning and running script"))
 				assert.Equal(t, 3, strings.Count(runData.logOut, "Pushing changes to remote"))
 				assert.Equal(t, 2, strings.Count(runData.logOut, "Creating pull request"))
-				assert.Equal(t, 1, strings.Count(runData.logOut, "Skip creating pull requests since one is already open"))
+				assert.Equal(t, 1, strings.Count(runData.logOut, "Updating pull request since one is already open"))
 
 				assert.Equal(t, `No data was changed:
   owner/no-change-1

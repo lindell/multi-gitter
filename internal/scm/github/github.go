@@ -10,11 +10,12 @@ import (
 	"time"
 
 	"github.com/google/go-github/v58/github"
-	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/exp/maps"
 	"golang.org/x/oauth2"
+
+	"github.com/lindell/multi-gitter/internal/scm"
 )
 
 type Config struct {
@@ -312,7 +313,6 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 					PerPage: 100,
 				},
 			})
-
 			if err != nil {
 				return nil, nil, err
 			}
@@ -329,7 +329,6 @@ func (g *Github) getSearchRepositories(ctx context.Context, search string) ([]*g
 
 			return rr.Repositories, resp, nil
 		})
-
 		if err != nil {
 			return nil, err
 		}
@@ -355,7 +354,6 @@ func (g *Github) getCodeSearchRepositories(ctx context.Context, search string) (
 					PerPage: 100,
 				},
 			})
-
 			if err != nil {
 				return nil, nil, err
 			}
@@ -372,7 +370,6 @@ func (g *Github) getCodeSearchRepositories(ctx context.Context, search string) (
 
 			return rr.CodeResults, resp, nil
 		})
-
 		if err != nil {
 			return nil, err
 		}
@@ -416,7 +413,6 @@ func (g *Github) getRepository(ctx context.Context, repoRef RepositoryReference)
 	repo, _, err := retry(ctx, func() (*github.Repository, *github.Response, error) {
 		return g.ghClient.Repositories.Get(ctx, repoRef.OwnerName, repoRef.Name)
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -436,15 +432,15 @@ func (g *Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		return nil, err
 	}
 
-	if err := g.addReviewers(ctx, r, newPR, pr); err != nil {
+	if err := g.setReviewers(ctx, r, newPR, pr); err != nil {
 		return nil, err
 	}
 
-	if err := g.addAssignees(ctx, r, newPR, pr); err != nil {
+	if err := g.setAssignees(ctx, r, newPR, pr); err != nil {
 		return nil, err
 	}
 
-	if err := g.addLabels(ctx, r, newPR, pr); err != nil {
+	if err := g.setLabels(ctx, r, newPR, pr); err != nil {
 		return nil, err
 	}
 
@@ -466,38 +462,143 @@ func (g *Github) createPullRequest(ctx context.Context, repo repository, prRepo 
 	return pr, err
 }
 
-func (g *Github) addReviewers(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
-	if len(newPR.Reviewers) == 0 && len(newPR.TeamReviewers) == 0 {
+func (g *Github) setReviewers(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
+	var addedReviewers, removedReviewers []string
+	if newPR.Reviewers != nil {
+		existingReviewers := scm.Map(createdPR.RequestedReviewers, func(user *github.User) string {
+			return user.GetLogin()
+		})
+		addedReviewers, removedReviewers = scm.Diff(existingReviewers, newPR.Reviewers)
+	}
+
+	var addedTeamReviewers, removedTeamReviewers []string
+	if newPR.Reviewers != nil {
+		existingTeamReviewers := scm.Map(createdPR.RequestedTeams, func(team *github.Team) string {
+			return team.GetSlug()
+		})
+		addedTeamReviewers, removedTeamReviewers = scm.Diff(existingTeamReviewers, newPR.TeamReviewers)
+	}
+
+	if len(addedReviewers) > 0 || len(addedTeamReviewers) > 0 {
+		_, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
+			return g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
+				Reviewers:     addedReviewers,
+				TeamReviewers: addedTeamReviewers,
+			})
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(removedReviewers) > 0 || len(removedTeamReviewers) > 0 {
+		_, err := retryWithoutReturn(ctx, func() (*github.Response, error) {
+			return g.ghClient.PullRequests.RemoveReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
+				Reviewers:     removedReviewers,
+				TeamReviewers: removedTeamReviewers,
+			})
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *Github) setAssignees(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
+	if newPR.Assignees == nil {
 		return nil
 	}
 
-	_, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
-		return g.ghClient.PullRequests.RequestReviewers(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), github.ReviewersRequest{
-			Reviewers:     newPR.Reviewers,
-			TeamReviewers: newPR.TeamReviewers,
+	existingAssignees := scm.Map(createdPR.Assignees, func(user *github.User) string {
+		return user.GetLogin()
+	})
+	addedAssignees, removedAssignees := scm.Diff(existingAssignees, newPR.Assignees)
+
+	if len(addedAssignees) > 0 {
+		_, _, err := retry(ctx, func() (*github.Issue, *github.Response, error) {
+			return g.ghClient.Issues.AddAssignees(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), addedAssignees)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(removedAssignees) > 0 {
+		_, _, err := retry(ctx, func() (*github.Issue, *github.Response, error) {
+			return g.ghClient.Issues.RemoveAssignees(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), removedAssignees)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (g *Github) setLabels(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
+	if newPR.Labels == nil {
+		return nil
+	}
+
+	existingLabels := scm.Map(createdPR.Labels, func(label *github.Label) string {
+		return label.GetName()
+	})
+	addedLabels, removedLabels := scm.Diff(existingLabels, newPR.Labels)
+
+	if len(addedLabels) > 0 {
+		_, _, err := retry(ctx, func() ([]*github.Label, *github.Response, error) {
+			return g.ghClient.Issues.AddLabelsToIssue(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), addedLabels)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, label := range removedLabels {
+		_, err := retryWithoutReturn(ctx, func() (*github.Response, error) {
+			return g.ghClient.Issues.RemoveLabelForIssue(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), label)
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// UpdatePullRequest updates an existing pull request
+func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
+	r := repo.(repository)
+	pr := pullReq.(pullRequest)
+
+	g.modLock()
+	defer g.modUnlock()
+
+	ghPR, _, err := retry(ctx, func() (*github.PullRequest, *github.Response, error) {
+		return g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
+			Title: &updatedPR.Title,
+			Body:  &updatedPR.Body,
 		})
 	})
-	return err
-}
-
-func (g *Github) addAssignees(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
-	if len(newPR.Assignees) == 0 {
-		return nil
+	if err != nil {
+		return nil, err
 	}
-	_, _, err := retry(ctx, func() (*github.Issue, *github.Response, error) {
-		return g.ghClient.Issues.AddAssignees(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Assignees)
-	})
-	return err
-}
 
-func (g *Github) addLabels(ctx context.Context, repo repository, newPR scm.NewPullRequest, createdPR *github.PullRequest) error {
-	if len(newPR.Labels) == 0 {
-		return nil
+	if err := g.setReviewers(ctx, r, updatedPR, ghPR); err != nil {
+		return nil, err
 	}
-	_, _, err := retry(ctx, func() ([]*github.Label, *github.Response, error) {
-		return g.ghClient.Issues.AddLabelsToIssue(ctx, repo.ownerName, repo.name, createdPR.GetNumber(), newPR.Labels)
-	})
-	return err
+
+	if err := g.setAssignees(ctx, r, updatedPR, ghPR); err != nil {
+		return nil, err
+	}
+
+	if err := g.setLabels(ctx, r, updatedPR, ghPR); err != nil {
+		return nil, err
+	}
+
+	return convertPullRequest(ghPR), nil
 }
 
 // GetPullRequests gets all pull requests of with a specific branch
@@ -761,7 +862,6 @@ func (g *Github) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 			Organization: newOwner,
 		})
 	})
-
 	if err != nil {
 		if _, isAccepted := err.(*github.AcceptedError); !isAccepted {
 			return nil, err
