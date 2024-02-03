@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.50.0](https://github.com/lindell/multi-gitter/compare/v0.49.1...v0.50.0) (2024-02-03)
+
+
+### Features
+
+* when using replace strategy also update PR ([#368](https://github.com/lindell/multi-gitter/issues/368)) ([3f2d821](https://github.com/lindell/multi-gitter/commit/3f2d8219b8a8cb62a027966f3dd796d63b6f0726))
+
+
+### Dependencies
+
+* update github.com/cloudflare/circl from 1.3.3 to 1.3.7 ([#451](https://github.com/lindell/multi-gitter/issues/451)) ([09b1ed8](https://github.com/lindell/multi-gitter/commit/09b1ed88dbd8aad62ed1cb18a255e2af32269a93))
+* update github.com/gfleury/go-bitbucket-v1 digest to 0b41d78 ([0fb5cdb](https://github.com/lindell/multi-gitter/commit/0fb5cdba8ecfdd54b47f2fc9556092242f8e8902))
+* update golang.org/x/exp digest to 1b97071 ([fbb68c2](https://github.com/lindell/multi-gitter/commit/fbb68c28f5422da08eee3c41e9ea5c466cf475e7))
+* update module code.gitea.io/sdk/gitea to v0.17.1 ([6922222](https://github.com/lindell/multi-gitter/commit/692222204b02292d205a522962a397575ca55ebc))
+* update module github.com/google/go-github/v57 to v58 ([#458](https://github.com/lindell/multi-gitter/issues/458)) ([281f130](https://github.com/lindell/multi-gitter/commit/281f130aea48d6dc463b2c87d3cd4272371fdd77))
+* update module github.com/xanzy/go-gitlab to v0.96.0 ([51e5dd0](https://github.com/lindell/multi-gitter/commit/51e5dd018b7788987b83f965b18ebfc882c64e8d))
+* update module golang.org/x/oauth2 to v0.16.0 ([5b76dad](https://github.com/lindell/multi-gitter/commit/5b76dadd6aa377fc4ae94f64e22cd613315b3794))
+
 ## [0.49.1](https://github.com/lindell/multi-gitter/compare/v0.49.1...v0.49.1) (2024-01-06)
 
 
