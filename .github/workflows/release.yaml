@@ -15,7 +15,7 @@ jobs:
       issues: write # needed for github-release-commenter
       pull-requests: write # needed for release-please and github-release-commenter
     steps:
-      - uses: GoogleCloudPlatform/release-please-action@8016a6649226f2ec88ed05441c11bb5410a22d29 # v3.7.10
+      - uses: GoogleCloudPlatform/release-please-action@db8f2c60ee802b3748b512940dde88eabd7b7e01 # v3.7.13
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -54,7 +54,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Comment on prs and issues
-        uses: apexskier/github-release-commenter@2c48bf8b39f414bc2f0c226e1f997e6207bb1942 # v1.3.2
+        uses: apexskier/github-release-commenter@3bd413ad5e1d603bfe2282f9f06f2bdcec079327 # v1.3.6
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           comment-template: Included in release {release_link} 🎉
