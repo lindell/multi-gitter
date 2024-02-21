@@ -472,7 +472,7 @@ func (g *Github) setReviewers(ctx context.Context, repo repository, newPR scm.Ne
 	}
 
 	var addedTeamReviewers, removedTeamReviewers []string
-	if newPR.Reviewers != nil {
+	if newPR.TeamReviewers != nil {
 		existingTeamReviewers := scm.Map(createdPR.RequestedTeams, func(team *github.Team) string {
 			return team.GetSlug()
 		})
