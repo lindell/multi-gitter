@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.50.1](https://github.com/lindell/multi-gitter/compare/v0.50.0...v0.50.1) (2024-02-21)
+
+
+### Bug Fixes
+
+* **github:** team reviewers no set without also setting reviewers ([#461](https://github.com/lindell/multi-gitter/issues/461)) ([edf8735](https://github.com/lindell/multi-gitter/commit/edf873526f92109132271e326cd366738fb61ece))
+
 ## [0.50.0](https://github.com/lindell/multi-gitter/compare/v0.49.1...v0.50.0) (2024-02-03)
 
 
