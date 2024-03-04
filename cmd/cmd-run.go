@@ -48,6 +48,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("max-team-reviewers", "", 0, "If this value is set, team reviewers will be randomized")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
+	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
 	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
@@ -89,6 +90,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	maxTeamReviewers, _ := flag.GetInt("max-team-reviewers")
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
+	pushOnly, _ := flag.GetBool("push-only")
 	skipRepository, _ := flag.GetStringSlice("skip-repo")
 	interactive, _ := flag.GetBool("interactive")
 	dryRun, _ := flag.GetBool("dry-run")
@@ -127,6 +129,10 @@ func run(cmd *cobra.Command, _ []string) error {
 		if prBody == "" && len(split) == 2 {
 			prBody = split[1]
 		}
+	}
+
+	if skipPullRequest && pushOnly {
+		return errors.New("--push-only and --skip-pr can't be used at the same time")
 	}
 
 	if skipPullRequest && forkMode {
@@ -228,6 +234,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		Fork:                   forkMode,
 		ForkOwner:              forkOwner,
 		SkipPullRequest:        skipPullRequest,
+		PushOnly:               pushOnly,
 		SkipRepository:         skipRepository,
 		CommitAuthor:           commitAuthor,
 		BaseBranch:             baseBranchName,

@@ -58,6 +58,7 @@ type Runner struct {
 
 	Concurrent             int
 	SkipPullRequest        bool     // If set, the script will run directly on the base-branch without creating any PR
+	PushOnly               bool     // If set, the script will only publish the feature branch without creating a PR
 	SkipRepository         []string // A list of repositories that run will skip
 	RegExIncludeRepository *regexp.Regexp
 	RegExExcludeRepository *regexp.Regexp
@@ -319,7 +320,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	// Determine if a branch already exists and (depending on the conflict strategy) skip making changes
 	featureBranchExist := false
-	if !r.SkipPullRequest {
+	if !r.SkipPullRequest && !r.PushOnly {
 		featureBranchExist, err = sourceController.BranchExist(remoteName, r.FeatureBranch)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exists")
@@ -338,6 +339,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	err = sourceController.Push(ctx, remoteName, forcePush)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
+	}
+
+	if r.PushOnly {
+		return dryRunPullRequest{
+			Repository: repo,
+		}, nil
 	}
 
 	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
