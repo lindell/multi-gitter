@@ -1186,6 +1186,76 @@ Repositories with a successful run:
 				assert.Equal(t, "Both the feature branch and base branch was named master, if you intended to push directly into the base branch, please use the `skip-pr` option:\n  owner/should-not-change\n", runData.out)
 			},
 		},
+
+		{
+			name: "fork conflicts with pushOnly",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--fork", "--push-only",
+				changerBinaryPath,
+			},
+			expectErr: true,
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Contains(t, runData.cmdOut, "Error: --push-only and --fork can't be used at the same time")
+			},
+		},
+		{
+			name: "skipPr conflicts with pushOnly",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--skip-pr", "--push-only",
+				changerBinaryPath,
+			},
+			expectErr: true,
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Contains(t, runData.cmdOut, "Error: --push-only and --skip-pr can't be used at the same time")
+			},
+		},
+		{
+			name: "pushOnly success",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--push-only",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, runData.cmdOut, "")
+				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #0\n")
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {
