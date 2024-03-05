@@ -131,6 +131,10 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	if pushOnly && forkMode {
+		return errors.New("--push-only and --fork can't be used at the same time")
+	}
+
 	if skipPullRequest && pushOnly {
 		return errors.New("--push-only and --skip-pr can't be used at the same time")
 	}
