@@ -210,6 +210,9 @@ pr-title:
 project:
   - group/project
 
+# Skip pull request and only push the feature branch.
+push-only: false
+
 # The name, including owner of a GitHub repository in the format "ownerName/repoName".
 repo:
   - my-org/js-repo
@@ -676,6 +679,7 @@ Flags:
   -b, --pr-body string             The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string            The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
+      --push-only                  Skip pull request and only push the feature branch.
   -R, --repo strings               The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --repo-exclude string        Exclude repositories that match with a given Regular Expression
       --repo-include string        Include repositories that match with a given Regular Expression
