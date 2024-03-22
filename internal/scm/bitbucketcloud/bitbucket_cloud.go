@@ -7,11 +7,6 @@ import (
 
 type BitbucketCloud struct{}
 
-func (bc *BitbucketCloud) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
-    //TODO implement me
-    panic("implement me")
-}
-
 func (bc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
     //TODO implement me
     panic("implement me")
@@ -38,6 +33,11 @@ func (bc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullReque
 }
 
 func (bc *BitbucketCloud) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error {
+    //TODO implement me
+    panic("implement me")
+}
+
+func (bc *BitbucketCloud) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
     //TODO implement me
     panic("implement me")
 }
