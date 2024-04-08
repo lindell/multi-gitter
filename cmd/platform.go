@@ -114,6 +114,8 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (
 		return createGiteaClient(flag, verifyFlags)
 	case "bitbucket_server":
 		return createBitbucketServerClient(flag, verifyFlags)
+	case "bitbucket_cloud":
+		return createBitbucketCloudClient(flag, verifyFlags)
 	default:
 		return nil, fmt.Errorf("unknown platform: %s", platform)
 	}
@@ -281,6 +283,11 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 	}
 
 	return vc, nil
+}
+
+//TODO: Add more code to the client
+func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+	return nil, errors.New("not implemented")
 }
 
 func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
