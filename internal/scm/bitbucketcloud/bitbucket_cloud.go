@@ -4,13 +4,46 @@ import (
     "context"
     "github.com/ktrysmt/go-bitbucket"
     "github.com/lindell/multi-gitter/internal/scm"
+    "net/http"
 )
 
-type BitbucketCloud struct{}
+type BitbucketCloud struct{
+    repositories *bitbucket.Repositories
+    workspaces *bitbucket.Workspace
+    user bitbucket.User
+    bearerToken string
+    sshAuth         bool
+    httpClient      *http.Client
+    bbClient *bitbucket.Client
+}
+
+func New(username string, bearerToken string, repositories *bitbucket.Repositories, workspaces *bitbucket.Workspace, sshAuth bool)(BitbucketCloud, error){
+    //TODO add logic to create client here and populate it with the values present here
+    return BitbucketCloud{}, nil
+    //type Client struct {
+    //    Auth         *auth
+    //    Users        users
+    //    User         user
+    //    Teams        teams
+    //    Repositories *Repositories
+    //    Workspaces   *Workspace
+    //    Pagelen      int
+    //    MaxDepth     int
+    //    // LimitPages limits the number of pages for a request
+    //    //	default value as 0 -- disable limits
+    //    LimitPages int
+    //    // DisableAutoPaging allows you to disable the default behavior of automatically requesting
+    //    // all the pages for a paginated response.
+    //    DisableAutoPaging bool
+    //
+    //    HttpClient *http.Client
+    //    // contains filtered or unexported fields
+    //}
+}
 
 func (bc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
     //TODO implement me
-    //ctoken := bitbucket.New
+    //ctoken := bitbucket
     c := bitbucket.NewBasicAuth("username", "password")
 
     opt := &bitbucket.PullRequestsOptions{
