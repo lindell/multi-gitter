@@ -175,7 +175,6 @@ func (bbc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullRequ
 	// looks like repo slug will be needed https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-merge-post
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:                string(bbcPR.number),
-		Owner:             "",
 		SourceBranch:      bbcPR.branchName,
 		SourceRepository:  bbcPR.prRepoName,
 	}
