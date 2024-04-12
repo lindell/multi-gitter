@@ -169,8 +169,19 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 }
 
 func (bbc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
-	//TODO implement me
-	panic("implement me 3")
+	bbcPR := pr.(pullRequest)
+
+	//TODO: do I need owner here? where should I get the repo slug? is it needed, I dont think bitbucket knows which repo to merge?
+	// looks like repo slug will be needed https://developer.atlassian.com/cloud/bitbucket/rest/api-group-pullrequests/#api-repositories-workspace-repo-slug-pullrequests-pull-request-id-merge-post
+	prOptions := &bitbucket.PullRequestsOptions{
+		ID:                string(bbcPR.number),
+		Owner:             "",
+		SourceBranch:      bbcPR.branchName,
+		SourceRepository:  bbcPR.prRepoName,
+	}
+
+	_, err := bbc.bbClient.Repositories.PullRequests.Merge(prOptions)
+	return err
 }
 
 func (bbc *BitbucketCloud) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error {
