@@ -170,10 +170,6 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 
 func (bbc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	bbcPR := pr.(pullRequest)
-	//s := bbcPR.status.String()
-	//if s != "Open" {
-	//	return nil
-	//}
 	repoSlug := strings.Split(bbcPR.guiURL, "/")
 	prStr := pr.String()
 	fmt.Println(prStr)
