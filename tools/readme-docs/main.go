@@ -116,8 +116,8 @@ func main() {
 
 // Replace some of the default values in the yaml example with these values
 var yamlExamples = map[string]string{
-	"repo":    "\n  - my-org/js-repo\n  - other-org/python-repo",
-	"project": "\n  - group/project",
+	"repo":    "\n  - my-org/js-repo\n  - other-org/python-repo\n - azure-devops-project/ado-repo",
+	"project": "\n  - group/project\n - azureDevOpsProjectName",
 }
 
 var listDefaultRegex = regexp.MustCompile(`^\[(.+)\]$`)
