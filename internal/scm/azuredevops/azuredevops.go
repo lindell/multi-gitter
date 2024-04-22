@@ -213,6 +213,7 @@ func (a *AzureDevOps) CreatePullRequest(ctx context.Context, _ scm.Repository, p
 			},
 			Labels:    &labels,
 			Reviewers: &reviewers,
+			IsDraft:   &newPR.Draft,
 		},
 		RepositoryId: &prr.rid,
 		Project:      &prr.ownerName,
@@ -229,6 +230,71 @@ func (a *AzureDevOps) CreatePullRequest(ctx context.Context, _ scm.Repository, p
 		repoID:     prr.rid,
 		branchName: newPR.Head,
 		id:         *pr.PullRequestId,
+	}, nil
+}
+
+func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
+	r := repo.(repository)
+	pr := pullReq.(pullRequest)
+
+	reviewerIDs, err := a.getUserIds(ctx, append(updatedPR.Reviewers, updatedPR.Assignees...))
+	if err != nil {
+		return nil, err
+	}
+
+	reviewers := make([]git.IdentityRefWithVote, len(reviewerIDs))
+	for i, reviewerID := range reviewerIDs {
+		rCopy := reviewerID
+		reviewers[i] = git.IdentityRefWithVote{
+			Id: &rCopy,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	prTitle := updatedPR.Title
+	if updatedPR.Draft {
+		prTitle = "Draft: " + prTitle
+	}
+
+	activeLabel := true
+	labels := make([]core.WebApiTagDefinition, len(updatedPR.Labels))
+
+	for i, label := range updatedPR.Labels {
+		lCopy := label
+		labels[i] = core.WebApiTagDefinition{
+			Active: &activeLabel,
+			Name:   &lCopy,
+		}
+	}
+
+	srn := PrependPrefixIfNeeded(updatedPR.Head) // Pass the value of newPR.Head
+	trn := PrependPrefixIfNeeded(updatedPR.Base)
+
+	updateResult, err := a.gitClient.UpdatePullRequest(ctx, git.UpdatePullRequestArgs{
+		GitPullRequestToUpdate: &git.GitPullRequest{
+			Title:         &prTitle,
+			Description:   &updatedPR.Body,
+			SourceRefName: &srn,
+			TargetRefName: &trn,
+			Labels:        &labels,
+			Reviewers:     &reviewers,
+		},
+		RepositoryId:  &pr.repoID,
+		PullRequestId: &pr.id,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return pullRequest{
+		ownerName:  r.ownerName,
+		repoName:   r.name,
+		repoID:     r.rid,
+		branchName: updatedPR.Head,
+		id:         *updateResult.PullRequestId,
 	}, nil
 }
 
