@@ -5,19 +5,24 @@ on:
 
 name: Generate docs
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    permissions:
+      contents: write  # for Git to git push
     name: Release
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.15.5"
-        id: go
-
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Set up Go
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        with:
+          go-version-file: "go.mod"
+        id: go
 
       - name: Generate docs
         run: go run ./tools/docs/main.go

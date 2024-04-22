@@ -19,14 +19,15 @@ builds:
       - goos: darwin
         goarch: arm
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
-      arm: ARM
-      arm64: ARM64
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else if eq .Arch "arm" }}ARM
+      {{- else if eq .Arch "arm64" }}ARM64
+      {{- else }}{{ .Arch }}{{ end }}
     files:
       - README.md
       - LICENSE
@@ -61,7 +62,7 @@ changelog:
       - "^test:"
 brews:
   - name: multi-gitter
-    tap:
+    repository:
       owner: lindell
       name: homebrew-multi-gitter
     goarm: 6
@@ -85,3 +86,6 @@ publishers:
       - packages
     dir: "{{ dir .ArtifactPath }}"
     cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/multi-gitter/
+signs:
+  - artifacts: checksum
+    args: ["--batch", "-u", "{{ .Env.GPG_FINGERPRINT }}", "--output", "${signature}", "--detach-sign", "${artifact}"]

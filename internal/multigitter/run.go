@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"regexp"
 	"sync"
 	"syscall"
 
@@ -25,6 +26,7 @@ import (
 type VersionController interface {
 	GetRepositories(ctx context.Context) ([]scm.Repository, error)
 	CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error)
+	UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error)
 	GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error)
 	GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error)
 	MergePullRequest(ctx context.Context, pr scm.PullRequest) error
@@ -46,20 +48,25 @@ type Runner struct {
 	PullRequestTitle string
 	PullRequestBody  string
 	Reviewers        []string
-	MaxReviewers     int // If set to zero, all reviewers will be used
+	TeamReviewers    []string
+	MaxReviewers     int // If set to zero, all reviewers will be use
+	MaxTeamReviewers int // If set to zero, all team-reviewers will be used
 	DryRun           bool
 	CommitAuthor     *git.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 	Assignees        []string
 
-	Concurrent      int
-	SkipPullRequest bool     // If set, the script will run directly on the base-branch without creating any PR
-	SkipRepository  []string // A list of repositories that run will skip
+	Concurrent             int
+	SkipPullRequest        bool     // If set, the script will run directly on the base-branch without creating any PR
+	PushOnly               bool     // If set, the script will only publish the feature branch without creating a PR
+	SkipRepository         []string // A list of repositories that run will skip
+	RegExIncludeRepository *regexp.Regexp
+	RegExExcludeRepository *regexp.Regexp
 
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
-	ConflictStrategy ConflictStrategy // Defines what will happen if a branch does already exist
+	ConflictStrategy ConflictStrategy // Defines what will happen if a branch already exists
 
 	Draft bool // If set, creates Pull Requests as draft
 
@@ -70,10 +77,12 @@ type Runner struct {
 	CreateGit func(dir string) Git
 }
 
-var errAborted = errors.New("run was never started because of aborted execution")
-var errRejected = errors.New("changes were not included since they were manually rejected")
-var errNoChange = errors.New("no data was changed")
-var errBranchExist = errors.New("the new branch does already exist")
+var (
+	errAborted     = errors.New("run was never started because of aborted execution")
+	errRejected    = errors.New("changes were not included since they were manually rejected")
+	errNoChange    = errors.New("no data was changed")
+	errBranchExist = errors.New("the new branch already exists")
+)
 
 type dryRunPullRequest struct {
 	status     scm.PullRequestStatus
@@ -96,7 +105,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
 
-	repos = filterRepositories(repos, r.SkipRepository)
+	repos = filterRepositories(repos, r.SkipRepository, r.RegExIncludeRepository, r.RegExExcludeRepository)
 
 	if len(repos) == 0 {
 		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want to change.")
@@ -119,7 +128,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		defer func() {
 			if r := recover(); r != nil {
 				log.Error(r)
-				rc.AddError(errors.New("run paniced"), repos[i])
+				rc.AddError(errors.New("run panicked"), repos[i], nil)
 			}
 		}()
 
@@ -128,7 +137,7 @@ func (r *Runner) Run(ctx context.Context) error {
 			if err != errAborted {
 				logger.Info(err)
 			}
-			rc.AddError(err, repos[i])
+			rc.AddError(err, repos[i], pr)
 
 			if log.IsLevelEnabled(log.TraceLevel) {
 				if stackTrace := getStackTrace(err); stackTrace != "" {
@@ -140,7 +149,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		}
 
 		if pr != nil {
-			rc.AddSuccessPullRequest(pr)
+			rc.AddSuccessPullRequest(repos[i], pr)
 		} else {
 			rc.AddSuccessRepositories(repos[i])
 		}
@@ -149,7 +158,25 @@ func (r *Runner) Run(ctx context.Context) error {
 	return nil
 }
 
-func filterRepositories(repos []scm.Repository, skipRepositoryNames []string) []scm.Repository {
+// Determines if Repository should be excluded based on provided Regular Expression
+func excludeRepositoryFilter(repoName string, regExp *regexp.Regexp) bool {
+	if regExp == nil {
+		return false
+	}
+	return regExp.MatchString(repoName)
+}
+
+// Determines if Repository should be included based on provided Regular Expression
+func matchesRepositoryFilter(repoName string, regExp *regexp.Regexp) bool {
+	if regExp == nil {
+		return true
+	}
+	return regExp.MatchString(repoName)
+}
+
+func filterRepositories(repos []scm.Repository, skipRepositoryNames []string, regExIncludeRepository *regexp.Regexp,
+	regExExcludeRepository *regexp.Regexp,
+) []scm.Repository {
 	skipReposMap := map[string]struct{}{}
 	for _, skipRepo := range skipRepositoryNames {
 		skipReposMap[skipRepo] = struct{}{}
@@ -157,10 +184,14 @@ func filterRepositories(repos []scm.Repository, skipRepositoryNames []string) []
 
 	filteredRepos := make([]scm.Repository, 0, len(repos))
 	for _, r := range repos {
-		if _, shouldSkip := skipReposMap[r.FullName()]; !shouldSkip {
-			filteredRepos = append(filteredRepos, r)
+		if _, shouldSkip := skipReposMap[r.FullName()]; shouldSkip {
+			log.Infof("Skipping %s since it is in exclusion list", r.FullName())
+		} else if !matchesRepositoryFilter(r.FullName(), regExIncludeRepository) {
+			log.Infof("Skipping %s since it does not match the inclusion regexp", r.FullName())
+		} else if excludeRepositoryFilter(r.FullName(), regExExcludeRepository) {
+			log.Infof("Skipping %s since it match the exclusion regexp", r.FullName())
 		} else {
-			log.Infof("Skipping %s", r.FullName())
+			filteredRepos = append(filteredRepos, r)
 		}
 	}
 	return filteredRepos
@@ -229,13 +260,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
-	// Run the command that might or might not change the content of the repo
-	// If the command return a non-zero exit code, abort.
-	cmd := exec.CommandContext(ctx, r.ScriptPath, r.Arguments...)
-	cmd.Dir = tmpDir
-	cmd.Env = append(os.Environ(),
-		fmt.Sprintf("REPOSITORY=%s", repo.FullName()),
-	)
+	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
 	if r.DryRun {
 		cmd.Env = append(cmd.Env, "DRY_RUN=true")
 	}
@@ -277,7 +302,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	}
 
 	remoteName := "origin"
-	var prRepo = repo
+	prRepo := repo
 	if r.Fork {
 		log.Info("Forking repository")
 
@@ -293,14 +318,19 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		remoteName = "fork"
 	}
 
-	// Determine if a branch already exist and (depending on the conflict strategy) skip making changes
+	// Determine if a branch already exists and (depending on the conflict strategy) skip making changes
 	featureBranchExist := false
-	if !r.SkipPullRequest {
+	if !r.SkipPullRequest && !r.PushOnly {
 		featureBranchExist, err = sourceController.BranchExist(remoteName, r.FeatureBranch)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not verify if branch already exist")
+			return nil, errors.Wrap(err, "could not verify if branch already exists")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
-			return nil, errBranchExist
+			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+			if err != nil {
+				return nil, err
+			}
+
+			return pr, errBranchExist
 		}
 	}
 
@@ -311,6 +341,16 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errors.Wrap(err, "could not push changes")
 	}
 
+	if r.PushOnly {
+		return dryRunPullRequest{
+			Repository: repo,
+		}, nil
+	}
+
+	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+}
+
+func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogger, repo scm.Repository, prRepo scm.Repository, baseBranch string, featureBranchExist bool) (scm.PullRequest, error) {
 	if r.SkipPullRequest {
 		return nil, nil
 	}
@@ -325,28 +365,37 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		existingPullRequest = pr
 	}
 
-	var pr scm.PullRequest
 	if existingPullRequest != nil {
-		log.Info("Skip creating pull requests since one is already open")
-		pr = existingPullRequest
-	} else {
-		log.Info("Creating pull request")
-		pr, err = r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
-			Title:     r.PullRequestTitle,
-			Body:      r.PullRequestBody,
-			Head:      r.FeatureBranch,
-			Base:      baseBranch,
-			Reviewers: getReviewers(r.Reviewers, r.MaxReviewers),
-			Assignees: r.Assignees,
-			Draft:     r.Draft,
-			Labels:    r.Labels,
-		})
-		if err != nil {
-			return nil, err
+		if r.ConflictStrategy == ConflictStrategyReplace {
+			log.Info("Updating pull request since one is already open")
+			return r.VersionController.UpdatePullRequest(ctx, repo, existingPullRequest, scm.NewPullRequest{
+				Title:         r.PullRequestTitle,
+				Body:          r.PullRequestBody,
+				Head:          r.FeatureBranch,
+				Base:          baseBranch,
+				Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
+				TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
+				Assignees:     r.Assignees,
+				Draft:         r.Draft,
+				Labels:        r.Labels,
+			})
 		}
+		log.Info("Skip creating pull requests since one is already open")
+		return existingPullRequest, nil
 	}
 
-	return pr, nil
+	log.Info("Creating pull request")
+	return r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
+		Title:         r.PullRequestTitle,
+		Body:          r.PullRequestBody,
+		Head:          r.FeatureBranch,
+		Base:          baseBranch,
+		Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
+		TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
+		Assignees:     r.Assignees,
+		Draft:         r.Draft,
+		Labels:        r.Labels,
+	})
 }
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`

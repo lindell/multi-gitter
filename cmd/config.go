@@ -19,11 +19,7 @@ func initializeConfig(cmd *cobra.Command) error {
 	}
 
 	// Read any config defined in static config files
-	if err := initializeStaticConfig(cmd); err != nil {
-		return err
-	}
-
-	return nil
+	return initializeStaticConfig(cmd)
 }
 
 func initializeDynamicConfig(cmd *cobra.Command) error {

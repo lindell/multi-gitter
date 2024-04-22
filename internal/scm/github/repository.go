@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/google/go-github/v50/github"
+	"github.com/google/go-github/v59/github"
 	"github.com/pkg/errors"
 )
 

@@ -1,19 +1,21 @@
 name: Testing Coverage
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   build:
     name: Test and Coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: "^1.15.5"
-
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v2
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        with:
+          go-version-file: "go.mod"
 
       - name: Prepare coverage
         run: mkdir coverage
@@ -22,12 +24,12 @@ jobs:
         run: SKIP_TYPES=time-dependent go test ./... -coverpkg=$( go list ./... | grep -v /tests | grep -v /tools | paste -sd "," -) -coverprofile coverage/coverage.out
 
       - name: Coverage convert
-        uses: jandelgado/gcov2lcov-action@v1.0.8
+        uses: jandelgado/gcov2lcov-action@c680c0f7c7442485f1749eb2a13e54a686e76eb5 # v1.0.9
         with:
           infile: coverage/coverage.out
           outfile: coverage/lcov.info
 
       - name: Coveralls report
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949 # v2.2.3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

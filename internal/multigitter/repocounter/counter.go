@@ -11,26 +11,33 @@ import (
 
 // Counter keeps track of succeeded and failed repositories
 type Counter struct {
-	successPullRequests []scm.PullRequest
-	successRepositories []scm.Repository
-	errorRepositories   map[string][]scm.Repository
+	successRepositories []repoInfo
+	errors              map[string][]repoInfo
 	lock                sync.RWMutex
+}
+
+type repoInfo struct {
+	repository  scm.Repository
+	pullRequest scm.PullRequest
 }
 
 // NewCounter create a new repo counter
 func NewCounter() *Counter {
 	return &Counter{
-		errorRepositories: map[string][]scm.Repository{},
+		errors: map[string][]repoInfo{},
 	}
 }
 
 // AddError add a failing repository together with the error that caused it
-func (r *Counter) AddError(err error, repo scm.Repository) {
+func (r *Counter) AddError(err error, repo scm.Repository, pr scm.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
 	msg := err.Error()
-	r.errorRepositories[msg] = append(r.errorRepositories[msg], repo)
+	r.errors[msg] = append(r.errors[msg], repoInfo{
+		repository:  repo,
+		pullRequest: pr,
+	})
 }
 
 // AddSuccessRepositories adds a repository that succeeded
@@ -38,15 +45,20 @@ func (r *Counter) AddSuccessRepositories(repo scm.Repository) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
-	r.successRepositories = append(r.successRepositories, repo)
+	r.successRepositories = append(r.successRepositories, repoInfo{
+		repository: repo,
+	})
 }
 
 // AddSuccessPullRequest adds a pullrequest that succeeded
-func (r *Counter) AddSuccessPullRequest(repo scm.PullRequest) {
+func (r *Counter) AddSuccessPullRequest(repo scm.Repository, pr scm.PullRequest) {
 	defer r.lock.Unlock()
 	r.lock.Lock()
 
-	r.successPullRequests = append(r.successPullRequests, repo)
+	r.successRepositories = append(r.successRepositories, repoInfo{
+		repository:  repo,
+		pullRequest: pr,
+	})
 }
 
 // Info returns a formatted string about all repositories
@@ -56,20 +68,17 @@ func (r *Counter) Info() string {
 
 	var exitInfo string
 
-	for errMsg := range r.errorRepositories {
+	for errMsg := range r.errors {
 		exitInfo += fmt.Sprintf("%s:\n", strings.ToUpper(errMsg[0:1])+errMsg[1:])
-		for _, repo := range r.errorRepositories[errMsg] {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
-		}
-	}
-
-	if len(r.successPullRequests) > 0 {
-		exitInfo += "Repositories with a successful run:\n"
-		for _, pr := range r.successPullRequests {
-			if urler, ok := pr.(urler); ok {
-				exitInfo += fmt.Sprintf("  %s\n", terminal.Link(pr.String(), urler.URL()))
+		for _, errInfo := range r.errors[errMsg] {
+			if errInfo.pullRequest == nil {
+				exitInfo += fmt.Sprintf("  %s\n", errInfo.repository.FullName())
 			} else {
-				exitInfo += fmt.Sprintf("  %s\n", pr.String())
+				if urler, hasURL := errInfo.pullRequest.(urler); hasURL && urler.URL() != "" {
+					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(errInfo.pullRequest.String(), urler.URL()))
+				} else {
+					exitInfo += fmt.Sprintf("  %s\n", errInfo.pullRequest.String())
+				}
 			}
 		}
 	}
@@ -77,7 +86,15 @@ func (r *Counter) Info() string {
 	if len(r.successRepositories) > 0 {
 		exitInfo += "Repositories with a successful run:\n"
 		for _, repo := range r.successRepositories {
-			exitInfo += fmt.Sprintf("  %s\n", repo.FullName())
+			if repo.pullRequest != nil {
+				if urler, hasURL := repo.pullRequest.(urler); hasURL && urler.URL() != "" {
+					exitInfo += fmt.Sprintf("  %s\n", terminal.Link(repo.pullRequest.String(), urler.URL()))
+				} else {
+					exitInfo += fmt.Sprintf("  %s\n", repo.pullRequest.String())
+				}
+			} else {
+				exitInfo += fmt.Sprintf("  %s\n", repo.repository.FullName())
+			}
 		}
 	}
 

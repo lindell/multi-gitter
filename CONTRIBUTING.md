@@ -25,6 +25,8 @@ The only dependency needed for multi-gitter development is `go`. By forking and 
 go run main.go run ./examples/general/replace.sh -R my-org/test-repo -m "Test message"
 ```
 
+If you don't have a Go setup already, you can use a [GitHub codespace already configured to work with multi-gitter development.](https://github.com/codespaces/new/lindell/multi-gitter?resume=1). 
+
 ### Test your code
 
 All tests can be run with `go test ./...`. These tests will also run on multiple platforms once you push it.

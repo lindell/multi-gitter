@@ -30,9 +30,11 @@ var BuildDate time.Time
 // Commit is the commit the build was made on (set by main.go)
 var Commit string
 
-func version(cmd *cobra.Command, args []string) {
+func version(_ *cobra.Command, _ []string) {
 	fmt.Printf("multi-gitter version: %s\n", Version)
 	fmt.Printf("Release-Date: %s\n", BuildDate.Format("2006-01-02"))
 	fmt.Printf("Go version: %s\n", runtime.Version())
+	fmt.Printf("OS: %s\n", runtime.GOOS)
+	fmt.Printf("Arch: %s\n", runtime.GOARCH)
 	fmt.Printf("Commit: %s\n", Commit)
 }

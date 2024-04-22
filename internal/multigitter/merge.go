@@ -36,7 +36,7 @@ func (s Merger) Merge(ctx context.Context) error {
 		log.Infof("Merging")
 		err := s.VersionController.MergePullRequest(ctx, pr)
 		if err != nil {
-			log.Errorf("Error occured while merging: %s", err.Error())
+			log.Errorf("Error occurred while merging: %s", err.Error())
 		}
 	}
 
