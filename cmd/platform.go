@@ -7,6 +7,7 @@ import (
 
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/scm/bitbucketcloud"
 	"github.com/lindell/multi-gitter/internal/scm/bitbucketserver"
 	"github.com/lindell/multi-gitter/internal/scm/gitea"
 	"github.com/lindell/multi-gitter/internal/scm/github"
@@ -114,6 +115,8 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (
 		return createGiteaClient(flag, verifyFlags)
 	case "bitbucket_server":
 		return createBitbucketServerClient(flag, verifyFlags)
+	case "bitbucket_cloud":
+		return createBitbucketCloudClient(flag, verifyFlags)
 	default:
 		return nil, fmt.Errorf("unknown platform: %s", platform)
 	}
@@ -276,6 +279,35 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 		Topics:        topics,
 		SkipForks:     skipForks,
 	}, mergeTypes, sshAuth)
+	if err != nil {
+		return nil, err
+	}
+
+	return vc, nil
+}
+
+// TODO: Add more code to the client
+func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+	workspaces, _ := flag.GetStringSlice("org")
+	users, _ := flag.GetStringSlice("user")
+	repos, _ := flag.GetStringSlice("repo")
+	username, _ := flag.GetString("username")
+	sshAuth, _ := flag.GetBool("ssh-auth")
+
+	if verifyFlags && len(workspaces) == 0 && len(users) == 0 && len(repos) == 0 {
+		return nil, errors.New("no workspace, user or repository set")
+	}
+
+	if username == "" {
+		return nil, errors.New("no username set")
+	}
+
+	token, err := getToken(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, sshAuth, http.NewLoggingRoundTripper)
 	if err != nil {
 		return nil, err
 	}

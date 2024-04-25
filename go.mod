@@ -18,6 +18,7 @@ require (
 	github.com/xanzy/go-gitlab v0.98.0
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/oauth2 v0.17.0
+	github.com/ktrysmt/go-bitbucket v0.9.76
 )
 
 require (
