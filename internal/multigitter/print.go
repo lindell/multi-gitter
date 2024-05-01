@@ -3,11 +3,12 @@ package multigitter
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/scm"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"os"
 )
 
 // Printer contains fields to be able to do the print command
@@ -49,7 +50,7 @@ func (r Printer) Print(ctx context.Context) error {
 			if err != errAborted {
 				logger.Info(err)
 			}
-			rc.AddError(err, repos[i])
+			rc.AddError(err, repos[i], nil)
 			return
 		}
 

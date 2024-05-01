@@ -240,7 +240,7 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		prTitle = "Draft: " + prTitle // See https://docs.gitlab.com/ee/user/project/merge_requests/drafts.html#mark-merge-requests-as-drafts
 	}
 
-	labels := gitlab.Labels(newPR.Labels)
+	labels := gitlab.LabelOptions(newPR.Labels)
 	removeSourceBranch := true
 	mr, _, err := g.glClient.MergeRequests.CreateMergeRequest(prR.pid, &gitlab.CreateMergeRequestOptions{
 		Title:              &prTitle,
@@ -301,6 +301,49 @@ func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, err
 	return userIDs, nil
 }
 
+// UpdatePullRequest updates an existing pull request
+func (g *Gitlab) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
+	r := repo.(repository)
+	pr := pullReq.(pullRequest)
+
+	reviewersIDs, err := g.getUserIds(ctx, updatedPR.Reviewers)
+	if err != nil {
+		return nil, err
+	}
+
+	assigneesIDs, err := g.getUserIds(ctx, updatedPR.Assignees)
+	if err != nil {
+		return nil, err
+	}
+
+	prTitle := updatedPR.Title
+	if updatedPR.Draft {
+		prTitle = "Draft: " + prTitle // See https://docs.gitlab.com/ee/user/project/merge_requests/drafts.html#mark-merge-requests-as-drafts
+	}
+
+	labels := gitlab.LabelOptions(updatedPR.Labels)
+	mr, _, err := g.glClient.MergeRequests.UpdateMergeRequest(pr.sourcePID, pr.iid, &gitlab.UpdateMergeRequestOptions{
+		Title:       &prTitle,
+		Description: &updatedPR.Body,
+		ReviewerIDs: &reviewersIDs,
+		AssigneeIDs: &assigneesIDs,
+		Labels:      &labels,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return pullRequest{
+		repoName:   r.name,
+		ownerName:  r.ownerName,
+		targetPID:  mr.TargetProjectID,
+		sourcePID:  mr.SourceProjectID,
+		branchName: updatedPR.Head,
+		iid:        mr.IID,
+		webURL:     mr.WebURL,
+	}, nil
+}
+
 // GetPullRequests gets all pull requests of with a specific branch
 func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	projects, err := g.getProjects(ctx)
@@ -318,7 +361,7 @@ func (g *Gitlab) GetPullRequests(ctx context.Context, branchName string) ([]scm.
 			continue
 		}
 
-		prs = append(prs, convertMergeRequest(mr, project.Path, project.Namespace.Path))
+		prs = append(prs, convertMergeRequest(mr, project.Path, project.Namespace.FullPath))
 	}
 
 	return prs, nil

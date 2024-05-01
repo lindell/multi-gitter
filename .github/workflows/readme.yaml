@@ -5,18 +5,23 @@ on:
 
 name: Generate readme
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    permissions:
+      contents: write  # for Git to git push
     name: Release
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
         with:
-          go-version: "^1.15.5"
+          go-version-file: "go.mod"
         id: go
 
       - name: Generate readme

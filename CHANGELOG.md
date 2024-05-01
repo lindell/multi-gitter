@@ -1,5 +1,211 @@
 # Changelog
 
+## [0.51.0](https://github.com/lindell/multi-gitter/compare/v0.50.1...v0.51.0) (2024-03-14)
+
+
+### Features
+
+* --push-only flag to allow developers to only push without creating a PR ([#466](https://github.com/lindell/multi-gitter/issues/466)) ([76dcabd](https://github.com/lindell/multi-gitter/commit/76dcabda33d11ff40dcdf31cd296b64a472587ad))
+
+
+### Miscellaneous
+
+* **deps:** bump google.golang.org/protobuf from 1.31.0 to 1.33.0 ([#467](https://github.com/lindell/multi-gitter/issues/467)) ([beff881](https://github.com/lindell/multi-gitter/commit/beff8810075a77682d189c62cc49c15f98f65c0f))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 814bf88 ([a393e22](https://github.com/lindell/multi-gitter/commit/a393e2280ebdb737faf7de273ce9fce3ccaeaa0a))
+* update module github.com/google/go-github/v58 to v59 ([#465](https://github.com/lindell/multi-gitter/issues/465)) ([a572c31](https://github.com/lindell/multi-gitter/commit/a572c31247985e0c114faad9d21ffc49259a7be2))
+* update module github.com/xanzy/go-gitlab to v0.98.0 ([60e218d](https://github.com/lindell/multi-gitter/commit/60e218d75726b9c6b8a0a574c7c3b5de2f8035f0))
+* update module golang.org/x/oauth2 to v0.17.0 ([28f6a82](https://github.com/lindell/multi-gitter/commit/28f6a82be47bb286395078c28b626cb783cb9a93))
+
+## [0.50.1](https://github.com/lindell/multi-gitter/compare/v0.50.0...v0.50.1) (2024-02-21)
+
+
+### Bug Fixes
+
+* **github:** team reviewers no set without also setting reviewers ([#461](https://github.com/lindell/multi-gitter/issues/461)) ([edf8735](https://github.com/lindell/multi-gitter/commit/edf873526f92109132271e326cd366738fb61ece))
+
+## [0.50.0](https://github.com/lindell/multi-gitter/compare/v0.49.1...v0.50.0) (2024-02-03)
+
+
+### Features
+
+* when using replace strategy also update PR ([#368](https://github.com/lindell/multi-gitter/issues/368)) ([3f2d821](https://github.com/lindell/multi-gitter/commit/3f2d8219b8a8cb62a027966f3dd796d63b6f0726))
+
+
+### Dependencies
+
+* update github.com/cloudflare/circl from 1.3.3 to 1.3.7 ([#451](https://github.com/lindell/multi-gitter/issues/451)) ([09b1ed8](https://github.com/lindell/multi-gitter/commit/09b1ed88dbd8aad62ed1cb18a255e2af32269a93))
+* update github.com/gfleury/go-bitbucket-v1 digest to 0b41d78 ([0fb5cdb](https://github.com/lindell/multi-gitter/commit/0fb5cdba8ecfdd54b47f2fc9556092242f8e8902))
+* update golang.org/x/exp digest to 1b97071 ([fbb68c2](https://github.com/lindell/multi-gitter/commit/fbb68c28f5422da08eee3c41e9ea5c466cf475e7))
+* update module code.gitea.io/sdk/gitea to v0.17.1 ([6922222](https://github.com/lindell/multi-gitter/commit/692222204b02292d205a522962a397575ca55ebc))
+* update module github.com/google/go-github/v57 to v58 ([#458](https://github.com/lindell/multi-gitter/issues/458)) ([281f130](https://github.com/lindell/multi-gitter/commit/281f130aea48d6dc463b2c87d3cd4272371fdd77))
+* update module github.com/xanzy/go-gitlab to v0.96.0 ([51e5dd0](https://github.com/lindell/multi-gitter/commit/51e5dd018b7788987b83f965b18ebfc882c64e8d))
+* update module golang.org/x/oauth2 to v0.16.0 ([5b76dad](https://github.com/lindell/multi-gitter/commit/5b76dadd6aa377fc4ae94f64e22cd613315b3794))
+
+## [0.49.1](https://github.com/lindell/multi-gitter/compare/v0.49.1...v0.49.1) (2024-01-06)
+
+
+### Bug Fixes
+
+* cmdgit BranchExist should match full branch name ([#433](https://github.com/lindell/multi-gitter/issues/433)) ([c7a6e69](https://github.com/lindell/multi-gitter/commit/c7a6e69aafb87efafa25248c73d7afa1a8ee76ac))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 02704c9 ([f7e273e](https://github.com/lindell/multi-gitter/commit/f7e273e6ebf4ee52d16e76e8472de87eb9c3a52e))
+* update golang.org/x/exp digest to 6522937 ([cab859f](https://github.com/lindell/multi-gitter/commit/cab859fdb40c181e9b1dc58448290eec800f6aae))
+* update module code.gitea.io/sdk/gitea to v0.17.0 ([3949d2f](https://github.com/lindell/multi-gitter/commit/3949d2f4a3d7f315ca48a6c8c18910a1bcce3443))
+* update module github.com/go-git/go-git/v5 to v5.10.1 ([40f62a1](https://github.com/lindell/multi-gitter/commit/40f62a11cacfd429e232451aeab9e11825de9ce3))
+* update module github.com/go-git/go-git/v5 to v5.11.0 [security] ([5fef1cc](https://github.com/lindell/multi-gitter/commit/5fef1ccc936c2d6f31a8d4ae7ac0ebed6409f2c1))
+* update module github.com/google/go-github/v56 to v57 ([#445](https://github.com/lindell/multi-gitter/issues/445)) ([28a3279](https://github.com/lindell/multi-gitter/commit/28a32793edd1c63bb66b2008ef333f2f7b31c07b))
+* update module github.com/spf13/cobra to v1.8.0 ([f976ac2](https://github.com/lindell/multi-gitter/commit/f976ac2d91254e92f5e937f9e0fad99802b8ce79))
+* update module github.com/spf13/viper to v1.18.2 ([29a205e](https://github.com/lindell/multi-gitter/commit/29a205e9db876a0baf6091415f47085bb2876b5e))
+* update module github.com/xanzy/go-gitlab to v0.94.0 ([38666d9](https://github.com/lindell/multi-gitter/commit/38666d9b5ae79783ea161a20ad566480e5c1b23a))
+* update module github.com/xanzy/go-gitlab to v0.95.2 ([#446](https://github.com/lindell/multi-gitter/issues/446)) ([61f0110](https://github.com/lindell/multi-gitter/commit/61f0110512e4ff464315e3791e6393e62830f112))
+* update module golang.org/x/oauth2 to v0.15.0 ([3874ccb](https://github.com/lindell/multi-gitter/commit/3874ccb93ab76c3a2724358f825880b750a5dbea))
+
+
+### Miscellaneous
+
+* **master:** release 0.49.0 ([#428](https://github.com/lindell/multi-gitter/issues/428)) ([89ef3b7](https://github.com/lindell/multi-gitter/commit/89ef3b77e51433735e667d0953c696b724f81b6f))
+* **master:** release 0.49.1 ([#434](https://github.com/lindell/multi-gitter/issues/434)) ([1693f01](https://github.com/lindell/multi-gitter/commit/1693f018a8ea273e3787b9d4e4606dc6a2f2a860))
+
+## [0.49.1](https://github.com/lindell/multi-gitter/compare/v0.49.0...v0.49.1) (2024-01-05)
+
+
+### Bug Fixes
+
+* cmdgit BranchExist should match full branch name ([#433](https://github.com/lindell/multi-gitter/issues/433)) ([c7a6e69](https://github.com/lindell/multi-gitter/commit/c7a6e69aafb87efafa25248c73d7afa1a8ee76ac))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 02704c9 ([f7e273e](https://github.com/lindell/multi-gitter/commit/f7e273e6ebf4ee52d16e76e8472de87eb9c3a52e))
+* update golang.org/x/exp digest to 6522937 ([cab859f](https://github.com/lindell/multi-gitter/commit/cab859fdb40c181e9b1dc58448290eec800f6aae))
+* update module code.gitea.io/sdk/gitea to v0.17.0 ([3949d2f](https://github.com/lindell/multi-gitter/commit/3949d2f4a3d7f315ca48a6c8c18910a1bcce3443))
+* update module github.com/go-git/go-git/v5 to v5.10.1 ([40f62a1](https://github.com/lindell/multi-gitter/commit/40f62a11cacfd429e232451aeab9e11825de9ce3))
+* update module github.com/go-git/go-git/v5 to v5.11.0 [security] ([5fef1cc](https://github.com/lindell/multi-gitter/commit/5fef1ccc936c2d6f31a8d4ae7ac0ebed6409f2c1))
+* update module github.com/google/go-github/v56 to v57 ([#445](https://github.com/lindell/multi-gitter/issues/445)) ([28a3279](https://github.com/lindell/multi-gitter/commit/28a32793edd1c63bb66b2008ef333f2f7b31c07b))
+* update module github.com/spf13/cobra to v1.8.0 ([f976ac2](https://github.com/lindell/multi-gitter/commit/f976ac2d91254e92f5e937f9e0fad99802b8ce79))
+* update module github.com/spf13/viper to v1.18.2 ([29a205e](https://github.com/lindell/multi-gitter/commit/29a205e9db876a0baf6091415f47085bb2876b5e))
+* update module github.com/xanzy/go-gitlab to v0.94.0 ([38666d9](https://github.com/lindell/multi-gitter/commit/38666d9b5ae79783ea161a20ad566480e5c1b23a))
+* update module github.com/xanzy/go-gitlab to v0.95.2 ([#446](https://github.com/lindell/multi-gitter/issues/446)) ([61f0110](https://github.com/lindell/multi-gitter/commit/61f0110512e4ff464315e3791e6393e62830f112))
+* update module golang.org/x/oauth2 to v0.15.0 ([3874ccb](https://github.com/lindell/multi-gitter/commit/3874ccb93ab76c3a2724358f825880b750a5dbea))
+
+## [0.49.0](https://github.com/lindell/multi-gitter/compare/v0.48.2...v0.49.0) (2023-11-09)
+
+
+### Features
+
+* add repo-include and repo-exclude options ([#426](https://github.com/lindell/multi-gitter/issues/426)) ([faf0092](https://github.com/lindell/multi-gitter/commit/faf0092a4c5411420f721973595588f6303253da))
+* **github:** use code search to select repositories ([#399](https://github.com/lindell/multi-gitter/issues/399)) ([d8b75f4](https://github.com/lindell/multi-gitter/commit/d8b75f4ed173c2389dcb3dd89a4213fd8ce78f42))
+
+## [0.48.2](https://github.com/lindell/multi-gitter/compare/v0.48.1...v0.48.2) (2023-11-04)
+
+
+### Bug Fixes
+
+* **typo:** fixed panicked typo ([#423](https://github.com/lindell/multi-gitter/issues/423)) ([9b5774a](https://github.com/lindell/multi-gitter/commit/9b5774ad8e95f849d9af0b76a58183c7bbdf0462))
+
+## [0.48.1](https://github.com/lindell/multi-gitter/compare/v0.48.0...v0.48.1) (2023-11-02)
+
+
+### Bug Fixes
+
+* mitigated script injection in test install action ([#404](https://github.com/lindell/multi-gitter/issues/404)) ([f77ef91](https://github.com/lindell/multi-gitter/commit/f77ef91416f3b13080372bb00831824eea37c130))
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 digest to 6e30c57 ([#382](https://github.com/lindell/multi-gitter/issues/382)) ([c201f42](https://github.com/lindell/multi-gitter/commit/c201f425b4fbde46c3d27fa380ab099e0a6f8608))
+* update module github.com/go-git/go-git/v5 to v5.10.0 ([077d637](https://github.com/lindell/multi-gitter/commit/077d637789ce7943212ca01827dd06fe314ad75d))
+* update module github.com/google/go-github/v55 to v56 ([#412](https://github.com/lindell/multi-gitter/issues/412)) ([946afac](https://github.com/lindell/multi-gitter/commit/946afac76f4a1884823da591d04236daaf3fb795))
+* update module github.com/spf13/viper to v1.17.0 ([cfe3409](https://github.com/lindell/multi-gitter/commit/cfe3409acee757b78c542e106436e7ca177cf82b))
+* update module github.com/xanzy/go-gitlab to v0.93.2 ([76fd29b](https://github.com/lindell/multi-gitter/commit/76fd29b07a7561223adb474bf4fd5eedae6a4298))
+* update module golang.org/x/oauth2 to v0.13.0 ([3b3e9c0](https://github.com/lindell/multi-gitter/commit/3b3e9c009d1d4a3634ce8decb75625f2ed8e4d0d))
+
+## [0.48.0](https://github.com/lindell/multi-gitter/compare/v0.47.4...v0.48.0) (2023-10-27)
+
+
+### Features
+
+* added --plain-output flag ([#378](https://github.com/lindell/multi-gitter/issues/378)) ([356f471](https://github.com/lindell/multi-gitter/commit/356f471f720e6efe0146bfabcb99b2c214d9c4db))
+* use repo search to select repositories ([#397](https://github.com/lindell/multi-gitter/issues/397)) ([0f8c2dc](https://github.com/lindell/multi-gitter/commit/0f8c2dcceeb9b635c7405e878df608318b518de4))
+
+
+### Bug Fixes
+
+* **gitlab:** make sure entire project path is shown ([#392](https://github.com/lindell/multi-gitter/issues/392)) ([280dfc7](https://github.com/lindell/multi-gitter/commit/280dfc7b6ed5c8a5345f2207e58e81202a451e33))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.16.0 ([ff04448](https://github.com/lindell/multi-gitter/commit/ff0444885bfbf657b4813efdb53986af67b0ac58))
+* update module github.com/go-git/go-git/v5 to v5.9.0 ([a954c7c](https://github.com/lindell/multi-gitter/commit/a954c7c0c20cb0a930203c92143456c1571d2e2f))
+* update module github.com/google/go-github/v53 to v55 ([#390](https://github.com/lindell/multi-gitter/issues/390)) ([d92cb29](https://github.com/lindell/multi-gitter/commit/d92cb29cc96e8a78d19ccdd1816643510169f6c9))
+* update module github.com/xanzy/go-gitlab to v0.92.1 ([19c2925](https://github.com/lindell/multi-gitter/commit/19c292523f3442766f09d5811ec9b38ecb26c9bf))
+* update module github.com/xanzy/go-gitlab to v0.92.3 ([3e6cd75](https://github.com/lindell/multi-gitter/commit/3e6cd75ad0923ad535f2125f1c94cba6b9072f05))
+* update module golang.org/x/oauth2 to v0.12.0 ([b9c258a](https://github.com/lindell/multi-gitter/commit/b9c258a2b2924ebafa37864159154dc7ed09449c))
+
+
+### Miscellaneous
+
+* update to Go 1.21 ([#402](https://github.com/lindell/multi-gitter/issues/402)) ([d454e5b](https://github.com/lindell/multi-gitter/commit/d454e5b17e90fa2b2d36fa60d15b51df3e7701fa))
+
+## [0.47.4](https://github.com/lindell/multi-gitter/compare/v0.47.3...v0.47.4) (2023-09-12)
+
+
+### Bug Fixes
+
+* don't panic when a PR branch is deleted ([#385](https://github.com/lindell/multi-gitter/issues/385)) ([fca98e1](https://github.com/lindell/multi-gitter/commit/fca98e134a6640d79aae6bffbe154d42b3393d40))
+
+
+### Dependencies
+
+* update module github.com/go-git/go-git/v5 to v5.8.1 ([8de2001](https://github.com/lindell/multi-gitter/commit/8de20010a3c8c7ac5eecb6c366975d164e9a8409))
+* update module github.com/xanzy/go-gitlab to v0.88.0 ([c0f0bb4](https://github.com/lindell/multi-gitter/commit/c0f0bb4ba45c9834fe67a44774a96a984a16913c))
+* update module github.com/xanzy/go-gitlab to v0.90.0 ([fd66cd2](https://github.com/lindell/multi-gitter/commit/fd66cd200c08b911fb19dae40dafa6c91170a269))
+* update module golang.org/x/oauth2 to v0.10.0 ([a82fc38](https://github.com/lindell/multi-gitter/commit/a82fc380c95ab1bec3a20a2da0465444b8d91cd2))
+* update module golang.org/x/oauth2 to v0.11.0 ([7820c22](https://github.com/lindell/multi-gitter/commit/7820c228f69386a12df3ddc4c908bb1940b9aa2e))
+
+## [0.47.3](https://github.com/lindell/multi-gitter/compare/v0.47.2...v0.47.3) (2023-07-16)
+
+
+### Bug Fixes
+
+* changed the order of version and os in the released archives ([656e9de](https://github.com/lindell/multi-gitter/commit/656e9de09c0bdb9064d47bd2b6adeb23f971eea3))
+
+## [0.47.2](https://github.com/lindell/multi-gitter/compare/v0.47.1...v0.47.2) (2023-07-16)
+
+
+### Bug Fixes
+
+* fixed archive release names ([1462b90](https://github.com/lindell/multi-gitter/commit/1462b901c373c0a1f04c73f38784fac01cb65189))
+
+## [0.47.1](https://github.com/lindell/multi-gitter/compare/v0.47.0...v0.47.1) (2023-07-15)
+
+
+### Bug Fixes
+
+* ensure pull request exists during conflict resolution ([#369](https://github.com/lindell/multi-gitter/issues/369)) ([2b7166a](https://github.com/lindell/multi-gitter/commit/2b7166a203ddd7d939bc28a90ee26e08adb5a771))
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 digest to 8d7be58 ([1d8a19f](https://github.com/lindell/multi-gitter/commit/1d8a19f8316dd8874a0755189902dce24acd09c5))
+* update module github.com/go-git/go-git/v5 to v5.7.0 ([d407eb9](https://github.com/lindell/multi-gitter/commit/d407eb9ef7bb06ca54b0d28ad992c8832ecb6c41))
+* update module github.com/google/go-github/v50 to v50.2.0 ([#359](https://github.com/lindell/multi-gitter/issues/359)) ([481c5da](https://github.com/lindell/multi-gitter/commit/481c5da7223eb798bd04b21eb839aa6aa563a763))
+* update module github.com/google/go-github/v50 to v53 ([#362](https://github.com/lindell/multi-gitter/issues/362)) ([ff85919](https://github.com/lindell/multi-gitter/commit/ff85919b1a264ce042e9e2bbca24e356be15e623))
+* update module github.com/sirupsen/logrus to v1.9.3 ([3f0d4c7](https://github.com/lindell/multi-gitter/commit/3f0d4c707636a595404839deecc6be9204cf0407))
+* update module github.com/spf13/cobra to v1.7.0 ([#360](https://github.com/lindell/multi-gitter/issues/360)) ([212a9b6](https://github.com/lindell/multi-gitter/commit/212a9b686db37c58205d7f2e20778ec592e15388))
+* update module github.com/spf13/viper to v1.16.0 ([#364](https://github.com/lindell/multi-gitter/issues/364)) ([af41308](https://github.com/lindell/multi-gitter/commit/af4130863a62217bcf2c5f4fda163b521112a7a0))
+* update module github.com/stretchr/testify to v1.8.4 ([#361](https://github.com/lindell/multi-gitter/issues/361)) ([2686055](https://github.com/lindell/multi-gitter/commit/2686055d74f2f2af416ff6ed05eb4f47647648be))
+* update module github.com/xanzy/go-gitlab to v0.86.0 ([#365](https://github.com/lindell/multi-gitter/issues/365)) ([79b9a0e](https://github.com/lindell/multi-gitter/commit/79b9a0e57a45ca5c55af310d1a619018166d2362))
+* update module golang.org/x/oauth2 to v0.9.0 ([#363](https://github.com/lindell/multi-gitter/issues/363)) ([58030bd](https://github.com/lindell/multi-gitter/commit/58030bd778db562dedcb6cf48eef9dbb2a8039d9))
+
 ## [0.47.0](https://www.github.com/lindell/multi-gitter/compare/v0.46.0...v0.47.0) (2023-05-02)
 
 

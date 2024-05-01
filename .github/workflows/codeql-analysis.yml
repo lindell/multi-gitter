@@ -9,8 +9,15 @@ on:
   schedule:
     - cron: '10 6 * * 2'
 
+permissions:
+  contents: read
+
 jobs:
   analyze:
+    permissions:
+      actions: read  # for github/codeql-action/init to get workflow details
+      contents: read  # for actions/checkout to fetch code
+      security-events: write  # for github/codeql-action/autobuild to send a status report
     name: Analyze
     runs-on: ubuntu-latest
 
@@ -21,16 +28,21 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+    - name: Set up Go
+      uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      with:
+        go-version-file: 'go.mod'
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@dc021d495cb77b369e4d9d04a501700fd83b8c51 # v2.24.0
       with:
         languages: ${{ matrix.language }}
 
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+      uses: github/codeql-action/autobuild@dc021d495cb77b369e4d9d04a501700fd83b8c51 # v2.24.0
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@dc021d495cb77b369e4d9d04a501700fd83b8c51 # v2.24.0

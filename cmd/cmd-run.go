@@ -2,16 +2,17 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
 
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -47,6 +48,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("max-team-reviewers", "", 0, "If this value is set, team reviewers will be randomized")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
+	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
 	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
@@ -63,6 +65,8 @@ Available values:
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.")
+	cmd.Flags().StringP("repo-include", "", "", "Include repositories that match with a given Regular Expression")
+	cmd.Flags().StringP("repo-exclude", "", "", "Exclude repositories that match with a given Regular Expression")
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureRunPlatform(cmd, true)
@@ -81,12 +85,13 @@ func run(cmd *cobra.Command, _ []string) error {
 	prTitle, _ := flag.GetString("pr-title")
 	prBody, _ := flag.GetString("pr-body")
 	commitMessage, _ := flag.GetString("commit-message")
-	reviewers, _ := flag.GetStringSlice("reviewers")
-	teamReviewers, _ := flag.GetStringSlice("team-reviewers")
+	reviewers, _ := stringSlice(flag, "reviewers")
+	teamReviewers, _ := stringSlice(flag, "team-reviewers")
 	maxReviewers, _ := flag.GetInt("max-reviewers")
 	maxTeamReviewers, _ := flag.GetInt("max-team-reviewers")
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
+	pushOnly, _ := flag.GetBool("push-only")
 	skipRepository, _ := flag.GetStringSlice("skip-repo")
 	interactive, _ := flag.GetBool("interactive")
 	dryRun, _ := flag.GetBool("dry-run")
@@ -96,10 +101,12 @@ func run(cmd *cobra.Command, _ []string) error {
 	authorName, _ := flag.GetString("author-name")
 	authorEmail, _ := flag.GetString("author-email")
 	strOutput, _ := flag.GetString("output")
-	assignees, _ := flag.GetStringSlice("assignees")
+	assignees, _ := stringSlice(flag, "assignees")
 	draft, _ := flag.GetBool("draft")
-	labels, _ := flag.GetStringSlice("labels")
 	cloneDir, _ := flag.GetString("clone-dir")
+	labels, _ := stringSlice(flag, "labels")
+	repoInclude, _ := flag.GetString("repo-include")
+	repoExclude, _ := flag.GetString("repo-exclude")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -126,6 +133,14 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	if pushOnly && forkMode {
+		return errors.New("--push-only and --fork can't be used at the same time")
+	}
+
+	if skipPullRequest && pushOnly {
+		return errors.New("--push-only and --skip-pr can't be used at the same time")
+	}
+
 	if skipPullRequest && forkMode {
 		return errors.New("--fork and --skip-pr can't be used at the same time")
 	}
@@ -144,6 +159,30 @@ func run(cmd *cobra.Command, _ []string) error {
 			Name:  authorName,
 			Email: authorEmail,
 		}
+	}
+
+	if maxReviewers < 0 {
+		return errors.New("max-reviewers cannot be negative")
+	}
+	if maxTeamReviewers < 0 {
+		return errors.New("max-team-reviewers cannot be negative")
+	}
+
+	var regExIncludeRepository *regexp.Regexp
+	var regExExcludeRepository *regexp.Regexp
+	if repoInclude != "" {
+		repoIncludeFilterCompile, err := regexp.Compile(repoInclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-include")
+		}
+		regExIncludeRepository = repoIncludeFilterCompile
+	}
+	if repoExclude != "" {
+		repoExcludeFilterCompile, err := regexp.Compile(repoExclude)
+		if err != nil {
+			return errors.WithMessage(err, "could not parse repo-exclude")
+		}
+		regExExcludeRepository = repoExcludeFilterCompile
 	}
 
 	vc, err := getVersionController(flag, true, false)
@@ -187,26 +226,30 @@ func run(cmd *cobra.Command, _ []string) error {
 
 		VersionController: vc,
 
-		CommitMessage:    commitMessage,
-		PullRequestTitle: prTitle,
-		PullRequestBody:  prBody,
-		Reviewers:        reviewers,
-		TeamReviewers:    teamReviewers,
-		MaxReviewers:     maxReviewers,
-		MaxTeamReviewers: maxTeamReviewers,
-		Interactive:      interactive,
-		DryRun:           dryRun,
-		Fork:             forkMode,
-		ForkOwner:        forkOwner,
-		SkipPullRequest:  skipPullRequest,
-		SkipRepository:   skipRepository,
-		CommitAuthor:     commitAuthor,
-		BaseBranch:       baseBranchName,
-		Assignees:        assignees,
-		ConflictStrategy: conflictStrategy,
-		Draft:            draft,
-		Labels:           labels,
-		CloneDir:         cloneDir,
+		CommitMessage:          commitMessage,
+		PullRequestTitle:       prTitle,
+		PullRequestBody:        prBody,
+		Reviewers:              reviewers,
+		TeamReviewers:          teamReviewers,
+		MaxReviewers:           maxReviewers,
+		MaxTeamReviewers:       maxTeamReviewers,
+		Interactive:            interactive,
+		DryRun:                 dryRun,
+		RegExIncludeRepository: regExIncludeRepository,
+		RegExExcludeRepository: regExExcludeRepository,
+		Fork:                   forkMode,
+		ForkOwner:              forkOwner,
+		SkipPullRequest:        skipPullRequest,
+		PushOnly:               pushOnly,
+		SkipRepository:         skipRepository,
+		CommitAuthor:           commitAuthor,
+		BaseBranch:             baseBranchName,
+		Assignees:              assignees,
+		ConflictStrategy:       conflictStrategy,
+		Draft:                  draft,
+		Labels:                 labels,
+    CloneDir:               cloneDir,
+
 
 		Concurrent: concurrent,
 

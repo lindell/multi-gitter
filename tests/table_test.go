@@ -238,6 +238,40 @@ func TestTable(t *testing.T) {
 		},
 
 		{
+			name: "existing branch with matching start",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				repo := createRepo(t, "owner", "should-change", "i like apples")
+				changeBranch(t, repo.Path, "custom-branch-name-but-with-different-ending", true)
+				changeTestFile(t, repo.Path, "i like apple", "test change")
+				changeBranch(t, repo.Path, "master", false)
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo,
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"--branch", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path))
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name-but-with-different-ending", false)
+				assert.Equal(t, "i like apple", readTestFile(t, vcMock.Repositories[0].Path))
+			},
+		},
+
+		{
 			name: "reviewers",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
@@ -337,6 +371,108 @@ func TestTable(t *testing.T) {
 				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
 			},
 		},
+		{
+			name: "repo-include regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-include", "^owner/repo-",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.logOut, "Running on 3 repositories")
+			},
+		},
+		{
+			name: "repo-exclude regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-exclude", "\\d$",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+			},
+		},
+		{
+			name: "invalid repo-include regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-include", "(abc[def$",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.cmdOut, "could not parse repo-include")
+			},
+			expectErr: true,
+		},
+		{
+			name: "invalid repo-exclude regex repository filtering",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "repo1", "i like apples"),
+						createRepo(t, "owner", "repo-2", "i like oranges"),
+						createRepo(t, "owner", "repo-change", "i like carrots"),
+						createRepo(t, "owner", "repo-3", "i like carrots"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--repo-search", "repo",
+				"--repo-exclude", "(abc[def$",
+				"--commit-message", "chore: foo",
+				"--dry-run",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 0)
+				assert.Contains(t, runData.cmdOut, "could not parse repo-exclude")
+			},
+			expectErr: true,
+		},
 
 		{
 			name:      "parallel",
@@ -379,10 +515,27 @@ func TestTable(t *testing.T) {
 				changeBranch(t, repo.Path, "custom-branch-name", true)
 				changeTestFile(t, repo.Path, "i like apple", "test change")
 				changeBranch(t, repo.Path, "master", false)
+
+				repoExistingPR := createRepo(t, "owner", "already-existing-branch-and-pr", "i like apples")
+				changeBranch(t, repoExistingPR.Path, "custom-branch-name", true)
+				changeTestFile(t, repoExistingPR.Path, "i like apple", "test change")
+				changeBranch(t, repoExistingPR.Path, "master", false)
+
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
 						repo,
+						repoExistingPR,
 						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+					PullRequests: []vcmock.PullRequest{
+						{
+							PRStatus:   scm.PullRequestStatusPending,
+							PRNumber:   10,
+							Repository: repoExistingPR,
+							NewPullRequest: scm.NewPullRequest{
+								Head: "custom-branch-name",
+							},
+						},
 					},
 				}
 			},
@@ -395,14 +548,15 @@ func TestTable(t *testing.T) {
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				require.Len(t, vcMock.PullRequests, 1)
-				assert.Contains(t, runData.logOut, "Running on 2 repositories")
+				require.Len(t, vcMock.PullRequests, 3)
+				assert.Contains(t, runData.logOut, "Running on 3 repositories")
 				assert.Contains(t, runData.logOut, "Cloning and running script")
 
 				assert.Equal(t, `The new branch already exists:
-  owner/already-existing-branch
+  owner/already-existing-branch #1
+  owner/already-existing-branch-and-pr #10
 Repositories with a successful run:
-  owner/should-change #1
+  owner/should-change #2
 `, runData.out)
 			},
 		},
@@ -785,7 +939,9 @@ Repositories with a successful run:
 							PRNumber:   42,
 							Repository: repo3,
 							NewPullRequest: scm.NewPullRequest{
-								Head: "custom-branch-name",
+								Title: "original title",
+								Body:  "original body",
+								Head:  "custom-branch-name",
 							},
 						},
 					},
@@ -804,6 +960,9 @@ Repositories with a successful run:
 				fmt.Println(runData.logOut)
 
 				require.Len(t, vcMock.PullRequests, 3)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "", vcMock.PullRequests[0].Body)
+				assert.Equal(t, 42, vcMock.PullRequests[0].PRNumber)
 				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[1].Head)
 				assert.Equal(t, "master", vcMock.PullRequests[1].Base)
 				assert.Equal(t, "custom message", vcMock.PullRequests[1].Title)
@@ -815,7 +974,7 @@ Repositories with a successful run:
 				assert.Equal(t, 5, strings.Count(runData.logOut, "Cloning and running script"))
 				assert.Equal(t, 3, strings.Count(runData.logOut, "Pushing changes to remote"))
 				assert.Equal(t, 2, strings.Count(runData.logOut, "Creating pull request"))
-				assert.Equal(t, 1, strings.Count(runData.logOut, "Skip creating pull requests since one is already open"))
+				assert.Equal(t, 1, strings.Count(runData.logOut, "Updating pull request since one is already open"))
 
 				assert.Equal(t, `No data was changed:
   owner/no-change-1
@@ -960,6 +1119,53 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "formats urls",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "has-url", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "Repositories with a successful run:\n  \x1b]8;;https://github.com/owner/has-url/pull/1\aowner/has-url #1\x1b]8;;\a\n", runData.out)
+			},
+		},
+
+		{
+			name: "does not format urls when --plain-output is used",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "has-url", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--plain-output",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, `Repositories with a successful run:
+  owner/has-url #1
+`, runData.out)
+			},
+		},
+
+		{
 			name: "same feature and base branch name",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
@@ -1047,6 +1253,76 @@ Repositories with a successful run:
 				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
 				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
 				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
+			},
+		},
+
+		{
+			name: "fork conflicts with pushOnly",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--fork", "--push-only",
+				changerBinaryPath,
+			},
+			expectErr: true,
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Contains(t, runData.cmdOut, "Error: --push-only and --fork can't be used at the same time")
+			},
+		},
+		{
+			name: "skipPr conflicts with pushOnly",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--skip-pr", "--push-only",
+				changerBinaryPath,
+			},
+			expectErr: true,
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Contains(t, runData.cmdOut, "Error: --push-only and --skip-pr can't be used at the same time")
+			},
+		},
+		{
+			name: "pushOnly success",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--push-only",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, runData.cmdOut, "")
+				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #0\n")
 			},
 		},
 	}

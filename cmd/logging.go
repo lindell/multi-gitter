@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	internallog "github.com/lindell/multi-gitter/internal/log"
+	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 )
 
 func configureLogging(cmd *cobra.Command, logFile string) {
@@ -25,6 +26,8 @@ func configureLogging(cmd *cobra.Command, logFile string) {
 	})
 
 	flags.StringP("log-file", "", logFile, `The file where all logs should be printed to. "-" means stdout.`)
+
+	flags.BoolP("plain-output", "", false, `Don't use any terminal formatting when printing the output.`)
 }
 
 func logFlagInit(cmd *cobra.Command, _ []string) error {
@@ -36,16 +39,25 @@ func logFlagInit(cmd *cobra.Command, _ []string) error {
 	}
 	log.SetLevel(logLevel)
 
+	// Set how custom terminal formatting is handled
+	plainOutput, _ := cmd.Flags().GetBool("plain-output")
+	terminal.DefaultPrinter.Plain = plainOutput
+
 	// Parse and set the log format
 	strFormat, _ := cmd.Flags().GetString("log-format")
 
 	var formatter log.Formatter
 	switch strFormat {
 	case "text":
-		formatter = &log.TextFormatter{}
+		formatter = &log.TextFormatter{
+			DisableColors: plainOutput,
+		}
 	case "json":
 		formatter = &log.JSONFormatter{}
 	case "json-pretty":
+		if plainOutput {
+			return errors.New("can't use json-pretty logs with with plain-output")
+		}
 		formatter = &log.JSONFormatter{
 			PrettyPrint: true,
 		}

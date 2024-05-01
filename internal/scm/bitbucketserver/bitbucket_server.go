@@ -310,6 +310,13 @@ func (b *BitbucketServer) getUsersWithLinks(usernames []string, client *bitbucke
 	return usersWithMetadata, nil
 }
 
+// UpdatePullRequest updates an existing pull request
+func (b *BitbucketServer) UpdatePullRequest(_ context.Context, _ scm.Repository, pullReq scm.PullRequest, _ scm.NewPullRequest) (scm.PullRequest, error) {
+	// currently unsupported by gfleury/go-bitbucket-v1 see https://github.com/gfleury/go-bitbucket-v1/issues/66
+	// for now just ignore the request rather than returning an error
+	return pullReq, nil
+}
+
 // GetPullRequests Gets the latest pull requests from repositories based on the scm configuration
 func (b *BitbucketServer) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	client := newClient(ctx, b.config)
@@ -367,7 +374,7 @@ func (b *BitbucketServer) pullRequestStatus(client *bitbucketv1.APIClient, proje
 		return scm.PullRequestStatusClosed, nil
 	}
 
-	response, err := client.DefaultApi.CanMerge(project, repoName, int64(pr.ID))
+	response, err := client.DefaultApi.CanMerge(project, repoName, pr.ID)
 	if err != nil {
 		return scm.PullRequestStatusUnknown, err
 	}
@@ -486,7 +493,7 @@ func (b *BitbucketServer) ClosePullRequest(ctx context.Context, pr scm.PullReque
 
 	client := newClient(ctx, b.config)
 
-	_, err := client.DefaultApi.DeleteWithVersion(bitbucketPR.project, bitbucketPR.repoName, int64(bitbucketPR.number), int64(bitbucketPR.version))
+	_, err := client.DefaultApi.DeleteWithVersion(bitbucketPR.project, bitbucketPR.repoName, bitbucketPR.number, int(bitbucketPR.version))
 	if err != nil {
 		return err
 	}

@@ -1,11 +1,11 @@
-name: Building
+name: Fuzzing
 on: [push, pull_request]
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build
+    name: Fuzzing
     runs-on: ubuntu-latest
     steps:
       - name: Check out code into the Go module directory
@@ -16,5 +16,5 @@ jobs:
         with:
           go-version-file: "go.mod"
 
-      - name: Build
-        run: go build main.go
+      - name: Fuzz
+        run: go test ./tests -fuzz . -fuzztime=2m
