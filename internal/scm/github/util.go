@@ -3,7 +3,7 @@ package github
 import (
 	"strings"
 
-	"github.com/google/go-github/v59/github"
+	"github.com/google/go-github/v61/github"
 	"github.com/lindell/multi-gitter/internal/scm"
 )
 
