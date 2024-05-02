@@ -20,7 +20,7 @@ import (
 func configurePlatform(cmd *cobra.Command) {
 	flags := cmd.Flags()
 
-	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or Azure DevOps.")
+	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea, BitBucket or Azure DevOps.")
 	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
 	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/AZURE_DEVOPS_TOKEN environment variable.")
@@ -28,7 +28,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
-	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\". If using Azure Devops, this should be the name of the projects and repositories containing the repos to modify in the format \"my-project/my-repo\".")
+	flags.StringSliceP("repo", "R", nil, "The repository name, including owner/group/project of the repository in the format \"ownerName/repoName\".")
 	flags.StringP("repo-search", "", "", "Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use `fork:true` to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.")
 	flags.StringP("code-search", "", "", "Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use `fork:true` to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
@@ -86,7 +86,7 @@ func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
 	}
 	flags.BoolP("fork", "", false, forkDesc)
 
-	forkOwnerDesc := "If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user. In Azure DevOps, this is the name of the project you want to fork into."
+	forkOwnerDesc := "If set, make the fork to the defined value (owner/project/group). Default behavior is for the fork to be on the logged in user."
 	if !prCreating {
 		forkOwnerDesc = "If set, use forks from the defined value instead of the logged in user. In Azure DevOps, this is the name of the project you want to fork into."
 	}

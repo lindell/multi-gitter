@@ -12,7 +12,6 @@ import (
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/git"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/identity"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/location"
-	"github.com/pkg/errors"
 )
 
 type AzureDevOps struct {
@@ -40,14 +39,6 @@ type RepositoryReference struct {
 
 // New creates a new AzureDevOps client
 func New(pat, baseURL string, sshAuth bool, fork bool, repoListing RepositoryListing) (*AzureDevOps, error) {
-	if strings.TrimSpace(pat) == "" {
-		return nil, errors.New("Personal Access Token is empty")
-	}
-
-	if strings.TrimSpace(baseURL) == "" {
-		return nil, errors.New("base url is empty")
-	}
-
 	// Declare the connection variable
 	connection := azuredevops.NewPatConnection(baseURL, pat)
 	gitClient, err := git.NewClient(context.Background(), connection)
