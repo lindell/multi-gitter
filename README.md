@@ -119,6 +119,9 @@ base-url:
 # The name of the branch where changes are committed.
 branch: multi-gitter-branch
 
+# The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
+clone-dir:
+
 # Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use `fork:true` to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
 code-search:
 
@@ -530,6 +533,9 @@ username:
 # Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
 base-url:
 
+# The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
+clone-dir:
+
 # Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use `fork:true` to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
 code-search:
 
@@ -643,6 +649,7 @@ Flags:
       --base-branch string         The branch which the changes will be based on.
   -g, --base-url string            Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
   -B, --branch string              The name of the branch where changes are committed. (default "multi-gitter-branch")
+      --clone-dir string           The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
       --code-search fork:true      Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
   -m, --commit-message string      The commit message. Will default to title + body if none is set.
   -C, --concurrent int             The maximum number of concurrent runs. (default 1)
@@ -814,6 +821,7 @@ Usage:
 
 Flags:
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+      --clone-dir string        The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
   -C, --concurrent int          The maximum number of concurrent runs. (default 1)
       --config string           Path of the config file.
