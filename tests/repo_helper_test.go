@@ -19,7 +19,7 @@ import (
 const fileName = "test.txt"
 
 func createRepo(t *testing.T, ownerName string, repoName string, dataInFile string) vcmock.Repository {
-	tmpDir, err := createDummyRepo(dataInFile)
+	tmpDir, err := createDummyRepo(dataInFile, os.TempDir())
 	require.NoError(t, err)
 
 	return vcmock.Repository{
@@ -29,8 +29,8 @@ func createRepo(t *testing.T, ownerName string, repoName string, dataInFile stri
 	}
 }
 
-func createDummyRepo(dataInFile string) (string, error) {
-	tmpDir, err := os.MkdirTemp(os.TempDir(), "multi-git-test-*.git")
+func createDummyRepo(dataInFile string, dir string) (string, error) {
+	tmpDir, err := os.MkdirTemp(dir, "multi-git-test-*.git")
 	if err != nil {
 		return "", err
 	}
