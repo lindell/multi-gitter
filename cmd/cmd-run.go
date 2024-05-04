@@ -248,8 +248,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		ConflictStrategy:       conflictStrategy,
 		Draft:                  draft,
 		Labels:                 labels,
-    CloneDir:               cloneDir,
-
+		CloneDir:               cloneDir,
 
 		Concurrent: concurrent,
 
