@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -1188,6 +1189,74 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "custom clone dir with relative path",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "clone-dir-branch-name",
+				"-m", "clone dir message",
+				"--clone-dir", "./tmp-test",
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/pwd/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				expectedPath := filepath.Join(workingDir, "tmp-test")
+
+				// Check the path in the logs
+				assert.Contains(t, runData.logOut, "Current path: "+strings.ReplaceAll(expectedPath, `\`, `\\`))
+
+				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
+				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
+				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
+			},
+		},
+
+		{
+			name: "custom clone dir with absolute path",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "clone-dir-branch-name",
+				"-m", "clone dir message",
+				"--clone-dir", filepath.Join(os.TempDir(), "tmp-test"),
+				fmt.Sprintf("go run %s", normalizePath(filepath.Join(workingDir, "scripts/pwd/main.go"))),
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				tmpDir := os.TempDir()
+				// Fix for MacOS (darwin) where the tmp directory is aliased under two different directories
+				if runtime.GOOS == "darwin" {
+					tmpDir = filepath.Join("/private", tmpDir)
+				}
+
+				expectedPath := filepath.Join(tmpDir, "tmp-test")
+
+				assert.Contains(t, runData.logOut, "Current path: "+strings.ReplaceAll(expectedPath, `\`, `\\`))
+
+				changeBranch(t, vcMock.Repositories[0].Path, "clone-dir-branch-name", false)
+				pathInFile := readFile(t, vcMock.Repositories[0].Path, "pwd.txt")
+				assert.True(t, strings.HasPrefix(pathInFile, expectedPath))
+			},
+		},
+
+		{
 			name: "fork conflicts with pushOnly",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
@@ -1277,9 +1346,10 @@ Repositories with a successful run:
 
 				outFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-output")
 				require.NoError(t, err)
-				// defer os.Remove(outFile.Name())
+				defer os.Remove(outFile.Name())
 
 				vc := test.vcCreate(t)
+
 				defer vc.Clean()
 
 				cmd.OverrideVersionController = vc

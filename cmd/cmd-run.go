@@ -64,6 +64,7 @@ Available values:
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
+	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.")
 	cmd.Flags().StringP("repo-include", "", "", "Include repositories that match with a given Regular Expression")
 	cmd.Flags().StringP("repo-exclude", "", "", "Exclude repositories that match with a given Regular Expression")
 	configureGit(cmd)
@@ -102,6 +103,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	strOutput, _ := flag.GetString("output")
 	assignees, _ := stringSlice(flag, "assignees")
 	draft, _ := flag.GetBool("draft")
+	cloneDir, _ := flag.GetString("clone-dir")
 	labels, _ := stringSlice(flag, "labels")
 	repoInclude, _ := flag.GetString("repo-include")
 	repoExclude, _ := flag.GetString("repo-exclude")
@@ -246,6 +248,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		ConflictStrategy:       conflictStrategy,
 		Draft:                  draft,
 		Labels:                 labels,
+		CloneDir:               cloneDir,
 
 		Concurrent: concurrent,
 
