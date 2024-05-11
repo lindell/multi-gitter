@@ -580,6 +580,7 @@ func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pul
 		return g.ghClient.PullRequests.Edit(ctx, pr.ownerName, pr.repoName, pr.number, &github.PullRequest{
 			Title: &updatedPR.Title,
 			Body:  &updatedPR.Body,
+			Draft: &updatedPR.Draft,
 		})
 	})
 	if err != nil {
