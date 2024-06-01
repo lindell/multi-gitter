@@ -15,7 +15,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
-	github.com/xanzy/go-gitlab v0.103.0
+	github.com/xanzy/go-gitlab v0.105.0
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 	golang.org/x/oauth2 v0.19.0
 )
