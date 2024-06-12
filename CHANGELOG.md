@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.52.0](https://github.com/lindell/multi-gitter/compare/v0.51.0...v0.52.0) (2024-05-04)
+
+
+### Features
+
+* add ability to configure repository clone directory ([#366](https://github.com/lindell/multi-gitter/issues/366)) ([6345c6b](https://github.com/lindell/multi-gitter/commit/6345c6b0064a9df81cfee5a7106e190169fa2523))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to a685a6e ([cc21b76](https://github.com/lindell/multi-gitter/commit/cc21b769f8b1293d37fd329683027871de90dcca))
+* update golang.org/x/exp digest to fe59bbe ([32ff1ed](https://github.com/lindell/multi-gitter/commit/32ff1edfa5e716d2c463129b1002ad8866db37e4))
+* update module code.gitea.io/sdk/gitea to v0.18.0 ([42f4451](https://github.com/lindell/multi-gitter/commit/42f4451381a80ae3234558e0bb9d48282fa4c15f))
+* update module github.com/go-git/go-git/v5 to v5.12.0 ([eb3810a](https://github.com/lindell/multi-gitter/commit/eb3810aa42f51e65376ba8e95ab5cc1010a22cfd))
+* update module github.com/xanzy/go-gitlab to v0.103.0 ([4082500](https://github.com/lindell/multi-gitter/commit/408250009597d9ec35cba2eda3e717e87f1bb67b))
+* update module golang.org/x/oauth2 to v0.19.0 ([b556a44](https://github.com/lindell/multi-gitter/commit/b556a44cb772f3139ad806df40619cbc65f50c91))
+
 ## [0.51.0](https://github.com/lindell/multi-gitter/compare/v0.50.1...v0.51.0) (2024-03-14)
 
 
