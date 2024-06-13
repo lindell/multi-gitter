@@ -19,14 +19,16 @@ type BitbucketCloud struct {
 	repositories []string
 	workspaces   []string
 	users        []string
+	fork         bool
 	username     string
 	token        string
 	sshAuth      bool
+	newOwner     string
 	httpClient   *http.Client
 	bbClient     *bitbucket.Client
 }
 
-func New(username string, token string, repositories []string, workspaces []string, users []string, sshAuth bool, transportMiddleware func(http.RoundTripper) http.RoundTripper) (*BitbucketCloud, error) {
+func New(username string, token string, repositories []string, workspaces []string, users []string, fork bool, sshAuth bool, newOwner string, transportMiddleware func(http.RoundTripper) http.RoundTripper) (*BitbucketCloud, error) {
 	if strings.TrimSpace(token) == "" {
 		return nil, errors.New("bearer token is empty")
 	}
@@ -35,9 +37,11 @@ func New(username string, token string, repositories []string, workspaces []stri
 	bitbucketCloud.repositories = repositories
 	bitbucketCloud.workspaces = workspaces
 	bitbucketCloud.users = users
+	bitbucketCloud.fork = fork
 	bitbucketCloud.username = username
 	bitbucketCloud.token = token
 	bitbucketCloud.sshAuth = sshAuth
+	bitbucketCloud.newOwner = newOwner
 	bitbucketCloud.httpClient = &http.Client{
 		Transport: transportMiddleware(&http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: false}, // nolint: gosec
@@ -61,6 +65,10 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 		newPR.Reviewers = append(newPR.Reviewers, reviewer.Uuid)
 	}
 
+	if bbc.newOwner == "" {
+		bbc.newOwner = bbc.username
+	}
+
 	prOptions := &bitbucket.PullRequestsOptions{
 		Owner:             bbc.workspaces[0],
 		RepoSlug:          splitRepoFullName[1],
@@ -69,6 +77,12 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 		Title:             newPR.Title,
 		CloseSourceBranch: true,
 		Reviewers:         newPR.Reviewers,
+	}
+
+	// If we are performing a fork, set the source repository.
+	// We do not if we are just creating a PR within the same repo, as it will cause issues
+	if bbc.fork {
+		prOptions.SourceRepository = fmt.Sprintf("%s/%s", bbc.newOwner, repoOptions.RepoSlug)
 	}
 
 	_, err := bbc.bbClient.Repositories.PullRequests.Create(prOptions)
