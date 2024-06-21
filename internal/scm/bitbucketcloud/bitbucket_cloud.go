@@ -53,12 +53,11 @@ func New(username string, token string, repositories []string, workspaces []stri
 }
 
 func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
-
-	splitRepoFullName := strings.Split(prRepo.FullName(), "/")
+	bbcRepo := prRepo.(repository)
 
 	repoOptions := &bitbucket.RepositoryOptions{
 		Owner:    bbc.workspaces[0],
-		RepoSlug: splitRepoFullName[1],
+		RepoSlug: bbcRepo.name,
 	}
 	currentUser, err := bbc.bbClient.User.Profile()
 	if err != nil {
@@ -80,7 +79,7 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 
 	prOptions := &bitbucket.PullRequestsOptions{
 		Owner:             bbc.workspaces[0],
-		RepoSlug:          splitRepoFullName[1],
+		RepoSlug:          bbcRepo.name,
 		SourceBranch:      newPR.Head,
 		DestinationBranch: newPR.Base,
 		Title:             newPR.Title,
@@ -100,24 +99,23 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 	}
 
 	return &pullRequest{
-		project:    splitRepoFullName[0],
-		repoName:   splitRepoFullName[1],
+		project:    bbcRepo.project,
+		repoName:   bbcRepo.name,
 		branchName: newPR.Head,
-		prProject:  splitRepoFullName[0],
-		prRepoName: splitRepoFullName[1],
+		prProject:  bbcRepo.project,
+		prRepoName: bbcRepo.name,
 		status:     scm.PullRequestStatusSuccess,
 	}, nil
 }
 
 func (bbc *BitbucketCloud) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
 	bbcPR := pullReq.(pullRequest)
-	repoSlug := strings.Split(bbcPR.guiURL, "/")
 
 	// Note the specs of the bitbucket client here, reviewers field must be UUID of the reviewers, not their usernames
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:                fmt.Sprintf("%d", bbcPR.number),
 		Owner:             bbc.workspaces[0],
-		RepoSlug:          repoSlug[4],
+		RepoSlug:          bbcPR.repoName,
 		Title:             updatedPR.Title,
 		Description:       updatedPR.Body,
 		CloseSourceBranch: true,
@@ -142,8 +140,13 @@ func (bbc *BitbucketCloud) UpdatePullRequest(ctx context.Context, repo scm.Repos
 
 func (bbc *BitbucketCloud) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	var responsePRs []scm.PullRequest
-	for _, repoName := range bbc.repositories {
-		prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: repoName})
+	repositories, err := bbc.GetRepositories(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, repo := range repositories {
+		bbcRepo := repo.(repository)
+		prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: bbcRepo.name})
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +160,7 @@ func (bbc *BitbucketCloud) GetPullRequests(ctx context.Context, branchName strin
 			return nil, err
 		}
 		for _, pr := range bbPullRequests.Values {
-			convertedPr, err := bbc.convertPullRequest(bbc.workspaces[0], repoName, &pr)
+			convertedPr, err := bbc.convertPullRequest(bbc.workspaces[0], bbcRepo.name, &pr)
 			if err != nil {
 				return nil, err
 			}
@@ -194,10 +197,7 @@ func (bbc *BitbucketCloud) getPullRequests(ctx context.Context, repoName string)
 }
 
 func (bbc *BitbucketCloud) convertPullRequest(project, repoName string, pr *bbPullRequest) (pullRequest, error) {
-	status, err := bbc.pullRequestStatus(pr)
-	if err != nil {
-		return pullRequest{}, err
-	}
+	status := bbc.pullRequestStatus(pr)
 
 	return pullRequest{
 		repoName:   repoName,
@@ -213,21 +213,20 @@ func (bbc *BitbucketCloud) convertPullRequest(project, repoName string, pr *bbPu
 	}, nil
 }
 
-func (bbc *BitbucketCloud) pullRequestStatus(pr *bbPullRequest) (scm.PullRequestStatus, error) {
+func (bbc *BitbucketCloud) pullRequestStatus(pr *bbPullRequest) scm.PullRequestStatus {
 	switch pr.State {
 	case stateMerged:
-		return scm.PullRequestStatusMerged, nil
+		return scm.PullRequestStatusMerged
 	case stateDeclined:
-		return scm.PullRequestStatusClosed, nil
+		return scm.PullRequestStatusClosed
 	}
 
-	return scm.PullRequestStatusSuccess, nil
+	return scm.PullRequestStatusSuccess
 }
 
 func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
-	repoFN := repo.FullName()
-	repoSlug := strings.Split(repoFN, "/")
-	repoPRs, err := bbc.getPullRequests(ctx, repoSlug[1])
+	bbcRepo := repo.(repository)
+	repoPRs, err := bbc.getPullRequests(ctx, bbcRepo.name)
 	if err != nil {
 		return nil, err
 	}
@@ -242,11 +241,11 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 
 func (bbc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	bbcPR := pr.(pullRequest)
-	repoSlug := strings.Split(bbcPR.guiURL, "/")
+	repoSlug := strings.Split(bbcPR.guiURL, "/")[4]
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:           fmt.Sprintf("%d", bbcPR.number),
 		SourceBranch: bbcPR.branchName,
-		RepoSlug:     repoSlug[4],
+		RepoSlug:     repoSlug,
 		Owner:        bbc.workspaces[0],
 	}
 	_, err := bbc.bbClient.Repositories.PullRequests.Merge(prOptions)
@@ -255,11 +254,11 @@ func (bbc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullRequ
 
 func (bbc *BitbucketCloud) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	bbcPR := pr.(pullRequest)
-	repoSlug := strings.Split(bbcPR.guiURL, "/")
+	repoSlug := strings.Split(bbcPR.guiURL, "/")[4]
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:           fmt.Sprintf("%d", bbcPR.number),
 		SourceBranch: bbcPR.branchName,
-		RepoSlug:     repoSlug[4],
+		RepoSlug:     repoSlug,
 		Owner:        bbc.workspaces[0],
 	}
 	_, err := bbc.bbClient.Repositories.PullRequests.Decline(prOptions)
@@ -293,16 +292,15 @@ func (bbc *BitbucketCloud) GetRepositories(ctx context.Context) ([]scm.Repositor
 }
 
 func (bbc *BitbucketCloud) ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error) {
-	splitRepoFullName := strings.Split(repo.FullName(), "/")
-
+	bbcRepo := repo.(repository)
 	if newOwner == "" {
 		newOwner = bbc.username
 	}
 	options := &bitbucket.RepositoryForkOptions{
 		FromOwner: bbc.workspaces[0],
-		FromSlug:  splitRepoFullName[1],
+		FromSlug:  bbcRepo.name,
 		Owner:     newOwner,
-		Name:      splitRepoFullName[1],
+		Name:      bbcRepo.name,
 	}
 	// TODO: Support for selecting Bitbucket project to fork into
 	resp, err := bbc.bbClient.Repositories.Repository.Fork(options)
@@ -327,14 +325,14 @@ func (bbc *BitbucketCloud) convertRepository(repo bitbucket.Repository) (*reposi
 	_ = json.Unmarshal(linkBytes, rLinks)
 
 	if bbc.sshAuth {
-		cloneURL = findLinkType(rLinks.Clone, cloneSSHType)
-		if cloneURL == "" {
-			return nil, errors.Errorf("unable to find clone url for repository %s using clone type %s", repo.Name, cloneSSHType)
+		cloneURL, err = findLinkType(rLinks.Clone, cloneSSHType, repo.Name)
+		if err != nil {
+			return nil, err
 		}
 	} else {
-		httpURL := findLinkType(rLinks.Clone, cloneHTTPType)
-		if httpURL == "" {
-			return nil, errors.Errorf("unable to find clone url for repository %s using clone type %s", repo.Name, cloneHTTPType)
+		httpURL, err := findLinkType(rLinks.Clone, cloneHTTPType, repo.Name)
+		if err != nil {
+			return nil, err
 		}
 		parsedURL, err := url.Parse(httpURL)
 		if err != nil {
@@ -353,12 +351,12 @@ func (bbc *BitbucketCloud) convertRepository(repo bitbucket.Repository) (*reposi
 	}, nil
 }
 
-func findLinkType(cloneLinks []hrefLink, cloneType string) string {
+func findLinkType(cloneLinks []hrefLink, cloneType string, repoName string) (string, error) {
 	for _, clone := range cloneLinks {
 		if strings.EqualFold(clone.Name, cloneType) {
-			return clone.Href
+			return clone.Href, nil
 		}
 	}
 
-	return ""
+	return "", errors.Errorf("unable to find clone url for repository %s using clone type %s", repoName, cloneType)
 }
