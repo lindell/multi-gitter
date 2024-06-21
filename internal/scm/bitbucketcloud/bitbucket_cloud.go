@@ -60,9 +60,15 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 		Owner:    bbc.workspaces[0],
 		RepoSlug: splitRepoFullName[1],
 	}
+	currentUser, err := bbc.bbClient.User.Profile()
+	if err != nil {
+		return nil, err
+	}
 	defaultReviewers, _ := bbc.bbClient.Repositories.Repository.ListDefaultReviewers(repoOptions)
 	for _, reviewer := range defaultReviewers.DefaultReviewers {
-		newPR.Reviewers = append(newPR.Reviewers, reviewer.Uuid)
+		if currentUser.Uuid != reviewer.Uuid {
+			newPR.Reviewers = append(newPR.Reviewers, reviewer.Uuid)
+		}
 	}
 
 	if bbc.newOwner == "" {
@@ -85,7 +91,7 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 		prOptions.SourceRepository = fmt.Sprintf("%s/%s", bbc.newOwner, repoOptions.RepoSlug)
 	}
 
-	_, err := bbc.bbClient.Repositories.PullRequests.Create(prOptions)
+	_, err = bbc.bbClient.Repositories.PullRequests.Create(prOptions)
 	if err != nil {
 		return nil, err
 	}
