@@ -2,13 +2,14 @@ package bitbucketcloud
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"slices"
 	"strings"
+
+	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 
 	"github.com/ktrysmt/go-bitbucket"
 	"github.com/lindell/multi-gitter/internal/scm"
@@ -43,9 +44,7 @@ func New(username string, token string, repositories []string, workspaces []stri
 	bitbucketCloud.sshAuth = sshAuth
 	bitbucketCloud.newOwner = newOwner
 	bitbucketCloud.httpClient = &http.Client{
-		Transport: transportMiddleware(&http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: false}, // nolint: gosec
-		}),
+		Transport: internalHTTP.LoggingRoundTripper{},
 	}
 	bitbucketCloud.bbClient = bitbucket.NewBasicAuth(username, token)
 
