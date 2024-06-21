@@ -64,7 +64,10 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 	if err != nil {
 		return nil, err
 	}
-	defaultReviewers, _ := bbc.bbClient.Repositories.Repository.ListDefaultReviewers(repoOptions)
+	defaultReviewers, err := bbc.bbClient.Repositories.Repository.ListDefaultReviewers(repoOptions)
+	if err != nil {
+		return nil, err
+	}
 	for _, reviewer := range defaultReviewers.DefaultReviewers {
 		if currentUser.Uuid != reviewer.Uuid {
 			newPR.Reviewers = append(newPR.Reviewers, reviewer.Uuid)
@@ -140,10 +143,16 @@ func (bbc *BitbucketCloud) UpdatePullRequest(ctx context.Context, repo scm.Repos
 func (bbc *BitbucketCloud) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
 	var responsePRs []scm.PullRequest
 	for _, repoName := range bbc.repositories {
-		prs, _ := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: repoName})
-		prBytes, _ := json.Marshal(prs)
+		prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: repoName})
+		if err != nil {
+			return nil, err
+		}
+		prBytes, err := json.Marshal(prs)
+		if err != nil {
+			return nil, err
+		}
 		bbPullRequests := &bitbucketPullRequests{}
-		err := json.Unmarshal(prBytes, bbPullRequests)
+		err = json.Unmarshal(prBytes, bbPullRequests)
 		if err != nil {
 			return nil, err
 		}
@@ -162,10 +171,16 @@ func (bbc *BitbucketCloud) GetPullRequests(ctx context.Context, branchName strin
 func (bbc *BitbucketCloud) getPullRequests(ctx context.Context, repoName string) ([]pullRequest, error) {
 
 	var repoPRs []pullRequest
-	prs, _ := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: repoName})
-	prBytes, _ := json.Marshal(prs)
+	prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: repoName})
+	if err != nil {
+		return nil, err
+	}
+	prBytes, err := json.Marshal(prs)
+	if err != nil {
+		return nil, err
+	}
 	bbPullRequests := &bitbucketPullRequests{}
-	err := json.Unmarshal(prBytes, bbPullRequests)
+	err = json.Unmarshal(prBytes, bbPullRequests)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +228,10 @@ func (bbc *BitbucketCloud) pullRequestStatus(pr *bbPullRequest) (scm.PullRequest
 func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
 	repoFN := repo.FullName()
 	repoSlug := strings.Split(repoFN, "/")
-	repoPRs, _ := bbc.getPullRequests(ctx, repoSlug[1])
+	repoPRs, err := bbc.getPullRequests(ctx, repoSlug[1])
+	if err != nil {
+		return nil, err
+	}
 	for _, repoPR := range repoPRs {
 		pr := pullRequest(repoPR)
 		if pr.branchName == branchName && pr.status == scm.PullRequestStatusSuccess {
@@ -303,7 +321,10 @@ func (bbc *BitbucketCloud) convertRepository(repo bitbucket.Repository) (*reposi
 	var cloneURL string
 
 	rLinks := &repoLinks{}
-	linkBytes, _ := json.Marshal(repo.Links)
+	linkBytes, err := json.Marshal(repo.Links)
+	if err != nil {
+		return nil, err
+	}
 	_ = json.Unmarshal(linkBytes, rLinks)
 
 	if bbc.sshAuth {
