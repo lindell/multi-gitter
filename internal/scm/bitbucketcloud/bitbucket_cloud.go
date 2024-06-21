@@ -164,7 +164,6 @@ func (bbc *BitbucketCloud) GetPullRequests(ctx context.Context, branchName strin
 			responsePRs = append(responsePRs, convertedPr)
 		}
 	}
-	fmt.Println(responsePRs)
 	return responsePRs, nil
 }
 
