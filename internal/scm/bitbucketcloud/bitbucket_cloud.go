@@ -92,12 +92,22 @@ func (bbc *BitbucketCloud) CreatePullRequest(ctx context.Context, repo scm.Repos
 		prOptions.SourceRepository = fmt.Sprintf("%s/%s", bbc.newOwner, repoOptions.RepoSlug)
 	}
 
-	_, err = bbc.bbClient.Repositories.PullRequests.Create(prOptions)
+	resp, err := bbc.bbClient.Repositories.PullRequests.Create(prOptions)
 	if err != nil {
 		return nil, err
 	}
-
+	createBytes, err := json.Marshal(resp)
+	if err != nil {
+		return nil, err
+	}
+	r := newPrResponse{}
+	err = json.Unmarshal(createBytes, &r)
+	if err != nil {
+		return nil, err
+	}
 	return &pullRequest{
+		number:     r.ID,
+		guiURL:     r.Links.Html.Href,
 		project:    bbcRepo.project,
 		repoName:   bbcRepo.name,
 		branchName: newPR.Head,
@@ -128,6 +138,8 @@ func (bbc *BitbucketCloud) UpdatePullRequest(ctx context.Context, repo scm.Repos
 	}
 
 	return &pullRequest{
+		number:     bbcPR.number,
+		guiURL:     bbcPR.guiURL,
 		project:    bbcPR.project,
 		repoName:   bbcPR.repoName,
 		branchName: updatedPR.Head,

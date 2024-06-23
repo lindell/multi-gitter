@@ -2,7 +2,7 @@ package bitbucketcloud
 
 import (
 	"fmt"
-	
+
 	"github.com/ktrysmt/go-bitbucket"
 	"github.com/lindell/multi-gitter/internal/scm"
 )
@@ -14,39 +14,44 @@ const (
 	stateDeclined = "DECLINED"
 )
 
+type newPrResponse struct {
+	ID    int   `json:"id""`
+	Links links `json:"links"`
+}
+
 type bitbucketPullRequests struct {
-	Next		string			`json:"next"`
-	Page		int				`json:"page"`
-	PageLen 	int				`json:"pagelen"`
-	Previous 	string			`json:"previous"`
-	Size		int				`json:"size"`
-	Values 		[]bbPullRequest `json:"values"`
+	Next     string          `json:"next"`
+	Page     int             `json:"page"`
+	PageLen  int             `json:"pagelen"`
+	Previous string          `json:"previous"`
+	Size     int             `json:"size"`
+	Values   []bbPullRequest `json:"values"`
 }
 
 type bbPullRequest struct {
-	State		string			`json:"state"`
-	Source 		pullRequestRef	`json:"source"`
-	Destination pullRequestRef	`json:"destination"`
-	Links 		links 			`json:"links"`
-	Title 		string			`json:"title"`
-	Type 		string 			`json:"type"`
-	ID 			int				`json:"id"`
+	State       string         `json:"state"`
+	Source      pullRequestRef `json:"source"`
+	Destination pullRequestRef `json:"destination"`
+	Links       links          `json:"links"`
+	Title       string         `json:"title"`
+	Type        string         `json:"type"`
+	ID          int            `json:"id"`
 }
 
 type pullRequestRef struct {
-	Branch      branch     				`json:"branch"`
-	Commit 		commit 					`json:"Commit"`
-	Repository  bitbucket.Repository 	`json:"repository"`
+	Branch     branch               `json:"branch"`
+	Commit     commit               `json:"Commit"`
+	Repository bitbucket.Repository `json:"repository"`
 }
 
 type branch struct {
-	Name	string 	`json:"name"`
+	Name string `json:"name"`
 }
 
 type commit struct {
-	Hash 	string	`json:"hash"`
-	Type 	string 	`json:"type"`
-	Links 	links	`json:"links"`
+	Hash  string `json:"hash"`
+	Type  string `json:"type"`
+	Links links  `json:"links"`
 }
 
 type links struct {
@@ -56,8 +61,8 @@ type links struct {
 
 type repoLinks struct {
 	Clone []hrefLink `json:"clone,omitempty"`
-	Self []hrefLink `json:"self,omitempty"`
-	Html []hrefLink `json:"html,omitempty"`
+	Self  []hrefLink `json:"self,omitempty"`
+	Html  []hrefLink `json:"html,omitempty"`
 }
 
 type hrefLink struct {
