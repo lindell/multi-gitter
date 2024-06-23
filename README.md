@@ -1022,9 +1022,3 @@ replace();
 
 
 Do you have a nice script that might be useful to others? Please create a PR that adds it to the [examples folder](/examples).
-
-## Bitbucket Cloud Support
-Using `fork: true` is currently experimental within multi-gitter for Bitbucket Cloud, and will be addressed in future updates.
-Here are the known limitations:
-- The forked repository will appear in the user-provided workspace/orgName, with the given repo name, but will appear in a random project within that workspace.
-- Using `git-type: cmd` is required for Bitbucket Cloud forking, as `git-type: go` causes inconsistent behavior. 
