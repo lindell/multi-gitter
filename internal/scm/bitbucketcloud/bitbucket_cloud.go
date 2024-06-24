@@ -157,7 +157,7 @@ func (bbc *BitbucketCloud) GetPullRequests(ctx context.Context, branchName strin
 	}
 	for _, repo := range repositories {
 		bbcRepo := repo.(repository)
-		prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: bbcRepo.name})
+		prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: bbcRepo.name, SourceBranch: branchName})
 		if err != nil {
 			return nil, err
 		}
