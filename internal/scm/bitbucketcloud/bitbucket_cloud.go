@@ -252,11 +252,10 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 
 func (bbc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	bbcPR := pr.(pullRequest)
-	repoSlug := strings.Split(bbcPR.guiURL, "/")[4]
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:           fmt.Sprintf("%d", bbcPR.number),
 		SourceBranch: bbcPR.branchName,
-		RepoSlug:     repoSlug,
+		RepoSlug:     bbcPR.prRepoName,
 		Owner:        bbc.workspaces[0],
 	}
 	_, err := bbc.bbClient.Repositories.PullRequests.Merge(prOptions)
@@ -265,11 +264,10 @@ func (bbc *BitbucketCloud) MergePullRequest(ctx context.Context, pr scm.PullRequ
 
 func (bbc *BitbucketCloud) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error {
 	bbcPR := pr.(pullRequest)
-	repoSlug := strings.Split(bbcPR.guiURL, "/")[4]
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:           fmt.Sprintf("%d", bbcPR.number),
 		SourceBranch: bbcPR.branchName,
-		RepoSlug:     repoSlug,
+		RepoSlug:     bbcPR.prRepoName,
 		Owner:        bbc.workspaces[0],
 	}
 	_, err := bbc.bbClient.Repositories.PullRequests.Decline(prOptions)
