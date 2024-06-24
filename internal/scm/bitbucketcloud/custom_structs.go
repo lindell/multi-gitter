@@ -15,7 +15,7 @@ const (
 )
 
 type newPrResponse struct {
-	ID    int   `json:"id""`
+	ID    int   `json:"id"`
 	Links links `json:"links"`
 }
 
