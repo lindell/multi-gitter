@@ -39,7 +39,6 @@ type RepositoryReference struct {
 
 // New creates a new AzureDevOps client
 func New(pat, baseURL string, sshAuth bool, fork bool, repoListing RepositoryListing) (*AzureDevOps, error) {
-	// Declare the connection variable
 	connection := azuredevops.NewPatConnection(baseURL, pat)
 	gitClient, err := git.NewClient(context.Background(), connection)
 	if err != nil {
