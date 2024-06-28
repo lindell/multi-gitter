@@ -25,6 +25,11 @@ func TestParseRepositoryReference(t *testing.T) {
 			val:     "my-repo",
 			wantErr: true,
 		},
+        {
+			name:    "too many parts",
+			val:     "my-project/my-repo/more-data",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
