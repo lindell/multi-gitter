@@ -7,6 +7,7 @@ import (
 
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/scm/azuredevops"
 	"github.com/lindell/multi-gitter/internal/scm/bitbucketserver"
 	"github.com/lindell/multi-gitter/internal/scm/gitea"
 	"github.com/lindell/multi-gitter/internal/scm/github"
@@ -19,26 +20,26 @@ import (
 func configurePlatform(cmd *cobra.Command) {
 	flags := cmd.Flags()
 
-	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.")
+	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea, BitBucket or Azure DevOps.")
 	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
-	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
+	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/AZURE_DEVOPS_TOKEN environment variable.")
 
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
 	flags.StringSliceP("user", "U", nil, "The name of a user. All repositories owned by that user will be used.")
-	flags.StringSliceP("repo", "R", nil, "The name, including owner of a GitHub repository in the format \"ownerName/repoName\".")
+	flags.StringSliceP("repo", "R", nil, "The repository name, including owner/group/project of the repository in the format \"ownerName/repoName\".")
 	flags.StringP("repo-search", "", "", "Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use `fork:true` to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.")
 	flags.StringP("code-search", "", "", "Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use `fork:true` to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.")
 	flags.StringSliceP("topic", "", nil, "The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.")
-	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\".")
+	flags.StringSliceP("project", "P", nil, "The name, including owner of a GitLab project in the format \"ownerName/repoName\". In Azure DevOps this is in the format \"projectName\".")
 	flags.BoolP("include-subgroups", "", false, "Include GitLab subgroups when using the --group flag.")
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
 	flags.BoolP("skip-forks", "", false, `Skip repositories which are forks.`)
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, azuredevops.")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"github", "gitlab", "gitea", "bitbucket_server"}, cobra.ShellCompDirectiveDefault
+		return []string{"github", "gitlab", "gitea", "bitbucket_server, azuredevops"}, cobra.ShellCompDirectiveDefault
 	})
 
 	// Autocompletion for organizations
@@ -85,9 +86,9 @@ func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
 	}
 	flags.BoolP("fork", "", false, forkDesc)
 
-	forkOwnerDesc := "If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user."
+	forkOwnerDesc := "If set, make the fork to the defined value (owner/project/group). Default behavior is for the fork to be on the logged in user."
 	if !prCreating {
-		forkOwnerDesc = "If set, use forks from the defined value instead of the logged in user."
+		forkOwnerDesc = "If set, use forks from the defined value (owner/project/group) instead of the logged in user."
 	}
 
 	flags.StringP("fork-owner", "", "", forkOwnerDesc)
@@ -114,6 +115,8 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (
 		return createGiteaClient(flag, verifyFlags)
 	case "bitbucket_server":
 		return createBitbucketServerClient(flag, verifyFlags)
+	case "azuredevops":
+		return createAzureDevOpsClient(flag, verifyFlags)
 	default:
 		return nil, fmt.Errorf("unknown platform: %s", platform)
 	}
@@ -322,6 +325,46 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 		Users:        users,
 		Repositories: repoRefs,
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return vc, nil
+}
+
+func createAzureDevOpsClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+	azureDevOpsBaseURL, _ := flag.GetString("base-url")
+	projects, _ := flag.GetStringSlice("project")
+	repos, _ := flag.GetStringSlice("repo")
+	sshAuth, _ := flag.GetBool("ssh-auth")
+	fork, _ := flag.GetBool("fork")
+
+	if verifyFlags && len(projects) == 0 && len(repos) == 0 {
+		return nil, errors.New("no projects or repositories set")
+	}
+
+	if azureDevOpsBaseURL == "" {
+		return nil, errors.New("no base-url set for azure devops")
+	}
+
+	token, err := getToken(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	repoRefs := make([]azuredevops.RepositoryReference, len(repos))
+	for i := range repos {
+		repoRefs[i], err = azuredevops.ParseRepositoryReference(repos[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	vc, err := azuredevops.New(token, azureDevOpsBaseURL, sshAuth, fork, azuredevops.RepositoryListing{
+		Projects:     projects,
+		Repositories: repoRefs,
+	})
+
 	if err != nil {
 		return nil, err
 	}
