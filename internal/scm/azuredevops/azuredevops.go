@@ -2,7 +2,9 @@ package azuredevops
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/google/uuid"
@@ -105,8 +107,12 @@ func (a *AzureDevOps) GetRepositories(ctx context.Context) ([]scm.Repository, er
 
 	for _, repo := range projects {
 		rCopy := repo
-		r := a.convertRepo(&rCopy)
-		repos = append(repos, r)
+		r, err := a.convertRepo(&rCopy)
+		if err != nil {
+			repos = append(repos, r)
+		} else {
+			return nil, err
+		}
 	}
 
 	return repos, nil
@@ -150,7 +156,7 @@ func (a *AzureDevOps) getRepos(ctx context.Context) ([]git.GitRepository, error)
 func (a *AzureDevOps) CreatePullRequest(ctx context.Context, _ scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	prr := prRepo.(repository)
 
-	reviewerIDs, err := a.getUserIds(ctx, append(newPR.Reviewers, newPR.Assignees...))
+	reviewerIDs, err := a.getUserIDs(ctx, append(newPR.Reviewers, newPR.Assignees...))
 	if err != nil {
 		return nil, err
 	}
@@ -214,15 +220,14 @@ func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository
 	r := repo.(repository)
 	pr := pullReq.(pullRequest)
 
-	reviewerIDs, err := a.getUserIds(ctx, append(updatedPR.Reviewers, updatedPR.Assignees...))
+	reviewerIDs, err := a.getUserIDs(ctx, append(updatedPR.Reviewers, updatedPR.Assignees...))
 	if err != nil {
 		return nil, err
 	}
 	reviewers := make([]git.IdentityRefWithVote, len(reviewerIDs))
 	for i, reviewerID := range reviewerIDs {
-		rCopy := reviewerID
 		reviewers[i] = git.IdentityRefWithVote{
-			Id: &rCopy,
+			Id: &reviewerID,
 		}
 	}
 	prTitle := updatedPR.Title
@@ -240,7 +245,7 @@ func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository
 		}
 	}
 
-	srn := PrependPrefixIfNeeded(updatedPR.Head) // Pass the value of newPR.Head
+	srn := PrependPrefixIfNeeded(updatedPR.Head)
 	trn := PrependPrefixIfNeeded(updatedPR.Base)
 
 	updateResult, err := a.gitClient.UpdatePullRequest(ctx, git.UpdatePullRequestArgs{
@@ -268,8 +273,8 @@ func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository
 	}, nil
 }
 
-func (a *AzureDevOps) getUserIds(ctx context.Context, usernames []string) ([]string, error) {
-	userIds := make([]string, len(usernames))
+func (a *AzureDevOps) getUserIDs(ctx context.Context, usernames []string) ([]string, error) {
+	userIDs := make([]string, len(usernames))
 
 	searchFilter := "General"
 
@@ -283,13 +288,13 @@ func (a *AzureDevOps) getUserIds(ctx context.Context, usernames []string) ([]str
 		if err != nil {
 			return nil, err
 		}
-		if len(*users) != 1 {
-			return nil, fmt.Errorf("could not find user: %s", usernames[i])
+		if users == nil || len(*users) != 1 {
+			return nil, fmt.Errorf("could not find user or more than one user was found: %s", usernames[i])
 		}
 
-		userIds[i] = (*users)[0].Id.String()
+		userIDs[i] = (*users)[0].Id.String()
 	}
-	return userIds, nil
+	return userIDs, nil
 }
 
 func (a *AzureDevOps) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
@@ -340,7 +345,7 @@ func (a *AzureDevOps) getPullRequest(ctx context.Context, branchName string, rid
 	if err != nil {
 		return nil, err
 	}
-	if len(*prs) == 0 {
+	if prs == nil || len(*prs) == 0 {
 		return nil, nil
 	}
 
@@ -378,7 +383,7 @@ func (a *AzureDevOps) GetOpenPullRequest(ctx context.Context, repo scm.Repositor
 	if err != nil {
 		return nil, err
 	}
-	if len(*prs) == 0 {
+	if prs == nil || len(*prs) == 0 {
 		return nil, nil
 	}
 
@@ -419,6 +424,7 @@ func (a *AzureDevOps) ClosePullRequest(ctx context.Context, pullReq scm.PullRequ
 	if err != nil {
 		return err
 	}
+	// this is the objectId needed to indicate that a branch should be deleted
 	newObjectID := "0000000000000000000000000000000000000000"
 	refUpdate := git.GitRefUpdate{
 		Name:        &pr.branchName,
@@ -460,8 +466,14 @@ func (a *AzureDevOps) ForkRepository(ctx context.Context, repo scm.Repository, n
 		RepositoryId: &repoName,
 	})
 
+	var wrappedErr *azuredevops.WrappedError
 	if err == nil {
-		return a.convertRepo(existingFork), nil
+		repo, err := a.convertRepo(existingFork)
+		return repo, err
+	} else if errors.As(err, &wrappedErr) {
+		if !(*wrappedErr.StatusCode == http.StatusNotFound) {
+			return nil, err
+		}
 	}
 
 	repoUUID, err := uuid.Parse(r.rid)
@@ -490,7 +502,7 @@ func (a *AzureDevOps) ForkRepository(ctx context.Context, repo scm.Repository, n
 		return nil, err
 	}
 	// Convert the forked repository to scm.Repository
-	return a.convertRepo(forkedRepo), nil
+	return a.convertRepo(forkedRepo)
 }
 
 func (a *AzureDevOps) getCurrentUser(ctx context.Context) (string, error) {

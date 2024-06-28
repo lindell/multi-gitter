@@ -2,13 +2,14 @@ package azuredevops
 
 import (
 	"fmt"
+	"net/url"
 	"path"
-	"strings"
 
 	"github.com/microsoft/azure-devops-go-api/azuredevops/v7/git"
+	"github.com/pkg/errors"
 )
 
-func (a *AzureDevOps) convertRepo(repo *git.GitRepository) repository {
+func (a *AzureDevOps) convertRepo(repo *git.GitRepository) (repository, error) {
 	var cloneURL string
 	if a.SSHAuth {
 		cloneURL = *repo.SshUrl
@@ -33,7 +34,7 @@ func (a *AzureDevOps) convertRepo(repo *git.GitRepository) repository {
 		name:          *repo.Name,
 		ownerName:     *repo.Project.Name,
 		defaultBranch: defaultBranch,
-	}
+	}, nil
 }
 
 type repository struct {
