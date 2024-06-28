@@ -13,7 +13,13 @@ func (a *AzureDevOps) convertRepo(repo *git.GitRepository) repository {
 	if a.SSHAuth {
 		cloneURL = *repo.SshUrl
 	} else {
-		cloneURL = fmt.Sprintf("https://%s@%s", a.pat, strings.TrimPrefix(*repo.RemoteUrl, "https://"))
+		u, err := url.Parse(*repo.RemoteUrl)
+		if err != nil {
+			return repository{}, errors.Wrap(err, "could not parse Azure Devops remote url")
+		}
+		// Set the token as https://ACCESSTOKEN@remote-url
+		u.User = url.User(a.pat)
+		cloneURL = u.String()
 	}
 
 	defaultBranch := ""
