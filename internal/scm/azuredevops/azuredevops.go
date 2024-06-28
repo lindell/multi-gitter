@@ -232,7 +232,6 @@ func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository
 
 	activeLabel := true
 	labels := make([]core.WebApiTagDefinition, len(updatedPR.Labels))
-
 	for i, label := range updatedPR.Labels {
 		lCopy := label
 		labels[i] = core.WebApiTagDefinition{
