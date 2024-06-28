@@ -88,7 +88,7 @@ func configureRunPlatform(cmd *cobra.Command, prCreating bool) {
 
 	forkOwnerDesc := "If set, make the fork to the defined value (owner/project/group). Default behavior is for the fork to be on the logged in user."
 	if !prCreating {
-		forkOwnerDesc = "If set, use forks from the defined value instead of the logged in user. In Azure DevOps, this is the name of the project you want to fork into."
+		forkOwnerDesc = "If set, use forks from the defined value (owner/project/group) instead of the logged in user."
 	}
 
 	flags.StringP("fork-owner", "", "", forkOwnerDesc)

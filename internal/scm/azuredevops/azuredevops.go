@@ -44,28 +44,23 @@ func New(pat, baseURL string, sshAuth bool, fork bool, repoListing RepositoryLis
 	if err != nil {
 		return nil, err
 	}
-
 	locationClient := location.NewClient(context.Background(), connection)
 
 	coreClient, err := core.NewClient(context.Background(), connection)
 	if err != nil {
 		return nil, err
 	}
-
 	identityClient, err := identity.NewClient(context.Background(), connection)
 	if err != nil {
 		return nil, err
 	}
-
 	projectMap := make(map[string]uuid.UUID)
 
 	if fork {
 		projects, err := coreClient.GetProjects(context.Background(), core.GetProjectsArgs{})
-
 		if err != nil {
 			return nil, err
 		}
-
 		projectMap = make(map[string]uuid.UUID, len(projects.Value))
 
 		for _, project := range projects.Value {
@@ -106,10 +101,9 @@ func (a *AzureDevOps) GetRepositories(ctx context.Context) ([]scm.Repository, er
 	if err != nil {
 		return nil, err
 	}
+	repos := make([]scm.Repository, 0, len(projects))
 
-	repos := make([]scm.Repository, 0, len(*projects))
-
-	for _, repo := range *projects {
+	for _, repo := range projects {
 		rCopy := repo
 		r := a.convertRepo(&rCopy)
 		repos = append(repos, r)
@@ -118,12 +112,11 @@ func (a *AzureDevOps) GetRepositories(ctx context.Context) ([]scm.Repository, er
 	return repos, nil
 }
 
-func (a *AzureDevOps) getRepos(ctx context.Context) (*[]git.GitRepository, error) {
+func (a *AzureDevOps) getRepos(ctx context.Context) ([]git.GitRepository, error) {
 	allRepos, err := a.gitClient.GetRepositories(ctx, git.GetRepositoriesArgs{})
 	if err != nil {
 		return nil, err
 	}
-
 	filteredRepos := make([]git.GitRepository, 0)
 
 	for _, repo := range *allRepos {
@@ -151,7 +144,7 @@ func (a *AzureDevOps) getRepos(ctx context.Context) (*[]git.GitRepository, error
 		}
 	}
 
-	return &filteredRepos, nil
+	return filteredRepos, nil
 }
 
 func (a *AzureDevOps) CreatePullRequest(ctx context.Context, _ scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
@@ -161,16 +154,11 @@ func (a *AzureDevOps) CreatePullRequest(ctx context.Context, _ scm.Repository, p
 	if err != nil {
 		return nil, err
 	}
-
 	reviewers := make([]git.IdentityRefWithVote, len(reviewerIDs))
 	for i, reviewerID := range reviewerIDs {
-		rCopy := reviewerID
 		reviewers[i] = git.IdentityRefWithVote{
-			Id: &rCopy,
+			Id: &reviewerID,
 		}
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	prTitle := newPR.Title
@@ -213,7 +201,6 @@ func (a *AzureDevOps) CreatePullRequest(ctx context.Context, _ scm.Repository, p
 	if err != nil {
 		return nil, err
 	}
-
 	return pullRequest{
 		ownerName:  prr.ownerName,
 		repoName:   prr.name,
@@ -231,7 +218,6 @@ func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository
 	if err != nil {
 		return nil, err
 	}
-
 	reviewers := make([]git.IdentityRefWithVote, len(reviewerIDs))
 	for i, reviewerID := range reviewerIDs {
 		rCopy := reviewerID
@@ -239,10 +225,6 @@ func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository
 			Id: &rCopy,
 		}
 	}
-	if err != nil {
-		return nil, err
-	}
-
 	prTitle := updatedPR.Title
 	if updatedPR.Draft {
 		prTitle = "Draft: " + prTitle
@@ -278,7 +260,6 @@ func (a *AzureDevOps) UpdatePullRequest(ctx context.Context, repo scm.Repository
 	if err != nil {
 		return nil, err
 	}
-
 	return pullRequest{
 		ownerName:  r.ownerName,
 		repoName:   r.name,
@@ -317,11 +298,10 @@ func (a *AzureDevOps) GetPullRequests(ctx context.Context, branchName string) ([
 	if err != nil {
 		return nil, err
 	}
-
 	bn := PrependPrefixIfNeeded(branchName)
 
 	prs := []scm.PullRequest{}
-	for _, repo := range *repos {
+	for _, repo := range repos {
 		pr, err := a.getPullRequest(ctx, bn, repo.Id.String())
 		if err != nil {
 			return nil, err
@@ -330,13 +310,13 @@ func (a *AzureDevOps) GetPullRequests(ctx context.Context, branchName string) ([
 			continue
 		}
 
-		prs = append(prs, convertPullRequest(pr))
+		prs = append(prs, convertPullRequest(*pr))
 	}
 
 	return prs, nil
 }
 
-func convertPullRequest(pr *git.GitPullRequest) pullRequest {
+func convertPullRequest(pr git.GitPullRequest) pullRequest {
 	return pullRequest{
 		ownerName:               *pr.Repository.Project.Name,
 		repoName:                *pr.Repository.Name,
@@ -361,7 +341,6 @@ func (a *AzureDevOps) getPullRequest(ctx context.Context, branchName string, rid
 	if err != nil {
 		return nil, err
 	}
-
 	if len(*prs) == 0 {
 		return nil, nil
 	}
@@ -369,7 +348,7 @@ func (a *AzureDevOps) getPullRequest(ctx context.Context, branchName string, rid
 	return &(*prs)[0], nil
 }
 
-func pullRequestStatus(pr *git.GitPullRequest) scm.PullRequestStatus {
+func pullRequestStatus(pr git.GitPullRequest) scm.PullRequestStatus {
 	switch {
 	case *pr.MergeStatus == git.PullRequestAsyncStatusValues.Succeeded:
 		return scm.PullRequestStatusSuccess
@@ -400,12 +379,11 @@ func (a *AzureDevOps) GetOpenPullRequest(ctx context.Context, repo scm.Repositor
 	if err != nil {
 		return nil, err
 	}
-
 	if len(*prs) == 0 {
 		return nil, nil
 	}
 
-	return convertPullRequest(&(*prs)[0]), nil
+	return convertPullRequest((*prs)[0]), nil
 }
 
 // MergePullRequest merges a pull request
@@ -425,7 +403,6 @@ func (a *AzureDevOps) MergePullRequest(ctx context.Context, pullReq scm.PullRequ
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -443,7 +420,6 @@ func (a *AzureDevOps) ClosePullRequest(ctx context.Context, pullReq scm.PullRequ
 	if err != nil {
 		return err
 	}
-
 	newObjectID := "0000000000000000000000000000000000000000"
 	refUpdate := git.GitRefUpdate{
 		Name:        &pr.branchName,
@@ -461,7 +437,6 @@ func (a *AzureDevOps) ClosePullRequest(ctx context.Context, pullReq scm.PullRequ
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -473,7 +448,6 @@ func (a *AzureDevOps) ForkRepository(ctx context.Context, repo scm.Repository, n
 	if err != nil {
 		return nil, err
 	}
-
 	np := newProject
 	if np == "" {
 		np = r.ownerName
@@ -495,7 +469,6 @@ func (a *AzureDevOps) ForkRepository(ctx context.Context, repo scm.Repository, n
 	if err != nil {
 		return nil, err
 	}
-
 	pid := a.projectNameToID[np]
 	parentPid := a.projectNameToID[r.ownerName]
 
@@ -517,7 +490,6 @@ func (a *AzureDevOps) ForkRepository(ctx context.Context, repo scm.Repository, n
 	if err != nil {
 		return nil, err
 	}
-
 	// Convert the forked repository to scm.Repository
 	return a.convertRepo(forkedRepo), nil
 }
@@ -527,7 +499,6 @@ func (a *AzureDevOps) getCurrentUser(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return *currentUser.AuthenticatedUser.ProviderDisplayName, nil
 }
 
