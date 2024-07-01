@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.52.1](https://github.com/lindell/multi-gitter/compare/v0.52.0...v0.52.1) (2024-07-01)
+
+
+### Bug Fixes
+
+* accept capital chars in run command ([#488](https://github.com/lindell/multi-gitter/issues/488)) ([6a9ad1b](https://github.com/lindell/multi-gitter/commit/6a9ad1b82f69c3408ee3642c2cb50cc7f99ae924))
+* **github:** include draft PR status to when updating PR ([#478](https://github.com/lindell/multi-gitter/issues/478)) ([bef2b44](https://github.com/lindell/multi-gitter/commit/bef2b443f85257df8c7d91cdfbf6a0a0f3772941))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 7f521ea ([5e45ec3](https://github.com/lindell/multi-gitter/commit/5e45ec350066b826db8fc0c836d159ffdefa60d3))
+* update module github.com/spf13/cobra to v1.8.1 ([a4f429f](https://github.com/lindell/multi-gitter/commit/a4f429ffdb238c35af37ae8af097d04e999a6e55))
+* update module github.com/spf13/viper to v1.19.0 ([934a1df](https://github.com/lindell/multi-gitter/commit/934a1df68417d53d68ae5564c5b8e883e562648c))
+* update module github.com/xanzy/go-gitlab to v0.105.0 ([4bcbe9c](https://github.com/lindell/multi-gitter/commit/4bcbe9caa5aec9ea71f5b9d35149e0646a204037))
+* update module github.com/xanzy/go-gitlab to v0.106.0 ([c63b8b6](https://github.com/lindell/multi-gitter/commit/c63b8b6527eb9173f54788cbec4cedacd96e762b))
+* update module golang.org/x/oauth2 to v0.20.0 ([d1876a6](https://github.com/lindell/multi-gitter/commit/d1876a6acb510d7a9af9543e97a728addeab6277))
+* update module golang.org/x/oauth2 to v0.21.0 ([f970bf2](https://github.com/lindell/multi-gitter/commit/f970bf292a6afc62df05c92037d91329b01269d9))
+
 ## [0.52.0](https://github.com/lindell/multi-gitter/compare/v0.51.0...v0.52.0) (2024-05-04)
 
 
