@@ -73,7 +73,7 @@ brews:
     description: "Update multiple repositories in bulk"
     homepage: https://github.com/lindell/multi-gitter
     license: "Apache-2.0"
-    folder: Formula
+    directory: Formula
     install: |-
       bin.install "multi-gitter"
       bash_completion.install "completions/multi-gitter.bash" => "multi-gitter"
