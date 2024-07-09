@@ -53,6 +53,7 @@ type Runner struct {
 	MaxReviewers     int // If set to zero, all reviewers will be use
 	MaxTeamReviewers int // If set to zero, all team-reviewers will be used
 	DryRun           bool
+	UseGHAPI         bool
 	CommitAuthor     *git.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 	Assignees        []string
@@ -284,11 +285,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errNoChange
 	}
 
-	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
-	if err != nil {
-		return nil, err
+	if !r.UseGHAPI {
+		err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
+		if err != nil {
+			return nil, err
+		}
 	}
-
 	if r.Interactive {
 		err = r.interactive(tmpDir, repo)
 		if err != nil {

@@ -3,6 +3,8 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -21,7 +23,8 @@ type Git struct {
 	Directory  string // The (temporary) directory that should be worked within
 	FetchDepth int    // Limit fetching to the specified number of commits
 
-	repo *git.Repository // The repository after the clone has been made
+	base64Changes internalgit.Changes // The changes that we've made base64 encoded
+	repo          *git.Repository     // The repository after the clone has been made
 }
 
 // Clone a repository
@@ -53,6 +56,7 @@ func (g *Git) ChangeBranch(branchName string) error {
 		Branch: plumbing.NewBranchReferenceName(branchName),
 		Create: true,
 	})
+
 	if err != nil {
 		return err
 	}
@@ -73,6 +77,43 @@ func (g *Git) Changes() (bool, error) {
 	}
 
 	return !status.IsClean(), nil
+}
+
+func (g *Git) GetFileChangesAsBase64() error {
+	w, err := g.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	treeStatus, err := w.Status()
+
+	if err != nil {
+		return err
+	}
+
+	for path, status := range treeStatus {
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		output := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+		base64.StdEncoding.Encode(output, data)
+
+		change := internalgit.Change{Path: path, Contents: output}
+
+		s := status.Worktree
+
+		if s == git.Deleted {
+			g.base64Changes.Deletions = append(g.base64Changes.Deletions, change)
+		} else if s == git.Added || s == git.Modified {
+			g.base64Changes.Additions = append(g.base64Changes.Additions, change)
+		} else if s == git.Renamed || s == git.Copied {
+			// Skipping this case for now, but we should handle it
+		}
+	}
+
+	return nil
 }
 
 // Commit and push all changes

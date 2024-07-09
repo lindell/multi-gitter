@@ -10,6 +10,15 @@ type Repository interface {
 	FullName() string
 }
 
+type CreateCommitOnBranchInput struct {
+	repositoryNameWithOwner string
+	branchName              string
+	message                 string
+	additions               map[string][]byte
+	deletions               map[string][]byte
+	expectedHeadOid         string
+}
+
 func RepoContainsTopic(repoTopics []string, filterTopics []string) bool {
 	repoTopicsMap := map[string]struct{}{}
 	for _, v := range repoTopics {
