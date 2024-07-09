@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	internalgit "github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	log "github.com/sirupsen/logrus"
 )
 
