@@ -3,16 +3,18 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	internalgit "github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 
 	git "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -73,6 +75,41 @@ func (g *Git) Changes() (bool, error) {
 	}
 
 	return !status.IsClean(), nil
+}
+
+func (g *Git) GetFileChangesAsBase64() (*internalgit.Changes, error) {
+	var changes internalgit.Changes
+	w, err := g.repo.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	status, err := w.Status()
+	if err != nil {
+		return nil, err
+	}
+
+	for path, status := range status {
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		output := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+		base64.StdEncoding.Encode(output, data)
+
+		change := internalgit.Change{Path: path, Contents: output}
+
+		if status.Staging == git.Deleted {
+			changes.Deletions = append(changes.Deletions, change)
+		} else if status.Staging == git.Added || status.Staging == git.Modified {
+			changes.Additions = append(changes.Additions, change)
+		} else if status.Staging == git.Renamed || status.Staging == git.Copied {
+			// Skipping this case for now, but we should handle it
+		}
+	}
+
+	return &changes, nil
 }
 
 // Commit and push all changes
