@@ -5,13 +5,3 @@ type CommitAuthor struct {
 	Name  string
 	Email string
 }
-
-type Changes struct {
-	Additions []Change
-	Deletions []Change
-}
-
-type Change struct {
-	Path     string
-	Contents []byte
-}
