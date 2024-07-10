@@ -102,7 +102,7 @@ func graphQLEndpoint(u string) (string, error) {
 	return baseEndpoint.String(), nil
 }
 
-func (g *Github) CommitThroughAPI(ctx context.Context) error {
+func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranchInput) error {
 	query := `
 		mutation ($input: CreateCommitOnBranchInput!) {
 			createCommitOnBranch(input: $input) {
@@ -112,33 +112,41 @@ func (g *Github) CommitThroughAPI(ctx context.Context) error {
 			}
 		}
 		`
+	change := `{
+		"path": "%s",
+		"contents": "%s"      
+	},`
+
 	vars := `
 	{
 	"input": {
 		"branch": {
-			"repositoryNameWithOwner": "chrisstatham/multi-gitter",
-			"branchName": "APPSEC-1108"
+			"repositoryNameWithOwner": "%s",
+			"branchName": "%s"
 		},
 		"message": {
-			"headline": "Hello from GraphQL!"
+			"headline": "%s"
 		},
 		"fileChanges": {
 			"additions": [
-				{
-					"path": "myfile.txt",
-					"contents": "SGVsbG8gZnJvbSBKQVZBIGFuZCBHcmFwaFFM"      
-				}
+				%s
 			]
 		},
-		"expectedHeadOid": "cb65177542c9239b9773fb4f6e117c46108c32d2" 
+		"expectedHeadOid": "%s" 
 		}
 	}`
 
-	result := map[string]graphqlRepo{}
+	v := ""
+
+	for path, sha := range input.Additions {
+		v += fmt.Sprintf(change, path, sha)
+	}
+
+	result := fmt.Sprintf(vars, input.RepositoryNameWithOwner, input.BranchName, input.Message, v, input.ExpectedHeadOid)
 
 	err := g.makeGraphQLRequest(ctx, query, vars, &result)
 	if err != nil {
-		fmt.Printf("FAil")
+		fmt.Printf("Fail")
 	}
 
 	return nil
