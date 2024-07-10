@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strings"
 	"sync"
 	"syscall"
 	"unicode"
@@ -21,6 +22,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
+	graphql "github.com/lindell/multi-gitter/internal/scm/github"
 )
 
 // VersionController fetches repositories
@@ -340,7 +342,38 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log.Info("Pushing changes to remote")
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
-	err = sourceController.Push(ctx, remoteName, forcePush)
+
+	if r.UseGHAPI {
+		if ghapi, ok := r.VersionController.(interface {
+			CommitThroughAPI(ctx context.Context, input graphql.CreateCommitOnBranchInput) error
+		}); ok {
+			var input graphql.CreateCommitOnBranchInput
+			input.Message = r.CommitMessage
+			input.BranchName = r.FeatureBranch
+			array := strings.Split(repo.CloneURL(), "/")
+			input.RepositoryNameWithOwner = fmt.Sprintf("%v\\%v\n", array[len(array)-2], array[len(array)-1])
+
+			if git, ok := sourceController.(interface {
+				Additions() map[string]string
+			}); ok {
+				input.Additions = git.Additions()
+			}
+
+			if git, ok := sourceController.(interface {
+				Deletions() map[string]string
+			}); ok {
+				input.Deletions = git.Deletions()
+			}
+
+			err = ghapi.CommitThroughAPI(ctx, input)
+		} else {
+			log.Info("Could not find CommitThroughAPI, falling back on default push")
+			err = sourceController.Push(ctx, remoteName, forcePush)
+		}
+	} else {
+		err = sourceController.Push(ctx, remoteName, forcePush)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
 	}

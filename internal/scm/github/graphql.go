@@ -200,7 +200,7 @@ type CreateCommitOnBranchInput struct {
 	RepositoryNameWithOwner string
 	BranchName              string
 	Message                 string
-	Additions               map[string][]byte
-	Deletions               map[string][]byte
+	Additions               map[string]string
+	Deletions               map[string]string
 	ExpectedHeadOid         string
 }

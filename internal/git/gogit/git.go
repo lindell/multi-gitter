@@ -3,6 +3,8 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -21,7 +23,9 @@ type Git struct {
 	Directory  string // The (temporary) directory that should be worked within
 	FetchDepth int    // Limit fetching to the specified number of commits
 
-	repo *git.Repository // The repository after the clone has been made
+	additions map[string]string // Files being added (used for GHAPI)
+	deletions map[string]string // Files being remove (used for GHAPI)
+	repo      *git.Repository   // The repository after the clone has been made
 }
 
 // Clone a repository
@@ -73,6 +77,44 @@ func (g *Git) Changes() (bool, error) {
 	}
 
 	return !status.IsClean(), nil
+}
+
+func (g *Git) GetFileChangesAsBase64() error {
+	w, err := g.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	treeStatus, err := w.Status()
+
+	if err != nil {
+		return err
+	}
+
+	g.additions = make(map[string]string)
+	g.deletions = make(map[string]string)
+
+	for path, status := range treeStatus {
+
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		output := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+		base64.StdEncoding.Encode(output, data)
+
+		s := status.Worktree
+
+		if s == git.Deleted {
+			g.deletions[path] = string(output)
+		} else if s == git.Added || s == git.Modified {
+			g.additions[path] = string(output)
+		} else if s == git.Renamed || s == git.Copied {
+			// Skipping this case for now, but we should handle it
+		}
+	}
+
+	return nil
 }
 
 // Commit and push all changes
@@ -208,6 +250,14 @@ func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
 		RemoteName: remoteName,
 		Force:      force,
 	})
+}
+
+func (g *Git) Additions() map[string]string {
+	return g.additions
+}
+
+func (g *Git) Deletions() map[string]string {
+	return g.additions
 }
 
 // AddRemote adds a new remote
