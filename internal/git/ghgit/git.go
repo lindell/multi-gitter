@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"os"
+	"strings"
 	"time"
+
+	graphql "github.com/lindell/multi-gitter/internal/scm/github"
 
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -25,6 +29,7 @@ type Git struct {
 
 	base64Changes internalgit.Changes // The changes that we've made base64 encoded
 	repo          *git.Repository     // The repository after the clone has been made
+	ghCommitInfo  graphql.CreateCommitOnBranchInput
 }
 
 // Clone a repository
@@ -36,9 +41,13 @@ func (g *Git) Clone(ctx context.Context, url string, baseName string) error {
 		ReferenceName: plumbing.NewBranchReferenceName(baseName),
 		SingleBranch:  true,
 	})
+
 	if err != nil {
 		return errors.Wrap(err, "could not clone from the remote")
 	}
+
+	array := strings.Split(url, "/")
+	g.ghCommitInfo.RepositoryNameWithOwner = fmt.Sprintf("%v\\%v\n", array[len(array)-2], array[len(array)-1])
 
 	g.repo = r
 
@@ -51,6 +60,8 @@ func (g *Git) ChangeBranch(branchName string) error {
 	if err != nil {
 		return err
 	}
+
+	g.ghCommitInfo.BranchName = branchName
 
 	err = w.Checkout(&git.CheckoutOptions{
 		Branch: plumbing.NewBranchReferenceName(branchName),
@@ -91,6 +102,9 @@ func (g *Git) GetFileChangesAsBase64() error {
 		return err
 	}
 
+	g.ghCommitInfo.Additions = make(map[string][]byte)
+	g.ghCommitInfo.Deletions = make(map[string][]byte)
+
 	for path, status := range treeStatus {
 
 		data, err := os.ReadFile(path)
@@ -100,14 +114,12 @@ func (g *Git) GetFileChangesAsBase64() error {
 		output := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
 		base64.StdEncoding.Encode(output, data)
 
-		change := internalgit.Change{Path: path, Contents: output}
-
 		s := status.Worktree
 
 		if s == git.Deleted {
-			g.base64Changes.Deletions = append(g.base64Changes.Deletions, change)
+			g.ghCommitInfo.Deletions[path] = output
 		} else if s == git.Added || s == git.Modified {
-			g.base64Changes.Additions = append(g.base64Changes.Additions, change)
+			g.ghCommitInfo.Additions[path] = output
 		} else if s == git.Renamed || s == git.Copied {
 			// Skipping this case for now, but we should handle it
 		}
@@ -118,6 +130,17 @@ func (g *Git) GetFileChangesAsBase64() error {
 
 // Commit and push all changes
 func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage string) error {
+
+	// We cannot use commit author and the API is going to ignore a ton of git specific features
+	// This captures the changes as base64 until its time to push.
+	err := g.GetFileChangesAsBase64()
+
+	if err != nil {
+		return err
+	}
+
+	g.ghCommitInfo.Message = commitMessage
+
 	w, err := g.repo.Worktree()
 	if err != nil {
 		return err
@@ -159,6 +182,7 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 		return err
 	}
 	oldHash := oldHead.Hash()
+	g.ghCommitInfo.ExpectedHeadOid = oldHash.String()
 
 	var author *object.Signature
 	if commitAuthor != nil {
@@ -245,10 +269,7 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 
 // Push the committed changes to the remote
 func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
-	return g.repo.PushContext(ctx, &git.PushOptions{
-		RemoteName: remoteName,
-		Force:      force,
-	})
+
 }
 
 // AddRemote adds a new remote

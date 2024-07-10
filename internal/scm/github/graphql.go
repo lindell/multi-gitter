@@ -102,6 +102,48 @@ func graphQLEndpoint(u string) (string, error) {
 	return baseEndpoint.String(), nil
 }
 
+func (g *Github) CommitThroughAPI(ctx context.Context) error {
+	query := `
+		mutation ($input: CreateCommitOnBranchInput!) {
+			createCommitOnBranch(input: $input) {
+				commit {
+				url
+				}
+			}
+		}
+		`
+	vars := `
+	{
+	"input": {
+		"branch": {
+			"repositoryNameWithOwner": "chrisstatham/multi-gitter",
+			"branchName": "APPSEC-1108"
+		},
+		"message": {
+			"headline": "Hello from GraphQL!"
+		},
+		"fileChanges": {
+			"additions": [
+				{
+					"path": "myfile.txt",
+					"contents": "SGVsbG8gZnJvbSBKQVZBIGFuZCBHcmFwaFFM"      
+				}
+			]
+		},
+		"expectedHeadOid": "cb65177542c9239b9773fb4f6e117c46108c32d2" 
+		}
+	}`
+
+	result := map[string]graphqlRepo{}
+
+	err := g.makeGraphQLRequest(ctx, query, vars, &result)
+	if err != nil {
+		fmt.Printf("FAil")
+	}
+
+	return nil
+}
+
 type graphqlPullRequestState string
 
 const (
@@ -144,4 +186,13 @@ type graphqlPR struct {
 			} `json:"commit"`
 		} `json:"nodes"`
 	} `json:"commits"`
+}
+
+type CreateCommitOnBranchInput struct {
+	RepositoryNameWithOwner string
+	BranchName              string
+	Message                 string
+	Additions               map[string][]byte
+	Deletions               map[string][]byte
+	ExpectedHeadOid         string
 }
