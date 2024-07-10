@@ -149,7 +149,3 @@ func (g *Git) AddRemote(name, url string) error {
 	_, err := g.run(cmd)
 	return err
 }
-
-func (g *Git) GetFileChangesAsBase64() (*git.Changes, error) {
-	return nil, nil
-}

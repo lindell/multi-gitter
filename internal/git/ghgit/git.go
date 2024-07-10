@@ -27,9 +27,8 @@ type Git struct {
 	Directory  string // The (temporary) directory that should be worked within
 	FetchDepth int    // Limit fetching to the specified number of commits
 
-	base64Changes internalgit.Changes // The changes that we've made base64 encoded
-	repo          *git.Repository     // The repository after the clone has been made
-	ghCommitInfo  graphql.CreateCommitOnBranchInput
+	repo         *git.Repository // The repository after the clone has been made
+	ghCommitInfo graphql.CreateCommitOnBranchInput
 }
 
 // Clone a repository
