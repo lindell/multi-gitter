@@ -287,12 +287,11 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errNoChange
 	}
 
-	if !r.UseGHAPI {
-		err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
-		if err != nil {
-			return nil, err
-		}
+	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
+	if err != nil {
+		return nil, err
 	}
+
 	if r.Interactive {
 		err = r.interactive(tmpDir, repo)
 		if err != nil {
