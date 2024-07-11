@@ -117,7 +117,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 		"contents": "%s"      
 	}`
 
-	var_template := `	{
+	varTemplate := `	{
 	"input": {
 		"branch": {
 			"repositoryNameWithOwner": "%s",
@@ -128,6 +128,9 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 		},
 		"fileChanges": {
 			"additions": [
+				%s
+			],
+			"deletions": [
 				%s
 			]
 		},
@@ -141,7 +144,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 		v += fmt.Sprintf(change, path, sha)
 	}
 
-	vars := fmt.Sprintf(var_template, input.RepositoryNameWithOwner, input.BranchName, input.Message, v, input.ExpectedHeadOid)
+	vars := fmt.Sprintf(varTemplate, input.RepositoryNameWithOwner, input.BranchName, input.Message, v, input.ExpectedHeadOid)
 
 	var result map[string]interface{}
 
