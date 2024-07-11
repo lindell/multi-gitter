@@ -70,6 +70,7 @@ type Runner struct {
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
 	ConflictStrategy ConflictStrategy // Defines what will happen if a branch already exists
+	UseGHAPI         bool
 
 	Draft bool // If set, creates Pull Requests as draft
 
@@ -348,39 +349,42 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log.Info("Pushing changes to remote")
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
-
-	if ghapi, ok := r.VersionController.(interface {
-		CommitThroughAPI(ctx context.Context, input graphql.CreateCommitOnBranchInput) error
-	}); ok {
-		var input graphql.CreateCommitOnBranchInput
-		input.Headline = r.CommitMessage
-		input.BranchName = r.FeatureBranch
-		array := strings.Split(repo.CloneURL(), "/")
-		repoName := strings.Trim(array[len(array)-1], ".git")
-		input.RepositoryNameWithOwner = strings.TrimSpace(fmt.Sprintf("%v/%v\n", array[len(array)-2], repoName))
-
-		if git, ok := sourceController.(interface {
-			Additions() map[string]string
+	if r.UseGHAPI {
+		if ghapi, ok := r.VersionController.(interface {
+			CommitThroughAPI(ctx context.Context, input graphql.CreateCommitOnBranchInput) error
 		}); ok {
-			fmt.Printf("%v\n", git.Additions())
-			input.Additions = git.Additions()
-		}
+			var input graphql.CreateCommitOnBranchInput
+			input.Headline = r.CommitMessage
+			input.BranchName = r.FeatureBranch
+			array := strings.Split(repo.CloneURL(), "/")
+			repoName := strings.Trim(array[len(array)-1], ".git")
+			input.RepositoryNameWithOwner = strings.TrimSpace(fmt.Sprintf("%v/%v\n", array[len(array)-2], repoName))
 
-		if git, ok := sourceController.(interface {
-			Deletions() []string
-		}); ok {
-			input.Deletions = git.Deletions()
-		}
+			if git, ok := sourceController.(interface {
+				Additions() map[string]string
+			}); ok {
+				fmt.Printf("%v\n", git.Additions())
+				input.Additions = git.Additions()
+			}
 
-		if git, ok := sourceController.(interface {
-			OldHash() string
-		}); ok {
-			input.ExpectedHeadOid = git.OldHash()
-		}
+			if git, ok := sourceController.(interface {
+				Deletions() []string
+			}); ok {
+				input.Deletions = git.Deletions()
+			}
 
-		err = ghapi.CommitThroughAPI(ctx, input)
+			if git, ok := sourceController.(interface {
+				OldHash() string
+			}); ok {
+				input.ExpectedHeadOid = git.OldHash()
+			}
+
+			err = ghapi.CommitThroughAPI(ctx, input)
+		} else {
+			log.Info("Could not find CommitThroughAPI, falling back on default push")
+			err = sourceController.Push(ctx, remoteName, forcePush)
+		}
 	} else {
-		log.Info("Could not find CommitThroughAPI, falling back on default push")
 		err = sourceController.Push(ctx, remoteName, forcePush)
 	}
 
