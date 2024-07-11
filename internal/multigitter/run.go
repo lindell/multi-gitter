@@ -55,7 +55,6 @@ type Runner struct {
 	MaxReviewers     int // If set to zero, all reviewers will be use
 	MaxTeamReviewers int // If set to zero, all team-reviewers will be used
 	DryRun           bool
-	UseGHAPI         bool
 	CommitAuthor     *git.CommitAuthor
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 	Assignees        []string
