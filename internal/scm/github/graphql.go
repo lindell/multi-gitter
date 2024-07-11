@@ -115,10 +115,9 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 	change := `{
 		"path": "%s",
 		"contents": "%s"      
-	},`
+	}`
 
-	vars := `
-	{
+	var_template := `	{
 	"input": {
 		"branch": {
 			"repositoryNameWithOwner": "%s",
@@ -142,11 +141,16 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 		v += fmt.Sprintf(change, path, sha)
 	}
 
-	result := fmt.Sprintf(vars, input.RepositoryNameWithOwner, input.BranchName, input.Message, v, input.ExpectedHeadOid)
+	vars := fmt.Sprintf(var_template, input.RepositoryNameWithOwner, input.BranchName, input.Message, v, input.ExpectedHeadOid)
+
+	var result map[string]interface{}
 
 	err := g.makeGraphQLRequest(ctx, query, vars, &result)
+
+	fmt.Printf("%s\n", result)
 	if err != nil {
-		fmt.Printf("Fail")
+		fmt.Printf("ERROR\n")
+		return err
 	}
 
 	return nil
@@ -201,6 +205,6 @@ type CreateCommitOnBranchInput struct {
 	BranchName              string
 	Message                 string
 	Additions               map[string]string
-	Deletions               map[string]string
+	Deletions               []string
 	ExpectedHeadOid         string
 }

@@ -265,6 +265,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
+	err = sourceController.Push(ctx, "origin", true)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "could not push changes")
+	}
+
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
 	if r.DryRun {
 		cmd.Env = append(cmd.Env, "DRY_RUN=true")
@@ -342,34 +348,38 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	log.Info("Pushing changes to remote")
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
 
-	if r.UseGHAPI {
-		if ghapi, ok := r.VersionController.(interface {
-			CommitThroughAPI(ctx context.Context, input graphql.CreateCommitOnBranchInput) error
+	if ghapi, ok := r.VersionController.(interface {
+		CommitThroughAPI(ctx context.Context, input graphql.CreateCommitOnBranchInput) error
+	}); ok {
+		var input graphql.CreateCommitOnBranchInput
+		input.Message = r.CommitMessage
+		input.BranchName = r.FeatureBranch
+		array := strings.Split(repo.CloneURL(), "/")
+		repoName := strings.Trim(array[len(array)-1], ".git")
+		input.RepositoryNameWithOwner = strings.TrimSpace(fmt.Sprintf("%v/%v\n", array[len(array)-2], repoName))
+
+		if git, ok := sourceController.(interface {
+			Additions() map[string]string
 		}); ok {
-			var input graphql.CreateCommitOnBranchInput
-			input.Message = r.CommitMessage
-			input.BranchName = r.FeatureBranch
-			array := strings.Split(repo.CloneURL(), "/")
-			input.RepositoryNameWithOwner = fmt.Sprintf("%v\\%v\n", array[len(array)-2], array[len(array)-1])
-
-			if git, ok := sourceController.(interface {
-				Additions() map[string]string
-			}); ok {
-				input.Additions = git.Additions()
-			}
-
-			if git, ok := sourceController.(interface {
-				Deletions() map[string]string
-			}); ok {
-				input.Deletions = git.Deletions()
-			}
-
-			err = ghapi.CommitThroughAPI(ctx, input)
-		} else {
-			log.Info("Could not find CommitThroughAPI, falling back on default push")
-			err = sourceController.Push(ctx, remoteName, forcePush)
+			fmt.Printf("%v\n", git.Additions())
+			input.Additions = git.Additions()
 		}
+
+		if git, ok := sourceController.(interface {
+			Deletions() []string
+		}); ok {
+			input.Deletions = git.Deletions()
+		}
+
+		if git, ok := sourceController.(interface {
+			OldHash() string
+		}); ok {
+			input.ExpectedHeadOid = git.OldHash()
+		}
+
+		err = ghapi.CommitThroughAPI(ctx, input)
 	} else {
+		log.Info("Could not find CommitThroughAPI, falling back on default push")
 		err = sourceController.Push(ctx, remoteName, forcePush)
 	}
 

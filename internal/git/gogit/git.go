@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"time"
 
@@ -24,8 +25,9 @@ type Git struct {
 	FetchDepth int    // Limit fetching to the specified number of commits
 
 	additions map[string]string // Files being added (used for GHAPI)
-	deletions map[string]string // Files being remove (used for GHAPI)
+	deletions []string          // Files being remove (used for GHAPI)
 	repo      *git.Repository   // The repository after the clone has been made
+	oldHash   string
 }
 
 // Clone a repository
@@ -92,22 +94,26 @@ func (g *Git) GetFileChangesAsBase64() error {
 	}
 
 	g.additions = make(map[string]string)
-	g.deletions = make(map[string]string)
 
 	for path, status := range treeStatus {
-
-		data, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		output := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
-		base64.StdEncoding.Encode(output, data)
-
 		s := status.Worktree
 
+		fmt.Printf("Path: %v\nStatus: '%c'\n", path, s)
+
 		if s == git.Deleted {
-			g.deletions[path] = string(output)
-		} else if s == git.Added || s == git.Modified {
+			g.deletions = append(g.deletions, path)
+		} else if s == git.Added || s == git.Modified || s == git.Untracked {
+			data, err := os.ReadFile(g.Directory + "/" + path)
+
+			fmt.Printf("Here")
+
+			if err != nil {
+				return err
+			}
+
+			output := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+			base64.StdEncoding.Encode(output, data)
+
 			g.additions[path] = string(output)
 		} else if s == git.Renamed || s == git.Copied {
 			// Skipping this case for now, but we should handle it
@@ -130,6 +136,11 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 		return err
 	}
 	w.Excludes = patterns
+
+	err = g.GetFileChangesAsBase64()
+	if err != nil {
+		return err
+	}
 
 	err = w.AddWithOptions(&git.AddOptions{
 		All: true,
@@ -160,6 +171,7 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 		return err
 	}
 	oldHash := oldHead.Hash()
+	g.oldHash = oldHash.String()
 
 	var author *object.Signature
 	if commitAuthor != nil {
@@ -256,8 +268,12 @@ func (g *Git) Additions() map[string]string {
 	return g.additions
 }
 
-func (g *Git) Deletions() map[string]string {
-	return g.additions
+func (g *Git) Deletions() []string {
+	return g.deletions
+}
+
+func (g *Git) OldHash() string {
+	return g.oldHash
 }
 
 // AddRemote adds a new remote
