@@ -269,7 +269,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	err = sourceController.Push(ctx, "origin", true)
 
 	if err != nil {
-		//Ignore this for now
+		//Ignore this for noww
 	}
 
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
