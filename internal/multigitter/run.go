@@ -265,6 +265,8 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
+	// The API requires the branch to exist in order to push a commit to it.
+	// Force pushing to the branch guarantees it will exist in the state we expect.
 	err = sourceController.Push(ctx, "origin", true)
 
 	if err != nil {
