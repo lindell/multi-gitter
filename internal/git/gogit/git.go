@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"time"
 
@@ -98,14 +97,10 @@ func (g *Git) GetFileChangesAsBase64() error {
 	for path, status := range treeStatus {
 		s := status.Worktree
 
-		fmt.Printf("Path: %v\nStatus: '%c'\n", path, s)
-
 		if s == git.Deleted {
 			g.deletions = append(g.deletions, path)
 		} else if s == git.Added || s == git.Modified || s == git.Untracked {
 			data, err := os.ReadFile(g.Directory + "/" + path)
-
-			fmt.Printf("Here")
 
 			if err != nil {
 				return err
