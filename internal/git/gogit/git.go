@@ -80,12 +80,7 @@ func (g *Git) Changes() (bool, error) {
 	return !status.IsClean(), nil
 }
 
-func (g *Git) GetFileChangesAsBase64() error {
-	w, err := g.repo.Worktree()
-	if err != nil {
-		return err
-	}
-
+func (g *Git) GetFileChangesAsBase64(w git.Worktree) error {
 	treeStatus, err := w.Status()
 
 	if err != nil {
@@ -132,7 +127,7 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 	}
 	w.Excludes = patterns
 
-	err = g.GetFileChangesAsBase64()
+	err = g.GetFileChangesAsBase64(*w)
 	if err != nil {
 		return err
 	}
