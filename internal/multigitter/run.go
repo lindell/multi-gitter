@@ -270,7 +270,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	err = sourceController.Push(ctx, "origin", true)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "could not push changes")
+		//Ignore this for now
 	}
 
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
@@ -354,7 +354,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		CommitThroughAPI(ctx context.Context, input graphql.CreateCommitOnBranchInput) error
 	}); ok {
 		var input graphql.CreateCommitOnBranchInput
-		input.Message = r.CommitMessage
+		input.Headline = r.CommitMessage
 		input.BranchName = r.FeatureBranch
 		array := strings.Split(repo.CloneURL(), "/")
 		repoName := strings.Trim(array[len(array)-1], ".git")

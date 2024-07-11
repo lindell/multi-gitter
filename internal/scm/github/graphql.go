@@ -112,45 +112,32 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 			}
 		}
 		`
-	change := `{
-		"path": "%s",
-		"contents": "%s"      
-	}`
 
-	varTemplate := `	{
-	"input": {
-		"branch": {
-			"repositoryNameWithOwner": "%s",
-			"branchName": "%s"
-		},
-		"message": {
-			"headline": "%s"
-		},
-		"fileChanges": {
-			"additions": [
-				%s
-			],
-			"deletions": [
-				%s
-			]
-		},
-		"expectedHeadOid": "%s" 
-		}
-	}`
+	var v varTemplate
 
-	v := ""
+	v.Input.Branch.RepositoryNameWithOwner = input.RepositoryNameWithOwner
+	v.Input.Branch.BranchName = input.BranchName
+	v.Input.ExpectedHeadOid = input.ExpectedHeadOid
+	v.Input.Message.Headline = input.Headline
 
-	for path, sha := range input.Additions {
-		v += fmt.Sprintf(change, path, sha)
+	for path, contents := range input.Additions {
+		v.Input.FileChanges.Additions = append(v.Input.FileChanges.Additions, struct {
+			Path     string "json:\"path,omitempty\""
+			Contents string "json:\"contents,omitempty\""
+		}{Path: path, Contents: contents})
 	}
 
-	vars := fmt.Sprintf(varTemplate, input.RepositoryNameWithOwner, input.BranchName, input.Message, v, input.ExpectedHeadOid)
+	for _, path := range input.Deletions {
+		v.Input.FileChanges.Deletions = append(v.Input.FileChanges.Deletions, struct {
+			Path string "json:\"path,omitempty\""
+		}{Path: path})
+	}
 
 	var result map[string]interface{}
 
-	err := g.makeGraphQLRequest(ctx, query, vars, &result)
+	err := g.makeGraphQLRequest(ctx, query, v, &result)
 
-	fmt.Printf("%s\n", result)
+	fmt.Printf("%s\n", v)
 	if err != nil {
 		fmt.Printf("ERROR\n")
 		return err
@@ -203,10 +190,32 @@ type graphqlPR struct {
 	} `json:"commits"`
 }
 
+type varTemplate struct {
+	Input struct {
+		ExpectedHeadOid string `json:"expectedHeadOid"`
+		Branch          struct {
+			RepositoryNameWithOwner string `json:"repositoryNameWithOwner"`
+			BranchName              string `json:"branchName"`
+		} `json:"branch"`
+		Message struct {
+			Headline string `json:"headline"`
+		} `json:"message"`
+		FileChanges struct {
+			Additions []struct {
+				Path     string `json:"path,omitempty"`
+				Contents string `json:"contents,omitempty"`
+			} `json:"additions"`
+			Deletions []struct {
+				Path string `json:"path,omitempty"`
+			} `json:"deletions"`
+		} `json:"fileChanges"`
+	} `json:"input"`
+}
+
 type CreateCommitOnBranchInput struct {
 	RepositoryNameWithOwner string
 	BranchName              string
-	Message                 string
+	Headline                string
 	Additions               map[string]string
 	Deletions               []string
 	ExpectedHeadOid         string
