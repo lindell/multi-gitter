@@ -92,7 +92,7 @@ func (g *Git) GetFileChangesAsBase64(w git.Worktree) error {
 	for path, status := range treeStatus {
 		s := status.Worktree
 
-		if s == git.Deleted {
+		if s == git.Deleted || s == git.Renamed || s == git.Copied {
 			g.deletions = append(g.deletions, path)
 		} else if s == git.Added || s == git.Modified || s == git.Untracked {
 			data, err := os.ReadFile(g.Directory + "/" + path)
@@ -105,8 +105,6 @@ func (g *Git) GetFileChangesAsBase64(w git.Worktree) error {
 			base64.StdEncoding.Encode(output, data)
 
 			g.additions[path] = string(output)
-		} else if s == git.Renamed || s == git.Copied {
-			// Skipping this case for now, but we should handle it
 		}
 	}
 

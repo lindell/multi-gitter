@@ -113,7 +113,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 		}
 		`
 
-	var v varTemplate
+	var v createCommitOnBranchInput
 
 	v.Input.Branch.RepositoryNameWithOwner = input.RepositoryNameWithOwner
 	v.Input.Branch.BranchName = input.BranchName
@@ -137,9 +137,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 
 	err := g.makeGraphQLRequest(ctx, query, v, &result)
 
-	fmt.Printf("%s\n", v)
 	if err != nil {
-		fmt.Printf("ERROR\n")
 		return err
 	}
 
@@ -190,7 +188,7 @@ type graphqlPR struct {
 	} `json:"commits"`
 }
 
-type varTemplate struct {
+type createCommitOnBranchInput struct {
 	Input struct {
 		ExpectedHeadOid string `json:"expectedHeadOid"`
 		Branch          struct {
