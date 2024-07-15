@@ -133,7 +133,10 @@ All configuration in multi-gitter can be done through command line flags, config
 
 Do you have a nice script that might be useful to others? Please create a PR that adds it to the [examples folder](/examples).
 
-## Bitbucket Cloud
+
+<details>
+
+<summary> Bitbucket Cloud </summary>
 
 In order to use bitbucket cloud you will need to create and use an [App Password](https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/). The app password you create needs sufficient permissions so ensure you grant it Read and Write access to projects, repositories and pull requests and at least Read access to your account and workspace membership.
 
@@ -156,3 +159,5 @@ Here are the known limitations:
 - Using `git-type: cmd` is required for Bitbucket Cloud forking for now until better support is added, as `git-type: go` causes inconsistent behavior(intermittent unauthorized errors).
 
 We also only support modifying a single workspace, any additional workspaces passed into the multi-gitter `org` option will be ignored after the first value.
+
+</details>
