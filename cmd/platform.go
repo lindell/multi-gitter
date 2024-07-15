@@ -286,7 +286,6 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 	return vc, nil
 }
 
-// TODO: Add more code to the client
 func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
 	workspaces, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")

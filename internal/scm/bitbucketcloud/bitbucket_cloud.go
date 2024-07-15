@@ -313,7 +313,7 @@ func (bbc *BitbucketCloud) ForkRepository(ctx context.Context, repo scm.Reposito
 		Owner:     newOwner,
 		Name:      bbcRepo.name,
 	}
-	// TODO: Support for selecting Bitbucket project to fork into
+
 	resp, err := bbc.bbClient.Repositories.Repository.Fork(options)
 	if err != nil {
 		return nil, err
