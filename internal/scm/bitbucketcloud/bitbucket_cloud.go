@@ -106,6 +106,8 @@ func (bbc *BitbucketCloud) CreatePullRequest(_ context.Context, _ scm.Repository
 	if err != nil {
 		return nil, err
 	}
+	// Were currently using scm.PullRequestStatusSuccess here for simplicity
+	// We could eventually look it up using bbc.pullRequestStatus but we will need to refactor it to support passing in the needed variable
 	return &pullRequest{
 		number:     r.ID,
 		guiURL:     r.Links.HTML.Href,

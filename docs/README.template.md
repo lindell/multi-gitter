@@ -162,4 +162,6 @@ Here are the known limitations:
 
 We also only support modifying a single workspace, any additional workspaces passed into the multi-gitter `org` option will be ignored after the first value.
 
+We also have noticed the performance is slower with larger workspaces and we expect to resolve this when we add support for projects to make filtering repositories by project faster.
+
 </details>
