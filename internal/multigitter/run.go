@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"sync"
 	"syscall"
+	"unicode"
 
 	"github.com/eiannone/keyboard"
 	"github.com/lindell/multi-gitter/internal/git"
@@ -420,7 +421,7 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 			return errRejected
 		}
 
-		switch char {
+		switch unicode.ToLower(char) {
 		case 'v':
 			fmt.Println("Showing changes...")
 			cmd := exec.Command("git", "diff", "HEAD~1")
