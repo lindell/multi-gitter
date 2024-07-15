@@ -357,25 +357,9 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			array := strings.Split(repo.CloneURL(), "/")
 			repoName := strings.Trim(array[len(array)-1], ".git")
 			input.RepositoryNameWithOwner = strings.TrimSpace(fmt.Sprintf("%v/%v\n", array[len(array)-2], repoName))
-
-			if git, ok := sourceController.(interface {
-				Additions() map[string]string
-			}); ok {
-				fmt.Printf("%v\n", git.Additions())
-				input.Additions = git.Additions()
-			}
-
-			if git, ok := sourceController.(interface {
-				Deletions() []string
-			}); ok {
-				input.Deletions = git.Deletions()
-			}
-
-			if git, ok := sourceController.(interface {
-				OldHash() string
-			}); ok {
-				input.ExpectedHeadOid = git.OldHash()
-			}
+			input.Additions = sourceController.Additions()
+			input.Deletions = sourceController.Deletions()
+			input.ExpectedHeadOid = sourceController.OldHash()
 
 			err = ghapi.CommitThroughAPI(ctx, input)
 		} else {
