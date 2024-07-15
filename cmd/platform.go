@@ -308,7 +308,7 @@ func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitt
 		return nil, err
 	}
 
-	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, fork, sshAuth, newOwner, http.NewLoggingRoundTripper)
+	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, fork, sshAuth, newOwner)
 	if err != nil {
 		return nil, err
 	}
