@@ -37,7 +37,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
 	flags.BoolP("skip-forks", "", false, `Skip repositories which are forks.`)
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud.")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"github", "gitlab", "gitea", "bitbucket_server", "bitbucket_cloud"}, cobra.ShellCompDirectiveDefault
 	})

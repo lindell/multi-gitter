@@ -138,6 +138,8 @@ Do you have a nice script that might be useful to others? Please create a PR tha
 
 <summary> Bitbucket Cloud </summary>
 
+_note: bitbucket cloud support is currently in Beta_
+
 In order to use bitbucket cloud you will need to create and use an [App Password](https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/). The app password you create needs sufficient permissions so ensure you grant it Read and Write access to projects, repositories and pull requests and at least Read access to your account and workspace membership.
 
 You will need to configure the bitbucket workspace using the `org` option for multi-gitter for the repositories you want to make changes to e.g. `multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace"`
