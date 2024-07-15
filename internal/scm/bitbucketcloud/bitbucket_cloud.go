@@ -231,6 +231,11 @@ func (bbc *BitbucketCloud) pullRequestStatus(pr *bbPullRequest) scm.PullRequestS
 	return scm.PullRequestStatusSuccess
 }
 
+func extractRepoSlug(bbcPR pullRequest) string {
+	repoSlug := strings.Split(bbcPR.guiURL, "/")[4]
+	return repoSlug
+}
+
 func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
 	bbcRepo := repo.(repository)
 	repoPRs, err := bbc.getPullRequests(ctx, bbcRepo.name)
@@ -248,7 +253,7 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 
 func (bbc *BitbucketCloud) MergePullRequest(_ context.Context, pr scm.PullRequest) error {
 	bbcPR := pr.(pullRequest)
-	repoSlug := strings.Split(bbcPR.guiURL, "/")[4]
+	repoSlug := extractRepoSlug(bbcPR)
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:           fmt.Sprintf("%d", bbcPR.number),
 		SourceBranch: bbcPR.branchName,
@@ -261,7 +266,7 @@ func (bbc *BitbucketCloud) MergePullRequest(_ context.Context, pr scm.PullReques
 
 func (bbc *BitbucketCloud) ClosePullRequest(_ context.Context, pr scm.PullRequest) error {
 	bbcPR := pr.(pullRequest)
-	repoSlug := strings.Split(bbcPR.guiURL, "/")[4]
+	repoSlug := extractRepoSlug(bbcPR)
 	prOptions := &bitbucket.PullRequestsOptions{
 		ID:           fmt.Sprintf("%d", bbcPR.number),
 		SourceBranch: bbcPR.branchName,
