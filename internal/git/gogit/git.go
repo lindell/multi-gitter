@@ -23,10 +23,11 @@ type Git struct {
 	Directory  string // The (temporary) directory that should be worked within
 	FetchDepth int    // Limit fetching to the specified number of commits
 
+	repo *git.Repository // The repository after the clone has been made
+
 	additions map[string]string // Files being added (used for GHAPI)
 	deletions []string          // Files being remove (used for GHAPI)
-	repo      *git.Repository   // The repository after the clone has been made
-	oldHash   string
+	oldHash   plumbing.Hash
 }
 
 // Clone a repository
@@ -158,8 +159,7 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 	if err != nil {
 		return err
 	}
-	oldHash := oldHead.Hash()
-	g.oldHash = oldHash.String()
+	g.oldHash = oldHead.Hash()
 
 	var author *object.Signature
 	if commitAuthor != nil {
@@ -182,7 +182,7 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 		return err
 	}
 
-	_ = g.logDiff(oldHash, commit.Hash)
+	_ = g.logDiff(g.oldHash, commit.Hash)
 
 	return nil
 }
@@ -261,7 +261,7 @@ func (g *Git) Deletions() []string {
 }
 
 func (g *Git) OldHash() string {
-	return g.oldHash
+	return g.oldHash.String()
 }
 
 // AddRemote adds a new remote
