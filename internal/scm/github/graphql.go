@@ -102,6 +102,55 @@ func graphQLEndpoint(u string) (string, error) {
 	return baseEndpoint.String(), nil
 }
 
+func (g *Github) getRepositoryID(ctx context.Context, owner string, name string) (error, string) {
+	query := `query($owner: String!, $name: String!) {
+	repository(owner: $owner, name: $name) {
+	  databaseId
+	} 
+	}`
+
+	var v getRepositoryInput
+
+	v.Name = name
+	v.Owner = owner
+
+	var result getRepositoryOutput
+
+	err := g.makeGraphQLRequest(ctx, query, v, &result)
+
+	if err != nil {
+		return err, ""
+	}
+
+	return nil, result.Data.Repository.DatabaseId
+}
+
+func (g *Github) createRef(ctx context.Context, branchName string, oid string, repositoryId string) error {
+	query := `mutation($input: CreateRefInput!){
+		createRef(input: $input) {
+			ref {
+				name
+			}
+		}
+	}`
+
+	var v createRefInput
+
+	v.Input.Name = branchName
+	v.Input.Oid = oid
+	v.Input.RepositoryId = repositoryId
+
+	var result map[string]interface{}
+
+	err := g.makeGraphQLRequest(ctx, query, v, &result)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranchInput) error {
 	query := `
 		mutation ($input: CreateCommitOnBranchInput!) {
@@ -110,12 +159,24 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 				url
 				}
 			}
-		}
-		`
+		}`
 
 	var v createCommitOnBranchInput
 
-	v.Input.Branch.RepositoryNameWithOwner = input.RepositoryNameWithOwner
+	err, repoID := g.getRepositoryID(ctx, input.Owner, input.BranchName)
+
+	if err != nil {
+		return err
+	}
+
+	err = g.createRef(ctx, input.BranchName, input.ExpectedHeadOid, repoID)
+
+	if err != nil {
+		return err
+	}
+
+	v.Input.Branch.RepositoryNameWithOwner = input.Owner + "/" + input.RepositoryName
+
 	v.Input.Branch.BranchName = input.BranchName
 	v.Input.ExpectedHeadOid = input.ExpectedHeadOid
 	v.Input.Message.Headline = input.Headline
@@ -135,7 +196,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 
 	var result map[string]interface{}
 
-	err := g.makeGraphQLRequest(ctx, query, v, &result)
+	err = g.makeGraphQLRequest(ctx, query, v, &result)
 
 	if err != nil {
 		return err
@@ -210,11 +271,33 @@ type createCommitOnBranchInput struct {
 	} `json:"input"`
 }
 
+type createRefInput struct {
+	Input struct {
+		Name         string `json:"name"`
+		Oid          string `json:"oid"`
+		RepositoryId string `json:"repositoryId"`
+	} `json:"input"`
+}
+
+type getRepositoryInput struct {
+	Name  string `json:"name"`
+	Owner string `json:"owner"`
+}
+
+type getRepositoryOutput struct {
+	Data struct {
+		Repository struct {
+			DatabaseId string `json:"databaseId"`
+		} `json:"repository"`
+	} `json:"data"`
+}
+
 type CreateCommitOnBranchInput struct {
-	RepositoryNameWithOwner string
-	BranchName              string
-	Headline                string
-	Additions               map[string]string
-	Deletions               []string
-	ExpectedHeadOid         string
+	RepositoryName  string
+	Owner           string
+	BranchName      string
+	Headline        string
+	Additions       map[string]string
+	Deletions       []string
+	ExpectedHeadOid string
 }

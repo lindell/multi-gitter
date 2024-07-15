@@ -265,12 +265,6 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
-	if r.UseGHAPI {
-		// The API requires the branch to exist in order to push a commit to it.
-		// Force pushing to the branch guarantees it will exist in the state we expect.
-		_ = sourceController.Push(ctx, "origin", true)
-	}
-
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
 	if r.DryRun {
 		cmd.Env = append(cmd.Env, "DRY_RUN=true")
@@ -355,8 +349,8 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			input.Headline = r.CommitMessage
 			input.BranchName = r.FeatureBranch
 			array := strings.Split(repo.CloneURL(), "/")
-			repoName := strings.Trim(array[len(array)-1], ".git")
-			input.RepositoryNameWithOwner = strings.TrimSpace(fmt.Sprintf("%v/%v\n", array[len(array)-2], repoName))
+			input.RepositoryName = strings.Trim(array[len(array)-1], ".git")
+			input.Owner = array[len(array)-2]
 			input.Additions = sourceController.Additions()
 			input.Deletions = sourceController.Deletions()
 			input.ExpectedHeadOid = sourceController.OldHash()
