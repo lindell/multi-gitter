@@ -37,7 +37,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
 	flags.BoolP("skip-forks", "", false, `Skip repositories which are forks.`)
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud.")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"github", "gitlab", "gitea", "bitbucket_server", "bitbucket_cloud"}, cobra.ShellCompDirectiveDefault
 	})
@@ -286,7 +286,6 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 	return vc, nil
 }
 
-// TODO: Add more code to the client
 func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
 	workspaces, _ := flag.GetStringSlice("org")
 	users, _ := flag.GetStringSlice("user")
@@ -309,7 +308,7 @@ func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitt
 		return nil, err
 	}
 
-	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, fork, sshAuth, newOwner, http.NewLoggingRoundTripper)
+	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, fork, sshAuth, newOwner)
 	if err != nil {
 		return nil, err
 	}
