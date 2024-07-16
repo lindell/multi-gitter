@@ -102,30 +102,28 @@ func graphQLEndpoint(u string) (string, error) {
 	return baseEndpoint.String(), nil
 }
 
-func (g *Github) getRepositoryID(ctx context.Context, owner string, name string) (error, string) {
+func (g *Github) getRepositoryID(ctx context.Context, owner string, name string) (string, error) {
 	query := `query($owner: String!, $name: String!) {
-	repository(owner: $owner, name: $name) {
-	  databaseId
-	} 
+		repository(owner: $owner, name: $name) {
+			id
+		} 
 	}`
 
 	var v getRepositoryInput
-
+	var result getRepositoryOutput
 	v.Name = name
 	v.Owner = owner
-
-	var result getRepositoryOutput
 
 	err := g.makeGraphQLRequest(ctx, query, v, &result)
 
 	if err != nil {
-		return err, ""
+		return "", err
 	}
 
-	return nil, result.Data.Repository.DatabaseId
+	return result.Repository.ID, nil
 }
 
-func (g *Github) createRef(ctx context.Context, branchName string, oid string, repositoryId string) error {
+func (g *Github) createRef(ctx context.Context, branchName string, oid string, iD string) error {
 	query := `mutation($input: CreateRefInput!){
 		createRef(input: $input) {
 			ref {
@@ -136,9 +134,11 @@ func (g *Github) createRef(ctx context.Context, branchName string, oid string, r
 
 	var v createRefInput
 
-	v.Input.Name = branchName
+	v.Input.Name = "refs/heads/" + branchName
 	v.Input.Oid = oid
-	v.Input.RepositoryId = repositoryId
+	v.Input.RepositoryID = iD
+
+	fmt.Printf("%v", v)
 
 	var result map[string]interface{}
 
@@ -163,7 +163,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 
 	var v createCommitOnBranchInput
 
-	err, repoID := g.getRepositoryID(ctx, input.Owner, input.BranchName)
+	repoID, err := g.getRepositoryID(ctx, input.Owner, input.RepositoryName)
 
 	if err != nil {
 		return err
@@ -275,7 +275,7 @@ type createRefInput struct {
 	Input struct {
 		Name         string `json:"name"`
 		Oid          string `json:"oid"`
-		RepositoryId string `json:"repositoryId"`
+		RepositoryID string `json:"repositoryId"`
 	} `json:"input"`
 }
 
@@ -285,11 +285,9 @@ type getRepositoryInput struct {
 }
 
 type getRepositoryOutput struct {
-	Data struct {
-		Repository struct {
-			DatabaseId string `json:"databaseId"`
-		} `json:"repository"`
-	} `json:"data"`
+	Repository struct {
+		ID string `json:"id"`
+	} `json:"repository"`
 }
 
 type CreateCommitOnBranchInput struct {
