@@ -355,6 +355,13 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			input.Deletions = sourceController.Deletions()
 			input.ExpectedHeadOid = sourceController.OldHash()
 
+			if forcePush {
+				// delete branch
+				// create branch
+			} else if !featureBranchExist {
+				// create branch
+			}
+
 			err = ghapi.CommitThroughAPI(ctx, input)
 		} else {
 			log.Info("Could not find CommitThroughAPI, falling back on default push")

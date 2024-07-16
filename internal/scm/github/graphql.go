@@ -102,19 +102,16 @@ func graphQLEndpoint(u string) (string, error) {
 	return baseEndpoint.String(), nil
 }
 
-func (g *Github) getRepositoryID(ctx context.Context, owner string, name string) (string, error) {
+func (g *Github) getRepositoryID(ctx context.Context, getRepositoryInput GetRepositoryInput) (string, error) {
 	query := `query($owner: String!, $name: String!) {
 		repository(owner: $owner, name: $name) {
 			id
 		} 
 	}`
 
-	var v getRepositoryInput
 	var result getRepositoryOutput
-	v.Name = name
-	v.Owner = owner
 
-	err := g.makeGraphQLRequest(ctx, query, v, &result)
+	err := g.makeGraphQLRequest(ctx, query, getRepositoryInput, &result)
 
 	if err != nil {
 		return "", err
@@ -123,7 +120,7 @@ func (g *Github) getRepositoryID(ctx context.Context, owner string, name string)
 	return result.Repository.ID, nil
 }
 
-func (g *Github) createRef(ctx context.Context, branchName string, oid string, iD string) error {
+func (g *Github) CreateBranch(ctx context.Context, createBranchInput CreateBranchInput) error {
 	query := `mutation($input: CreateRefInput!){
 		createRef(input: $input) {
 			ref {
@@ -132,17 +129,31 @@ func (g *Github) createRef(ctx context.Context, branchName string, oid string, i
 		}
 	}`
 
-	var v createRefInput
+	var getRepositoryInput GetRepositoryInput
+	var createRefInput CreateRefInput
 
-	v.Input.Name = "refs/heads/" + branchName
-	v.Input.Oid = oid
-	v.Input.RepositoryID = iD
+	getRepositoryInput.Name = createBranchInput.RepositoryName
+	getRepositoryInput.Owner = createBranchInput.Owner
 
-	fmt.Printf("%v", v)
+	repoID, err := g.getRepositoryID(ctx, getRepositoryInput)
+
+	if err != nil {
+		return err
+	}
+
+	createRefInput.Input.RepositoryID = repoID
+	createRefInput.Input.Oid = createBranchInput.Oid
+	createRefInput.Input.Name = createBranchInput.BranchName
+
+	if !strings.HasPrefix(createRefInput.Input.Name, "refs/heads/") {
+		createRefInput.Input.Name = "refs/heads/" + createRefInput.Input.Name
+	}
+
+	fmt.Printf("%v", createRefInput)
 
 	var result map[string]interface{}
 
-	err := g.makeGraphQLRequest(ctx, query, v, &result)
+	err = g.makeGraphQLRequest(ctx, query, createRefInput, &result)
 
 	if err != nil {
 		return err
@@ -162,18 +173,6 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 		}`
 
 	var v createCommitOnBranchInput
-
-	repoID, err := g.getRepositoryID(ctx, input.Owner, input.RepositoryName)
-
-	if err != nil {
-		return err
-	}
-
-	err = g.createRef(ctx, input.BranchName, input.ExpectedHeadOid, repoID)
-
-	if err != nil {
-		return err
-	}
 
 	v.Input.Branch.RepositoryNameWithOwner = input.Owner + "/" + input.RepositoryName
 
@@ -196,7 +195,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context, input CreateCommitOnBranc
 
 	var result map[string]interface{}
 
-	err = g.makeGraphQLRequest(ctx, query, v, &result)
+	err := g.makeGraphQLRequest(ctx, query, v, &result)
 
 	if err != nil {
 		return err
@@ -271,7 +270,7 @@ type createCommitOnBranchInput struct {
 	} `json:"input"`
 }
 
-type createRefInput struct {
+type CreateRefInput struct {
 	Input struct {
 		Name         string `json:"name"`
 		Oid          string `json:"oid"`
@@ -279,7 +278,7 @@ type createRefInput struct {
 	} `json:"input"`
 }
 
-type getRepositoryInput struct {
+type GetRepositoryInput struct {
 	Name  string `json:"name"`
 	Owner string `json:"owner"`
 }
@@ -298,4 +297,11 @@ type CreateCommitOnBranchInput struct {
 	Additions       map[string]string
 	Deletions       []string
 	ExpectedHeadOid string
+}
+
+type CreateBranchInput struct {
+	RepositoryName string
+	Owner          string
+	BranchName     string
+	Oid            string
 }
