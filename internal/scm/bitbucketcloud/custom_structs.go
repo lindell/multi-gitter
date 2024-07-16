@@ -56,13 +56,13 @@ type commit struct {
 
 type links struct {
 	Self hrefLink `json:"self,omitempty"`
-	Html hrefLink `json:"html,omitempty"`
+	HTML hrefLink `json:"html,omitempty"`
 }
 
 type repoLinks struct {
 	Clone []hrefLink `json:"clone,omitempty"`
 	Self  []hrefLink `json:"self,omitempty"`
-	Html  []hrefLink `json:"html,omitempty"`
+	HTML  []hrefLink `json:"html,omitempty"`
 }
 
 type hrefLink struct {
