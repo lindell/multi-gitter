@@ -61,6 +61,7 @@ Available values:
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
+	cmd.Flags().BoolP("use-gh-api", "", false, "Attempt to commit and push through the Github API, rather than pushing through the git client.")
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
@@ -92,6 +93,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	pushOnly, _ := flag.GetBool("push-only")
+	useGHAPI, _ := flag.GetBool("use-gh-api")
 	skipRepository, _ := flag.GetStringSlice("skip-repo")
 	interactive, _ := flag.GetBool("interactive")
 	dryRun, _ := flag.GetBool("dry-run")
@@ -241,6 +243,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		ForkOwner:              forkOwner,
 		SkipPullRequest:        skipPullRequest,
 		PushOnly:               pushOnly,
+		UseGHAPI:               useGHAPI,
 		SkipRepository:         skipRepository,
 		CommitAuthor:           commitAuthor,
 		BaseBranch:             baseBranchName,

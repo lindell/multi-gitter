@@ -258,6 +258,9 @@ token:
 topic:
   - example
 
+# Attempt to commit and push through the Github API, rather than pushing through the git client.
+use-gh-api: false
+
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
