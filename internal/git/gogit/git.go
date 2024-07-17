@@ -3,6 +3,8 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -22,6 +24,10 @@ type Git struct {
 	FetchDepth int    // Limit fetching to the specified number of commits
 
 	repo *git.Repository // The repository after the clone has been made
+
+	additions map[string]string // Files being added (used for GHAPI)
+	deletions []string          // Files being remove (used for GHAPI)
+	oldHash   plumbing.Hash
 }
 
 // Clone a repository
@@ -75,6 +81,37 @@ func (g *Git) Changes() (bool, error) {
 	return !status.IsClean(), nil
 }
 
+func (g *Git) GetFileChangesAsBase64(w git.Worktree) error {
+	treeStatus, err := w.Status()
+
+	if err != nil {
+		return err
+	}
+
+	g.additions = make(map[string]string)
+
+	for path, status := range treeStatus {
+		s := status.Worktree
+
+		if s == git.Deleted || s == git.Renamed || s == git.Copied {
+			g.deletions = append(g.deletions, path)
+		} else if s == git.Added || s == git.Modified || s == git.Untracked {
+			data, err := os.ReadFile(g.Directory + "/" + path)
+
+			if err != nil {
+				return err
+			}
+
+			output := make([]byte, base64.StdEncoding.EncodedLen(len(data)))
+			base64.StdEncoding.Encode(output, data)
+
+			g.additions[path] = string(output)
+		}
+	}
+
+	return nil
+}
+
 // Commit and push all changes
 func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage string) error {
 	w, err := g.repo.Worktree()
@@ -88,6 +125,11 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 		return err
 	}
 	w.Excludes = patterns
+
+	err = g.GetFileChangesAsBase64(*w)
+	if err != nil {
+		return err
+	}
 
 	err = w.AddWithOptions(&git.AddOptions{
 		All: true,
@@ -117,7 +159,7 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 	if err != nil {
 		return err
 	}
-	oldHash := oldHead.Hash()
+	g.oldHash = oldHead.Hash()
 
 	var author *object.Signature
 	if commitAuthor != nil {
@@ -140,7 +182,7 @@ func (g *Git) Commit(commitAuthor *internalgit.CommitAuthor, commitMessage strin
 		return err
 	}
 
-	_ = g.logDiff(oldHash, commit.Hash)
+	_ = g.logDiff(g.oldHash, commit.Hash)
 
 	return nil
 }
@@ -208,6 +250,18 @@ func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
 		RemoteName: remoteName,
 		Force:      force,
 	})
+}
+
+func (g *Git) Additions() map[string]string {
+	return g.additions
+}
+
+func (g *Git) Deletions() []string {
+	return g.deletions
+}
+
+func (g *Git) OldHash() string {
+	return g.oldHash.String()
 }
 
 // AddRemote adds a new remote

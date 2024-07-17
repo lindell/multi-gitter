@@ -68,6 +68,7 @@ type Runner struct {
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
 
 	ConflictStrategy ConflictStrategy // Defines what will happen if a branch already exists
+	UseGHAPI         bool
 
 	Draft bool // If set, creates Pull Requests as draft
 
@@ -338,7 +339,38 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log.Info("Pushing changes to remote")
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
-	err = sourceController.Push(ctx, remoteName, forcePush)
+	if r.UseGHAPI {
+		if ghapi, ok := r.VersionController.(interface {
+			CommitAndPushThoughGraphQL(ctx context.Context,
+				headline string,
+				featureBranch string,
+				cloneURL string,
+				oldHash string,
+				additions map[string]string,
+				deletions []string,
+				forcePush bool,
+				branchExist bool) error
+		}); ok {
+			err = ghapi.CommitAndPushThoughGraphQL(ctx,
+				r.CommitMessage,
+				r.FeatureBranch,
+				repo.CloneURL(),
+				sourceController.OldHash(),
+				sourceController.Additions(),
+				sourceController.Deletions(),
+				forcePush,
+				featureBranchExist)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			log.Info("Could not find CommitThroughAPI, falling back on default push")
+			err = sourceController.Push(ctx, remoteName, forcePush)
+		}
+	} else {
+		err = sourceController.Push(ctx, remoteName, forcePush)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "could not push changes")
 	}
