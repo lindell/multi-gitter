@@ -21,14 +21,10 @@ func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context,
 	owner := array[len(array)-2]
 
 	if forcePush {
-		fmt.Printf("about to get branchid\n")
-
 		branchID, err := g.getBranchID(ctx, owner, repositoryName, featureBranch)
 		if err != nil {
 			return err
 		}
-
-		fmt.Printf("about to deleteref\n")
 
 		err = g.deleteRef(ctx, branchID)
 		if err != nil {
@@ -39,8 +35,6 @@ func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context,
 	}
 
 	if !branchExist {
-		fmt.Printf("about to create branch\n")
-
 		err := g.CreateBranch(ctx, owner,
 			repositoryName,
 			featureBranch,
@@ -49,8 +43,6 @@ func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context,
 			return err
 		}
 	}
-
-	fmt.Printf("About to commit though API\n")
 
 	err := g.CommitThroughAPI(ctx, owner, repositoryName, featureBranch, oldHash, headline, additions, deletions)
 
