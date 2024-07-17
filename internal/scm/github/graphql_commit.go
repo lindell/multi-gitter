@@ -21,14 +21,16 @@ func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context,
 	owner := array[len(array)-2]
 
 	if forcePush {
-		branchID, err := g.getBranchID(ctx, owner, repositoryName, featureBranch)
+		fmt.Printf("about to get branchid\n")
 
+		branchID, err := g.getBranchID(ctx, owner, repositoryName, featureBranch)
 		if err != nil {
 			return err
 		}
 
-		err = g.deleteRef(ctx, branchID)
+		fmt.Printf("about to deleteref\n")
 
+		err = g.deleteRef(ctx, branchID)
 		if err != nil {
 			return err
 		}
@@ -37,6 +39,8 @@ func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context,
 	}
 
 	if !branchExist {
+		fmt.Printf("about to create branch\n")
+
 		err := g.CreateBranch(ctx, owner,
 			repositoryName,
 			featureBranch,
@@ -45,6 +49,8 @@ func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context,
 			return err
 		}
 	}
+
+	fmt.Printf("About to commit though API\n")
 
 	err := g.CommitThroughAPI(ctx, owner, repositoryName, featureBranch, oldHash, headline, additions, deletions)
 
@@ -75,15 +81,16 @@ func (g *Github) getRepositoryID(ctx context.Context, owner string, name string)
 
 func (g *Github) getBranchID(ctx context.Context, owner string, repoName string, branchName string) (string, error) {
 	query := `query($owner: String!, $name: String!) {
-	repository(owner: $owner, name: $name) {
-	  refs(first: 100, refPrefix: "refs/heads/") {
-	    edges {
-	      node {
-	        id
-          name
-	      }
-	    }
-	  }
+		repository(owner: $owner, name: $name) {
+			refs(first: 100, refPrefix: "refs/heads/") {
+				edges {
+					node {
+						id
+						name
+					}
+				}
+			}
+		} 
 	}`
 
 	var result getRefsOutput
