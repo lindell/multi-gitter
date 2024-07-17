@@ -6,8 +6,15 @@ import (
 	"strings"
 )
 
-func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context, headline string, featureBranch string, cloneURL string, oldHash string, additions map[string]string, deletions []string, forcePush bool, branchExist bool) error {
-
+func (g *Github) CommitAndPushThoughGraphQL(ctx context.Context,
+	headline string,
+	featureBranch string,
+	cloneURL string,
+	oldHash string,
+	additions map[string]string,
+	deletions []string,
+	forcePush bool,
+	branchExist bool) error {
 	array := strings.Split(cloneURL, "/")
 
 	repositoryName := strings.Trim(array[len(array)-1], ".git")
@@ -67,7 +74,6 @@ func (g *Github) getRepositoryID(ctx context.Context, owner string, name string)
 }
 
 func (g *Github) getBranchID(ctx context.Context, owner string, repoName string, branchName string) (string, error) {
-
 	query := `query($owner: String!, $name: String!) {
 	repository(owner: $owner, name: $name) {
 	  refs(first: 100, refPrefix: "refs/heads/") {
@@ -94,7 +100,7 @@ func (g *Github) getBranchID(ctx context.Context, owner string, repoName string,
 		}
 	}
 
-	return "", fmt.Errorf("Unable to find a matching branch name to delete. Looking for %s.", branchName)
+	return "", fmt.Errorf("unable to find branch named %s to delete", branchName)
 }
 
 func (g *Github) CreateBranch(ctx context.Context, owner string, repoName string, branchName string, oid string) error {
@@ -115,10 +121,11 @@ func (g *Github) CreateBranch(ctx context.Context, owner string, repoName string
 	}
 
 	if !strings.HasPrefix(repoName, "refs/heads/") {
-		repoName = "refs/heads/" + repoName
+		cri.Input.Name = "refs/heads/" + branchName
+	} else {
+		cri.Input.Name = branchName
 	}
 
-	cri.Input.Name = repoName
 	cri.Input.Oid = oid
 	cri.Input.RepositoryID = repoID
 
@@ -187,7 +194,11 @@ func (g *Github) deleteRef(ctx context.Context, branchRef string) error {
 
 	type ignoreReturn map[string]interface{}
 
-	g.makeGraphQLRequest(ctx, query, deleteRefInput, &ignoreReturn{})
+	err := g.makeGraphQLRequest(ctx, query, deleteRefInput, &ignoreReturn{})
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
