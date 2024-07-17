@@ -258,9 +258,6 @@ token:
 topic:
   - example
 
-# Attempt to commit and push through the Github API, rather than pushing through the git client.
-use-gh-api: false
-
 # The name of a user. All repositories owned by that user will be used.
 user:
   - example
@@ -702,7 +699,6 @@ Flags:
       --team-reviewers strings     Github team names of the reviewers, in format: 'org/team'
   -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.
       --topic strings              The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
-      --use-gh-api                 Attempt to commit and push through the Github API, rather than pushing through the git client.
   -U, --user strings               The name of a user. All repositories owned by that user will be used.
   -u, --username string            The Bitbucket server username.
 ```
