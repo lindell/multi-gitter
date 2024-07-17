@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"strings"
 	"sync"
 	"syscall"
 	"unicode"
@@ -22,7 +21,6 @@ import (
 	"github.com/lindell/multi-gitter/internal/multigitter/logger"
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
-	graphql "github.com/lindell/multi-gitter/internal/scm/github"
 )
 
 // VersionController fetches repositories
@@ -343,26 +341,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
 	if r.UseGHAPI {
 		if ghapi, ok := r.VersionController.(interface {
-			CommitThroughAPI(ctx context.Context, input graphql.CreateCommitOnBranchInput) error
+			CommitAndPushThoughGraphQL(ctx context.Context, headline string, featureBranch string, cloneURL string, oldHash string, additions map[string]string, deletions []string, forcePush bool, branchExist bool) error
 		}); ok {
-			var input graphql.CreateCommitOnBranchInput
-			input.Headline = r.CommitMessage
-			input.BranchName = r.FeatureBranch
-			array := strings.Split(repo.CloneURL(), "/")
-			input.RepositoryName = strings.Trim(array[len(array)-1], ".git")
-			input.Owner = array[len(array)-2]
-			input.Additions = sourceController.Additions()
-			input.Deletions = sourceController.Deletions()
-			input.ExpectedHeadOid = sourceController.OldHash()
-
-			if forcePush {
-				// delete branch
-				// create branch
-			} else if !featureBranchExist {
-				// create branch
+			err = ghapi.CommitAndPushThoughGraphQL(ctx, r.CommitMessage, r.FeatureBranch, repo.CloneURL(), sourceController.OldHash(), sourceController.Additions(), sourceController.Deletions(), forcePush, featureBranchExist)
+			if err != nil {
+				return nil, err
 			}
-
-			err = ghapi.CommitThroughAPI(ctx, input)
 		} else {
 			log.Info("Could not find CommitThroughAPI, falling back on default push")
 			err = sourceController.Push(ctx, remoteName, forcePush)
