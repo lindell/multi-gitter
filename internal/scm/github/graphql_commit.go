@@ -70,7 +70,7 @@ func (g *Github) getRepositoryID(ctx context.Context, owner string, name string)
 
 	var result getRepositoryOutput
 
-	err := g.makeGraphQLRequest(ctx, query, &RepositoryInput{Name: name, Owner: owner}, result)
+	err := g.makeGraphQLRequest(ctx, query, &RepositoryInput{Name: name, Owner: owner}, &result)
 
 	if err != nil {
 		return "", err
@@ -95,7 +95,7 @@ func (g *Github) getBranchID(ctx context.Context, owner string, repoName string,
 
 	var result getRefsOutput
 
-	err := g.makeGraphQLRequest(ctx, query, &RepositoryInput{Name: repoName, Owner: owner}, result)
+	err := g.makeGraphQLRequest(ctx, query, &RepositoryInput{Name: repoName, Owner: owner}, &result)
 
 	if err != nil {
 		return "", err
@@ -136,7 +136,7 @@ func (g *Github) CreateBranch(ctx context.Context, owner string, repoName string
 	cri.Input.Oid = oid
 	cri.Input.RepositoryID = repoID
 
-	var result map[string]interface{}
+	var result interface{}
 
 	err = g.makeGraphQLRequest(ctx, query, cri, &result)
 
@@ -247,7 +247,7 @@ type RepositoryInput struct {
 
 type DeleteRefInput struct {
 	Input struct {
-		RefID string `json:"RefID"`
+		RefID string `json:"refId"`
 	} `json:"input"`
 }
 

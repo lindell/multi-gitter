@@ -341,9 +341,25 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
 	if r.UseGHAPI {
 		if ghapi, ok := r.VersionController.(interface {
-			CommitAndPushThoughGraphQL(ctx context.Context, headline string, featureBranch string, cloneURL string, oldHash string, additions map[string]string, deletions []string, forcePush bool, branchExist bool) error
+			CommitAndPushThoughGraphQL(ctx context.Context,
+				headline string,
+				featureBranch string,
+				cloneURL string,
+				oldHash string,
+				additions map[string]string,
+				deletions []string,
+				forcePush bool,
+				branchExist bool) error
 		}); ok {
-			err = ghapi.CommitAndPushThoughGraphQL(ctx, r.CommitMessage, r.FeatureBranch, repo.CloneURL(), sourceController.OldHash(), sourceController.Additions(), sourceController.Deletions(), forcePush, featureBranchExist)
+			err = ghapi.CommitAndPushThoughGraphQL(ctx,
+				r.CommitMessage,
+				r.FeatureBranch,
+				repo.CloneURL(),
+				sourceController.OldHash(),
+				sourceController.Additions(),
+				sourceController.Deletions(),
+				forcePush,
+				featureBranchExist)
 			if err != nil {
 				return nil, err
 			}
