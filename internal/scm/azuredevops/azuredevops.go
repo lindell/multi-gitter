@@ -108,7 +108,7 @@ func (a *AzureDevOps) GetRepositories(ctx context.Context) ([]scm.Repository, er
 	for _, repo := range projects {
 		rCopy := repo
 		r, err := a.convertRepo(&rCopy)
-		if err != nil {
+		if err == nil {
 			repos = append(repos, r)
 		} else {
 			return nil, err
