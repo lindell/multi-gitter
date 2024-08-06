@@ -7,6 +7,7 @@ import (
 
 	"github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/scm/bitbucketcloud"
 	"github.com/lindell/multi-gitter/internal/scm/bitbucketserver"
 	"github.com/lindell/multi-gitter/internal/scm/gitea"
 	"github.com/lindell/multi-gitter/internal/scm/github"
@@ -22,7 +23,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.")
 	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
-	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN environment variable.")
+	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.")
 
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
@@ -36,9 +37,9 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
 	flags.BoolP("skip-forks", "", false, `Skip repositories which are forks.`)
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server.")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"github", "gitlab", "gitea", "bitbucket_server"}, cobra.ShellCompDirectiveDefault
+		return []string{"github", "gitlab", "gitea", "bitbucket_server", "bitbucket_cloud"}, cobra.ShellCompDirectiveDefault
 	})
 
 	// Autocompletion for organizations
@@ -114,6 +115,8 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (
 		return createGiteaClient(flag, verifyFlags)
 	case "bitbucket_server":
 		return createBitbucketServerClient(flag, verifyFlags)
+	case "bitbucket_cloud":
+		return createBitbucketCloudClient(flag, verifyFlags)
 	default:
 		return nil, fmt.Errorf("unknown platform: %s", platform)
 	}
@@ -276,6 +279,36 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 		Topics:        topics,
 		SkipForks:     skipForks,
 	}, mergeTypes, sshAuth)
+	if err != nil {
+		return nil, err
+	}
+
+	return vc, nil
+}
+
+func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+	workspaces, _ := flag.GetStringSlice("org")
+	users, _ := flag.GetStringSlice("user")
+	repos, _ := flag.GetStringSlice("repo")
+	username, _ := flag.GetString("username")
+	sshAuth, _ := flag.GetBool("ssh-auth")
+	fork, _ := flag.GetBool("fork")
+	newOwner, _ := flag.GetString("fork-owner")
+
+	if verifyFlags && len(workspaces) == 0 && len(users) == 0 && len(repos) == 0 {
+		return nil, errors.New("no workspace, user or repository set")
+	}
+
+	if username == "" {
+		return nil, errors.New("no username set")
+	}
+
+	token, err := getToken(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, fork, sshAuth, newOwner)
 	if err != nil {
 		return nil, err
 	}

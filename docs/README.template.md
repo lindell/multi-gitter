@@ -132,3 +132,36 @@ All configuration in multi-gitter can be done through command line flags, config
 {{end}}{{end}}
 
 Do you have a nice script that might be useful to others? Please create a PR that adds it to the [examples folder](/examples).
+
+
+<details>
+
+<summary> Bitbucket Cloud </summary>
+
+_note: bitbucket cloud support is currently in Beta_
+
+In order to use bitbucket cloud you will need to create and use an [App Password](https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/). The app password you create needs sufficient permissions so ensure you grant it Read and Write access to projects, repositories and pull requests and at least Read access to your account and workspace membership.
+
+You will need to configure the bitbucket workspace using the `org` option for multi-gitter for the repositories you want to make changes to e.g. `multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace"`
+
+### Example
+Here is an example of using the command line options to run a script from the `examples/` directory and make pull-requests for a few repositories in a specified workspace.
+```shell
+export BITBUCKET_CLOUD_APP_PASSWORD="your_app_password"
+multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name
+```
+
+### Bitbucket Cloud Limitations
+Currently, we add the repositories default reviewers as a reviewer for any pull-request you create. If you want to specify specific reviewers, you will need to add them using their `UUID` instead of their username since bitbucket does not allow us to look up a `UUID` using their username. [This article has more information about where you can get a users UUID.](https://community.atlassian.com/t5/Bitbucket-articles/Retrieve-the-Atlassian-Account-ID-AAID-in-bitbucket-org/ba-p/2471787)
+
+We don't support specifying specific projects for bitbucket cloud yet, you should still be able to make changes to the repositories you want but certain functionality, like forking, does not work as well until we implement that feature.
+Using `fork: true` is currently experimental within multi-gitter for Bitbucket Cloud, and will be addressed in future updates.
+Here are the known limitations:
+- The forked repository will appear in the user-provided workspace/orgName, with the given repo name, but will appear in a random project within that workspace.
+- Using `git-type: cmd` is required for Bitbucket Cloud forking for now until better support is added, as `git-type: go` causes inconsistent behavior(intermittent unauthorized errors).
+
+We also only support modifying a single workspace, any additional workspaces passed into the multi-gitter `org` option will be ignored after the first value.
+
+We also have noticed the performance is slower with larger workspaces and we expect to resolve this when we add support for projects to make filtering repositories by project faster.
+
+</details>
