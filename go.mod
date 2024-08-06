@@ -7,7 +7,7 @@ require (
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240131155556-0b41d7863037
 	github.com/go-git/go-git/v5 v5.12.0
-	github.com/google/go-github/v59 v59.0.0
+	github.com/google/go-github/v63 v63.0.0
 	github.com/ktrysmt/go-bitbucket v0.9.80
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
