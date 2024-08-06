@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.53.0](https://github.com/lindell/multi-gitter/compare/v0.52.1...v0.53.0) (2024-08-06)
+
+
+### Features
+
+* adding bitbucket cloud support ([#479](https://github.com/lindell/multi-gitter/issues/479)) ([cbe65fa](https://github.com/lindell/multi-gitter/commit/cbe65fa747552883afa2776be8bc216828b9e4e2))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 8a7402a ([2bceed5](https://github.com/lindell/multi-gitter/commit/2bceed5bb5aaec96821a657002bb3e4ff6548a37))
+* update module code.gitea.io/sdk/gitea to v0.19.0 ([769d20e](https://github.com/lindell/multi-gitter/commit/769d20e4724efcb3ead9fd52c51b4bc2a7057356))
+* update module github.com/google/go-github/v59 to v63 ([#497](https://github.com/lindell/multi-gitter/issues/497)) ([05c819f](https://github.com/lindell/multi-gitter/commit/05c819f994d97a5ea2868d39c640cd02ade6c934))
+* update module github.com/xanzy/go-gitlab to v0.107.0 ([c1be1eb](https://github.com/lindell/multi-gitter/commit/c1be1eb511ae4872ece9d94819ea6551be2c47c7))
+
 ## [0.52.1](https://github.com/lindell/multi-gitter/compare/v0.52.1...v0.52.1) (2024-07-02)
 
 
