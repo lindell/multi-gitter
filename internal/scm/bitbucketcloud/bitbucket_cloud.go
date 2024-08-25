@@ -63,13 +63,13 @@ func (bbc *BitbucketCloud) CreatePullRequest(_ context.Context, _ scm.Repository
 	if err != nil {
 		return nil, err
 	}
-	defaultReviewers, err := bbc.bbClient.Repositories.Repository.ListDefaultReviewers(repoOptions)
+	defaultReviewers, err := bbc.bbClient.Repositories.Repository.ListEffectiveDefaultReviewers(repoOptions)
 	if err != nil {
 		return nil, err
 	}
-	for _, reviewer := range defaultReviewers.DefaultReviewers {
-		if currentUser.Uuid != reviewer.Uuid {
-			newPR.Reviewers = append(newPR.Reviewers, reviewer.Uuid)
+	for _, reviewer := range defaultReviewers.EffectiveDefaultReviewers {
+		if currentUser.Uuid != reviewer.User.Uuid {
+			newPR.Reviewers = append(newPR.Reviewers, reviewer.User.Uuid)
 		}
 	}
 
