@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.53.1](https://github.com/lindell/multi-gitter/compare/v0.53.0...v0.53.1) (2024-09-09)
+
+
+### Dependencies
+
+* update github.com/gfleury/go-bitbucket-v1 digest to a3031aa ([e97338c](https://github.com/lindell/multi-gitter/commit/e97338c5f90d1587e6a22dcd4e2944554b9bb092))
+* update golang.org/x/exp digest to 9b4947d ([e2c0dd8](https://github.com/lindell/multi-gitter/commit/e2c0dd8cf856c9eb2396c58d83bac7775441d091))
+* update module github.com/google/go-github/v63 to v64 ([#501](https://github.com/lindell/multi-gitter/issues/501)) ([051d4bf](https://github.com/lindell/multi-gitter/commit/051d4bf1381bad758f4b319d067692f4c2dfbcaf))
+* update module github.com/xanzy/go-gitlab to v0.108.0 ([a48a749](https://github.com/lindell/multi-gitter/commit/a48a74913b7981c734c0819e5f9b6c8328827b4d))
+* update module golang.org/x/oauth2 to v0.22.0 ([5f11b7c](https://github.com/lindell/multi-gitter/commit/5f11b7c472ea26efd95ba852b8fb78bc74c600e9))
+
 ## [0.53.0](https://github.com/lindell/multi-gitter/compare/v0.52.1...v0.53.0) (2024-08-06)
 
 
