@@ -13,7 +13,7 @@
 </div>
 <br>
 
-*multi-gitter* allows you to make changes in multiple repositories simultaneously. This is achieved by running a script or program in the context of multiple repositories. If any changes are made, a pull request is created that can be merged manually by the set reviewers, or automatically by multi-gitter when CI pipelines has completed successfully.
+*multi-gitter* allows you to make changes in multiple repositories simultaneously. This is achieved by running a script or program in the context of multiple repositories. If any changes are made, a pull request is created that can be merged manually by the set reviewers, or automatically by multi-gitter when CI pipelines have completed successfully.
 
 Are you a bash-guru or simply prefer your scripting in Node.js? It doesn't matter, since multi-gitter support any type of script or program. **If you can script it to run in one place, you can run it in all your repositories with one command!**
 
@@ -47,7 +47,7 @@ $ multi-gitter run "go run $PWD/main.go" -U my-user -m "Commit message" -B branc
 ```
 
 ### Test before live run
-You might want to test your changes before creating commits. The `--dry-run` provides an easy way to test without actually making any modifications. It works well with setting the log level to `debug` with `--log-level=debug` to also print the changes that would have been made.
+You might want to test your changes before creating commits. The `--dry-run` flag provides an easy way to test without actually making any modifications. It works well when setting the log level to `debug`, with `--log-level=debug`, to also print the changes that would have been made.
 ```
 $ multi-gitter run ./script.sh --dry-run --log-level=debug -O my-org -m "Commit message" -B branch-name
 ```
@@ -80,6 +80,7 @@ go install github.com/lindell/multi-gitter@latest
 To use multi-gitter, a token that is allowed to list repositories and create pull requests is needed. This token can either be set in the `GITHUB_TOKEN`, `GITLAB_TOKEN`, `GITEA_TOKEN` environment variable, or by using the `--token` flag.
 
 ### GitHub
+
 [How to generate a GitHub personal access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic). Make sure to give it `repo` permissions.
 
 ### GitLab
@@ -92,7 +93,7 @@ In Gitea, access tokens can be generated under Settings -> Applications -> Manag
 
 ## Config file
 
-All configuration in multi-gitter can be done through command line flags, configuration files or a mix of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml`. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
+All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
 
 {{range .Commands}}
 {{if .YAMLExample}}
