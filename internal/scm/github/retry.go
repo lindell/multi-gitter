@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v64/github"
+	"github.com/google/go-github/v65/github"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
