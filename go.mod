@@ -2,7 +2,7 @@ module github.com/lindell/multi-gitter
 
 go 1.22.0
 
-toolchain go1.23.1
+toolchain go1.23.2
 
 require (
 	code.gitea.io/sdk/gitea v0.19.0
