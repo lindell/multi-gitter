@@ -35,11 +35,13 @@ func getToken(flag *flag.FlagSet) (string, error) {
 			token = ght
 		} else if ght := os.Getenv("BITBUCKET_CLOUD_APP_PASSWORD"); ght != "" {
 			token = ght
+		} else if ght := os.Getenv("BITBUCKET_CLOUD_WORKSPACE_TOKEN"); ght != "" {
+			token = ght
 		}
 	}
 
 	if token == "" {
-		return "", errors.New("either the --token flag or the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable has to be set")
+		return "", errors.New("either the --token flag or the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable has to be set")
 	}
 
 	return token, nil

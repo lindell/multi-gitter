@@ -25,12 +25,13 @@ type BitbucketCloud struct {
 	token        string
 	sshAuth      bool
 	newOwner     string
+	authType     string
 	httpClient   *http.Client
 	bbClient     *bitbucket.Client
 }
 
 func New(username string, token string, repositories []string, workspaces []string, users []string, fork bool, sshAuth bool,
-	newOwner string) (*BitbucketCloud, error) {
+	newOwner string, authType string) (*BitbucketCloud, error) {
 	if strings.TrimSpace(token) == "" {
 		return nil, errors.New("bearer token is empty")
 	}
@@ -44,10 +45,20 @@ func New(username string, token string, repositories []string, workspaces []stri
 	bitbucketCloud.token = token
 	bitbucketCloud.sshAuth = sshAuth
 	bitbucketCloud.newOwner = newOwner
+	bitbucketCloud.authType = authType
 	bitbucketCloud.httpClient = &http.Client{
 		Transport: internalHTTP.LoggingRoundTripper{},
 	}
-	bitbucketCloud.bbClient = bitbucket.NewBasicAuth(username, token)
+
+	if authType == "app-password" {
+		// Authenticate using app password
+		bitbucketCloud.bbClient = bitbucket.NewBasicAuth(username, token)
+	} else if authType == "workspace-token" {
+		// Authenticate using workspace token
+		bitbucketCloud.bbClient = bitbucket.NewOAuthbearerToken(token)
+	} else {
+		return nil, errors.New("Please enter a valid value for authtype (app-password or workspace-token)")
+	}
 
 	return bitbucketCloud, nil
 }
@@ -59,16 +70,21 @@ func (bbc *BitbucketCloud) CreatePullRequest(_ context.Context, _ scm.Repository
 		Owner:    bbc.workspaces[0],
 		RepoSlug: bbcRepo.name,
 	}
-	currentUser, err := bbc.bbClient.User.Profile()
-	if err != nil {
-		return nil, err
+	var currentUserUUID string
+	if bbc.authType == "app-password" {
+		currentUser, err := bbc.bbClient.User.Profile()
+		if err != nil {
+			return nil, err
+		}
+		currentUserUUID = currentUser.Uuid
 	}
+
 	defaultReviewers, err := bbc.bbClient.Repositories.Repository.ListEffectiveDefaultReviewers(repoOptions)
 	if err != nil {
 		return nil, err
 	}
 	for _, reviewer := range defaultReviewers.EffectiveDefaultReviewers {
-		if currentUser.Uuid != reviewer.User.Uuid {
+		if currentUserUUID != reviewer.User.Uuid {
 			newPR.Reviewers = append(newPR.Reviewers, reviewer.User.Uuid)
 		}
 	}
@@ -351,7 +367,12 @@ func (bbc *BitbucketCloud) convertRepository(repo bitbucket.Repository) (*reposi
 			return nil, err
 		}
 
-		parsedURL.User = url.UserPassword(bbc.username, bbc.token)
+		if bbc.authType == "app-password" {
+			parsedURL.User = url.UserPassword(bbc.username, bbc.token)
+		} else if bbc.authType == "workspace-token" {
+			parsedURL.User = url.UserPassword("x-token-auth", bbc.token)
+		}
+
 		cloneURL = parsedURL.String()
 	}
 
