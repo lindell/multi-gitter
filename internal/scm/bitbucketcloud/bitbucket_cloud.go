@@ -25,13 +25,13 @@ type BitbucketCloud struct {
 	token        string
 	sshAuth      bool
 	newOwner     string
-	authType     string
+	authType     AuthType
 	httpClient   *http.Client
 	bbClient     *bitbucket.Client
 }
 
 func New(username string, token string, repositories []string, workspaces []string, users []string, fork bool, sshAuth bool,
-	newOwner string, authType string) (*BitbucketCloud, error) {
+	newOwner string, authType AuthType) (*BitbucketCloud, error) {
 	if strings.TrimSpace(token) == "" {
 		return nil, errors.New("bearer token is empty")
 	}
@@ -50,14 +50,12 @@ func New(username string, token string, repositories []string, workspaces []stri
 		Transport: internalHTTP.LoggingRoundTripper{},
 	}
 
-	if authType == "app-password" {
+	if authType == AuthTypeAppPassword {
 		// Authenticate using app password
 		bitbucketCloud.bbClient = bitbucket.NewBasicAuth(username, token)
-	} else if authType == "workspace-token" {
+	} else if authType == AuthTypeWorkspaceToken {
 		// Authenticate using workspace token
 		bitbucketCloud.bbClient = bitbucket.NewOAuthbearerToken(token)
-	} else {
-		return nil, errors.New("Please enter a valid value for authtype (app-password or workspace-token)")
 	}
 
 	return bitbucketCloud, nil
@@ -71,7 +69,7 @@ func (bbc *BitbucketCloud) CreatePullRequest(_ context.Context, _ scm.Repository
 		RepoSlug: bbcRepo.name,
 	}
 	var currentUserUUID string
-	if bbc.authType == "app-password" {
+	if bbc.authType == AuthTypeAppPassword {
 		currentUser, err := bbc.bbClient.User.Profile()
 		if err != nil {
 			return nil, err
@@ -367,9 +365,9 @@ func (bbc *BitbucketCloud) convertRepository(repo bitbucket.Repository) (*reposi
 			return nil, err
 		}
 
-		if bbc.authType == "app-password" {
+		if bbc.authType == AuthTypeAppPassword {
 			parsedURL.User = url.UserPassword(bbc.username, bbc.token)
-		} else if bbc.authType == "workspace-token" {
+		} else if bbc.authType == AuthTypeWorkspaceToken {
 			parsedURL.User = url.UserPassword("x-token-auth", bbc.token)
 		}
 
@@ -392,4 +390,26 @@ func findLinkType(cloneLinks []hrefLink, cloneType string, repoName string) (str
 	}
 
 	return "", errors.Errorf("unable to find clone url for repository %s using clone type %s", repoName, cloneType)
+}
+
+// AuthType defines the authentication method for Bitbucket Cloud
+type AuthType int
+
+const (
+	// AuthTypeAppPassword will use app password authentication
+	AuthTypeAppPassword AuthType = iota + 1
+	// AuthTypeWorkspaceToken will use workspace token authentication
+	AuthTypeWorkspaceToken
+)
+
+// ParseAuthType parses an auth type from a string
+func ParseAuthType(str string) (AuthType, error) {
+	switch str {
+	default:
+		return AuthType(0), fmt.Errorf("could not parse \"%s\" as auth type", str)
+	case "app-password":
+		return AuthTypeAppPassword, nil
+	case "workspace-token":
+		return AuthTypeWorkspaceToken, nil
+	}
 }

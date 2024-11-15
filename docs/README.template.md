@@ -143,19 +143,19 @@ _note: bitbucket cloud support is currently in Beta_
 
 In order to use bitbucket cloud you will need to create and use an [App Password](https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/) or [Workspace Token](https://support.atlassian.com/bitbucket-cloud/docs/access-tokens/). The app password or workspace token you create needs sufficient permissions so ensure you grant it Read and Write access to projects, repositories and pull requests and at least Read access to your account and workspace membership.
 
-You will need to configure the bitbucket workspace using the `org` option for multi-gitter for the repositories you want to make changes to. You will also need to configure the authentication method using the `authtype` flag e.g. `multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --authtype app-password`
+You will need to configure the bitbucket workspace using the `org` option for multi-gitter for the repositories you want to make changes to. You will also need to configure the authentication method using the `auth-type` flag e.g. `multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --auth-type app-password`
 
 ### Example
 Here is an example of using the command line options to run a script from the `examples/` directory and make pull-requests for a few repositories in a specified workspace, using app password authentication.
 ```shell
 export BITBUCKET_CLOUD_APP_PASSWORD="your_app_password"
-multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name --authtype app-password
+multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name --auth-type app-password
 ```
 
 Here is an example of running the script using workspace token authentication.
 ```shell
 export BITBUCKET_CLOUD_WORKSPACE_TOKEN="your_workspace_token"
-multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name --authtype workspace-token
+multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name --auth-type workspace-token
 ```
 
 ### Bitbucket Cloud Limitations
