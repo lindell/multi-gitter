@@ -24,10 +24,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
 	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.")
-	flags.StringP("auth-type", "", "app-password", `The authentication type. Used only for Bitbucket cloud.
-Available values:
-  app-password: authenticate using an app password
-  workspace-token: authenticate using a workspace token
+	flags.StringP("auth-type", "", "app-password", `The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
 	`)
 	_ = cmd.RegisterFlagCompletionFunc("auth-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"app-password", "workspace-token"}, cobra.ShellCompDirectiveNoFileComp
