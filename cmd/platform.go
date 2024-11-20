@@ -23,7 +23,11 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.")
 	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
-	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.")
+	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.")
+	flags.StringP("auth-type", "", "app-password", `The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.`)
+	_ = cmd.RegisterFlagCompletionFunc("auth-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"app-password", "workspace-token"}, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	flags.StringSliceP("org", "O", nil, "The name of a GitHub organization. All repositories in that organization will be used.")
 	flags.StringSliceP("group", "G", nil, "The name of a GitLab organization. All repositories in that group will be used.")
@@ -294,6 +298,7 @@ func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitt
 	sshAuth, _ := flag.GetBool("ssh-auth")
 	fork, _ := flag.GetBool("fork")
 	newOwner, _ := flag.GetString("fork-owner")
+	authTypeStr, _ := flag.GetString("auth-type")
 
 	if verifyFlags && len(workspaces) == 0 && len(users) == 0 && len(repos) == 0 {
 		return nil, errors.New("no workspace, user or repository set")
@@ -308,7 +313,12 @@ func createBitbucketCloudClient(flag *flag.FlagSet, verifyFlags bool) (multigitt
 		return nil, err
 	}
 
-	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, fork, sshAuth, newOwner)
+	authType, err := bitbucketcloud.ParseAuthType(authTypeStr)
+	if err != nil {
+		return nil, err
+	}
+
+	vc, err := bitbucketcloud.New(username, token, repos, workspaces, users, fork, sshAuth, newOwner, authType)
 	if err != nil {
 		return nil, err
 	}
