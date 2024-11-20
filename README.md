@@ -105,6 +105,9 @@ All configuration in multi-gitter can be done through command line flags, config
 assignees:
   - example
 
+# The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
+auth-type: app-password
+
 # Email of the committer. If not set, the global git config setting will be used.
 author-email:
 
@@ -252,7 +255,7 @@ ssh-auth: false
 team-reviewers:
   - example
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -273,6 +276,9 @@ username:
   <summary>All available merge options</summary>
 
 ```yaml
+# The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
+auth-type: app-password
+
 # Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
 base-url:
 
@@ -341,7 +347,7 @@ skip-forks: false
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -362,6 +368,9 @@ username:
   <summary>All available status options</summary>
 
 ```yaml
+# The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
+auth-type: app-password
+
 # Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
 base-url:
 
@@ -427,7 +436,7 @@ skip-forks: false
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -448,6 +457,9 @@ username:
   <summary>All available close options</summary>
 
 ```yaml
+# The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
+auth-type: app-password
+
 # Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
 base-url:
 
@@ -510,7 +522,7 @@ skip-forks: false
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -531,6 +543,9 @@ username:
   <summary>All available print options</summary>
 
 ```yaml
+# The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
+auth-type: app-password
+
 # Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
 base-url:
 
@@ -605,7 +620,7 @@ skip-forks: false
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -645,6 +660,7 @@ Usage:
 
 Flags:
   -a, --assignees strings          The username of the assignees to be added on the pull request.
+      --auth-type string           The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
       --author-email string        Email of the committer. If not set, the global git config setting will be used.
       --author-name string         Name of the committer. If not set, the global git config setting will be used.
       --base-branch string         The branch which the changes will be based on.
@@ -698,7 +714,7 @@ Flags:
   -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
       --team-reviewers strings     Github team names of the reviewers, in format: 'org/team'
-  -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+  -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
       --topic strings              The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings               The name of a user. All repositories owned by that user will be used.
   -u, --username string            The Bitbucket server username.
@@ -712,6 +728,7 @@ Usage:
   multi-gitter merge [flags]
 
 Flags:
+      --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
@@ -733,7 +750,7 @@ Flags:
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
@@ -747,6 +764,7 @@ Usage:
   multi-gitter status [flags]
 
 Flags:
+      --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
@@ -768,7 +786,7 @@ Flags:
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
@@ -782,6 +800,7 @@ Usage:
   multi-gitter close [flags]
 
 Flags:
+      --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
@@ -802,7 +821,7 @@ Flags:
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
@@ -821,6 +840,7 @@ Usage:
   multi-gitter print [script path] [flags]
 
 Flags:
+      --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
       --clone-dir string        The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
@@ -848,7 +868,7 @@ Flags:
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
@@ -1031,15 +1051,21 @@ Do you have a nice script that might be useful to others? Please create a PR tha
 
 _note: bitbucket cloud support is currently in Beta_
 
-In order to use bitbucket cloud you will need to create and use an [App Password](https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/). The app password you create needs sufficient permissions so ensure you grant it Read and Write access to projects, repositories and pull requests and at least Read access to your account and workspace membership.
+In order to use bitbucket cloud you will need to create and use an [App Password](https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/) or [Workspace Token](https://support.atlassian.com/bitbucket-cloud/docs/access-tokens/). The app password or workspace token you create needs sufficient permissions so ensure you grant it Read and Write access to projects, repositories and pull requests and at least Read access to your account and workspace membership.
 
-You will need to configure the bitbucket workspace using the `org` option for multi-gitter for the repositories you want to make changes to e.g. `multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace"`
+You will need to configure the bitbucket workspace using the `org` option for multi-gitter for the repositories you want to make changes to. You will also need to configure the authentication method using the `auth-type` flag e.g. `multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --auth-type app-password`
 
 ### Example
-Here is an example of using the command line options to run a script from the `examples/` directory and make pull-requests for a few repositories in a specified workspace.
+Here is an example of using the command line options to run a script from the `examples/` directory and make pull-requests for a few repositories in a specified workspace, using app password authentication.
 ```shell
 export BITBUCKET_CLOUD_APP_PASSWORD="your_app_password"
-multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name
+multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name --auth-type app-password
+```
+
+Here is an example of running the script using workspace token authentication.
+```shell
+export BITBUCKET_CLOUD_WORKSPACE_TOKEN="your_workspace_token"
+multi-gitter run examples/go/upgrade-go-version.sh -u your_username --org "your_workspace" --repo "your_first_repository,your_second_repository" --platform bitbucket_cloud -m "your_commit_message" -B your_branch_name --auth-type workspace-token
 ```
 
 ### Bitbucket Cloud Limitations
