@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.54.0](https://github.com/lindell/multi-gitter/compare/v0.53.1...v0.54.0) (2024-11-20)
+
+
+### Features
+
+* support for bitbucket workspace token authentication ([#508](https://github.com/lindell/multi-gitter/issues/508)) ([b9ddafa](https://github.com/lindell/multi-gitter/commit/b9ddafa4dd523a0f8e1e9cc894079f35013c14be))
+
+
+### Bug Fixes
+
+* minor improvements to documentation ([#502](https://github.com/lindell/multi-gitter/issues/502)) ([bef1ca5](https://github.com/lindell/multi-gitter/commit/bef1ca5df01c3822925720587fd6a6b887814259))
+
+
+### Dependencies
+
+* update dependency go to v1.23.2 ([30f33e3](https://github.com/lindell/multi-gitter/commit/30f33e334a29a2489b823faee2686517efb4474c))
+* update github.com/gfleury/go-bitbucket-v1 digest to df385ef ([fb4f99a](https://github.com/lindell/multi-gitter/commit/fb4f99aab75850b0c3f6c1a39d55db63bfba495c))
+* update golang.org/x/exp digest to 701f63a ([a423f69](https://github.com/lindell/multi-gitter/commit/a423f6958f966e7f3c723ee2ed804c312ca93bb9))
+* update golang.org/x/exp digest to f66d83c ([b08d71a](https://github.com/lindell/multi-gitter/commit/b08d71a0057ef8258099479886a6cbaa16de57e6))
+* update module github.com/google/go-github/v64 to v66 ([#507](https://github.com/lindell/multi-gitter/issues/507)) ([76feb96](https://github.com/lindell/multi-gitter/commit/76feb96bcaf19e15a8f210d907f68c55562cc77a))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.81 ([784f2b8](https://github.com/lindell/multi-gitter/commit/784f2b8e5ec22c98b7b2419f68ec92c183d70c88))
+* update module github.com/xanzy/go-gitlab to v0.109.0 ([9784cf9](https://github.com/lindell/multi-gitter/commit/9784cf918f454e10773548103111bbc15a5a57f2))
+* update module github.com/xanzy/go-gitlab to v0.112.0 ([37b2583](https://github.com/lindell/multi-gitter/commit/37b2583171d5d865fcbf5eeb52e9dfc29cf48666))
+* update module golang.org/x/oauth2 to v0.23.0 ([7f88742](https://github.com/lindell/multi-gitter/commit/7f887425b44c6bda355db2f627c64ad930f91d2e))
+
 ## [0.53.1](https://github.com/lindell/multi-gitter/compare/v0.53.0...v0.53.1) (2024-09-09)
 
 
