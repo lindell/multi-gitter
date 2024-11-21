@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.54.1](https://github.com/lindell/multi-gitter/compare/v0.54.0...v0.54.1) (2024-11-21)
+
+
+### Bug Fixes
+
+* make sure go-releaser uses right version ([28b7391](https://github.com/lindell/multi-gitter/commit/28b73911659aa56f11016d1dcceea9dfb020c1eb))
+
 ## [0.54.0](https://github.com/lindell/multi-gitter/compare/v0.53.1...v0.54.0) (2024-11-20)
 
 
