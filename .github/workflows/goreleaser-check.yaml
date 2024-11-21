@@ -2,7 +2,9 @@ name: Check GoReleaser config
 on:
   push:
     branches:
-      - 'release-please--**'
+      - "release-please--**"
+      - "renovate/all-non-major-github-actions"
+      - master
 
 permissions:
   contents: read
