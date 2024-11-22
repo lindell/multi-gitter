@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/lindell/multi-gitter/internal/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/scm/github"
 	"github.com/lindell/multi-gitter/internal/scm/gitlab"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -163,6 +165,12 @@ func createGithubClient(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (mu
 		if err != nil {
 			return nil, err
 		}
+		if slices.Contains(orgs, repoRefs[i].OwnerName) {
+			log.Warnf("Repository %s and organization %s are both set. This is likely a mistake", repoRefs[i].String(), repoRefs[i].OwnerName)
+		}
+		if slices.Contains(users, repoRefs[i].OwnerName) {
+			log.Warnf("Repository %s and user %s are both set. This is likely a mistake", repoRefs[i].String(), repoRefs[i].OwnerName)
+		}
 	}
 
 	mergeTypes, err := getMergeTypes(flag)
@@ -222,6 +230,12 @@ func createGitlabClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versi
 		if err != nil {
 			return nil, err
 		}
+		if slices.Contains(groups, projRefs[i].OwnerName) {
+			log.Warnf("Repository %s and group %s are both set. This is likely a mistake", projRefs[i].String(), projRefs[i].OwnerName)
+		}
+		if slices.Contains(users, projRefs[i].OwnerName) {
+			log.Warnf("Repository %s and user %s are both set. This is likely a mistake", projRefs[i].String(), projRefs[i].OwnerName)
+		}
 	}
 
 	vc, err := gitlab.New(token, gitBaseURL, gitlab.RepositoryListing{
@@ -268,6 +282,12 @@ func createGiteaClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.Versio
 		repoRefs[i], err = gitea.ParseRepositoryReference(repos[i])
 		if err != nil {
 			return nil, err
+		}
+		if slices.Contains(orgs, repoRefs[i].OwnerName) {
+			log.Warnf("Repository %s and organization %s are both set. This is likely a mistake", repoRefs[i].String(), repoRefs[i].OwnerName)
+		}
+		if slices.Contains(users, repoRefs[i].OwnerName) {
+			log.Warnf("Repository %s and user %s are both set. This is likely a mistake", repoRefs[i].String(), repoRefs[i].OwnerName)
 		}
 	}
 

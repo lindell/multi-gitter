@@ -71,6 +71,10 @@ type ProjectReference struct {
 	Name      string
 }
 
+func (p ProjectReference) String() string {
+	return fmt.Sprintf("%s/%s", p.OwnerName, p.Name)
+}
+
 // ParseProjectReference parses a repository reference from the format "ownerName/repoName"
 func ParseProjectReference(val string) (ProjectReference, error) {
 	lastSlashIndex := strings.LastIndex(val, "/")

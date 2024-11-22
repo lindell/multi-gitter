@@ -79,6 +79,10 @@ type RepositoryReference struct {
 	Name      string
 }
 
+func (r RepositoryReference) String() string {
+	return fmt.Sprintf("%s/%s", r.OwnerName, r.Name)
+}
+
 // ParseRepositoryReference parses a repository reference from the format "ownerName/repoName"
 func ParseRepositoryReference(val string) (RepositoryReference, error) {
 	split := strings.Split(val, "/")
