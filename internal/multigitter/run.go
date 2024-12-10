@@ -403,8 +403,8 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
 func (r *Runner) interactive(dir string, repo scm.Repository) error {
-	fmt.Printf("Changes were made to %s\n", terminal.Bold(repo.FullName()))
-	fmt.Println(interactiveInfo)
+	fmt.Fprintf(os.Stderr, "Changes were made to %s\n", terminal.Bold(repo.FullName()))
+	fmt.Fprintln(os.Stderr, interactiveInfo)
 	for {
 		char, key, err := keyboard.GetSingleKey()
 		if err != nil {
@@ -423,12 +423,12 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 
 		switch unicode.ToLower(char) {
 		case 'v':
-			fmt.Println("Showing changes...")
+			fmt.Fprintln(os.Stderr, "Showing changes...")
 			cmd := exec.Command("git", "diff", "HEAD~1")
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			if err != nil {
+			if cmd.Err != nil {
 				return err
 			}
 			err = cmd.Run()
@@ -436,10 +436,10 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 				return err
 			}
 		case 'r':
-			fmt.Println("Rejected, continuing...")
+			fmt.Fprintln(os.Stderr, "Rejected, continuing...")
 			return errRejected
 		case 'a':
-			fmt.Println("Accepted, proceeding...")
+			fmt.Fprintln(os.Stderr, "Accepted, proceeding...")
 			return nil
 		}
 	}

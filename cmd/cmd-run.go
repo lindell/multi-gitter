@@ -211,7 +211,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		fmt.Println("Finishing up ongoing runs. Press CTRL+C again to abort now.")
+		fmt.Fprintln(os.Stderr, "Finishing up ongoing runs. Press CTRL+C again to abort now.")
 		cancel()
 		<-c
 		os.Exit(1)
@@ -257,7 +257,7 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	err = runner.Run(ctx)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 

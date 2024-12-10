@@ -17,7 +17,7 @@ func main() {
 	cmd.BuildDate, _ = time.ParseInLocation(time.RFC3339, date, time.UTC)
 	cmd.Commit = commit
 	if err := cmd.RootCmd().Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
