@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.54.2](https://github.com/lindell/multi-gitter/compare/v0.54.1...v0.54.2) (2024-12-11)
+
+
+### Bug Fixes
+
+* print most things to stderr instead of stdout ([#515](https://github.com/lindell/multi-gitter/issues/515)) ([445a6a6](https://github.com/lindell/multi-gitter/commit/445a6a647fb1538c4ed062420d3c15ea03452952))
+* warn users of overlapping repositories with orgs/users/etc. ([#511](https://github.com/lindell/multi-gitter/issues/511)) ([7498be2](https://github.com/lindell/multi-gitter/commit/7498be27cfa320447fbcc2df88dfbe0d446ceecc))
+
+
+### Dependencies
+
+* update dependency go to v1.23.3 ([1bf47f0](https://github.com/lindell/multi-gitter/commit/1bf47f084731ab25c28632222f0ffb022491290e))
+* update golang.org/x/exp digest to 2d47ceb ([2e18e85](https://github.com/lindell/multi-gitter/commit/2e18e852d5afccfe0877f69e1d072d8b556321d0))
+* update module github.com/google/go-github/v66 to v67 ([#513](https://github.com/lindell/multi-gitter/issues/513)) ([39e5f9f](https://github.com/lindell/multi-gitter/commit/39e5f9ff12ac5549b6bf5cb38175171a87a272f7))
+* update module github.com/stretchr/testify to v1.10.0 ([0614f40](https://github.com/lindell/multi-gitter/commit/0614f40a1b8a7b46efb83c7f0554cf7059b50eef))
+* update module github.com/xanzy/go-gitlab to v0.114.0 ([ddde5f1](https://github.com/lindell/multi-gitter/commit/ddde5f149cc8a262670e14382c8179b22473d86e))
+* update module golang.org/x/oauth2 to v0.24.0 ([b5d20dc](https://github.com/lindell/multi-gitter/commit/b5d20dcd9393236388e21ef5bd89e06d070f1ef9))
+
 ## [0.54.1](https://github.com/lindell/multi-gitter/compare/v0.54.0...v0.54.1) (2024-11-21)
 
 
