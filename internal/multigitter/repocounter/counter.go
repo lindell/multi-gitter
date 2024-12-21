@@ -2,6 +2,8 @@ package repocounter
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 	"sync"
 
@@ -68,7 +70,10 @@ func (r *Counter) Info() string {
 
 	var exitInfo string
 
-	for errMsg := range r.errors {
+	errors := slices.Collect(maps.Keys(r.errors))
+	slices.Sort(errors)
+
+	for _, errMsg := range errors {
 		exitInfo += fmt.Sprintf("%s:\n", strings.ToUpper(errMsg[0:1])+errMsg[1:])
 		for _, errInfo := range r.errors[errMsg] {
 			if errInfo.pullRequest == nil {
