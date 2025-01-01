@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
+	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 )
@@ -59,6 +60,25 @@ Repositories with a successful run:
 `,
 		},
 		{
+			name: "one success with pr and link",
+			changeFn: func(r *repocounter.Counter) {
+				repo := vcmock.Repository{
+					OwnerName: "owner-1",
+					RepoName:  "has-url",
+				}
+				pr := vcmock.PullRequest{
+					PRStatus:   scm.PullRequestStatusPending,
+					Repository: repo,
+					PRNumber:   42,
+				}
+				r.AddSuccessPullRequest(repo, pr)
+			},
+			want: `
+Repositories with a successful run:
+  ` + terminal.Link("owner-1/has-url #42", "https://github.com/owner/has-url/pull/1") + `
+`,
+		},
+		{
 			name: "one error no pr",
 			changeFn: func(r *repocounter.Counter) {
 				r.AddError(errors.New("test error"), fakeRepo(1), nil)
@@ -76,6 +96,25 @@ Test error:
 			want: `
 Test error:
   owner-1/repo-1 #42
+`,
+		},
+		{
+			name: "one error with pr and link",
+			changeFn: func(r *repocounter.Counter) {
+				repo := vcmock.Repository{
+					OwnerName: "owner-1",
+					RepoName:  "has-url",
+				}
+				pr := vcmock.PullRequest{
+					PRStatus:   scm.PullRequestStatusPending,
+					Repository: repo,
+					PRNumber:   42,
+				}
+				r.AddError(errors.New("test error"), repo, pr)
+			},
+			want: `
+Test error:
+  ` + terminal.Link("owner-1/has-url #42", "https://github.com/owner/has-url/pull/1") + `
 `,
 		},
 		{
