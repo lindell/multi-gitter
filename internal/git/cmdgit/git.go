@@ -149,3 +149,15 @@ func (g *Git) AddRemote(name, url string) error {
 	_, err := g.run(cmd)
 	return err
 }
+
+func (g *Git) Additions() map[string]string {
+	return make(map[string]string)
+}
+
+func (g *Git) Deletions() []string {
+	return make([]string, 0)
+}
+
+func (g *Git) OldHash() string {
+	return ""
+}
