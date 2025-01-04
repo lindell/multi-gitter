@@ -784,7 +784,7 @@
 ### Bug Fixes
 
 * commit hooks no longer run with cmd-git implementation ([#157](https://www.github.com/lindell/multi-gitter/issues/157)) ([ba12d08](https://www.github.com/lindell/multi-gitter/commit/ba12d08fee2e8cc0ef8015a1761afde747a2622c))
-* downgraded go-diff to fix diff formating ([#156](https://www.github.com/lindell/multi-gitter/issues/156)) ([6ef43a8](https://www.github.com/lindell/multi-gitter/commit/6ef43a847f14d5b81745e9978732eebda5bf8ca9))
+* downgraded go-diff to fix diff formatting ([#156](https://www.github.com/lindell/multi-gitter/issues/156)) ([6ef43a8](https://www.github.com/lindell/multi-gitter/commit/6ef43a847f14d5b81745e9978732eebda5bf8ca9))
 
 ## [0.29.0](https://www.github.com/lindell/multi-gitter/compare/v0.28.0...v0.29.0) (2021-06-20)
 
