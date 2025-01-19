@@ -690,7 +690,7 @@ func (g *Github) getPullRequests(ctx context.Context, branchName string, repos [
 	)
 
 	result := map[string]graphqlRepo{}
-	err := g.makeGraphQLRequest(ctx, query, queryVariables, &result)
+	err := g.makeGraphQLRequestWithRetry(ctx, query, queryVariables, &result)
 	if err != nil {
 		return nil, err
 	}

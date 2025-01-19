@@ -12,6 +12,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+func (g *Github) makeGraphQLRequestWithRetry(ctx context.Context, query string, data interface{}, res interface{}) error {
+	return retryAPIRequest(ctx, func() error {
+		return g.makeGraphQLRequest(ctx, query, data, res)
+	})
+}
+
 func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data interface{}, res interface{}) error {
 	type reqData struct {
 		Query string      `json:"query"`
@@ -45,6 +51,11 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 		return err
 	}
 	defer resp.Body.Close()
+
+	retryAfterErr := retryAfterFromHTTPResponse(resp)
+	if retryAfterErr != nil {
+		return retryAfterErr
+	}
 
 	resultData := struct {
 		Data   json.RawMessage `json:"data"`
