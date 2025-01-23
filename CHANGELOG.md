@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.55.1](https://github.com/lindell/multi-gitter/compare/v0.55.0...v0.55.1) (2025-01-23)
+
+
+### Bug Fixes
+
+* retry GraphQL calls the same way for v3 API calls ([#524](https://github.com/lindell/multi-gitter/issues/524)) ([6a31f13](https://github.com/lindell/multi-gitter/commit/6a31f13e015d1f560b90c5e50cfc936a69f9f8df))
+* use http logger for BitBucket cloud ([#528](https://github.com/lindell/multi-gitter/issues/528)) ([4fb9e1e](https://github.com/lindell/multi-gitter/commit/4fb9e1e0cd396920ef05099aaeea6327f4df3bfe))
+
 ## [0.55.0](https://github.com/lindell/multi-gitter/compare/v0.54.1...v0.55.0) (2025-01-01)
 
 
