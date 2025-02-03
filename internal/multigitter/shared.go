@@ -34,6 +34,9 @@ type Git interface {
 	BranchExist(remoteName, branchName string) (bool, error)
 	Push(ctx context.Context, remoteName string, force bool) error
 	AddRemote(name, url string) error
+	Additions() map[string]string
+	Deletions() []string
+	OldHash() string
 }
 
 type stackTracer interface {
