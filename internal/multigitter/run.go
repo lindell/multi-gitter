@@ -76,7 +76,7 @@ type Runner struct {
 
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
-	CreateGit func(dir string) Git
+	CreateGit func(dir string, repo scm.Repository) Git
 }
 
 var (
@@ -238,7 +238,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, err
 	}
 
-	sourceController := r.CreateGit(tmpDir)
+	sourceController := r.CreateGit(tmpDir, repo)
 
 	baseBranch := r.BaseBranch
 	if baseBranch == "" {

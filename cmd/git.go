@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/git/cmdgit"
 	"github.com/lindell/multi-gitter/internal/git/gogit"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -21,26 +23,40 @@ Available values:
 	})
 }
 
-func getGitCreator(flag *flag.FlagSet) (func(string) multigitter.Git, error) {
+func getGitCreator(flag *flag.FlagSet) (func(string, scm.Repository) multigitter.Git, error) {
 	fetchDepth, _ := flag.GetInt("fetch-depth")
 	gitType, _ := flag.GetString("git-type")
 
 	switch gitType {
 	case "go":
-		return func(path string) multigitter.Git {
+		return func(path string, repo scm.Repository) multigitter.Git {
 			return &gogit.Git{
-				Directory:  path,
-				FetchDepth: fetchDepth,
+				Directory:   path,
+				FetchDepth:  fetchDepth,
+				Credentials: getRepoCredentials(repo),
 			}
 		}, nil
 	case "cmd":
-		return func(path string) multigitter.Git {
+		return func(path string, repo scm.Repository) multigitter.Git {
 			return &cmdgit.Git{
-				Directory:  path,
-				FetchDepth: fetchDepth,
+				Directory:   path,
+				FetchDepth:  fetchDepth,
+				Credentials: getRepoCredentials(repo),
 			}
 		}, nil
 	}
 
 	return nil, errors.Errorf(`could not parse git type "%s"`, gitType)
+}
+
+func getRepoCredentials(repo scm.Repository) *git.Credentials {
+	type credentialser interface {
+		Credentials() *git.Credentials
+	}
+
+	if repo, ok := repo.(credentialser); ok {
+		return repo.Credentials()
+	}
+
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -15,8 +16,9 @@ import (
 
 // Git is an implementation of git that executes git as commands
 type Git struct {
-	Directory  string // The (temporary) directory that should be worked within
-	FetchDepth int    // Limit fetching to the specified number of commits
+	Directory   string // The (temporary) directory that should be worked within
+	FetchDepth  int    // Limit fetching to the specified number of commits
+	Credentials *git.Credentials
 }
 
 var errRe = regexp.MustCompile(`(^|\n)(error|fatal): (.+)`)
@@ -29,7 +31,20 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 	cmd.Stderr = stderr
 	cmd.Stdout = stdout
 
-	err := cmd.Run()
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", errors.Wrap(err, "could not get executable path")
+	}
+	if g.Credentials != nil {
+		cmd.Env = append(
+			cmd.Env,
+			fmt.Sprintf("GIT_ASKPASS=%s", execPath),
+			fmt.Sprintf("MULTI_GITTER_USERNAME_ECHO=%s", g.Credentials.Username),
+			fmt.Sprintf("MULTI_GITTER_PASSWORD_ECHO=%s", g.Credentials.Password),
+		)
+	}
+
+	err = cmd.Run()
 	if err != nil {
 		matches := errRe.FindStringSubmatch(stderr.String())
 		if matches != nil {
@@ -148,4 +163,21 @@ func (g *Git) AddRemote(name, url string) error {
 	cmd := exec.Command("git", "remote", "add", name, url)
 	_, err := g.run(cmd)
 	return err
+}
+
+// AskGitEcho will echo the username and password to the git command
+// This should be placed as the first call in main and abort if true is returned
+func AskGitEcho() (abort bool) {
+	if len(os.Args) < 2 {
+		return false
+	}
+
+	if strings.HasPrefix(os.Args[1], "Username") {
+		fmt.Println(os.Getenv("MULTI_GITTER_USERNAME_ECHO"))
+		return true
+	} else if strings.HasPrefix(os.Args[1], "Password") {
+		fmt.Println(os.Getenv("MULTI_GITTER_PASSWORD_ECHO"))
+		return true
+	}
+	return false
 }

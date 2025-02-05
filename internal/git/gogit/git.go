@@ -13,13 +13,15 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	log "github.com/sirupsen/logrus"
 )
 
 // Git is an implementation of git that used go-git
 type Git struct {
-	Directory  string // The (temporary) directory that should be worked within
-	FetchDepth int    // Limit fetching to the specified number of commits
+	Directory   string // The (temporary) directory that should be worked within
+	FetchDepth  int    // Limit fetching to the specified number of commits
+	Credentials *internalgit.Credentials
 
 	repo *git.Repository // The repository after the clone has been made
 }
@@ -32,6 +34,7 @@ func (g *Git) Clone(ctx context.Context, url string, baseName string) error {
 		Depth:         g.FetchDepth,
 		ReferenceName: plumbing.NewBranchReferenceName(baseName),
 		SingleBranch:  true,
+		Auth:          g.credentials(),
 	})
 	if err != nil {
 		return errors.Wrap(err, "could not clone from the remote")
@@ -190,7 +193,9 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 		return false, err
 	}
 
-	refs, err := remote.List(&git.ListOptions{})
+	refs, err := remote.List(&git.ListOptions{
+		Auth: g.credentials(),
+	})
 	if err != nil {
 		return false, err
 	}
@@ -207,6 +212,7 @@ func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
 	return g.repo.PushContext(ctx, &git.PushOptions{
 		RemoteName: remoteName,
 		Force:      force,
+		Auth:       g.credentials(),
 	})
 }
 
@@ -217,4 +223,15 @@ func (g *Git) AddRemote(name, url string) error {
 		URLs: []string{url},
 	})
 	return err
+}
+
+func (g *Git) credentials() *http.BasicAuth {
+	if g.Credentials == nil {
+		return nil
+	}
+
+	return &http.BasicAuth{
+		Username: g.Credentials.Username,
+		Password: g.Credentials.Password,
+	}
 }

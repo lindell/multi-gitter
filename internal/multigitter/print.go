@@ -24,7 +24,7 @@ type Printer struct {
 	Concurrent int
 	CloneDir   string
 
-	CreateGit func(dir string) Git
+	CreateGit func(dir string, repo scm.Repository) Git
 }
 
 // Print runs a script for multiple repositories and print the output of each run
@@ -74,7 +74,7 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 		return err
 	}
 
-	sourceController := r.CreateGit(tmpDir)
+	sourceController := r.CreateGit(tmpDir, repo)
 
 	err = sourceController.Clone(ctx, repo.CloneURL(), repo.DefaultBranch())
 	if err != nil {
