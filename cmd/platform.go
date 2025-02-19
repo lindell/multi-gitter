@@ -10,6 +10,7 @@ import (
 	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm/bitbucketcloud"
 	"github.com/lindell/multi-gitter/internal/scm/bitbucketserver"
+	"github.com/lindell/multi-gitter/internal/scm/gerrit"
 	"github.com/lindell/multi-gitter/internal/scm/gitea"
 	"github.com/lindell/multi-gitter/internal/scm/github"
 	"github.com/lindell/multi-gitter/internal/scm/gitlab"
@@ -22,10 +23,10 @@ import (
 func configurePlatform(cmd *cobra.Command) {
 	flags := cmd.Flags()
 
-	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.")
+	flags.StringP("base-url", "g", "", "Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.")
 	flags.BoolP("insecure", "", false, "Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.")
 	flags.StringP("username", "u", "", "The Bitbucket server username.")
-	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.")
+	flags.StringP("token", "T", "", "The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.")
 	flags.StringP("auth-type", "", "app-password", `The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.`)
 	_ = cmd.RegisterFlagCompletionFunc("auth-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"app-password", "workspace-token"}, cobra.ShellCompDirectiveNoFileComp
@@ -43,7 +44,7 @@ func configurePlatform(cmd *cobra.Command) {
 	flags.BoolP("ssh-auth", "", false, `Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.`)
 	flags.BoolP("skip-forks", "", false, `Skip repositories which are forks.`)
 
-	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta")
+	flags.StringP("platform", "p", "github", "The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta")
 	_ = cmd.RegisterFlagCompletionFunc("platform", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"github", "gitlab", "gitea", "bitbucket_server", "bitbucket_cloud"}, cobra.ShellCompDirectiveDefault
 	})
@@ -123,6 +124,8 @@ func getVersionController(flag *flag.FlagSet, verifyFlags bool, readOnly bool) (
 		return createBitbucketServerClient(flag, verifyFlags)
 	case "bitbucket_cloud":
 		return createBitbucketCloudClient(flag, verifyFlags)
+	case "gerrit":
+		return createGerritClient(flag, verifyFlags)
 	default:
 		return nil, fmt.Errorf("unknown platform: %s", platform)
 	}
@@ -390,6 +393,28 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 	}
 
 	return vc, nil
+}
+
+func createGerritClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+	username, _ := flag.GetString("username")
+	if username == "" {
+		return nil, errors.New("no username set")
+	}
+
+	gerritBaseURL, _ := flag.GetString("base-url")
+	if gerritBaseURL == "" {
+		return nil, errors.New("no base-url set")
+	}
+
+	repoSearch, _ := flag.GetString("repo-search")
+
+	token, err := getToken(flag)
+	if err != nil {
+		return nil, err
+	}
+
+	vc, err := gerrit.New(username, token, gerritBaseURL, repoSearch)
+	return vc, err
 }
 
 // versionControllerCompletion is a helper function to allow for easier implementation of Cobra autocompletions that depend on a version controller

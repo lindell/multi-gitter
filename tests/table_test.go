@@ -3,6 +3,7 @@ package tests
 import (
 	"bytes"
 	"fmt"
+	"github.com/lindell/multi-gitter/internal/multigitter"
 	"io"
 	"os"
 	"path/filepath"
@@ -1382,6 +1383,203 @@ Repositories with a successful run:
 				vc := test.vcCreate(t)
 
 				defer vc.Clean()
+
+				cmd.OverrideVersionController = vc
+
+				cobraBuf := &bytes.Buffer{}
+
+				staticArgs := []string{
+					"--log-file", logFile.Name(),
+					"--output", outFile.Name(),
+					"--git-type", string(gitBackend),
+				}
+
+				command := cmd.RootCmd()
+				command.SetOut(cobraBuf)
+				command.SetErr(cobraBuf)
+				command.SetArgs(append(staticArgs, test.args...))
+				before := time.Now()
+				err = command.Execute()
+				took := time.Since(before)
+				if test.expectErr {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
+
+				logData, err := io.ReadAll(logFile)
+				assert.NoError(t, err)
+
+				outData, err := io.ReadAll(outFile)
+				assert.NoError(t, err)
+
+				test.verify(t, vc, runData{
+					logOut: string(logData),
+					out:    string(outData),
+					cmdOut: cobraBuf.String(),
+					took:   took,
+				})
+			})
+		}
+	}
+}
+
+func TestGerritTable(t *testing.T) {
+	workingDir, err := os.Getwd()
+	assert.NoError(t, err)
+
+	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
+
+	tests := []struct {
+		name     string
+		vcCreate func(t *testing.T) multigitter.VersionController
+		args     []string
+
+		verify func(t *testing.T, vcMock multigitter.VersionController, runData runData)
+		clean  func(t *testing.T, vcMock multigitter.VersionController)
+
+		expectErr bool
+	}{
+		{
+			name: "when PR does not exist",
+			vcCreate: func(t *testing.T) multigitter.VersionController {
+				return &vcmock.GerritVersionController{
+					VC: vcmock.VersionController{
+						Repositories: []vcmock.Repository{
+							createRepo(t, "owner", "should-change", "i like apples"),
+						},
+						PullRequests: []vcmock.PullRequest{},
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock multigitter.VersionController, runData runData) {
+				gerritMock := vcMock.(*vcmock.GerritVersionController)
+				commitMessage, _ := getCommitMessage(t, gerritMock.VC.Repositories[0].Path, "refs/heads/mocked-custom-branch-name")
+				assert.Equal(t, "custom message\n\nMocked-Footer: custom-branch-name", strings.TrimSuffix(commitMessage, "\n"))
+
+				assert.Equal(t, "custom-branch-name", gerritMock.VC.PullRequests[0].Head)
+				assert.Equal(t, "master", gerritMock.VC.PullRequests[0].Base)
+				assert.Equal(t, "custom message", gerritMock.VC.PullRequests[0].Title)
+			},
+			clean: func(t *testing.T, vcMock multigitter.VersionController) {
+				vcMock.(*vcmock.GerritVersionController).Clean()
+			},
+			expectErr: false,
+		},
+		{
+			name: "when PR already exists and conflict strategy=skip",
+			vcCreate: func(t *testing.T) multigitter.VersionController {
+				repoExistingPR := createRepo(t, "owner", "already-existing-pr", "i like apples")
+
+				return &vcmock.GerritVersionController{
+					VC: vcmock.VersionController{
+						Repositories: []vcmock.Repository{
+							repoExistingPR,
+						},
+						PullRequests: []vcmock.PullRequest{
+							{
+								PRStatus:   scm.PullRequestStatusPending,
+								PRNumber:   10,
+								Repository: repoExistingPR,
+								NewPullRequest: scm.NewPullRequest{
+									Head: "custom-branch-name",
+								},
+							},
+						},
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock multigitter.VersionController, runData runData) {
+				gerritMock := vcMock.(*vcmock.GerritVersionController)
+
+				_, err := getCommitMessage(t, gerritMock.VC.Repositories[0].Path, "refs/heads/mocked-custom-branch-name")
+				assert.Error(t, err, "reference not found")
+			},
+			clean: func(t *testing.T, vcMock multigitter.VersionController) {
+				vcMock.(*vcmock.GerritVersionController).Clean()
+			},
+			expectErr: false,
+		},
+		{
+			name: "when PR already exists and conflict strategy=replace",
+			vcCreate: func(t *testing.T) multigitter.VersionController {
+				repoExistingPR := createRepo(t, "owner", "already-existing-pr", "i like apples")
+
+				return &vcmock.GerritVersionController{
+					VC: vcmock.VersionController{
+						Repositories: []vcmock.Repository{
+							repoExistingPR,
+						},
+						PullRequests: []vcmock.PullRequest{
+							{
+								PRStatus:   scm.PullRequestStatusPending,
+								PRNumber:   10,
+								Repository: repoExistingPR,
+								NewPullRequest: scm.NewPullRequest{
+									Head: "custom-branch-name",
+									Base: "master",
+								},
+							},
+						},
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--conflict-strategy", "replace",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock multigitter.VersionController, runData runData) {
+				gerritMock := vcMock.(*vcmock.GerritVersionController)
+
+				commitMessage, _ := getCommitMessage(t, gerritMock.VC.Repositories[0].Path, "refs/heads/mocked-custom-branch-name")
+				assert.Equal(t, "custom message\n\nMocked-Footer: custom-branch-name", strings.TrimSuffix(commitMessage, "\n"))
+
+				assert.Equal(t, "custom-branch-name", gerritMock.VC.PullRequests[0].Head)
+				assert.Equal(t, "master", gerritMock.VC.PullRequests[0].Base)
+				assert.Equal(t, "custom message", gerritMock.VC.PullRequests[0].Title)
+			},
+			clean: func(t *testing.T, vcMock multigitter.VersionController) {
+				vcMock.(*vcmock.GerritVersionController).Clean()
+			},
+			expectErr: false,
+		},
+	}
+
+	for _, gitBackend := range gitBackends {
+		for _, test := range tests {
+			t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
+				logFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-log")
+				require.NoError(t, err)
+				defer os.Remove(logFile.Name())
+
+				outFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-output")
+				require.NoError(t, err)
+				defer os.Remove(outFile.Name())
+
+				vc := test.vcCreate(t)
+
+				defer test.clean(t, vc)
 
 				cmd.OverrideVersionController = vc
 
