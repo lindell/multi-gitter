@@ -30,6 +30,7 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 	cmd.Stdout = stdout
 
 	err := cmd.Run()
+	logGitExecution(cmd, stdout, stderr)
 	if err != nil {
 		matches := errRe.FindStringSubmatch(stderr.String())
 		if matches != nil {
@@ -44,6 +45,15 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 		return "", errors.New(msg)
 	}
 	return stdout.String(), nil
+}
+
+func logGitExecution(cmd *exec.Cmd, stdout *bytes.Buffer, stderr *bytes.Buffer) {
+	logger := log.WithFields(log.Fields{
+		"cmd":    cmd,
+		"stdout": stdout.String(),
+		"stderr": stderr.String(),
+	})
+	logger.Trace("cmdgit")
 }
 
 // Clone a repository
