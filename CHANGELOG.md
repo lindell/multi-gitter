@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.56.0](https://github.com/lindell/multi-gitter/compare/v0.55.1...v0.56.0) (2025-02-28)
+
+
+### Features
+
+* log stdout/err of cmdgit executions as Trace level ([#538](https://github.com/lindell/multi-gitter/issues/538)) ([771c8fd](https://github.com/lindell/multi-gitter/commit/771c8fd4bbe10bb0f4d3c2398fd45c2b45783aad))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to e0ece0d ([ac8651a](https://github.com/lindell/multi-gitter/commit/ac8651accd4acc961835aaa327418dd23e4300ae))
+* update module code.gitea.io/sdk/gitea to v0.20.0 ([10a147d](https://github.com/lindell/multi-gitter/commit/10a147dbe64174899d03979422a43cb03800ce39))
+* update module github.com/go-git/go-git/v5 to v5.13.2 ([9deab1b](https://github.com/lindell/multi-gitter/commit/9deab1b0d97986dae295c7ef88b65d405d034c8c))
+* update module github.com/spf13/pflag to v1.0.6 ([383b00f](https://github.com/lindell/multi-gitter/commit/383b00fe837a8bbde7ac29ea904a07416a3350ce))
+* update module golang.org/x/oauth2 to v0.25.0 ([cc52888](https://github.com/lindell/multi-gitter/commit/cc52888f758ba97a3de2f578a45a27b603d6d0fa))
+
 ## [0.55.1](https://github.com/lindell/multi-gitter/compare/v0.55.0...v0.55.1) (2025-01-23)
 
 
