@@ -48,12 +48,11 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 }
 
 func logGitExecution(cmd *exec.Cmd, stdout *bytes.Buffer, stderr *bytes.Buffer) {
-	logger := log.WithFields(log.Fields{
-		"cmd":    cmd,
+	log.WithFields(log.Fields{
+		"cmd":    cmd.String(),
 		"stdout": stdout.String(),
 		"stderr": stderr.String(),
-	})
-	logger.Trace("cmdgit")
+	}).Trace("cmdgit")
 }
 
 // Clone a repository
