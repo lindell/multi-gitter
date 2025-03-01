@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.56.1](https://github.com/lindell/multi-gitter/compare/v0.56.0...v0.56.1) (2025-03-01)
+
+
+### Dependencies
+
+* update module github.com/spf13/cobra to v1.9.1 ([37bd4cb](https://github.com/lindell/multi-gitter/commit/37bd4cba4274176c00757d58e8439a963d5426c7))
+* update module golang.org/x/oauth2 to v0.27.0 ([b829f13](https://github.com/lindell/multi-gitter/commit/b829f13cfd7b394c1863beda20f30297cb7a677e))
+
 ## [0.56.0](https://github.com/lindell/multi-gitter/compare/v0.55.1...v0.56.0) (2025-02-28)
 
 
