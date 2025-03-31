@@ -24,6 +24,7 @@ func (g *Github) convertRepo(r *github.Repository) (repository, error) {
 
 	return repository{
 		url:           repoURL,
+		id:            r.GetNodeID(),
 		name:          r.GetName(),
 		ownerName:     r.GetOwner().GetLogin(),
 		defaultBranch: r.GetDefaultBranch(),
@@ -32,6 +33,7 @@ func (g *Github) convertRepo(r *github.Repository) (repository, error) {
 
 type repository struct {
 	url           string
+	id            string
 	name          string
 	ownerName     string
 	defaultBranch string

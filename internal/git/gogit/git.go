@@ -3,11 +3,13 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"io"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/utils/merkletrie"
 	internalgit "github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 
@@ -217,4 +219,70 @@ func (g *Git) AddRemote(name, url string) error {
 		URLs: []string{url},
 	})
 	return err
+}
+
+func (g *Git) LastCommitChanges() (internalgit.Changes, error) {
+	iter, err := g.repo.Log(&git.LogOptions{})
+	if err != nil {
+		return internalgit.Changes{}, err
+	}
+
+	current, err := iter.Next()
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get current commit")
+	}
+	last, err := iter.Next()
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get last commit")
+	}
+
+	currentTree, err := current.Tree()
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get current tree")
+	}
+	lastTree, err := last.Tree()
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get current tree")
+	}
+
+	changes, err := lastTree.Diff(currentTree)
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get diff")
+	}
+
+	additions := map[string][]byte{}
+	deletions := []string{}
+	for _, change := range changes {
+		action, err := change.Action()
+		if err != nil {
+			return internalgit.Changes{}, errors.WithMessage(err, "could not get action")
+		}
+
+		if action == merkletrie.Insert || action == merkletrie.Modify {
+			_, to, err := change.Files()
+			if err != nil {
+				return internalgit.Changes{}, errors.WithMessage(err, "could not get files")
+			}
+
+			reader, err := to.Reader()
+			if err != nil {
+				return internalgit.Changes{}, errors.WithMessage(err, "could not get reader")
+			}
+			bytes, err := io.ReadAll(reader)
+			reader.Close()
+			if err != nil {
+				return internalgit.Changes{}, errors.WithMessage(err, "could not read file")
+			}
+
+			additions[to.Name] = bytes
+		} else if action == merkletrie.Delete {
+			deletions = append(deletions, change.From.Name)
+		}
+	}
+
+	return internalgit.Changes{
+		Additions: additions,
+		Deletions: deletions,
+		OldHash:   last.Hash.String(),
+	}, nil
 }

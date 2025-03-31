@@ -14,6 +14,7 @@ import (
 	"github.com/lindell/multi-gitter/cmd"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -1323,6 +1324,36 @@ Repositories with a successful run:
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				assert.Equal(t, runData.cmdOut, "")
 				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #0\n")
+			},
+		},
+		{
+			name:        "api-push",
+			gitBackends: []gitBackend{gitBackendGo},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--api-push",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, runData.cmdOut, "")
+				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
+				require.Len(t, vcMock.Changes, 1)
+				assert.Equal(t, vcMock.Changes[0].Additions, map[string][]byte{
+					"test.txt": []byte("i like bananas"),
+				})
+				assert.Equal(t, vcMock.Changes[0].Deletions, []string{})
+				assert.Len(t, vcMock.Changes[0].OldHash, 40)
 			},
 		},
 	}

@@ -84,6 +84,10 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 		return errors.Errorf("could not make GitHub GraphQL request: %s", resultData.Message)
 	}
 
+	if res == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(resultData.Data, res); err != nil {
 		return errors.WithMessage(err, "could not unmarshal graphQL result")
 	}
