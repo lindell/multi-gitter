@@ -50,7 +50,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
 	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
 	cmd.Flags().BoolP("api-push", "", false, `Push changes through the API instead of git. Only supported for GitHub.
-Has the benefit of automatically producing verified commits. But is slower and and suited for larger changes.`)
+It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.`)
 	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
