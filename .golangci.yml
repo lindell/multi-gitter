@@ -1,19 +1,15 @@
-run:
-  timeout: 10m
+version: "2"
 
 linters:
-  disable-all: true
+  default: none
   enable:
     - bodyclose
     - dupl
     - errcheck
-    - exportloopref
     - goconst
     - gocritic
     - gocyclo
-    - gofmt
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - lll
@@ -21,56 +17,73 @@ linters:
     - revive
     - rowserrcheck
     - staticcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unparam
     - unused
     - whitespace
-
-linters-settings:
-  dupl:
-    threshold: 200
-  misspell:
-    ignore-words:
-      - statuser
-  goconst:
-    min-len: 2
-    min-occurrences: 3
-  gocritic:
-    disable-tags:
+  settings:
+    dupl:
+      threshold: 200
+    goconst:
+      min-len: 2
+      min-occurrences: 3
+    gocritic:
+      disabled-tags:
       - opinionated
-    disabled-checks:
-      - ifElseChain
-  gocyclo:
-    min-complexity: 25
-  lll:
-    line-length: 200
-  govet:
-    disable:
-      - composites
-
-issues:
-  include:
-    - EXC0002 # disable excluding of issues about comments from golint
-  exclude:
-    - "ST1000:" # at least one file in a package should have a package comment (stylecheck)
-    - "G204:" # rule that command runs must be hard coded
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - dupl
-        - errcheck
-        - exportloopref
-        - funlen
-        - gocyclo
-        - gosec
-        - lll
-        - unparam
-    - path: cmd/ # The cmd package contains a lot of descriptions that must be on a single long line
-      linters:
-        - lll
-        - funlen
-    - path: tools/
-      linters:
-        - gosec
+      disabled-checks:
+        - ifElseChain
+    gocyclo:
+      min-complexity: 25
+    govet:
+      disable:
+        - composites
+    lll:
+      line-length: 200
+    misspell:
+      ignore-rules:
+        - statuser
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - dupl
+          - errcheck
+          - exportloopref
+          - funlen
+          - gocyclo
+          - gosec
+          - lll
+          - unparam
+        path: _test\.go
+      # The cmd package contains a lot of descriptions that must be on a single long line
+      - linters:
+          - funlen
+          - lll
+        path: cmd/
+      - linters:
+          - gosec
+        path: tools/
+      # at least one file in a package should have a package comment (stylecheck)
+      - path: (.+)\.go$
+        text: 'ST1000:'
+      # rule that command runs must be hard coded
+      - path: (.+)\.go$
+        text: 'G204:'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
