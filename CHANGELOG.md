@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.57.0](https://github.com/lindell/multi-gitter/compare/v0.56.0...v0.57.0) (2025-04-02)
+
+
+### Features
+
+* add api-push ([#548](https://github.com/lindell/multi-gitter/issues/548)) ([70d7bc7](https://github.com/lindell/multi-gitter/commit/70d7bc7a4adec04b51cb741d1206867b33941d4a))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 054e65f ([e32debc](https://github.com/lindell/multi-gitter/commit/e32debc490491073ba53e4917ad235d8ac6a9ce0))
+* update module github.com/go-git/go-git/v5 to v5.14.0 ([dc9a8a4](https://github.com/lindell/multi-gitter/commit/dc9a8a41751b2b8490854d2999249c5304c3d94f))
+* update module github.com/google/go-github/v68 to v69 ([#539](https://github.com/lindell/multi-gitter/issues/539)) ([51c6779](https://github.com/lindell/multi-gitter/commit/51c6779ac89d9d35a6d69bf149fc1a3c8191df5e))
+* update module github.com/google/go-github/v69 to v70 ([#546](https://github.com/lindell/multi-gitter/issues/546)) ([9f672f9](https://github.com/lindell/multi-gitter/commit/9f672f9f9960c3b1ac6101ae19b49d213d0d8a19))
+* update module github.com/spf13/cobra to v1.9.1 ([37bd4cb](https://github.com/lindell/multi-gitter/commit/37bd4cba4274176c00757d58e8439a963d5426c7))
+* update module github.com/spf13/viper to v1.20.1 ([74b8ce8](https://github.com/lindell/multi-gitter/commit/74b8ce80e08d0a1c9943208ee52d5661256f18e2))
+* update module golang.org/x/oauth2 to v0.27.0 ([b829f13](https://github.com/lindell/multi-gitter/commit/b829f13cfd7b394c1863beda20f30297cb7a677e))
+* update module golang.org/x/oauth2 to v0.28.0 ([0e96e75](https://github.com/lindell/multi-gitter/commit/0e96e755a8c3d00a77565a88fc2989fa5a06c54f))
+
 ## [0.56.0](https://github.com/lindell/multi-gitter/compare/v0.55.1...v0.56.0) (2025-02-28)
 
 
