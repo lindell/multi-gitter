@@ -101,6 +101,10 @@ All configuration in multi-gitter can be done through command line flags, config
   <summary>All available run options</summary>
 
 ```yaml
+# Push changes through the API instead of git. Only supported for GitHub.
+# It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.
+api-push: false
+
 # The username of the assignees to be added on the pull request.
 assignees:
   - example
@@ -659,6 +663,8 @@ Usage:
   multi-gitter run [script path] [flags]
 
 Flags:
+      --api-push                   Push changes through the API instead of git. Only supported for GitHub.
+                                   It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.
   -a, --assignees strings          The username of the assignees to be added on the pull request.
       --auth-type string           The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
       --author-email string        Email of the committer. If not set, the global git config setting will be used.
