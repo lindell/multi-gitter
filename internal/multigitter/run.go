@@ -61,6 +61,7 @@ type Runner struct {
 	SkipPullRequest        bool     // If set, the script will run directly on the base-branch without creating any PR
 	PushOnly               bool     // If set, the script will only publish the feature branch without creating a PR
 	SkipRepository         []string // A list of repositories that run will skip
+	APIPush                bool     // Use the SCM API to commit and push the changes instead of git
 	RegExIncludeRepository *regexp.Regexp
 	RegExExcludeRepository *regexp.Regexp
 
@@ -338,9 +339,28 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log.Info("Pushing changes to remote")
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
-	err = sourceController.Push(ctx, remoteName, forcePush)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not push changes")
+
+	if !r.APIPush {
+		err = sourceController.Push(ctx, remoteName, forcePush)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not push changes")
+		}
+	} else {
+		commitChecker, hasCommitChecker := sourceController.(git.LastCommitChecker)
+		changePusher, hasChangePusher := r.VersionController.(scm.ChangePusher)
+		if !hasCommitChecker || !hasChangePusher {
+			return nil, errors.New("the scm implementation does not support committing through the API")
+		}
+
+		changes, err := commitChecker.LastCommitChanges()
+		if err != nil {
+			return nil, errors.Wrap(err, "could not get diff")
+		}
+
+		err = changePusher.Push(ctx, repo, r.CommitMessage, changes, r.FeatureBranch, featureBranchExist, forcePush)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if r.PushOnly {

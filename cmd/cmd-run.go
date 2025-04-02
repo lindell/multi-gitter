@@ -49,6 +49,8 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
 	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
+	cmd.Flags().BoolP("api-push", "", false, `Push changes through the API instead of git. Only supported for GitHub.
+It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.`)
 	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
@@ -92,6 +94,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	pushOnly, _ := flag.GetBool("push-only")
+	apiPush, _ := flag.GetBool("api-push")
 	skipRepository, _ := flag.GetStringSlice("skip-repo")
 	interactive, _ := flag.GetBool("interactive")
 	dryRun, _ := flag.GetBool("dry-run")
@@ -107,6 +110,9 @@ func run(cmd *cobra.Command, _ []string) error {
 	labels, _ := stringSlice(flag, "labels")
 	repoInclude, _ := flag.GetString("repo-include")
 	repoExclude, _ := flag.GetString("repo-exclude")
+
+	platform, _ := flag.GetString("platform")
+	gitType, _ := flag.GetString("git-type")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -147,6 +153,15 @@ func run(cmd *cobra.Command, _ []string) error {
 
 	if concurrent > 1 && interactive {
 		return errors.New("--concurrent and --interactive can't be used at the same time")
+	}
+
+	if apiPush {
+		if platform != "github" {
+			return errors.New("api-push is only supported for GitHub")
+		}
+		if gitType != "go" {
+			return errors.New("api-push only works with go-git")
+		}
 	}
 
 	// Parse commit author data
@@ -241,6 +256,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		ForkOwner:              forkOwner,
 		SkipPullRequest:        skipPullRequest,
 		PushOnly:               pushOnly,
+		APIPush:                apiPush,
 		SkipRepository:         skipRepository,
 		CommitAuthor:           commitAuthor,
 		BaseBranch:             baseBranchName,
