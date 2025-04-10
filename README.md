@@ -151,6 +151,9 @@ draft: false
 # Run without pushing changes or creating pull requests.
 dry-run: false
 
+# Additional arguments to pass to the git commit command. Only works with the 'cmd' git type.
+extra-commit-args:
+
 # Limit fetching to the specified number of commits. Set to 0 for no limit.
 fetch-depth: 1
 
@@ -565,6 +568,9 @@ concurrent: 1
 # The file that the output of the script should be outputted to. "-" means stderr.
 error-output: "-"
 
+# Additional arguments to pass to the git commit command. Only works with the 'cmd' git type.
+extra-commit-args:
+
 # Limit fetching to the specified number of commits. Set to 0 for no limit.
 fetch-depth: 1
 
@@ -684,6 +690,7 @@ Flags:
                                     (default "skip")
       --draft                      Create pull request(s) as draft.
   -d, --dry-run                    Run without pushing changes or creating pull requests.
+      --extra-commit-args string   Additional arguments to pass to the git commit command. Only works with the 'cmd' git type.
   -f, --fetch-depth int            Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --fork                       Fork the repository instead of creating a new branch on the same owner.
       --fork-owner string          If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user.
@@ -846,38 +853,39 @@ Usage:
   multi-gitter print [script path] [flags]
 
 Flags:
-      --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
-  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
-      --clone-dir string        The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
-      --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
-  -C, --concurrent int          The maximum number of concurrent runs. (default 1)
-      --config string           Path of the config file.
-  -E, --error-output string     The file that the output of the script should be outputted to. "-" means stderr. (default "-")
-  -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
-      --git-type string         The type of git implementation to use.
-                                Available values:
-                                  go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
-                                  cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
-                                 (default "go")
-  -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
-      --include-subgroups       Include GitLab subgroups when using the --group flag.
-      --insecure                Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
-      --log-file string         The file where all logs should be printed to. "-" means stdout.
-      --log-format string       The formatting of the logs. Available values: text, json, json-pretty. (default "text")
-  -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
-  -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
-  -o, --output string           The file that the output of the script should be outputted to. "-" means stdout. (default "-")
-      --plain-output            Don't use any terminal formatting when printing the output.
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta (default "github")
-  -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
-  -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
-      --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
-      --skip-forks              Skip repositories which are forks.
-      --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
-      --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
-  -U, --user strings            The name of a user. All repositories owned by that user will be used.
-  -u, --username string         The Bitbucket server username.
+      --auth-type string           The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
+  -g, --base-url string            Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+      --clone-dir string           The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
+      --code-search fork:true      Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
+  -C, --concurrent int             The maximum number of concurrent runs. (default 1)
+      --config string              Path of the config file.
+  -E, --error-output string        The file that the output of the script should be outputted to. "-" means stderr. (default "-")
+      --extra-commit-args string   Additional arguments to pass to the git commit command. Only works with the 'cmd' git type.
+  -f, --fetch-depth int            Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
+      --git-type string            The type of git implementation to use.
+                                   Available values:
+                                     go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
+                                     cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
+                                    (default "go")
+  -G, --group strings              The name of a GitLab organization. All repositories in that group will be used.
+      --include-subgroups          Include GitLab subgroups when using the --group flag.
+      --insecure                   Insecure controls whether a client verifies the server certificate chain and host name. Used only for Bitbucket server.
+      --log-file string            The file where all logs should be printed to. "-" means stdout.
+      --log-format string          The formatting of the logs. Available values: text, json, json-pretty. (default "text")
+  -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
+  -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
+  -o, --output string              The file that the output of the script should be outputted to. "-" means stdout. (default "-")
+      --plain-output               Don't use any terminal formatting when printing the output.
+  -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta (default "github")
+  -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
+  -R, --repo strings               The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --repo-search fork:true      Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
+      --skip-forks                 Skip repositories which are forks.
+      --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
+  -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+      --topic strings              The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
+  -U, --user strings               The name of a user. All repositories owned by that user will be used.
+  -u, --username string            The Bitbucket server username.
 ```
 
 
@@ -925,6 +933,8 @@ cp $REPLACE_FILE $FILE
 # Assuming you are using gnu sed, if you are running this on a mac, please see https://stackoverflow.com/questions/4247068/sed-command-with-i-option-failing-on-mac-but-works-on-linux
 
 find ./ -type f -exec sed -i -e 's/apple/orange/g' {} \;
+
+echo "test" >> README.md
 ```
 </details>
 

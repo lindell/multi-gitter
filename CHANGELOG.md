@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.58.0](https://github.com/lindell/multi-gitter/compare/v0.57.0...v0.58.0) (2025-04-10)
+
+
+### Features
+
+* extra commit args ([c314b51](https://github.com/lindell/multi-gitter/commit/c314b5163be0b638995b25de3cde62378ce39948))
+
 ## [0.57.0](https://github.com/lindell/multi-gitter/compare/v0.56.0...v0.57.0) (2025-04-02)
 
 

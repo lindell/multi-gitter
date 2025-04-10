@@ -1356,6 +1356,38 @@ Repositories with a successful run:
 				assert.Len(t, vcMock.Changes[0].OldHash, 40)
 			},
 		},
+
+		{
+			name:        "extra-commit-args",
+			gitBackends: []gitBackend{gitBackendCmd},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--extra-commit-args", "-s",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path))
+				assert.Equal(
+					t,
+					"custom message\n\nSigned-off-by: Test Author <test@example.com>\n",
+					commitText(t, vcMock.Repositories[0].Path),
+				)
+			},
+		},
 	}
 
 	for _, gitBackend := range gitBackends {
