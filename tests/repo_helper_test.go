@@ -178,3 +178,16 @@ func fileExist(t *testing.T, basePath string, fn string) bool {
 func normalizePath(path string) string {
 	return strings.ReplaceAll(filepath.ToSlash(path), " ", "\\ ")
 }
+
+func commitText(t *testing.T, basePath string) string {
+	repo, err := git.PlainOpen(basePath)
+	require.NoError(t, err)
+
+	commitIter, err := repo.Log(&git.LogOptions{})
+	require.NoError(t, err)
+
+	commit, err := commitIter.Next()
+	require.NoError(t, err)
+
+	return commit.Message
+}

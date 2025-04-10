@@ -19,11 +19,26 @@ Available values:
 	_ = cmd.RegisterFlagCompletionFunc("git-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"go", "cmd"}, cobra.ShellCompDirectiveDefault
 	})
+	cmd.Flags().StringP("extra-commit-args", "", "", "Additional arguments to pass to the git commit command. Only works with the 'cmd' git type.")
 }
 
 func getGitCreator(flag *flag.FlagSet) (func(string) multigitter.Git, error) {
 	fetchDepth, _ := flag.GetInt("fetch-depth")
 	gitType, _ := flag.GetString("git-type")
+	extraCommitArgsStr, _ := flag.GetString("extra-commit-args")
+
+	extraCommitArgs := []string{}
+	var err error
+	if extraCommitArgsStr != "" {
+		if gitType != "cmd" {
+			return nil, errors.New("extra commit arguments can only be used with cmd git type")
+		}
+
+		extraCommitArgs, err = parseCommandLine(extraCommitArgsStr)
+		if err != nil {
+			return nil, errors.WithMessage(err, "could not parse extra commit arguments")
+		}
+	}
 
 	switch gitType {
 	case "go":
@@ -36,8 +51,9 @@ func getGitCreator(flag *flag.FlagSet) (func(string) multigitter.Git, error) {
 	case "cmd":
 		return func(path string) multigitter.Git {
 			return &cmdgit.Git{
-				Directory:  path,
-				FetchDepth: fetchDepth,
+				Directory:            path,
+				FetchDepth:           fetchDepth,
+				ExtraCommitArguments: extraCommitArgs,
 			}
 		}, nil
 	}
