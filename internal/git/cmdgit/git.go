@@ -162,3 +162,10 @@ func (g *Git) AddRemote(name, url string) error {
 	_, err := g.run(cmd)
 	return err
 }
+
+// LatestCommitHash returns the latest commit hash
+func (g *Git) LatestCommitHash() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	stdOut, err := g.run(cmd)
+	return strings.TrimSpace(stdOut), err
+}

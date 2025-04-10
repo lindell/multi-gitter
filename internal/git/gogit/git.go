@@ -234,6 +234,15 @@ func (g *Git) AddRemote(name, url string) error {
 	return err
 }
 
+// LatestCommitHash returns the latest commit hash
+func (g *Git) LatestCommitHash() (string, error) {
+	head, err := g.repo.Head()
+	if err != nil {
+		return "", err
+	}
+	return head.Hash().String(), nil
+}
+
 func (g *Git) LastCommitChanges() (internalgit.Changes, error) {
 	iter, err := g.repo.Log(&git.LogOptions{})
 	if err != nil {
