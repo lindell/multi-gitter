@@ -6,8 +6,8 @@
 </h1>
 
 <div align="center">
-  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ABuilding"><img alt="Go build status" src="https://github.com/lindell/multi-gitter/workflows/Building/badge.svg?branch=master" /></a>
-  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ATesting"><img alt="Go test status" src="https://github.com/lindell/multi-gitter/workflows/Testing/badge.svg?branch=master" /></a>
+  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ABuilding"><img alt="Go build status" src="https://github.com/lindell/multi-gitter/actions/workflows/build.yaml/badge.svg?branch=master" /></a>
+  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ATesting"><img alt="Go test status" src="https://github.com/lindell/multi-gitter/actions/workflows/test.yaml/badge.svg?branch=master" /></a>
   <a href="https://goreportcard.com/report/github.com/lindell/multi-gitter"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/lindell/multi-gitter" /></a>
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/lindell/multi-gitter"><img alt="OpenSSF Scorecard" src="https://api.securityscorecards.dev/projects/github.com/lindell/multi-gitter/badge" /></a>
 </div>
