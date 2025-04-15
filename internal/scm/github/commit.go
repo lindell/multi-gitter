@@ -17,8 +17,7 @@ var _ scm.ChangePusher = &Github{}
 func (g *Github) Push(
 	ctx context.Context,
 	r scm.Repository,
-	commitMessage string,
-	changes git.Changes,
+	changes []git.Changes,
 	featureBranch string,
 	branchExist bool,
 	forcePush bool,
@@ -37,15 +36,26 @@ func (g *Github) Push(
 	}
 
 	if !branchExist {
-		err := g.CreateBranch(ctx, repo, featureBranch, changes.OldHash)
+		err := g.CreateBranch(ctx, repo, featureBranch, changes[0].OldHash)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := g.CommitThroughAPI(ctx, repo, featureBranch, commitMessage, changes)
-	if err != nil {
-		return err
+	var err error
+	newHash := ""
+	for _, change := range changes {
+		// If multiple changes are made, the old hash should be the new hash
+		// from the previous commit. The commit locally won't be exactly the same
+		// as the commit made through the API
+		if newHash != "" {
+			change.OldHash = newHash
+		}
+
+		newHash, err = g.CommitThroughAPI(ctx, repo, featureBranch, change)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -54,14 +64,13 @@ func (g *Github) Push(
 func (g *Github) CommitThroughAPI(ctx context.Context,
 	repo repository,
 	branch string,
-	commitMessage string,
 	changes git.Changes,
-) error {
+) (string, error) {
 	query := `
 		mutation ($input: CreateCommitOnBranchInput!) {
 			createCommitOnBranch(input: $input) {
 				commit {
-				url
+					oid
 				}
 			}
 		}`
@@ -72,7 +81,7 @@ func (g *Github) CommitThroughAPI(ctx context.Context,
 
 	v.Input.Branch.BranchName = branch
 	v.Input.ExpectedHeadOid = changes.OldHash
-	v.Input.Message.Headline = commitMessage
+	v.Input.Message.Headline = changes.Message
 
 	for path, contents := range changes.Additions {
 		v.Input.FileChanges.Additions = append(v.Input.FileChanges.Additions, commitAddition{
@@ -87,14 +96,17 @@ func (g *Github) CommitThroughAPI(ctx context.Context,
 		})
 	}
 
-	var result map[string]interface{}
-
+	var result createCommitOnBranchOutput
 	err := g.makeGraphQLRequest(ctx, query, v, &result)
 	if err != nil {
-		return errors.WithMessage(err, "could not commit changes though API")
+		return "", errors.WithMessage(err, "could not commit changes though API")
+	}
+	oid := result.CreateCommitOnBranch.Commit.Oid
+	if oid == "" {
+		return "", errors.New("could not get commit oid")
 	}
 
-	return nil
+	return oid, nil
 }
 
 func (g *Github) CreateBranch(ctx context.Context, repo repository, branchName string, oid string) error {
@@ -184,6 +196,14 @@ type createCommitOnBranchInput struct {
 			Deletions []commitDeletion `json:"deletions,omitempty"`
 		} `json:"fileChanges"`
 	} `json:"input"`
+}
+
+type createCommitOnBranchOutput struct {
+	CreateCommitOnBranch struct {
+		Commit struct {
+			Oid string `json:"oid"`
+		} `json:"commit"`
+	} `json:"createCommitOnBranch"`
 }
 
 type commitAddition struct {

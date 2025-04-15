@@ -123,7 +123,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Set commit message based on pr title and body or the reverse
-	if commitMessage == "" && prTitle == "" {
+	if commitMessage == "" && prTitle == "" && !manualCommit {
 		return errors.New("pull request title or commit message must be set")
 	} else if commitMessage == "" {
 		commitMessage = prTitle

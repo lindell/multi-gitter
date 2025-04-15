@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"slices"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -243,31 +244,53 @@ func (g *Git) LatestCommitHash() (string, error) {
 	return head.Hash().String(), nil
 }
 
-func (g *Git) LastCommitChanges() (internalgit.Changes, error) {
+func (g *Git) CommitChanges(sinceCommitHash string) ([]internalgit.Changes, error) {
 	iter, err := g.repo.Log(&git.LogOptions{})
 	if err != nil {
-		return internalgit.Changes{}, err
+		return nil, err
 	}
 
-	current, err := iter.Next()
+	toCommit, err := iter.Next()
 	if err != nil {
-		return internalgit.Changes{}, errors.WithMessage(err, "could not get current commit")
-	}
-	last, err := iter.Next()
-	if err != nil {
-		return internalgit.Changes{}, errors.WithMessage(err, "could not get last commit")
+		return nil, errors.WithMessage(err, "could not get current commit")
 	}
 
-	currentTree, err := current.Tree()
+	allChanges := []internalgit.Changes{}
+	for {
+		fromCommit, err := iter.Next()
+		if err != nil {
+			return nil, errors.WithMessage(err, "could not get last commit")
+		}
+
+		changes, err := g.changesBetweenCommits(context.Background(), fromCommit, toCommit)
+		if err != nil {
+			return nil, errors.WithMessage(err, "could not get changes")
+		}
+		allChanges = append(allChanges, changes)
+
+		if sinceCommitHash == fromCommit.Hash.String() {
+			break
+		}
+		toCommit = fromCommit
+	}
+
+	// Reverse the order of the changes to get the earliest commit first
+	slices.Reverse(allChanges)
+
+	return allChanges, nil
+}
+
+func (g *Git) changesBetweenCommits(ctx context.Context, from, to *object.Commit) (internalgit.Changes, error) {
+	toTree, err := to.Tree()
 	if err != nil {
 		return internalgit.Changes{}, errors.WithMessage(err, "could not get current tree")
 	}
-	lastTree, err := last.Tree()
+	fromTree, err := from.Tree()
 	if err != nil {
 		return internalgit.Changes{}, errors.WithMessage(err, "could not get current tree")
 	}
 
-	changes, err := lastTree.Diff(currentTree)
+	changes, err := fromTree.Diff(toTree)
 	if err != nil {
 		return internalgit.Changes{}, errors.WithMessage(err, "could not get diff")
 	}
@@ -303,8 +326,9 @@ func (g *Git) LastCommitChanges() (internalgit.Changes, error) {
 	}
 
 	return internalgit.Changes{
+		Message:   to.Message,
 		Additions: additions,
 		Deletions: deletions,
-		OldHash:   last.Hash.String(),
+		OldHash:   from.Hash.String(),
 	}, nil
 }

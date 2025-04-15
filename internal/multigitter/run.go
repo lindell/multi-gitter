@@ -339,19 +339,19 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			return nil, errors.Wrap(err, "could not push changes")
 		}
 	} else {
-		commitChecker, hasCommitChecker := sourceController.(git.LastCommitChecker)
+		commitChecker, hasCommitChecker := sourceController.(git.ChangeFetcher)
 		changePusher, hasChangePusher := r.VersionController.(scm.ChangePusher)
 		if !hasCommitChecker || !hasChangePusher {
 			return nil, errors.New("the scm implementation does not support committing through the API")
 		}
 
 		// Todo: Change to ChangesSince(commitBeforeRun)
-		changes, err := commitChecker.LastCommitChanges()
+		changes, err := commitChecker.CommitChanges(commitHashBeforeRun)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not get diff")
 		}
 
-		err = changePusher.Push(ctx, repo, r.CommitMessage, changes, r.FeatureBranch, featureBranchExist, forcePush)
+		err = changePusher.Push(ctx, repo, changes, r.FeatureBranch, featureBranchExist, forcePush)
 		if err != nil {
 			return nil, err
 		}
