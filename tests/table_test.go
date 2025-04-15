@@ -1411,11 +1411,13 @@ Repositories with a successful run:
 				assert.Equal(t, runData.cmdOut, "")
 				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
 				require.Len(t, vcMock.Changes, 1)
-				assert.Equal(t, vcMock.Changes[0].Additions, map[string][]byte{
+				changes := vcMock.Changes["owner/example-repository"]
+				require.Len(t, changes, 1)
+				assert.Equal(t, changes[0].Additions, map[string][]byte{
 					"test.txt": []byte("i like bananas"),
 				})
-				assert.Equal(t, vcMock.Changes[0].Deletions, []string{})
-				assert.Len(t, vcMock.Changes[0].OldHash, 40)
+				assert.Equal(t, changes[0].Deletions, []string{})
+				assert.Len(t, changes[0].OldHash, 40)
 			},
 		},
 	}
