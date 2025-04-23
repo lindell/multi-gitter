@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.57.1](https://github.com/lindell/multi-gitter/compare/v0.57.0...v0.57.1) (2025-04-23)
+
+
+### Bug Fixes
+
+* api-push now includes path for additions ([#557](https://github.com/lindell/multi-gitter/issues/557)) ([6911474](https://github.com/lindell/multi-gitter/commit/6911474ba3f5be266b6d754926e46aa17b09e97c))
+* fixed problem when both additions and deletions were present with --api-push ([#558](https://github.com/lindell/multi-gitter/issues/558)) ([94902f0](https://github.com/lindell/multi-gitter/commit/94902f0f356e67ffc859d8b9b3a3e9d6d5539a33))
+
 ## [0.57.0](https://github.com/lindell/multi-gitter/compare/v0.56.0...v0.57.0) (2025-04-02)
 
 
