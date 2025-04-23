@@ -180,8 +180,8 @@ type createCommitOnBranchInput struct {
 			Headline string `json:"headline"`
 		} `json:"message"`
 		FileChanges struct {
-			Additions []commitAddition `json:"additions"`
-			Deletions []commitDeletion `json:"deletions"`
+			Additions []commitAddition `json:"additions,omitempty"`
+			Deletions []commitDeletion `json:"deletions,omitempty"`
 		} `json:"fileChanges"`
 	} `json:"input"`
 }
