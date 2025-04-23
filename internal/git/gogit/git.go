@@ -274,7 +274,7 @@ func (g *Git) LastCommitChanges() (internalgit.Changes, error) {
 				return internalgit.Changes{}, errors.WithMessage(err, "could not read file")
 			}
 
-			additions[to.Name] = bytes
+			additions[change.To.Name] = bytes
 		} else if action == merkletrie.Delete {
 			deletions = append(deletions, change.From.Name)
 		}
