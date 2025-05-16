@@ -1,0 +1,1 @@
+multi-gitter run "python3 $PWD/autofixer.py" --config=./config.yaml
