@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -130,7 +131,8 @@ func (b *BitbucketServer) GetRepositories(ctx context.Context) ([]scm.Repository
 	for _, bitbucketRepository := range bitbucketRepositories {
 		response, getDefaultBranchErr := client.DefaultApi.GetDefaultBranch(bitbucketRepository.Project.Key, bitbucketRepository.Slug)
 		if getDefaultBranchErr != nil {
-			return nil, getDefaultBranchErr
+			log.Printf("Skipping repository %s/%s due to error fetching default branch: %v", bitbucketRepository.Project.Key, bitbucketRepository.Slug, getDefaultBranchErr)
+			continue // Skip to the next repository
 		}
 
 		var defaultBranch bitbucketv1.Branch
