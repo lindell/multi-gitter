@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"slices"
 	"strings"
 
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
@@ -199,28 +198,6 @@ func (bbc *BitbucketCloud) GetPullRequests(ctx context.Context, branchName strin
 	return responsePRs, nil
 }
 
-func (bbc *BitbucketCloud) getPullRequests(_ context.Context, repoName string) ([]pullRequest, error) {
-	var repoPRs []pullRequest
-	prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{Owner: bbc.workspaces[0], RepoSlug: repoName})
-	if err != nil {
-		return nil, err
-	}
-	prBytes, err := json.Marshal(prs)
-	if err != nil {
-		return nil, err
-	}
-	bbPullRequests := &bitbucketPullRequests{}
-	err = json.Unmarshal(prBytes, bbPullRequests)
-	if err != nil {
-		return nil, err
-	}
-	for _, pr := range bbPullRequests.Values {
-		convertedPr := bbc.convertPullRequest(bbc.workspaces[0], repoName, &pr)
-		repoPRs = append(repoPRs, convertedPr)
-	}
-	return repoPRs, nil
-}
-
 func (bbc *BitbucketCloud) convertPullRequest(project, repoName string, pr *bbPullRequest) pullRequest {
 	status := bbc.pullRequestStatus(pr)
 
@@ -256,17 +233,42 @@ func extractRepoSlug(bbcPR pullRequest) string {
 
 func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
 	bbcRepo := repo.(repository)
-	repoPRs, err := bbc.getPullRequests(ctx, bbcRepo.name)
+
+	// Query for open pull requests on the specific branch
+	// The bitbucket API uses `source.branch.name="<branchName>"` in the q parameter for filtering.
+	// The go-bitbucket library uses the States field for filtering by PR state.
+	queryString := fmt.Sprintf("source.branch.name = \"%s\"", branchName)
+	prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{
+		Owner:    bbc.workspaces[0],
+		RepoSlug: bbcRepo.name,
+		Query:    queryString,      // Using the query parameter for branch filtering.
+		States:   []string{"OPEN"}, // Use States field for PR state filtering.
+	})
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to get pull requests for branch %s in repo %s", branchName, bbcRepo.name)
 	}
-	for _, repoPR := range repoPRs {
-		pr := repoPR
-		if pr.branchName == branchName && pr.status == scm.PullRequestStatusSuccess {
-			return repoPR, nil
-		}
+
+	// The Gets method returns a struct that contains a list of pull requests.
+	// We need to iterate through these, though with the query, it should ideally be 0 or 1.
+	prBytes, err := json.Marshal(prs)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal pull requests response")
 	}
-	return nil, nil
+	bbPullRequests := &bitbucketPullRequests{}
+	err = json.Unmarshal(prBytes, bbPullRequests)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal pull requests response")
+	}
+
+	for _, pr := range bbPullRequests.Values {
+		// The API query should be precise, but we can double-check here if necessary.
+		// if pr.Source.Branch.Name == branchName && pr.State == "OPEN" {
+		convertedPR := bbc.convertPullRequest(bbc.workspaces[0], bbcRepo.name, &pr)
+		return convertedPR, nil
+		// }
+	}
+
+	return nil, nil // No open pull request found for the branch
 }
 
 func (bbc *BitbucketCloud) MergePullRequest(_ context.Context, pr scm.PullRequest) error {
@@ -296,26 +298,47 @@ func (bbc *BitbucketCloud) ClosePullRequest(_ context.Context, pr scm.PullReques
 }
 
 func (bbc *BitbucketCloud) GetRepositories(_ context.Context) ([]scm.Repository, error) {
-	repoOptions := &bitbucket.RepositoriesOptions{
-		Role:  "member",
-		Owner: bbc.workspaces[0],
-	}
-
-	repos, err := bbc.bbClient.Repositories.ListForAccount(repoOptions)
-
-	if err != nil {
-		return nil, err
-	}
-
-	repositories := make([]scm.Repository, 0, len(repos.Items))
-	for _, repo := range repos.Items {
-		if slices.Contains(bbc.repositories, repo.Name) {
-			converted, err := bbc.convertRepository(repo)
+	if len(bbc.repositories) > 0 {
+		// If specific repository names are provided, fetch them directly
+		repositories := make([]scm.Repository, 0, len(bbc.repositories))
+		for _, repoName := range bbc.repositories {
+			repoDetails, err := bbc.bbClient.Repositories.Repository.Get(&bitbucket.RepositoryOptions{
+				Owner:    bbc.workspaces[0],
+				RepoSlug: repoName,
+			})
 			if err != nil {
-				return nil, err
+				// It might be desirable to collect errors or decide if one failure should stop all
+				return nil, errors.Wrapf(err, "failed to get repository %s/%s", bbc.workspaces[0], repoName)
+			}
+			converted, err := bbc.convertRepository(*repoDetails)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to convert repository %s", repoName)
 			}
 			repositories = append(repositories, *converted)
 		}
+		return repositories, nil
+	}
+
+	// Otherwise, fetch all repositories in the workspace
+	repoOptions := &bitbucket.RepositoriesOptions{
+		Role:  "member", // Role filter is important for accessibility
+		Owner: bbc.workspaces[0],
+	}
+
+	allReposResponse, err := bbc.bbClient.Repositories.ListForAccount(repoOptions)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to list repositories for account")
+	}
+
+	repositories := make([]scm.Repository, 0, len(allReposResponse.Items))
+	for _, repo := range allReposResponse.Items {
+		// No need to filter by bbc.repositories here, as this branch means it was empty
+		converted, err := bbc.convertRepository(repo)
+		if err != nil {
+			// It might be desirable to log and continue, or collect errors
+			return nil, errors.Wrapf(err, "failed to convert repository %s", repo.Name)
+		}
+		repositories = append(repositories, *converted)
 	}
 
 	return repositories, nil
