@@ -395,7 +395,7 @@ func createBitbucketServerClient(flag *flag.FlagSet, verifyFlags bool) (multigit
 	return vc, nil
 }
 
-func createGerritClient(flag *flag.FlagSet, verifyFlags bool) (multigitter.VersionController, error) {
+func createGerritClient(flag *flag.FlagSet, _ bool) (multigitter.VersionController, error) {
 	username, _ := flag.GetString("username")
 	if username == "" {
 		return nil, errors.New("no username set")

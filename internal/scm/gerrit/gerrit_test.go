@@ -63,13 +63,13 @@ func getChangesForQuery(query string) (*[]gogerrit.ChangeInfo, *gogerrit.Respons
 
 	if strings.Contains(query, "throw-error") {
 		return nil, nil, assert.AnError
-	} else {
-		if changes, ok := data[query]; ok {
-			return &changes, nil, nil
-		} else {
-			return &[]gogerrit.ChangeInfo{}, nil, nil
-		}
 	}
+
+	if changes, ok := data[query]; ok {
+		return &changes, nil, nil
+	}
+
+	return &[]gogerrit.ChangeInfo{}, nil, nil
 }
 
 func TestGetRepositories(t *testing.T) {
@@ -81,7 +81,7 @@ func TestGetRepositories(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseUrl:    "https://gerrit.com",
+		baseURL:    "https://gerrit.com",
 		username:   "admin",
 		token:      "token123",
 		repoSearch: "repo",
@@ -115,10 +115,10 @@ func TestGetPullRequests(t *testing.T) {
 				return projects, nil, nil
 			},
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
-				return getChangesForQuery(opt.QueryOptions.Query[0])
+				return getChangesForQuery(opt.Query[0])
 			},
 		},
-		baseUrl:    "https://gerrit.com",
+		baseURL:    "https://gerrit.com",
 		username:   "admin",
 		token:      "token123",
 		repoSearch: "repo",
@@ -129,7 +129,7 @@ func TestGetPullRequests(t *testing.T) {
 
 	expectedPRs := []struct {
 		project  string
-		changeId string
+		changeID string
 		number   int
 		status   scm.PullRequestStatus
 	}{
@@ -144,7 +144,7 @@ func TestGetPullRequests(t *testing.T) {
 		assert.Equal(t, expectedPR.status, pr.Status())
 		assert.Equal(t, strconv.Itoa(change.number)+": "+change.project, pr.String())
 		assert.Equal(t, expectedPR.project, change.project)
-		assert.Equal(t, expectedPR.changeId, change.changeId)
+		assert.Equal(t, expectedPR.changeID, change.changeID)
 		assert.Equal(t, "https://gerrit.com/c/"+change.project+"/+/"+strconv.Itoa(change.number), change.URL())
 	}
 }
@@ -153,14 +153,14 @@ func TestGetOpenPullRequest(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
-				return getChangesForQuery(opt.QueryOptions.Query[0])
+				return getChangesForQuery(opt.Query[0])
 			},
 		},
 	}
 	tests := []struct {
 		repository       string
 		expectedErr      bool
-		expectedChangeId string
+		expectedChangeID string
 	}{
 		{"repo-active", false, "I123"},
 		{"another-repo-active", false, ""},
@@ -176,11 +176,11 @@ func TestGetOpenPullRequest(t *testing.T) {
 				require.Contains(t, err.Error(), "More than one open change for branch feature in project "+test.repository)
 			} else {
 				require.NoError(t, err)
-				if test.expectedChangeId == "" {
+				if test.expectedChangeID == "" {
 					require.Nil(t, pr)
 				} else {
 					require.NotNil(t, pr)
-					assert.Equal(t, test.expectedChangeId, pr.(change).changeId)
+					assert.Equal(t, test.expectedChangeID, pr.(change).changeID)
 				}
 			}
 		})
@@ -191,7 +191,7 @@ func TestCreatePullRequest(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
-				return getChangesForQuery(opt.QueryOptions.Query[0])
+				return getChangesForQuery(opt.Query[0])
 			},
 		},
 	}
@@ -199,9 +199,9 @@ func TestCreatePullRequest(t *testing.T) {
 	pr, err := g.CreatePullRequest(context.Background(), repo, repo, scm.NewPullRequest{Head: "feature"})
 	require.NoError(t, err)
 	require.NotNil(t, pr)
-	assert.Equal(t, "I123", pr.(change).changeId)
+	assert.Equal(t, "I123", pr.(change).changeID)
 
-	pr, err = g.CreatePullRequest(context.Background(), repo, repo, scm.NewPullRequest{Head: "unknown-feature"})
+	_, err = g.CreatePullRequest(context.Background(), repo, repo, scm.NewPullRequest{Head: "unknown-feature"})
 	require.Error(t, err)
 }
 
@@ -209,7 +209,7 @@ func TestUpdatePullRequest(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
-				return getChangesForQuery(opt.QueryOptions.Query[0])
+				return getChangesForQuery(opt.Query[0])
 			},
 		},
 	}
@@ -217,9 +217,9 @@ func TestUpdatePullRequest(t *testing.T) {
 	pr, err := g.UpdatePullRequest(context.Background(), repo, change{}, scm.NewPullRequest{Head: "feature"})
 	require.NoError(t, err)
 	require.NotNil(t, pr)
-	assert.Equal(t, "I123", pr.(change).changeId)
+	assert.Equal(t, "I123", pr.(change).changeID)
 
-	pr, err = g.UpdatePullRequest(context.Background(), repo, change{}, scm.NewPullRequest{Head: "unknown-feature"})
+	_, err = g.UpdatePullRequest(context.Background(), repo, change{}, scm.NewPullRequest{Head: "unknown-feature"})
 	require.Error(t, err)
 }
 
@@ -251,7 +251,7 @@ func TestFeatureBranchExist(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
-				return getChangesForQuery(opt.QueryOptions.Query[0])
+				return getChangesForQuery(opt.Query[0])
 			},
 		},
 	}
@@ -278,7 +278,7 @@ func TestEnhanceCommit(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
-				return getChangesForQuery(opt.QueryOptions.Query[0])
+				return getChangesForQuery(opt.Query[0])
 			},
 		},
 	}
@@ -286,7 +286,7 @@ func TestEnhanceCommit(t *testing.T) {
 	tests := []struct {
 		branchName    string
 		expectedErr   bool
-		changeIdRegex string
+		changeIDRegex string
 	}{
 		{"feature", false, "I123"},
 		{"new-feature", false, "I[0-9a-f]{40}"},
@@ -303,7 +303,7 @@ func TestEnhanceCommit(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				assert.Regexp(t, regexp.MustCompile(
-					"dummy commit message\n\nMultiGitter-Branch: "+test.branchName+"\nChange-Id: "+test.changeIdRegex), msg)
+					"dummy commit message\n\nMultiGitter-Branch: "+test.branchName+"\nChange-Id: "+test.changeIDRegex), msg)
 			}
 		})
 	}
@@ -312,7 +312,7 @@ func TestEnhanceCommit(t *testing.T) {
 func TestMergePullRequest(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
-			SubmitChangeFunc: func(_ context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
+			SubmitChangeFunc: func(_ context.Context, changeID string, _ *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
 				// Ensure correct id is used when a change is submitted
 				require.Equal(t, "repo-active~master~Icc717a31a47beb9b5d9aeb8a1d374883afe89030", changeID)
 				return &gogerrit.ChangeInfo{}, nil, nil
@@ -323,7 +323,7 @@ func TestMergePullRequest(t *testing.T) {
 		id:       "repo-active~master~Icc717a31a47beb9b5d9aeb8a1d374883afe89030",
 		project:  "repo-active",
 		branch:   "master",
-		changeId: "Icc717a31a47beb9b5d9aeb8a1d374883afe89030",
+		changeID: "Icc717a31a47beb9b5d9aeb8a1d374883afe89030",
 	}
 	err := g.MergePullRequest(context.Background(), pr)
 	require.NoError(t, err)
@@ -332,7 +332,7 @@ func TestMergePullRequest(t *testing.T) {
 func TestClosePullRequest(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
-			AbandonChangeFunc: func(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
+			AbandonChangeFunc: func(_ context.Context, changeID string, _ *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
 				// Ensure correct id is used when a change is abandoned
 				require.Equal(t, "repo-active~master~Icc717a31a47beb9b5d9aeb8a1d374883afe89030", changeID)
 				return &gogerrit.ChangeInfo{}, nil, nil
@@ -343,7 +343,7 @@ func TestClosePullRequest(t *testing.T) {
 		id:       "repo-active~master~Icc717a31a47beb9b5d9aeb8a1d374883afe89030",
 		project:  "repo-active",
 		branch:   "master",
-		changeId: "Icc717a31a47beb9b5d9aeb8a1d374883afe89030",
+		changeID: "Icc717a31a47beb9b5d9aeb8a1d374883afe89030",
 	}
 	err := g.ClosePullRequest(context.Background(), pr)
 	require.NoError(t, err)

@@ -2,7 +2,7 @@ package gerrit
 
 import (
 	"context"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec
 	"encoding/hex"
 	"maps"
 	"net/url"
@@ -19,11 +19,11 @@ import (
 )
 
 const FooterBranch = "MultiGitter-Branch"
-const FooterChangeId = "Change-Id"
+const FooterChangeID = "Change-Id"
 
 type Gerrit struct {
 	client     GoGerritClient
-	baseUrl    string
+	baseURL    string
 	username   string
 	token      string
 	repoSearch string
@@ -42,7 +42,7 @@ func New(username, token, baseURL, repoSearch string) (*Gerrit, error) {
 		client: goGerritClient{
 			client: client,
 		},
-		baseUrl:    baseURL,
+		baseURL:    baseURL,
 		username:   username,
 		token:      token,
 		repoSearch: repoSearch,
@@ -84,22 +84,22 @@ func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 
 func (g Gerrit) convertRepo(name string) (repository, error) {
 	// Note: maybe we should support cloning via ssh
-	u, err := url.Parse(g.baseUrl)
+	u, err := url.Parse(g.baseURL)
 	if err != nil {
 		return repository{}, err
 	}
 	u.User = url.UserPassword(g.username, g.token)
 	u.Path = "/a/" + name
-	repoUrl := u.String()
+	repoURL := u.String()
 
 	return repository{
-		url:           repoUrl,
+		url:           repoURL,
 		name:          name,
 		defaultBranch: "master", // Some projects might have a different default branch
 	}, nil
 }
 
-func (g Gerrit) CreatePullRequest(ctx context.Context, repo scm.Repository, prRepo scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
+func (g Gerrit) CreatePullRequest(ctx context.Context, repo scm.Repository, _ scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	// In Gerrit context, pushing a commit to refs/for/<base_branch> is enough to create automatically a change.
 	// So here, we are just "fetching" the change related to current branch (Head of PR)
 	// Not yet implemented: reviewers, team reviewers, assignees, draft, labels
@@ -107,7 +107,7 @@ func (g Gerrit) CreatePullRequest(ctx context.Context, repo scm.Repository, prRe
 	return g.getChange(ctx, repo, newPR.Head)
 }
 
-func (g Gerrit) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
+func (g Gerrit) UpdatePullRequest(ctx context.Context, repo scm.Repository, _ scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
 	// In Gerrit context, pushing a commit to refs/for/<base_branch> is enough to create automatically a change.
 	// So here, we are just "fetching" the change related
 	// Not yet implemented: reviewers, team reviewers, assignees, draft, labels
@@ -128,7 +128,7 @@ func (g Gerrit) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 			return nil, err
 		}
 		for _, change := range *changes {
-			prs = append(prs, convertChange(change, g.baseUrl))
+			prs = append(prs, convertChange(change, g.baseURL))
 		}
 	}
 
@@ -149,7 +149,7 @@ func (g Gerrit) GetOpenPullRequest(ctx context.Context, repo scm.Repository, bra
 		return nil, errors.New("More than one open change for branch " + branchName + " in project " + repo.FullName())
 	}
 
-	return convertChange((*changes)[0], g.baseUrl), nil
+	return convertChange((*changes)[0], g.baseURL), nil
 }
 
 func (g Gerrit) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
@@ -170,7 +170,7 @@ func (g Gerrit) ClosePullRequest(ctx context.Context, pr scm.PullRequest) error 
 	return nil
 }
 
-func (Gerrit) ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error) {
+func (Gerrit) ForkRepository(_ context.Context, _ scm.Repository, _ string) (scm.Repository, error) {
 	return nil, errors.New("Forking repositories is not supported in Gerrit")
 }
 
@@ -214,15 +214,15 @@ func (g Gerrit) EnhanceCommit(ctx context.Context, repo scm.Repository, branchNa
 		return commitMessage, err
 	}
 
-	changeId := ""
+	changeID := ""
 	if pr != nil {
-		changeId = pr.(change).changeId
+		changeID = pr.(change).changeID
 	} else {
-		changeId = generateChangeId(commitMessage)
+		changeID = generateChangeID(commitMessage)
 	}
 	message := commitMessage
 	message = message + "\n\n" + FooterBranch + ": " + branchName
-	message = message + "\n" + FooterChangeId + ": " + changeId
+	message = message + "\n" + FooterChangeID + ": " + changeID
 	return message, nil
 }
 
@@ -238,8 +238,8 @@ func (g Gerrit) RemoteReference(baseBranch string, featureBranch string, skipPul
 	return "refs/heads/" + featureBranch
 }
 
-func generateChangeId(commitMessage string) string {
-	h := sha1.New()
+func generateChangeID(commitMessage string) string {
+	h := sha1.New() // #nosec
 	hostname, _ := os.Hostname()
 	whoami, _ := user.Current()
 	h.Write([]byte(hostname))

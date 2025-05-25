@@ -15,7 +15,7 @@ type change struct {
 	project  string
 	branch   string
 	number   int
-	changeId string
+	changeID string
 	status   scm.PullRequestStatus
 	webURL   string
 }
@@ -32,7 +32,7 @@ func (r change) URL() string {
 	return r.webURL
 }
 
-func convertChange(changeInfo gogerrit.ChangeInfo, baseUrl string) scm.PullRequest {
+func convertChange(changeInfo gogerrit.ChangeInfo, baseURL string) scm.PullRequest {
 	status := scm.PullRequestStatusUnknown
 
 	if changeInfo.Submittable {
@@ -53,8 +53,8 @@ func convertChange(changeInfo gogerrit.ChangeInfo, baseUrl string) scm.PullReque
 		project:  changeInfo.Project,
 		branch:   changeInfo.Branch,
 		number:   changeInfo.Number,
-		changeId: changeInfo.ChangeID,
+		changeID: changeInfo.ChangeID,
 		status:   status,
-		webURL:   strings.Join([]string{baseUrl, "c", changeInfo.Project, "+", strconv.Itoa(changeInfo.Number)}, "/"),
+		webURL:   strings.Join([]string{baseURL, "c", changeInfo.Project, "+", strconv.Itoa(changeInfo.Number)}, "/"),
 	}
 }
