@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.57.2](https://github.com/lindell/multi-gitter/compare/v0.57.1...v0.57.2) (2025-06-03)
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 7e4ce0a ([22c7249](https://github.com/lindell/multi-gitter/commit/22c72494677bdb40917fcb72d9d433c84d295042))
+* update module code.gitea.io/sdk/gitea to v0.21.0 ([3aedbec](https://github.com/lindell/multi-gitter/commit/3aedbeca95611058d9d3d87668703ef7514af6e1))
+* update module github.com/go-git/go-git/v5 to v5.16.0 ([b38f4be](https://github.com/lindell/multi-gitter/commit/b38f4be11de057ca208326ea9e823aa3fb0bfaaa))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.83 ([facc560](https://github.com/lindell/multi-gitter/commit/facc560bc4f16c149dc46ffabc52cbc18579fff2))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.85 ([d6feff2](https://github.com/lindell/multi-gitter/commit/d6feff20c009fd5b78cade9d6d44bc9e98934537))
+* update module golang.org/x/oauth2 to v0.29.0 ([ced70f4](https://github.com/lindell/multi-gitter/commit/ced70f457a6a71f64f5eab4062d70070bcc0adaa))
+* update module golang.org/x/oauth2 to v0.30.0 ([7e1084a](https://github.com/lindell/multi-gitter/commit/7e1084aab2cc0035103f008b9ffb123b5b1ffdca))
+
 ## [0.57.1](https://github.com/lindell/multi-gitter/compare/v0.57.0...v0.57.1) (2025-04-23)
 
 
