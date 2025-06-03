@@ -35,6 +35,18 @@ type VersionController interface {
 	ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error)
 }
 
+type VersionControllerEnhanceCommit interface {
+	EnhanceCommit(ctx context.Context, repo scm.Repository, branchName string, commitMessage string) (string, error)
+}
+
+type VersionControllerFeatureBranchExist interface {
+	FeatureBranchExist(ctx context.Context, repo scm.Repository, branchName string) (bool, error)
+}
+
+type VersionControllerRemoteReference interface {
+	RemoteReference(baseBranch string, featureBranch string, skipPullRequest bool, pushOnly bool) string
+}
+
 // Runner contains fields to be able to do the run
 type Runner struct {
 	VersionController VersionController
@@ -285,7 +297,8 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errNoChange
 	}
 
-	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
+	commitMessage := r.enhanceCommitMessage(ctx, repo)
+	err = sourceController.Commit(r.CommitAuthor, commitMessage)
 	if err != nil {
 		return nil, err
 	}
@@ -324,7 +337,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	// Determine if a branch already exists and (depending on the conflict strategy) skip making changes
 	featureBranchExist := false
 	if !r.SkipPullRequest && !r.PushOnly {
-		featureBranchExist, err = sourceController.BranchExist(remoteName, r.FeatureBranch)
+		featureBranchExist, err = r.featureBranchExist(ctx, repo, remoteName, sourceController)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exists")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
@@ -341,7 +354,8 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
 
 	if !r.APIPush {
-		err = sourceController.Push(ctx, remoteName, forcePush)
+		remoteReference := r.remoteReference(baseBranch, r.FeatureBranch)
+		err = sourceController.Push(ctx, remoteName, remoteReference, forcePush)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not push changes")
 		}
@@ -370,6 +384,31 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	}
 
 	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+}
+
+func (r *Runner) enhanceCommitMessage(ctx context.Context, repo scm.Repository) string {
+	vcs, ok := r.VersionController.(VersionControllerEnhanceCommit)
+	if ok {
+		commitMessage, _ := vcs.EnhanceCommit(ctx, repo, r.FeatureBranch, r.CommitMessage)
+		return commitMessage
+	}
+	return r.CommitMessage
+}
+
+func (r *Runner) featureBranchExist(ctx context.Context, repo scm.Repository, remoteName string, sourceController Git) (bool, error) {
+	vcs, ok := r.VersionController.(VersionControllerFeatureBranchExist)
+	if ok {
+		return vcs.FeatureBranchExist(ctx, repo, r.FeatureBranch)
+	}
+	return sourceController.BranchExist(remoteName, r.FeatureBranch)
+}
+
+func (r *Runner) remoteReference(baseBranch string, featureBranch string) string {
+	vcs, ok := r.VersionController.(VersionControllerRemoteReference)
+	if ok {
+		return vcs.RemoteReference(baseBranch, featureBranch, r.SkipPullRequest, r.PushOnly)
+	}
+	return ""
 }
 
 func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogger, repo scm.Repository, prRepo scm.Repository, baseBranch string, featureBranchExist bool) (scm.PullRequest, error) {
