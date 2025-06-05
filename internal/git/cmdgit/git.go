@@ -15,8 +15,9 @@ import (
 
 // Git is an implementation of git that executes git as commands
 type Git struct {
-	Directory  string // The (temporary) directory that should be worked within
-	FetchDepth int    // Limit fetching to the specified number of commits
+	Directory            string // The (temporary) directory that should be worked within
+	FetchDepth           int    // Limit fetching to the specified number of commits
+	ExtraCommitArguments []string
 }
 
 var errRe = regexp.MustCompile(`(^|\n)(error|fatal): (.+)`)
@@ -90,7 +91,10 @@ func (g *Git) Commit(commitAuthor *git.CommitAuthor, commitMessage string) error
 		return err
 	}
 
-	cmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
+	args := []string{"commit", "--no-verify", "-m", commitMessage}
+	args = append(args, g.ExtraCommitArguments...)
+
+	cmd = exec.Command("git", args...)
 
 	if commitAuthor != nil {
 		cmd.Env = append(cmd.Env,
