@@ -235,8 +235,6 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 	bbcRepo := repo.(repository)
 
 	// Query for open pull requests on the specific branch
-	// The bitbucket API uses `source.branch.name="<branchName>"` in the q parameter for filtering.
-	// The go-bitbucket library uses the States field for filtering by PR state.
 	queryString := fmt.Sprintf("source.branch.name = \"%s\"", branchName)
 	prs, err := bbc.bbClient.Repositories.PullRequests.Gets(&bitbucket.PullRequestsOptions{
 		Owner:    bbc.workspaces[0],
@@ -249,7 +247,6 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 	}
 
 	// The Gets method returns a struct that contains a list of pull requests.
-	// We need to iterate through these, though with the query, it should ideally be 0 or 1.
 	prBytes, err := json.Marshal(prs)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal pull requests response")
@@ -262,10 +259,10 @@ func (bbc *BitbucketCloud) GetOpenPullRequest(ctx context.Context, repo scm.Repo
 
 	for _, pr := range bbPullRequests.Values {
 		// The API query should be precise, but we can double-check here if necessary.
-		// if pr.Source.Branch.Name == branchName && pr.State == "OPEN" {
-		convertedPR := bbc.convertPullRequest(bbc.workspaces[0], bbcRepo.name, &pr)
-		return convertedPR, nil
-		// }
+		if pr.Source.Branch.Name == branchName && pr.State == "OPEN" {
+			convertedPR := bbc.convertPullRequest(bbc.workspaces[0], bbcRepo.name, &pr)
+			return convertedPR, nil
+		}
 	}
 
 	return nil, nil // No open pull request found for the branch
@@ -321,7 +318,7 @@ func (bbc *BitbucketCloud) GetRepositories(_ context.Context) ([]scm.Repository,
 
 	// Otherwise, fetch all repositories in the workspace
 	repoOptions := &bitbucket.RepositoriesOptions{
-		Role:  "member", // Role filter is important for accessibility
+		Role:  "member",
 		Owner: bbc.workspaces[0],
 	}
 
