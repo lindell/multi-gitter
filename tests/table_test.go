@@ -3,7 +3,6 @@ package tests
 import (
 	"bytes"
 	"fmt"
-	"github.com/lindell/multi-gitter/internal/multigitter"
 	"io"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 	"time"
 
 	"github.com/lindell/multi-gitter/cmd"
+	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 
