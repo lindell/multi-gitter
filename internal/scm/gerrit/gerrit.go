@@ -5,6 +5,7 @@ import (
 	"crypto/sha1" // #nosec
 	"encoding/hex"
 	"maps"
+	"net/http"
 	"net/url"
 	"os"
 	"os/user"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	gogerrit "github.com/andygrunwald/go-gerrit"
+	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -31,7 +33,9 @@ type Gerrit struct {
 
 func New(username, token, baseURL, repoSearch string) (*Gerrit, error) {
 	ctx := context.Background()
-	client, err := gogerrit.NewClient(ctx, baseURL, nil)
+	client, err := gogerrit.NewClient(ctx, baseURL, &http.Client{
+		Transport: internalHTTP.LoggingRoundTripper{},
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create gerrit client")
 	}
@@ -221,8 +225,8 @@ func (g Gerrit) EnhanceCommit(ctx context.Context, repo scm.Repository, branchNa
 		changeID = generateChangeID(commitMessage)
 	}
 	message := commitMessage
-	message = message + "\n\n" + FooterBranch + ": " + branchName
-	message = message + "\n" + FooterChangeID + ": " + changeID
+	message += "\n\n" + FooterBranch + ": " + branchName
+	message += "\n" + FooterChangeID + ": " + changeID
 	return message, nil
 }
 

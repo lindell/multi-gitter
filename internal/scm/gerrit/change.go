@@ -2,9 +2,6 @@ package gerrit
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/lindell/multi-gitter/internal/scm"
 
 	gogerrit "github.com/andygrunwald/go-gerrit"
@@ -55,6 +52,6 @@ func convertChange(changeInfo gogerrit.ChangeInfo, baseURL string) scm.PullReque
 		number:   changeInfo.Number,
 		changeID: changeInfo.ChangeID,
 		status:   status,
-		webURL:   strings.Join([]string{baseURL, "c", changeInfo.Project, "+", strconv.Itoa(changeInfo.Number)}, "/"),
+		webURL:   fmt.Sprintf("%s/c/%s/+/%d", baseURL, changeInfo.Project, changeInfo.Number),
 	}
 }
