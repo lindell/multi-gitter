@@ -178,3 +178,18 @@ func fileExist(t *testing.T, basePath string, fn string) bool {
 func normalizePath(path string) string {
 	return strings.ReplaceAll(filepath.ToSlash(path), " ", "\\ ")
 }
+
+func getCommitMessage(t *testing.T, path string, referenceName string) (string, error) {
+	repo, err := git.PlainOpen(path)
+	assert.NoError(t, err)
+
+	reference, err := repo.Reference(plumbing.ReferenceName(referenceName), false)
+	if err != nil {
+		return "", err
+	}
+
+	commit, err := repo.CommitObject(reference.Hash())
+	assert.NoError(t, err)
+
+	return commit.Message, nil
+}

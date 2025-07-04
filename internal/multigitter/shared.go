@@ -32,7 +32,7 @@ type Git interface {
 	Changes() (bool, error)
 	Commit(commitAuthor *git.CommitAuthor, commitMessage string) error
 	BranchExist(remoteName, branchName string) (bool, error)
-	Push(ctx context.Context, remoteName string, force bool) error
+	Push(ctx context.Context, remoteName, remoteReference string, force bool) error
 	AddRemote(name, url string) error
 }
 
