@@ -43,19 +43,18 @@ var projects = &map[string]gogerrit.ProjectInfo{
 
 func getChangesForQuery(query string) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
 	var data = map[string][]gogerrit.ChangeInfo{
-		"project:repo-active+footer:MultiGitter-Branch=feature+is:open": {
+		"footer:MultiGitter-Branch=feature+project:repo-active+is:open": {
 			{Project: "repo-active", ChangeID: "I123", Branch: "feature", Number: 1000, Status: "NEW"},
 		},
-		"project:repo-active+footer:MultiGitter-Branch=feature": {
+		"footer:MultiGitter-Branch=feature": {
 			{Project: "repo-active", ChangeID: "I123", Branch: "feature", Number: 1000, Status: "NEW"},
 			{Project: "repo-active", ChangeID: "I000", Branch: "feature", Number: 1001, Status: "ABANDONED"},
 			{Project: "repo-active", ChangeID: "I644", Branch: "feature", Number: 1002, Submittable: true},
-		},
-		"project:another-repo-active+footer:MultiGitter-Branch=feature+is:open": {},
-		"project:another-repo-active+footer:MultiGitter-Branch=feature": {
 			{Project: "another-repo-active", ChangeID: "I666", Branch: "feature", Number: 1003, Status: "MERGED"},
+			{Project: "name-that-do-not-match", ChangeID: "I000", Branch: "feature", Number: 1004, Submittable: true},
 		},
-		"project:read-only+footer:MultiGitter-Branch=feature+is:open": {
+		"footer:MultiGitter-Branch=feature+project:another-repo-active+is:open": {},
+		"footer:MultiGitter-Branch=feature+project:read-only+is:open": {
 			{Project: "read-only", ChangeID: "I456", Branch: "feature", Number: 1004, Status: "NEW"},
 			{Project: "read-only", ChangeID: "I789", Branch: "feature", Number: 1004, Status: "NEW"},
 		},
