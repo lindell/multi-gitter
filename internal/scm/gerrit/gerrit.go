@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 
 const FooterBranch = "MultiGitter-Branch"
 const FooterChangeID = "Change-Id"
+const QueryChangesLimit = 100
 
 type Gerrit struct {
 	client     GoGerritClient
@@ -125,24 +127,47 @@ func (g Gerrit) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 		return nil, err
 	}
 
+	// Build a map of repository names to fast search if a change belongs to a repository
+	projectNames := make(map[string]struct{}, len(repositories))
+	for _, s := range repositories {
+		projectNames[s.(repository).name] = struct{}{}
+	}
+
 	var prs []scm.PullRequest
-	for _, repo := range repositories {
-		changes, err := g.queryChanges(ctx, repo, branchName, []string{})
+	var start int
+	for {
+		// Query all changes related to the branch name to avoid one query per repository
+		changes, err := g.queryChanges(ctx, branchName, []string{}, start, QueryChangesLimit)
 		if err != nil {
 			return nil, err
 		}
+
+		moreChanges := false
 		for _, change := range *changes {
-			prs = append(prs, convertChange(change, g.baseURL))
+			if _, ok := projectNames[change.Project]; ok {
+				prs = append(prs, convertChange(change, g.baseURL))
+			}
+			moreChanges = change.MoreChanges
 		}
+
+		if !moreChanges {
+			break
+		}
+		start += QueryChangesLimit
 	}
 
+	// Keep consistent order of PRs
+	sort.Slice(prs, func(i, j int) bool {
+		return prs[i].(change).project < prs[j].(change).project
+	})
 	return prs, err
 }
 
 func (g Gerrit) GetOpenPullRequest(ctx context.Context, repo scm.Repository, branchName string) (scm.PullRequest, error) {
-	changes, err := g.queryChanges(ctx, repo, branchName, []string{
+	changes, err := g.queryChanges(ctx, branchName, []string{
+		"project:" + repo.FullName(),
 		"is:open",
-	})
+	}, 0, 5) // Limit to few changes, since we only care about the first one
 	if err != nil {
 		return nil, err
 	}
@@ -188,9 +213,8 @@ func (g Gerrit) getChange(ctx context.Context, repo scm.Repository, branchName s
 	return pr, nil
 }
 
-func (g Gerrit) queryChanges(ctx context.Context, repo scm.Repository, branchName string, filters []string) (*[]gogerrit.ChangeInfo, error) {
+func (g Gerrit) queryChanges(ctx context.Context, branchName string, filters []string, start int, limit int) (*[]gogerrit.ChangeInfo, error) {
 	defaultFilters := []string{
-		"project:" + repo.FullName(),
 		"footer:" + FooterBranch + "=" + branchName,
 	}
 	query := strings.Join(append(defaultFilters, filters...), "+")
@@ -198,6 +222,8 @@ func (g Gerrit) queryChanges(ctx context.Context, repo scm.Repository, branchNam
 	opt := &gogerrit.QueryChangeOptions{
 		QueryOptions: gogerrit.QueryOptions{
 			Query: []string{query},
+			Start: start,
+			Limit: limit,
 		},
 		ChangeOptions: gogerrit.ChangeOptions{
 			AdditionalFields: []string{
