@@ -49,6 +49,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
 	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
+	cmd.Flags().BoolP("manual-commit", "", false, "Don't automatically commit changes. The script must commit the changes itself. Multiple commits are allowed.")
 	cmd.Flags().BoolP("api-push", "", false, `Push changes through the API instead of git. Only supported for GitHub.
 It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.`)
 	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
@@ -94,6 +95,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	pushOnly, _ := flag.GetBool("push-only")
+	manualCommit, _ := flag.GetBool("manual-commit")
 	apiPush, _ := flag.GetBool("api-push")
 	skipRepository, _ := flag.GetStringSlice("skip-repo")
 	interactive, _ := flag.GetBool("interactive")
@@ -124,7 +126,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Set commit message based on pr title and body or the reverse
-	if commitMessage == "" && prTitle == "" {
+	if commitMessage == "" && prTitle == "" && !manualCommit {
 		return errors.New("pull request title or commit message must be set")
 	} else if commitMessage == "" {
 		commitMessage = prTitle
@@ -257,6 +259,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		SkipPullRequest:        skipPullRequest,
 		PushOnly:               pushOnly,
 		APIPush:                apiPush,
+		ManualCommit:           manualCommit,
 		SkipRepository:         skipRepository,
 		CommitAuthor:           commitAuthor,
 		BaseBranch:             baseBranchName,

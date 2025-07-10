@@ -11,8 +11,7 @@ type ChangePusher interface {
 	Push(
 		ctx context.Context,
 		repo Repository,
-		commitMessage string,
-		change git.Changes,
+		change []git.Changes,
 		featureBranch string,
 		branchExist bool,
 		forcePush bool,

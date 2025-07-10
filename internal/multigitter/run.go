@@ -62,6 +62,7 @@ type Runner struct {
 	PushOnly               bool     // If set, the script will only publish the feature branch without creating a PR
 	SkipRepository         []string // A list of repositories that run will skip
 	APIPush                bool     // Use the SCM API to commit and push the changes instead of git
+	ManualCommit           bool     // If set, multi-gitter will not commit the changes left by the script.
 	RegExIncludeRepository *regexp.Regexp
 	RegExExcludeRepository *regexp.Regexp
 
@@ -263,6 +264,11 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
+	commitHashBeforeRun, err := sourceController.LatestCommitHash()
+	if err != nil {
+		return nil, err
+	}
+
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
 	if r.DryRun {
 		cmd.Env = append(cmd.Env, "DRY_RUN=true")
@@ -279,19 +285,30 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, transformExecError(err)
 	}
 
-	if changed, err := sourceController.Changes(); err != nil {
-		return nil, err
-	} else if !changed {
-		return nil, errNoChange
-	}
+	if !r.ManualCommit {
+		if changed, err := sourceController.Changes(); err != nil {
+			return nil, err
+		} else if !changed {
+			return nil, errNoChange
+		}
 
-	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
-	if err != nil {
-		return nil, err
+		err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		commitHashAfterRun, err := sourceController.LatestCommitHash()
+		if err != nil {
+			return nil, err
+		}
+
+		if commitHashBeforeRun == commitHashAfterRun {
+			return nil, errNoChange
+		}
 	}
 
 	if r.Interactive {
-		err = r.interactive(tmpDir, repo)
+		err = r.interactive(tmpDir, repo, commitHashBeforeRun)
 		if err != nil {
 			return nil, err
 		}
@@ -346,18 +363,19 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			return nil, errors.Wrap(err, "could not push changes")
 		}
 	} else {
-		commitChecker, hasCommitChecker := sourceController.(git.LastCommitChecker)
+		commitChecker, hasCommitChecker := sourceController.(git.ChangeFetcher)
 		changePusher, hasChangePusher := r.VersionController.(scm.ChangePusher)
 		if !hasCommitChecker || !hasChangePusher {
 			return nil, errors.New("the scm implementation does not support committing through the API")
 		}
 
-		changes, err := commitChecker.LastCommitChanges()
+		// Todo: Change to ChangesSince(commitBeforeRun)
+		changes, err := commitChecker.CommitChanges(commitHashBeforeRun)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not get diff")
 		}
 
-		err = changePusher.Push(ctx, repo, r.CommitMessage, changes, r.FeatureBranch, featureBranchExist, forcePush)
+		err = changePusher.Push(ctx, repo, changes, r.FeatureBranch, featureBranchExist, forcePush)
 		if err != nil {
 			return nil, err
 		}
@@ -422,7 +440,7 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(dir string, repo scm.Repository) error {
+func (r *Runner) interactive(dir string, repo scm.Repository, oldCommitHash string) error {
 	fmt.Fprintf(os.Stderr, "Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Fprintln(os.Stderr, interactiveInfo)
 	for {
@@ -444,7 +462,7 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 		switch unicode.ToLower(char) {
 		case 'v':
 			fmt.Fprintln(os.Stderr, "Showing changes...")
-			cmd := exec.Command("git", "diff", "HEAD~1")
+			cmd := exec.Command("git", "diff", oldCommitHash)
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
