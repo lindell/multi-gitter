@@ -205,10 +205,23 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
+func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool) error {
+	var refSpecs []config.RefSpec
+
+	if remoteReference != "" {
+		// go-git doesn't support refSpec like HEAD:<name>, so first we need to resolve SHA1 commit related to HEAD
+		head, err := g.repo.Head()
+		if err != nil {
+			return errors.Wrap(err, "Unable to get HEAD")
+		}
+		refSpecs = []config.RefSpec{
+			config.RefSpec(head.Hash().String() + ":" + remoteReference),
+		}
+	}
 	return g.repo.PushContext(ctx, &git.PushOptions{
 		RemoteName: remoteName,
 		Force:      force,
+		RefSpecs:   refSpecs,
 	})
 }
 
