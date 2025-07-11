@@ -143,7 +143,7 @@ func (g Gerrit) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 		}
 
 		moreChanges := false
-		for _, change := range *changes {
+		for _, change := range changes {
 			if _, ok := projectNames[change.Project]; ok {
 				prs = append(prs, convertChange(change, g.baseURL))
 			}
@@ -172,13 +172,13 @@ func (g Gerrit) GetOpenPullRequest(ctx context.Context, repo scm.Repository, bra
 		return nil, err
 	}
 
-	if len(*changes) == 0 {
+	if len(changes) == 0 {
 		return nil, nil
-	} else if len(*changes) > 1 {
+	} else if len(changes) > 1 {
 		return nil, errors.New("More than one open change for branch " + branchName + " in project " + repo.FullName())
 	}
 
-	return convertChange((*changes)[0], g.baseURL), nil
+	return convertChange(changes[0], g.baseURL), nil
 }
 
 func (g Gerrit) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
@@ -213,7 +213,7 @@ func (g Gerrit) getChange(ctx context.Context, repo scm.Repository, branchName s
 	return pr, nil
 }
 
-func (g Gerrit) queryChanges(ctx context.Context, branchName string, filters []string, start int, limit int) (*[]gogerrit.ChangeInfo, error) {
+func (g Gerrit) queryChanges(ctx context.Context, branchName string, filters []string, start int, limit int) ([]gogerrit.ChangeInfo, error) {
 	defaultFilters := []string{
 		"footer:" + FooterBranch + "=" + branchName,
 	}
@@ -235,7 +235,7 @@ func (g Gerrit) queryChanges(ctx context.Context, branchName string, filters []s
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to query changes: '%s'", filters)
 	}
-	return changes, nil
+	return *changes, nil
 }
 
 func (g Gerrit) EnhanceCommit(ctx context.Context, repo scm.Repository, branchName string, commitMessage string) (string, error) {
