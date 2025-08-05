@@ -4,13 +4,12 @@ import (
 	"context"
 	"crypto/sha1" // #nosec
 	"encoding/hex"
-	"maps"
 	"net/http"
 	"net/url"
 	"os"
 	"os/user"
-	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,12 +17,12 @@ import (
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 )
 
 const FooterBranch = "MultiGitter-Branch"
 const FooterChangeID = "Change-Id"
 const QueryChangesLimit = 100
+const QueryProjectsLimit = 100
 
 type Gerrit struct {
 	client     GoGerritClient
@@ -56,35 +55,50 @@ func New(username, token, baseURL, repoSearch string) (*Gerrit, error) {
 }
 
 func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
-	opt := &gogerrit.ProjectOptions{
-		Description: true,
-		Regex:       g.repoSearch,
-		Type:        "CODE",
-		ProjectBaseOptions: gogerrit.ProjectBaseOptions{
-			Limit: 2500, // Maybe we should make this configurable
-		},
-	}
-	projects, _, err := g.client.ListProjects(ctx, opt)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to list projects")
-	}
-
 	repos := make([]scm.Repository, 0)
-	for _, name := range slices.Sorted(maps.Keys(*projects)) {
-		project := (*projects)[name]
-		if project.State != "ACTIVE" {
-			log.Debug("Skipping repository since state is not ACTIVE")
-			continue
+	skip := 0
+	for {
+		opt := &gogerrit.ProjectOptions{
+			Description: true,
+			Regex:       g.repoSearch,
+			Type:        "CODE",
+			Skip:        strconv.Itoa(skip),
+			ProjectBaseOptions: gogerrit.ProjectBaseOptions{
+				Limit: QueryProjectsLimit,
+			},
 		}
-
-		repo, err := g.convertRepo(name)
+		projects, _, err := g.client.ListProjects(ctx, opt)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to list projects")
 		}
 
-		repos = append(repos, repo)
+		moreProjects := false
+		for name, project := range *projects {
+			if project.State == "ACTIVE" {
+				repo, err := g.convertRepo(name)
+				if err != nil {
+					return nil, err
+				}
+
+				repos = append(repos, repo)
+			}
+			// Because projects is a map, Golang iteration do not guarantee order of projects.
+			// So we cannot rely only on the last project to determine if there are more projects.
+			if project.MoreProjects {
+				moreProjects = true
+			}
+		}
+
+		if !moreProjects {
+			break
+		}
+		skip += QueryProjectsLimit
 	}
 
+	// Keep consistent order of repositories
+	sort.Slice(repos, func(i, j int) bool {
+		return repos[i].(repository).name < repos[j].(repository).name
+	})
 	return repos, nil
 }
 

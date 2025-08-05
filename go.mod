@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	code.gitea.io/sdk/gitea v0.21.0
-	github.com/andygrunwald/go-gerrit v1.0.0
+	github.com/andygrunwald/go-gerrit v1.1.0
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240917142304-df385efaac68
 	github.com/go-git/go-git/v5 v5.16.2
