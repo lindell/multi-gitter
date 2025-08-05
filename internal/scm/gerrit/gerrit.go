@@ -148,7 +148,7 @@ func (g Gerrit) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 	}
 
 	var prs []scm.PullRequest
-	var start int
+	start := 0
 	for {
 		// Query all changes related to the branch name to avoid one query per repository
 		changes, err := g.queryChanges(ctx, branchName, []string{}, start, QueryChangesLimit)
@@ -156,15 +156,14 @@ func (g Gerrit) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 			return nil, err
 		}
 
-		moreChanges := false
 		for _, change := range changes {
 			if _, ok := projectNames[change.Project]; ok {
 				prs = append(prs, convertChange(change, g.baseURL))
 			}
-			moreChanges = change.MoreChanges
 		}
 
-		if !moreChanges {
+		// The lastest change retuned by API indicates if there are more changes to fetch.
+		if !changes[len(changes)-1].MoreChanges {
 			break
 		}
 		start += QueryChangesLimit
