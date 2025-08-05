@@ -33,7 +33,7 @@ type Gerrit struct {
 }
 
 func New(username, token, baseURL, repoSearch string) (*Gerrit, error) {
-	ctx := context.Background()
+	ctx := context.Background() // cancellation won't happen in our case (only used by go-gerrit if you inject username and token directly within baseURL)
 	client, err := gogerrit.NewClient(ctx, baseURL, &http.Client{
 		Transport: internalHTTP.LoggingRoundTripper{},
 	})
