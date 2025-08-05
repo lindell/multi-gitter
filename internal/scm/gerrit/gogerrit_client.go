@@ -5,16 +5,18 @@ import (
 	"golang.org/x/net/context"
 )
 
-// GoGerritClient define Methods used by gerrit implementation, and facilitate unit testing with mock
+// The gogerrit.Client struct encapsulates sub-structs for each API endpoint.
+// Defining our own interface allows us to flatten the client structure
+// by exposing only the necessary methods, which simplifies mocking in tests.
+type goGerritClient struct {
+	client *gogerrit.Client
+}
+
 type GoGerritClient interface {
 	ListProjects(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error)
 	QueryChanges(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error)
 	AbandonChange(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
 	SubmitChange(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
-}
-
-type goGerritClient struct {
-	client *gogerrit.Client
 }
 
 func (ggc goGerritClient) ListProjects(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
