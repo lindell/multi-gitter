@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.58.0](https://github.com/lindell/multi-gitter/compare/v0.57.1...v0.58.0) (2025-08-07)
+
+
+### Features
+
+* new SCM: gerrit ([#565](https://github.com/lindell/multi-gitter/issues/565)) ([90939a7](https://github.com/lindell/multi-gitter/commit/90939a71c798f51ffccffffe00304a059119eff4))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 645b1fa ([b8cae5b](https://github.com/lindell/multi-gitter/commit/b8cae5b39fc08bf6fd2c5aed164061d72b0c214a))
+* update golang.org/x/exp digest to 7e4ce0a ([22c7249](https://github.com/lindell/multi-gitter/commit/22c72494677bdb40917fcb72d9d433c84d295042))
+* update golang.org/x/exp digest to b7579e2 ([f6d5351](https://github.com/lindell/multi-gitter/commit/f6d5351691ae1a3faa4de5d8b84b4b3a0b2d0e88))
+* update module code.gitea.io/sdk/gitea to v0.21.0 ([3aedbec](https://github.com/lindell/multi-gitter/commit/3aedbeca95611058d9d3d87668703ef7514af6e1))
+* update module github.com/go-git/go-git/v5 to v5.16.0 ([b38f4be](https://github.com/lindell/multi-gitter/commit/b38f4be11de057ca208326ea9e823aa3fb0bfaaa))
+* update module github.com/go-git/go-git/v5 to v5.16.2 ([eae99e4](https://github.com/lindell/multi-gitter/commit/eae99e43eaedff79b59524b036f20114713f42cc))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.83 ([facc560](https://github.com/lindell/multi-gitter/commit/facc560bc4f16c149dc46ffabc52cbc18579fff2))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.85 ([d6feff2](https://github.com/lindell/multi-gitter/commit/d6feff20c009fd5b78cade9d6d44bc9e98934537))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.86 ([06d1583](https://github.com/lindell/multi-gitter/commit/06d158380d74700a8d08aba8636ff6d4ab87bcc5))
+* update module github.com/spf13/pflag to v1.0.7 ([749a4e4](https://github.com/lindell/multi-gitter/commit/749a4e4fde294ff7b7fa2ea6be8913c1eea8b9f1))
+* update module golang.org/x/oauth2 to v0.29.0 ([ced70f4](https://github.com/lindell/multi-gitter/commit/ced70f457a6a71f64f5eab4062d70070bcc0adaa))
+* update module golang.org/x/oauth2 to v0.30.0 ([7e1084a](https://github.com/lindell/multi-gitter/commit/7e1084aab2cc0035103f008b9ffb123b5b1ffdca))
+
 ## [0.57.1](https://github.com/lindell/multi-gitter/compare/v0.57.0...v0.57.1) (2025-04-23)
 
 
