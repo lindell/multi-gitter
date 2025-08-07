@@ -55,40 +55,14 @@ func New(username, token, baseURL, repoSearch string) (*Gerrit, error) {
 }
 
 func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
-	repos := make([]scm.Repository, 0)
+	repositories := make([]scm.Repository, 0)
 	skip := 0
 	for {
-		opt := &gogerrit.ProjectOptions{
-			Description: true,
-			Regex:       g.repoSearch,
-			Type:        "CODE",
-			Skip:        strconv.Itoa(skip),
-			ProjectBaseOptions: gogerrit.ProjectBaseOptions{
-				Limit: QueryProjectsLimit,
-			},
-		}
-		projects, _, err := g.client.ListProjects(ctx, opt)
+		repos, moreProjects, err := g.getRepositoriesWithSkip(ctx, skip)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to list projects")
+			return nil, errors.Wrap(err, "failed to get repositories")
 		}
-
-		moreProjects := false
-		for name, project := range *projects {
-			if project.State == "ACTIVE" {
-				repo, err := g.convertRepo(name)
-				if err != nil {
-					return nil, err
-				}
-
-				repos = append(repos, repo)
-			}
-			// Because projects is a map, Golang iteration do not guarantee order of projects.
-			// So we cannot rely only on the last project to determine if there are more projects.
-			if project.MoreProjects {
-				moreProjects = true
-			}
-		}
-
+		repositories = append(repositories, repos...)
 		if !moreProjects {
 			break
 		}
@@ -96,10 +70,43 @@ func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	}
 
 	// Keep consistent order of repositories
-	sort.Slice(repos, func(i, j int) bool {
-		return repos[i].(repository).name < repos[j].(repository).name
+	sort.Slice(repositories, func(i, j int) bool {
+		return repositories[i].(repository).name < repositories[j].(repository).name
 	})
-	return repos, nil
+	return repositories, nil
+}
+
+func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (repositories []scm.Repository, moreProjects bool, err error) {
+	opt := &gogerrit.ProjectOptions{
+		Description: true,
+		Regex:       g.repoSearch,
+		Type:        "CODE",
+		Skip:        strconv.Itoa(skip),
+		ProjectBaseOptions: gogerrit.ProjectBaseOptions{
+			Limit: QueryProjectsLimit,
+		},
+	}
+	projects, _, err := g.client.ListProjects(ctx, opt)
+	if err != nil {
+		return nil, false, errors.Wrap(err, "failed to list projects")
+	}
+
+	for name, project := range *projects {
+		if project.State == "ACTIVE" {
+			repo, err := g.convertRepo(name)
+			if err != nil {
+				return nil, false, err
+			}
+
+			repositories = append(repositories, repo)
+		}
+		// Because projects is a map, Golang iteration do not guarantee order of projects.
+		// So we cannot rely only on the last project to determine if there are more projects.
+		if project.MoreProjects {
+			moreProjects = true
+		}
+	}
+	return repositories, moreProjects, nil
 }
 
 func (g Gerrit) convertRepo(name string) (repository, error) {
