@@ -16,6 +16,7 @@ type NewPullRequest struct {
 	TeamReviewers []string // Teams to assign as reviewers
 	Assignees     []string
 	Draft         bool
+	AutoMerge     bool
 	Labels        []string
 }
 

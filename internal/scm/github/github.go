@@ -1,7 +1,9 @@
 package github
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -444,6 +446,12 @@ func (g *Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		return nil, err
 	}
 
+	if newPR.AutoMerge {
+		if err := g.enableAutoMerge(ctx, r, pr); err != nil {
+			return nil, err
+		}
+	}
+
 	return convertPullRequest(pr), nil
 }
 
@@ -568,6 +576,36 @@ func (g *Github) setLabels(ctx context.Context, repo repository, newPR scm.NewPu
 	return nil
 }
 
+func (g *Github) enableAutoMerge(ctx context.Context, repo repository, pr *github.PullRequest) error {
+	// Use GraphQL API to enable auto-merge since the REST API doesn't have a direct endpoint
+	// GitHub GraphQL mutation: enablePullRequestAutoMerge
+	
+	query := `
+		mutation enableAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod!) {
+			enablePullRequestAutoMerge(input: {
+				pullRequestId: $pullRequestId,
+				mergeMethod: $mergeMethod
+			}) {
+				pullRequest {
+					id
+					autoMergeRequest {
+						enabledAt
+						mergeMethod
+					}
+				}
+			}
+		}`
+	
+	variables := map[string]interface{}{
+		"pullRequestId": pr.GetNodeID(),
+		"mergeMethod":   "MERGE", // Could be MERGE, SQUASH, or REBASE
+	}
+	
+	var result interface{} // We don't need to parse the result
+	
+	return g.makeGraphQLRequestWithRetry(ctx, query, variables, &result)
+}
+
 // UpdatePullRequest updates an existing pull request
 func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
 	r := repo.(repository)
@@ -597,6 +635,12 @@ func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pul
 
 	if err := g.setLabels(ctx, r, updatedPR, ghPR); err != nil {
 		return nil, err
+	}
+
+	if updatedPR.AutoMerge {
+		if err := g.enableAutoMerge(ctx, r, ghPR); err != nil {
+			return nil, err
+		}
 	}
 
 	return convertPullRequest(ghPR), nil
@@ -970,4 +1014,49 @@ func (g *Github) modLock() {
 func (g *Github) modUnlock() {
 	g.lastModRequest = time.Now()
 	g.modMutex.Unlock()
+}
+
+func (g *Github) makeCustomHTTPRequest(ctx context.Context, method, url string, reqBody interface{}, respBody interface{}) error {
+	var reqData []byte
+	var err error
+	
+	if reqBody != nil {
+		reqData, err = json.Marshal(reqBody)
+		if err != nil {
+			return errors.WithMessage(err, "could not marshal request body")
+		}
+	}
+	
+	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(reqData))
+	if err != nil {
+		return errors.WithMessage(err, "could not create HTTP request")
+	}
+	
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", g.token))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	
+	resp, err := g.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	
+	// Handle rate limiting
+	retryAfterErr := retryAfterFromHTTPResponse(resp)
+	if retryAfterErr != nil {
+		return retryAfterErr
+	}
+	
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
+	}
+	
+	if respBody != nil {
+		if err := json.NewDecoder(resp.Body).Decode(respBody); err != nil {
+			return errors.WithMessage(err, "could not read response body")
+		}
+	}
+	
+	return nil
 }
