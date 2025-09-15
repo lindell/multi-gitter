@@ -60,7 +60,7 @@ Available values:
   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
 `)
 	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
-	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests.")
+	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab).")
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
