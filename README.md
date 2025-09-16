@@ -52,19 +52,6 @@ You might want to test your changes before creating commits. The `--dry-run` fla
 $ multi-gitter run ./script.sh --dry-run --log-level=debug -O my-org -m "Commit message" -B branch-name
 ```
 
-### Auto-merge pull requests
-You can enable automatic merging of pull requests using the `--pr-auto-merge` flag. This will automatically merge pull requests when all required conditions are met.
-```bash
-# Enable auto-merge with default merge method
-$ multi-gitter run ./script.sh -O my-org -m "Commit message" -B branch-name --pr-auto-merge
-
-# Enable auto-merge with squash merge method (useful for repositories that don't allow merge commits)
-$ multi-gitter run ./script.sh -O my-org -m "Commit message" -B branch-name --pr-auto-merge --merge-type squash,rebase,merge
-
-# Enable auto-merge with rebase merge method
-$ multi-gitter run ./script.sh -O my-org -m "Commit message" -B branch-name --pr-auto-merge --merge-type rebase,squash,merge
-```
-
 ## Install
 
 ### Homebrew
@@ -229,15 +216,6 @@ pr-body:
 
 # The title of the PR. Will default to the first line of the commit message if none is set.
 pr-title:
-
-# Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab).
-pr-auto-merge: false
-
-# The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge.
-merge-type:
-  - merge
-  - squash
-  - rebase
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
 project:
@@ -724,12 +702,10 @@ Flags:
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
       --max-team-reviewers int     If this value is set, team reviewers will be randomized
-      --merge-type strings         The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge. (default [merge,squash,rebase])
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string              The file that the output of the script should be outputted to. "-" means stdout. (default "-")
       --plain-output               Don't use any terminal formatting when printing the output.
   -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
-      --pr-auto-merge              Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.
   -b, --pr-body string             The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string            The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
