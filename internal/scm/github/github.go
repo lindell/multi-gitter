@@ -445,7 +445,7 @@ func (g *Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 	}
 
 	if newPR.AutoMerge {
-		if err := g.enableAutoMerge(ctx, r, pr); err != nil {
+		if err := g.enableAutoMerge(ctx, r, pr, newPR.MergeMethod); err != nil {
 			return nil, err
 		}
 	}
@@ -574,9 +574,22 @@ func (g *Github) setLabels(ctx context.Context, repo repository, newPR scm.NewPu
 	return nil
 }
 
-func (g *Github) enableAutoMerge(ctx context.Context, repo repository, pr *github.PullRequest) error {
+func (g *Github) enableAutoMerge(ctx context.Context, repo repository, pr *github.PullRequest, mergeMethod string) error {
 	// Use GraphQL API to enable auto-merge since the REST API doesn't have a direct endpoint
 	// GitHub GraphQL mutation: enablePullRequestAutoMerge
+	
+	// Convert merge method to uppercase for GitHub API
+	var graphqlMergeMethod string
+	switch strings.ToLower(mergeMethod) {
+	case "merge":
+		graphqlMergeMethod = "MERGE"
+	case "squash":
+		graphqlMergeMethod = "SQUASH"
+	case "rebase":
+		graphqlMergeMethod = "REBASE"
+	default:
+		graphqlMergeMethod = "MERGE" // Default fallback
+	}
 	
 	query := `
 		mutation enableAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod!) {
@@ -596,7 +609,7 @@ func (g *Github) enableAutoMerge(ctx context.Context, repo repository, pr *githu
 	
 	variables := map[string]interface{}{
 		"pullRequestId": pr.GetNodeID(),
-		"mergeMethod":   "MERGE", // Could be MERGE, SQUASH, or REBASE
+		"mergeMethod":   graphqlMergeMethod,
 	}
 	
 	var result interface{} // We don't need to parse the result
@@ -636,7 +649,7 @@ func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pul
 	}
 
 	if updatedPR.AutoMerge {
-		if err := g.enableAutoMerge(ctx, r, ghPR); err != nil {
+		if err := g.enableAutoMerge(ctx, r, ghPR, updatedPR.MergeMethod); err != nil {
 			return nil, err
 		}
 	}
