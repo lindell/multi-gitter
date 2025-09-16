@@ -60,12 +60,13 @@ Available values:
   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
 `)
 	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
-	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --pr-merge-method to specify the merge strategy for GitHub.")
-	cmd.Flags().StringP("pr-merge-method", "", "merge", "The merge method to use for auto-merge. Valid values: merge, squash, rebase. Only applies to GitHub when auto-merge is enabled.")
+	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.")
+	cmd.Flags().StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"},
+		"The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge.")
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
-	_ = cmd.RegisterFlagCompletionFunc("pr-merge-method", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	_ = cmd.RegisterFlagCompletionFunc("merge-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"merge", "squash", "rebase"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
@@ -112,7 +113,6 @@ func run(cmd *cobra.Command, _ []string) error {
 	assignees, _ := stringSlice(flag, "assignees")
 	draft, _ := flag.GetBool("draft")
 	prAutoMerge, _ := flag.GetBool("pr-auto-merge")
-	prMergeMethod, _ := flag.GetString("pr-merge-method")
 	cloneDir, _ := flag.GetString("clone-dir")
 	labels, _ := stringSlice(flag, "labels")
 	repoInclude, _ := flag.GetString("repo-include")
@@ -169,11 +169,6 @@ func run(cmd *cobra.Command, _ []string) error {
 		if gitType != "go" {
 			return errors.New("api-push only works with go-git")
 		}
-	}
-
-	// Validate merge method
-	if prMergeMethod != "merge" && prMergeMethod != "squash" && prMergeMethod != "rebase" {
-		return errors.New("pr-merge-method must be one of: merge, squash, rebase")
 	}
 
 	// Parse commit author data
@@ -276,7 +271,6 @@ func run(cmd *cobra.Command, _ []string) error {
 		ConflictStrategy:       conflictStrategy,
 		Draft:                  draft,
 		AutoMerge:              prAutoMerge,
-		MergeMethod:            prMergeMethod,
 		Labels:                 labels,
 		CloneDir:               cloneDir,
 

@@ -17,7 +17,6 @@ type NewPullRequest struct {
 	Assignees     []string
 	Draft         bool
 	AutoMerge     bool
-	MergeMethod   string   // The merge method for auto-merge: "merge", "squash", or "rebase" (GitHub only)
 	Labels        []string
 }
 
