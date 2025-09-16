@@ -1,9 +1,7 @@
 package github
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -1016,47 +1014,4 @@ func (g *Github) modUnlock() {
 	g.modMutex.Unlock()
 }
 
-func (g *Github) makeCustomHTTPRequest(ctx context.Context, method, url string, reqBody interface{}, respBody interface{}) error {
-	var reqData []byte
-	var err error
-	
-	if reqBody != nil {
-		reqData, err = json.Marshal(reqBody)
-		if err != nil {
-			return errors.WithMessage(err, "could not marshal request body")
-		}
-	}
-	
-	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(reqData))
-	if err != nil {
-		return errors.WithMessage(err, "could not create HTTP request")
-	}
-	
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", g.token))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	
-	resp, err := g.httpClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	
-	// Handle rate limiting
-	retryAfterErr := retryAfterFromHTTPResponse(resp)
-	if retryAfterErr != nil {
-		return retryAfterErr
-	}
-	
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
-	}
-	
-	if respBody != nil {
-		if err := json.NewDecoder(resp.Body).Decode(respBody); err != nil {
-			return errors.WithMessage(err, "could not read response body")
-		}
-	}
-	
-	return nil
-}
+
