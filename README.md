@@ -15,8 +15,6 @@
 
 *multi-gitter* allows you to make changes in multiple repositories simultaneously. This is achieved by running a script or program in the context of multiple repositories. If any changes are made, a pull request is created that can be merged manually by the set reviewers, or automatically by multi-gitter when CI pipelines have completed successfully.
 
-**New in multi-gitter**: You can now enable automatic merging of pull requests using the `--pr-auto-merge` flag. When enabled, pull requests will be automatically merged once all required conditions are met (branch protection rules, CI checks, reviews, etc.), eliminating the need to manually merge PRs across multiple repositories.
-
 Are you a bash-guru or simply prefer your scripting in Node.js? It doesn't matter, since multi-gitter support any type of script or program. **If you can script it to run in one place, you can run it in all your repositories with one command!**
 
 ### Some examples:
