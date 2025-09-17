@@ -573,7 +573,6 @@ func Test_SearchTooManyResults(t *testing.T) {
 }
 
 func Test_enableAutoMerge_MergeTypeMapping(t *testing.T) {
-	// Test the merge type mapping logic for auto-merge
 	tests := []struct {
 		name                  string
 		mergeTypes           []scm.MergeType
@@ -622,12 +621,8 @@ func Test_enableAutoMerge_MergeTypeMapping(t *testing.T) {
 			})
 			require.NoError(t, err)
 
-			// Verify that the Github instance was created with the correct merge types
-			// This indirectly tests that our enableAutoMerge function will use the correct merge method
 			assert.Equal(t, tt.mergeTypes, gh.MergeTypes)
 			
-			// Test the actual mapping logic by calling the function
-			// Note: The function will use the first merge type from gh.MergeTypes
 			var expectedMergeType scm.MergeType
 			if len(tt.mergeTypes) > 0 {
 				expectedMergeType = tt.mergeTypes[0]
@@ -635,7 +630,6 @@ func Test_enableAutoMerge_MergeTypeMapping(t *testing.T) {
 				expectedMergeType = scm.MergeTypeMerge // Default
 			}
 			
-			// Verify the merge type mapping matches our expectation
 			switch expectedMergeType {
 			case scm.MergeTypeMerge:
 				assert.Equal(t, "MERGE", tt.expectedGraphQLMethod)
@@ -649,7 +643,6 @@ func Test_enableAutoMerge_MergeTypeMapping(t *testing.T) {
 }
 
 func Test_NewPullRequest_AutoMerge(t *testing.T) {
-	// Test that the AutoMerge field is properly handled in NewPullRequest
 	testCases := []struct {
 		name      string
 		autoMerge bool
@@ -677,7 +670,6 @@ func Test_NewPullRequest_AutoMerge(t *testing.T) {
 				AutoMerge: tc.autoMerge,
 			}
 
-			// Verify the AutoMerge field is set correctly
 			assert.Equal(t, tc.expected, newPR.AutoMerge)
 		})
 	}

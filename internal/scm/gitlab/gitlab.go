@@ -345,7 +345,6 @@ func (g *Gitlab) UpdatePullRequest(ctx context.Context, repo scm.Repository, pul
 		return nil, err
 	}
 
-	// Enable auto-merge if requested
 	if updatedPR.AutoMerge {
 		err = g.enableAutoMerge(ctx, r, mr)
 		if err != nil {
@@ -560,8 +559,6 @@ func (g *Gitlab) getCurrentUser(ctx context.Context) (*gitlab.User, error) {
 }
 
 func (g *Gitlab) enableAutoMerge(ctx context.Context, repo repository, mr *gitlab.MergeRequest) error {
-	// Enable auto-merge in GitLab by using AcceptMergeRequest with MergeWhenPipelineSucceeds=true
-	// This sets up the merge request to be automatically merged when the pipeline succeeds
 	mergeWhenPipelineSucceeds := true
 	
 	_, _, err := g.glClient.MergeRequests.AcceptMergeRequest(repo.pid, mr.IID, &gitlab.AcceptMergeRequestOptions{

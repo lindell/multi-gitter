@@ -574,7 +574,7 @@ func (g *Github) setLabels(ctx context.Context, repo repository, newPR scm.NewPu
 	return nil
 }
 
-func (g *Github) enableAutoMerge(ctx context.Context, repo repository, pr *github.PullRequest) error {
+func (g *Github) enableAutoMerge(ctx context.Context, _ repository, pr *github.PullRequest) error {
 	// Use GraphQL API to enable auto-merge since the REST API doesn't have a direct endpoint
 	// GitHub GraphQL mutation: enablePullRequestAutoMerge
 	
