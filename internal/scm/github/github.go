@@ -603,10 +603,6 @@ func (g *Github) enableAutoMerge(ctx context.Context, _ repository, pr *github.P
 			}) {
 				pullRequest {
 					id
-					autoMergeRequest {
-						enabledAt
-						mergeMethod
-					}
 				}
 			}
 		}`
@@ -1030,5 +1026,3 @@ func (g *Github) modUnlock() {
 	g.lastModRequest = time.Now()
 	g.modMutex.Unlock()
 }
-
-

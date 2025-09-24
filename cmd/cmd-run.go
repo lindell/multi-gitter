@@ -61,13 +61,9 @@ Available values:
 `)
 	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
 	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.")
-	cmd.Flags().StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"},
-		"The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge.")
+	configureMergeType(cmd, true)
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
-	})
-	_ = cmd.RegisterFlagCompletionFunc("merge-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"merge", "squash", "rebase"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
