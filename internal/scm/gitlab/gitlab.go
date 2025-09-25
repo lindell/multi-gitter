@@ -2,7 +2,7 @@ package gitlab
 
 import (
 	"context"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"sort"
@@ -11,7 +11,6 @@ import (
 
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/scm"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/xanzy/go-gitlab"
 )
@@ -541,7 +540,7 @@ func (g *Gitlab) ForkRepository(ctx context.Context, repo scm.Repository, newOwn
 		time.Sleep(time.Second * 3)
 	}
 
-	return nil, stderrors.New("time waiting for fork to complete was exceeded")
+	return nil, errors.New("time waiting for fork to complete was exceeded")
 }
 
 func (g *Gitlab) getCurrentUser(ctx context.Context) (*gitlab.User, error) {
@@ -567,7 +566,7 @@ func (g *Gitlab) enableAutoMerge(ctx context.Context, repo repository, mr *gitla
 	}, gitlab.WithContext(ctx))
 	
 	if err != nil {
-		return errors.Wrap(err, "failed to enable auto-merge")
+		return fmt.Errorf("failed to enable auto-merge: %w", err)
 	}
 	
 	return nil
