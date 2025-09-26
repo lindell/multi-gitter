@@ -566,7 +566,7 @@ func (g *Gitlab) enableAutoMerge(ctx context.Context, repo repository, mr *gitla
 	}, gitlab.WithContext(ctx))
 	
 	if err != nil {
-		return fmt.Errorf("failed to enable auto-merge: %w", err)
+		return err
 	}
 	
 	return nil
