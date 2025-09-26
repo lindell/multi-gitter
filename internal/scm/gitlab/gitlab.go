@@ -565,9 +565,5 @@ func (g *Gitlab) enableAutoMerge(ctx context.Context, repo repository, mr *gitla
 		MergeWhenPipelineSucceeds: &mergeWhenPipelineSucceeds,
 	}, gitlab.WithContext(ctx))
 	
-	if err != nil {
-		return err
-	}
-	
-	return nil
+	return err
 }
