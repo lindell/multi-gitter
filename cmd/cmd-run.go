@@ -60,6 +60,8 @@ Available values:
   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
 `)
 	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
+	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.")
+	configureMergeType(cmd, true)
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
@@ -106,6 +108,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	strOutput, _ := flag.GetString("output")
 	assignees, _ := stringSlice(flag, "assignees")
 	draft, _ := flag.GetBool("draft")
+	prAutoMerge, _ := flag.GetBool("pr-auto-merge")
 	cloneDir, _ := flag.GetString("clone-dir")
 	labels, _ := stringSlice(flag, "labels")
 	repoInclude, _ := flag.GetString("repo-include")
@@ -263,6 +266,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		Assignees:              assignees,
 		ConflictStrategy:       conflictStrategy,
 		Draft:                  draft,
+		AutoMerge:              prAutoMerge,
 		Labels:                 labels,
 		CloneDir:               cloneDir,
 

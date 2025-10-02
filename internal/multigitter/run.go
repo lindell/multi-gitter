@@ -84,6 +84,8 @@ type Runner struct {
 
 	Draft bool // If set, creates Pull Requests as draft
 
+	AutoMerge bool // If set, enables auto-merge for created Pull Requests
+
 	Labels   []string // Labels to be added to the pull request
 	CloneDir string   // Directory to clone repositories to
 
@@ -438,6 +440,7 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 				TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
 				Assignees:     r.Assignees,
 				Draft:         r.Draft,
+				AutoMerge:     r.AutoMerge,
 				Labels:        r.Labels,
 			})
 		}
@@ -455,6 +458,7 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 		TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
 		Assignees:     r.Assignees,
 		Draft:         r.Draft,
+		AutoMerge:     r.AutoMerge,
 		Labels:        r.Labels,
 	})
 }

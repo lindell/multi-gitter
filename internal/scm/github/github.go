@@ -444,6 +444,12 @@ func (g *Github) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 		return nil, err
 	}
 
+	if newPR.AutoMerge {
+		if err := g.enableAutoMerge(ctx, r, pr); err != nil {
+			return nil, err
+		}
+	}
+
 	return convertPullRequest(pr), nil
 }
 
@@ -568,6 +574,49 @@ func (g *Github) setLabels(ctx context.Context, repo repository, newPR scm.NewPu
 	return nil
 }
 
+func (g *Github) enableAutoMerge(ctx context.Context, _ repository, pr *github.PullRequest) error {
+	// Use GraphQL API to enable auto-merge since the REST API doesn't have a direct endpoint
+	// GitHub GraphQL mutation: enablePullRequestAutoMerge
+
+	// Use the first merge type from the configured merge types
+	var graphqlMergeMethod string
+	if len(g.MergeTypes) > 0 {
+		switch g.MergeTypes[0] {
+		case scm.MergeTypeMerge:
+			graphqlMergeMethod = "MERGE"
+		case scm.MergeTypeSquash:
+			graphqlMergeMethod = "SQUASH"
+		case scm.MergeTypeRebase:
+			graphqlMergeMethod = "REBASE"
+		default:
+			graphqlMergeMethod = "MERGE" // Default fallback
+		}
+	} else {
+		graphqlMergeMethod = "MERGE" // Default fallback if no merge types configured
+	}
+
+	query := `
+		mutation enableAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod!) {
+			enablePullRequestAutoMerge(input: {
+				pullRequestId: $pullRequestId,
+				mergeMethod: $mergeMethod
+			}) {
+				pullRequest {
+					id
+				}
+			}
+		}`
+
+	variables := map[string]interface{}{
+		"pullRequestId": pr.GetNodeID(),
+		"mergeMethod":   graphqlMergeMethod,
+	}
+
+	var result interface{} // We don't need to parse the result
+
+	return g.makeGraphQLRequestWithRetry(ctx, query, variables, &result)
+}
+
 // UpdatePullRequest updates an existing pull request
 func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pullReq scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
 	r := repo.(repository)
@@ -597,6 +646,12 @@ func (g *Github) UpdatePullRequest(ctx context.Context, repo scm.Repository, pul
 
 	if err := g.setLabels(ctx, r, updatedPR, ghPR); err != nil {
 		return nil, err
+	}
+
+	if updatedPR.AutoMerge {
+		if err := g.enableAutoMerge(ctx, r, ghPR); err != nil {
+			return nil, err
+		}
 	}
 
 	return convertPullRequest(ghPR), nil
