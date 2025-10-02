@@ -577,7 +577,7 @@ func (g *Github) setLabels(ctx context.Context, repo repository, newPR scm.NewPu
 func (g *Github) enableAutoMerge(ctx context.Context, _ repository, pr *github.PullRequest) error {
 	// Use GraphQL API to enable auto-merge since the REST API doesn't have a direct endpoint
 	// GitHub GraphQL mutation: enablePullRequestAutoMerge
-	
+
 	// Use the first merge type from the configured merge types
 	var graphqlMergeMethod string
 	if len(g.MergeTypes) > 0 {
@@ -594,7 +594,7 @@ func (g *Github) enableAutoMerge(ctx context.Context, _ repository, pr *github.P
 	} else {
 		graphqlMergeMethod = "MERGE" // Default fallback if no merge types configured
 	}
-	
+
 	query := `
 		mutation enableAutoMerge($pullRequestId: ID!, $mergeMethod: PullRequestMergeMethod!) {
 			enablePullRequestAutoMerge(input: {
@@ -606,14 +606,14 @@ func (g *Github) enableAutoMerge(ctx context.Context, _ repository, pr *github.P
 				}
 			}
 		}`
-	
+
 	variables := map[string]interface{}{
 		"pullRequestId": pr.GetNodeID(),
 		"mergeMethod":   graphqlMergeMethod,
 	}
-	
+
 	var result interface{} // We don't need to parse the result
-	
+
 	return g.makeGraphQLRequestWithRetry(ctx, query, variables, &result)
 }
 

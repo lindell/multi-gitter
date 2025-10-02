@@ -84,7 +84,7 @@ type Runner struct {
 
 	Draft bool // If set, creates Pull Requests as draft
 
-	AutoMerge     bool   // If set, enables auto-merge for created Pull Requests
+	AutoMerge bool // If set, enables auto-merge for created Pull Requests
 
 	Labels   []string // Labels to be added to the pull request
 	CloneDir string   // Directory to clone repositories to

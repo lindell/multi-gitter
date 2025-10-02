@@ -23,7 +23,7 @@ func configureMergeType(cmd *cobra.Command, includeAutoMergeText bool) {
 	if includeAutoMergeText {
 		description += " The first type is used for auto-merge."
 	}
-	
+
 	cmd.Flags().StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"}, description)
 	_ = cmd.RegisterFlagCompletionFunc("merge-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"merge", "squash", "rebase"}, cobra.ShellCompDirectiveNoFileComp

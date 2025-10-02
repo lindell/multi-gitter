@@ -560,10 +560,10 @@ func (g *Gitlab) getCurrentUser(ctx context.Context) (*gitlab.User, error) {
 
 func (g *Gitlab) enableAutoMerge(ctx context.Context, repo repository, mr *gitlab.MergeRequest) error {
 	mergeWhenPipelineSucceeds := true
-	
+
 	_, _, err := g.glClient.MergeRequests.AcceptMergeRequest(repo.pid, mr.IID, &gitlab.AcceptMergeRequestOptions{
 		MergeWhenPipelineSucceeds: &mergeWhenPipelineSucceeds,
 	}, gitlab.WithContext(ctx))
-	
+
 	return err
 }
