@@ -1,6 +1,6 @@
 module github.com/lindell/multi-gitter
 
-go 1.23.3
+go 1.25.1
 
 require (
 	code.gitea.io/sdk/gitea v0.21.0
