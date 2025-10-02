@@ -198,6 +198,12 @@ max-reviewers: 0
 # If this value is set, team reviewers will be randomized
 max-team-reviewers: 0
 
+# The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge.
+merge-type:
+  - merge
+  - squash
+  - rebase
+
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
   - example
@@ -210,6 +216,9 @@ plain-output: false
 
 # The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta
 platform: github
+
+# Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.
+pr-auto-merge: false
 
 # The body of the commit message. Will default to everything but the first line of the commit message if none is set.
 pr-body:
@@ -317,7 +326,7 @@ log-format: text
 # The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
-# The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.
+# The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed.
 merge-type:
   - merge
   - squash
@@ -702,10 +711,12 @@ Flags:
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
       --max-team-reviewers int     If this value is set, team reviewers will be randomized
+      --merge-type strings         The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge. (default [merge,squash,rebase])
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string              The file that the output of the script should be outputted to. "-" means stdout. (default "-")
       --plain-output               Don't use any terminal formatting when printing the output.
   -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
+      --pr-auto-merge              Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.
   -b, --pr-body string             The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string            The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -747,7 +758,7 @@ Flags:
       --log-file string         The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string       The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
-      --merge-type strings      The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
+      --merge-type strings      The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
       --plain-output            Don't use any terminal formatting when printing the output.
   -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
