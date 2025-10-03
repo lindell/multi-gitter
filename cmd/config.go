@@ -24,7 +24,7 @@ func initializeConfig(cmd *cobra.Command) error {
 
 func initializeDynamicConfig(cmd *cobra.Command) error {
 	configFiles, _ := cmd.Flags().GetStringArray("config")
-	if configFiles == nil || len(configFiles) == 0 {
+	if len(configFiles) == 0 {
 		return nil
 	}
 
@@ -37,7 +37,7 @@ func initializeDynamicConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	for i:=1; i < len(configFiles); i++ {
+	for i := 1; i < len(configFiles); i++ {
 		v.SetConfigFile(configFiles[i])
 		if err := v.MergeInConfig(); err != nil {
 			return err
