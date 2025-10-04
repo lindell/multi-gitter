@@ -365,7 +365,7 @@ func (g *Gitea) UpdatePullRequest(ctx context.Context, repo scm.Repository, pull
 
 	giteaPr, _, err := g.giteaClient(ctx).EditPullRequest(r.ownerName, r.name, pr.index, gitea.EditPullRequestOption{
 		Title:     prTitle,
-		Body:      updatedPR.Body,
+		Body:      &updatedPR.Body,
 		Assignees: updatedPR.Assignees,
 		Labels:    labels,
 	})
