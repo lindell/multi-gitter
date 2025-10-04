@@ -3,7 +3,9 @@ package github
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -12,7 +14,6 @@ import (
 	"github.com/google/go-github/v70/github"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 	"golang.org/x/oauth2"
 
 	"github.com/lindell/multi-gitter/internal/scm"
@@ -391,7 +392,7 @@ func (g *Github) getCodeSearchRepositories(ctx context.Context, search string) (
 
 	// Code search does not return full details (like permissions). So for each
 	// repo discovered, we have to query it again.
-	repoNames := maps.Values(resultRepos)
+	repoNames := slices.Collect(maps.Values(resultRepos))
 	return g.getAllRepositories(ctx, repoNames)
 }
 
