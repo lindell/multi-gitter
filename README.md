@@ -93,7 +93,7 @@ In Gitea, access tokens can be generated under Settings -> Applications -> Manag
 
 ## Config file
 
-All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
+All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. You can also specify this flag multiple times, where later files override configs set in earlier files. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
 
 
 
@@ -685,7 +685,7 @@ Flags:
       --code-search fork:true      Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
   -m, --commit-message string      The commit message. Will default to title + body if none is set.
   -C, --concurrent int             The maximum number of concurrent runs. (default 1)
-      --config string              Path of the config file.
+      --config stringArray         Path of the config file.
       --conflict-strategy string   What should happen if the branch already exist.
                                    Available values:
                                      skip: Skip making any changes to the existing branch and do not create a new pull request.
@@ -749,7 +749,7 @@ Flags:
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
       --fork                    Use pull requests made from forks instead of from the same repository.
       --fork-owner string       If set, use forks from the defined value instead of the logged in user.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
@@ -785,7 +785,7 @@ Flags:
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
       --fork                    Use pull requests made from forks instead of from the same repository.
       --fork-owner string       If set, use forks from the defined value instead of the logged in user.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
@@ -821,7 +821,7 @@ Flags:
   -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
       --fork                    Use pull requests made from forks instead of from the same repository.
       --fork-owner string       If set, use forks from the defined value instead of the logged in user.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
@@ -862,7 +862,7 @@ Flags:
       --clone-dir string        The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
   -C, --concurrent int          The maximum number of concurrent runs. (default 1)
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
   -E, --error-output string     The file that the output of the script should be outputted to. "-" means stderr. (default "-")
   -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --git-type string         The type of git implementation to use.
