@@ -30,15 +30,10 @@ func initializeDynamicConfig(cmd *cobra.Command) error {
 
 	v := viper.New()
 
-	v.SetConfigFile(configFiles[0])
 	v.SetConfigType("yaml")
 
-	if err := v.ReadInConfig(); err != nil {
-		return err
-	}
-
-	for i := 1; i < len(configFiles); i++ {
-		v.SetConfigFile(configFiles[i])
+	for _, file := range configFiles {
+		v.SetConfigFile(file)
 		if err := v.MergeInConfig(); err != nil {
 			return err
 		}

@@ -863,7 +863,7 @@ Repositories with a successful run:
 				"--author-name", "Test Author",
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
-				"--config", "test-config.yaml",
+				"--config", "data/test-config.yaml",
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
@@ -892,8 +892,8 @@ Repositories with a successful run:
 				"--author-name", "Test Author",
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
-				"--config", "test-config.yaml",
-				"--config", "test-config-override.yaml",
+				"--config", "data/test-config.yaml",
+				"--config", "data/test-config-override.yaml",
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
@@ -922,8 +922,8 @@ Repositories with a successful run:
 				"--author-name", "Test Author",
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
-				"--config", "test-config.yaml",
-				"--config", "test-config2.yaml",
+				"--config", "data/test-config.yaml",
+				"--config", "data/test-config2.yaml",
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
