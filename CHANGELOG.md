@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.59.0](https://github.com/lindell/multi-gitter/compare/v0.58.0...v0.59.0) (2025-10-06)
+
+
+### Features
+
+* support reading multiple configuration files ([#582](https://github.com/lindell/multi-gitter/issues/582)) ([9e25cec](https://github.com/lindell/multi-gitter/commit/9e25cec5f7f41daa44db8b140175d4fefd158b39))
+
+
+### Miscellaneous
+
+* add multi-gitter binary to gitignore ([ca8105f](https://github.com/lindell/multi-gitter/commit/ca8105f63d801eff826443ef581666054936daae))
+* migrate to stable maps package ([#583](https://github.com/lindell/multi-gitter/issues/583)) ([8f47429](https://github.com/lindell/multi-gitter/commit/8f4742953400cd198c09337148cf46e5af3b84df))
+* update go to 1.25.1 ([#581](https://github.com/lindell/multi-gitter/issues/581)) ([e17a460](https://github.com/lindell/multi-gitter/commit/e17a4608150713ac31dfc285871c4a28feb984af))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.22.0 ([#577](https://github.com/lindell/multi-gitter/issues/577)) ([a5db0c0](https://github.com/lindell/multi-gitter/commit/a5db0c04dc2bf7893f50ff6a2f6fc6ab0601ca39))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.87 ([4584835](https://github.com/lindell/multi-gitter/commit/45848351b06825440634c3c12c4615b237c456b7))
+* update module github.com/spf13/cobra to v1.10.1 ([89b8ac9](https://github.com/lindell/multi-gitter/commit/89b8ac9a13add38a86f339a18cae40a6686b18a0))
+* update module github.com/spf13/pflag to v1.0.10 ([5a124a8](https://github.com/lindell/multi-gitter/commit/5a124a8dc2b316c08b080a04c9dbb6d50444625f))
+* update module github.com/spf13/viper to v1.21.0 ([94ea523](https://github.com/lindell/multi-gitter/commit/94ea523eb8bfe1b23c3043340f42d747a7373fa6))
+* update module golang.org/x/net to v0.44.0 ([#578](https://github.com/lindell/multi-gitter/issues/578)) ([d26dde1](https://github.com/lindell/multi-gitter/commit/d26dde18adddd89ca1d5b3105ebf830308086668))
+* update module golang.org/x/oauth2 to v0.31.0 ([#579](https://github.com/lindell/multi-gitter/issues/579)) ([433ffc9](https://github.com/lindell/multi-gitter/commit/433ffc9399a6f9df83f40289bb602482a5113815))
+
 ## [0.58.0](https://github.com/lindell/multi-gitter/compare/v0.57.1...v0.58.0) (2025-08-07)
 
 
