@@ -93,7 +93,7 @@ In Gitea, access tokens can be generated under Settings -> Applications -> Manag
 
 ## Config file
 
-All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
+All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. You can also specify this flag multiple times, where later files override configs set in earlier files. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
 
 {{range .Commands}}
 {{if .YAMLExample}}

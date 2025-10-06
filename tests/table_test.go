@@ -863,7 +863,7 @@ Repositories with a successful run:
 				"--author-name", "Test Author",
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
-				"--config", "test-config.yaml",
+				"--config", "data/test-config.yaml",
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
@@ -871,6 +871,67 @@ Repositories with a successful run:
 				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
 				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
 				assert.Equal(t, "config-message", vcMock.PullRequests[0].Title)
+
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-change #1
+`, runData.out)
+			},
+		},
+
+		{
+			name: "overriding config files",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--config", "data/test-config.yaml",
+				"--config", "data/test-config-override.yaml",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "override-message", vcMock.PullRequests[0].Title)
+
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-change #1
+`, runData.out)
+			},
+		},
+
+		{
+			name: "merging config files",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--config", "data/test-config.yaml",
+				"--config", "data/test-config2.yaml",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "config-message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "test body", vcMock.PullRequests[0].Body)
 
 				assert.Equal(t, `Repositories with a successful run:
   owner/should-change #1
