@@ -3,7 +3,7 @@ module github.com/lindell/multi-gitter
 go 1.25.1
 
 require (
-	code.gitea.io/sdk/gitea v0.22.0
+	code.gitea.io/sdk/gitea v0.22.1
 	github.com/andygrunwald/go-gerrit v1.1.0
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240917142304-df385efaac68
