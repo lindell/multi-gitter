@@ -331,7 +331,7 @@ func TestEnhanceCommit(t *testing.T) {
 func TestMergePullRequest(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
-			SubmitChangeFunc: func(_ context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
+			SubmitChangeFunc: func(_ context.Context, changeID string, _ *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
 				// Ensure correct id is used when a change is submitted
 				require.Equal(t, "repo-active~master~Icc717a31a47beb9b5d9aeb8a1d374883afe89030", changeID)
 				return &gogerrit.ChangeInfo{}, nil, nil
