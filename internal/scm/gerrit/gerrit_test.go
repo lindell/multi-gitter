@@ -42,17 +42,18 @@ func (gcm goGerritClientMock) GetHEAD(ctx context.Context, projectName string) (
 	if gcm.GetHEADFunc != nil {
 		return gcm.GetHEADFunc(ctx, projectName)
 	}
-	// Default implementation for tests: return "main" for "repo-active", "master" for others
-	if projectName == "repo-active" {
+	// Default implementation for tests: return "main" for "main-branch-repo", "master" for others
+	if projectName == "main-branch-repo" {
 		return "refs/heads/main", nil, nil
 	}
 	return "refs/heads/master", nil, nil
 }
 
 var projects = &map[string]gogerrit.ProjectInfo{
+	"another-repo-active": {State: "ACTIVE"},
+	"main-branch-repo":    {State: "ACTIVE"},
 	"repo-active":         {State: "ACTIVE"},
 	"repo-read-only":      {State: "READ_ONLY"},
-	"another-repo-active": {State: "ACTIVE"},
 }
 
 func getChangesForQuery(query string) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
@@ -102,7 +103,7 @@ func TestGetRepositories(t *testing.T) {
 
 	repos, err := g.GetRepositories(context.Background())
 	require.NoError(t, err)
-	require.Len(t, repos, 2)
+	require.Len(t, repos, 3)
 
 	expectedRepos := []struct {
 		name          string
@@ -110,7 +111,8 @@ func TestGetRepositories(t *testing.T) {
 		cloneURL      string
 	}{
 		{"another-repo-active", "master", "https://admin:token123@gerrit.com/a/another-repo-active"},
-		{"repo-active", "main", "https://admin:token123@gerrit.com/a/repo-active"},
+		{"main-branch-repo", "main", "https://admin:token123@gerrit.com/a/main-branch-repo"},
+		{"repo-active", "master", "https://admin:token123@gerrit.com/a/repo-active"},
 	}
 	for idx, expectedRepo := range expectedRepos {
 		repo := repos[idx]
