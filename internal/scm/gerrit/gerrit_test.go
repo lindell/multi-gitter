@@ -431,24 +431,24 @@ func TestGetDefaultBranch(t *testing.T) {
 
 func TestConvertRepoWithDynamicDefaultBranch(t *testing.T) {
 	tests := []struct {
-		name               string
-		projectName        string
-		mockHEADResponse   string
-		mockHEADError      error
-		expectedDefaultBr  string
+		name              string
+		projectName       string
+		mockHEADResponse  string
+		mockHEADError     error
+		expectedDefaultBr string
 	}{
 		{
-			name:             "successful HEAD retrieval",
-			projectName:      "test-repo",
-			mockHEADResponse: "refs/heads/develop",
-			mockHEADError:    nil,
+			name:              "successful HEAD retrieval",
+			projectName:       "test-repo",
+			mockHEADResponse:  "refs/heads/develop",
+			mockHEADError:     nil,
 			expectedDefaultBr: "develop",
 		},
 		{
-			name:             "HEAD retrieval fails - fallback to master",
-			projectName:      "error-repo",
-			mockHEADResponse: "",
-			mockHEADError:    errors.New("network error"),
+			name:              "HEAD retrieval fails - fallback to master",
+			projectName:       "error-repo",
+			mockHEADResponse:  "",
+			mockHEADError:     errors.New("network error"),
 			expectedDefaultBr: "master",
 		},
 	}
