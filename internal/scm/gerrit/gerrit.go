@@ -123,8 +123,7 @@ func (g Gerrit) convertRepo(ctx context.Context, name string) (repository, error
 	// Get the actual default branch from Gerrit API
 	defaultBranch, err := g.getDefaultBranch(ctx, name)
 	if err != nil {
-		// If we can't get the HEAD branch, fall back to "master" to maintain compatibility
-		defaultBranch = "master"
+		return repository{}, err
 	}
 
 	return repository{
@@ -140,14 +139,7 @@ func (g Gerrit) getDefaultBranch(ctx context.Context, projectName string) (strin
 		return "", errors.Wrapf(err, "failed to get HEAD branch for project %s", projectName)
 	}
 
-	// The HEAD reference typically comes in the format "refs/heads/main" or "refs/heads/master"
-	// We need to extract just the branch name
-	if strings.HasPrefix(headRef, RefHeadsPrefix) {
-		return strings.TrimPrefix(headRef, RefHeadsPrefix), nil
-	}
-
-	// If it doesn't have the expected prefix, return it as-is
-	return headRef, nil
+	return strings.TrimPrefix(headRef, RefHeadsPrefix), nil
 }
 
 func (g Gerrit) CreatePullRequest(ctx context.Context, repo scm.Repository, _ scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
