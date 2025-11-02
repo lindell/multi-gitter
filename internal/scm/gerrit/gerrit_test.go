@@ -1,15 +1,17 @@
 package gerrit
 
 import (
+	"errors"
+	"regexp"
+	"strconv"
+	"strings"
+	"testing"
+
 	gogerrit "github.com/andygrunwald/go-gerrit"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
-	"regexp"
-	"strconv"
-	"strings"
-	"testing"
 )
 
 type goGerritClientMock struct {
@@ -17,6 +19,7 @@ type goGerritClientMock struct {
 	QueryChangesFunc  func(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error)
 	AbandonChangeFunc func(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
 	SubmitChangeFunc  func(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
+	GetHEADFunc       func(ctx context.Context, projectName string) (string, *gogerrit.Response, error)
 }
 
 func (gcm goGerritClientMock) ListProjects(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
@@ -33,6 +36,17 @@ func (gcm goGerritClientMock) AbandonChange(ctx context.Context, changeID string
 
 func (gcm goGerritClientMock) SubmitChange(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
 	return gcm.SubmitChangeFunc(ctx, changeID, input)
+}
+
+func (gcm goGerritClientMock) GetHEAD(ctx context.Context, projectName string) (string, *gogerrit.Response, error) {
+	if gcm.GetHEADFunc != nil {
+		return gcm.GetHEADFunc(ctx, projectName)
+	}
+	// Default implementation for tests: return "main" for "repo-active", "master" for others
+	if projectName == "repo-active" {
+		return "refs/heads/main", nil, nil
+	}
+	return "refs/heads/master", nil, nil
 }
 
 var projects = &map[string]gogerrit.ProjectInfo{
@@ -96,7 +110,7 @@ func TestGetRepositories(t *testing.T) {
 		cloneURL      string
 	}{
 		{"another-repo-active", "master", "https://admin:token123@gerrit.com/a/another-repo-active"},
-		{"repo-active", "master", "https://admin:token123@gerrit.com/a/repo-active"},
+		{"repo-active", "main", "https://admin:token123@gerrit.com/a/repo-active"},
 	}
 	for idx, expectedRepo := range expectedRepos {
 		repo := repos[idx]
@@ -346,4 +360,119 @@ func TestClosePullRequest(t *testing.T) {
 	}
 	err := g.ClosePullRequest(context.Background(), pr)
 	require.NoError(t, err)
+}
+
+func TestGetDefaultBranch(t *testing.T) {
+	tests := []struct {
+		name           string
+		projectName    string
+		mockResponse   string
+		mockError      error
+		expectedBranch string
+		expectError    bool
+	}{
+		{
+			name:           "successful retrieval with refs/heads/ prefix",
+			projectName:    "test-project",
+			mockResponse:   "refs/heads/main",
+			mockError:      nil,
+			expectedBranch: "main",
+			expectError:    false,
+		},
+		{
+			name:           "successful retrieval with refs/heads/master",
+			projectName:    "legacy-project",
+			mockResponse:   "refs/heads/master",
+			mockError:      nil,
+			expectedBranch: "master",
+			expectError:    false,
+		},
+		{
+			name:           "response without refs/heads/ prefix",
+			projectName:    "bare-project",
+			mockResponse:   "develop",
+			mockError:      nil,
+			expectedBranch: "develop",
+			expectError:    false,
+		},
+		{
+			name:           "API error",
+			projectName:    "error-project",
+			mockResponse:   "",
+			mockError:      errors.New("API error"),
+			expectedBranch: "",
+			expectError:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := &Gerrit{
+				client: goGerritClientMock{
+					GetHEADFunc: func(ctx context.Context, projectName string) (string, *gogerrit.Response, error) {
+						require.Equal(t, tt.projectName, projectName)
+						return tt.mockResponse, nil, tt.mockError
+					},
+				},
+			}
+
+			branch, err := g.getDefaultBranch(context.Background(), tt.projectName)
+
+			if tt.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "failed to get HEAD branch")
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expectedBranch, branch)
+			}
+		})
+	}
+}
+
+func TestConvertRepoWithDynamicDefaultBranch(t *testing.T) {
+	tests := []struct {
+		name               string
+		projectName        string
+		mockHEADResponse   string
+		mockHEADError      error
+		expectedDefaultBr  string
+	}{
+		{
+			name:             "successful HEAD retrieval",
+			projectName:      "test-repo",
+			mockHEADResponse: "refs/heads/develop",
+			mockHEADError:    nil,
+			expectedDefaultBr: "develop",
+		},
+		{
+			name:             "HEAD retrieval fails - fallback to master",
+			projectName:      "error-repo",
+			mockHEADResponse: "",
+			mockHEADError:    errors.New("network error"),
+			expectedDefaultBr: "master",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := &Gerrit{
+				client: goGerritClientMock{
+					GetHEADFunc: func(ctx context.Context, projectName string) (string, *gogerrit.Response, error) {
+						require.Equal(t, tt.projectName, projectName)
+						return tt.mockHEADResponse, nil, tt.mockHEADError
+					},
+				},
+				baseURL:  "https://gerrit.example.com",
+				username: "testuser",
+				token:    "testtoken",
+			}
+
+			repo, err := g.convertRepo(context.Background(), tt.projectName)
+			require.NoError(t, err)
+
+			assert.Equal(t, tt.projectName, repo.name)
+			assert.Equal(t, tt.expectedDefaultBr, repo.defaultBranch)
+			assert.Equal(t, "https://testuser:testtoken@gerrit.example.com/a/"+tt.projectName, repo.url)
+		})
+	}
 }
