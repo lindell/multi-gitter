@@ -90,7 +90,6 @@ func TestGetRepositories(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
 			ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
-				// Ensure we inject repoSearch parameter correctly
 				require.Equal(t, "repo", opt.Regex)
 				return projects, nil, nil
 			},
@@ -475,7 +474,7 @@ func TestGetRepositoriesWithSpecificList(t *testing.T) {
 
 	// Test with error from client
 	g.client = goGerritClientMock{
-		ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+		ListProjectsFunc: func(_ context.Context, _ *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
 			return nil, nil, assert.AnError
 		},
 	}
@@ -600,7 +599,7 @@ func TestGetRepositoriesWithEmptyRepositoriesButRepoSearch(t *testing.T) {
 func TestGetRepositoriesWithCaseSensitiveMatching(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
-			ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+			ListProjectsFunc: func(_ context.Context, _ *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
 				return projects, nil, nil
 			},
 		},
@@ -620,7 +619,7 @@ func TestGetRepositoriesWithCaseSensitiveMatching(t *testing.T) {
 func TestGetRepositoriesWithInactiveRepoInList(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
-			ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+			ListProjectsFunc: func(_ context.Context, _ *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
 				return projects, nil, nil
 			},
 		},
