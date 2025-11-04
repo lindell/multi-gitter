@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.60.0](https://github.com/lindell/multi-gitter/compare/v0.59.0...v0.60.0) (2025-11-04)
+
+
+### Features
+
+* **gerrit:** Replace hardcoded "master" with dynamic HEAD branch retrieval ([#586](https://github.com/lindell/multi-gitter/issues/586)) ([7e422c7](https://github.com/lindell/multi-gitter/commit/7e422c71ea16b4f699dbbcecf277062fbc8d3adf))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.22.1 ([77a51e7](https://github.com/lindell/multi-gitter/commit/77a51e795be2ee94c6247505cd80c6af37ad56de))
+* update module github.com/go-git/go-git/v5 to v5.16.3 ([beeb445](https://github.com/lindell/multi-gitter/commit/beeb445b5146b83bfa12c6b1606ca0a1fa603ca3))
+* update module golang.org/x/net to v0.46.0 ([3468651](https://github.com/lindell/multi-gitter/commit/3468651447531a4b297cbc54f13b49c17b43a0c5))
+* update module golang.org/x/oauth2 to v0.32.0 ([baff054](https://github.com/lindell/multi-gitter/commit/baff054454d335919bcd7130dc4d7ac60d5e1064))
+
 ## [0.59.0](https://github.com/lindell/multi-gitter/compare/v0.58.0...v0.59.0) (2025-10-06)
 
 
