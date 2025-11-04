@@ -23,6 +23,7 @@ const FooterBranch = "MultiGitter-Branch"
 const FooterChangeID = "Change-Id"
 const QueryChangesLimit = 100
 const QueryProjectsLimit = 100
+const RefHeadsPrefix = "refs/heads/"
 
 type Gerrit struct {
 	client     GoGerritClient
@@ -93,7 +94,7 @@ func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (reposito
 
 	for name, project := range *projects {
 		if project.State == "ACTIVE" {
-			repo, err := g.convertRepo(name)
+			repo, err := g.convertRepo(ctx, name)
 			if err != nil {
 				return nil, false, err
 			}
@@ -109,7 +110,7 @@ func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (reposito
 	return repositories, moreProjects, nil
 }
 
-func (g Gerrit) convertRepo(name string) (repository, error) {
+func (g Gerrit) convertRepo(ctx context.Context, name string) (repository, error) {
 	// Note: maybe we should support cloning via ssh
 	u, err := url.Parse(g.baseURL)
 	if err != nil {
@@ -119,11 +120,26 @@ func (g Gerrit) convertRepo(name string) (repository, error) {
 	u.Path = "/a/" + name
 	repoURL := u.String()
 
+	// Get the actual default branch from Gerrit API
+	defaultBranch, err := g.getDefaultBranch(ctx, name)
+	if err != nil {
+		return repository{}, err
+	}
+
 	return repository{
 		url:           repoURL,
 		name:          name,
-		defaultBranch: "master", // Some projects might have a different default branch
+		defaultBranch: defaultBranch,
 	}, nil
+}
+
+func (g Gerrit) getDefaultBranch(ctx context.Context, projectName string) (string, error) {
+	headRef, _, err := g.client.GetHEAD(ctx, projectName)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get HEAD branch for project %s", projectName)
+	}
+
+	return strings.TrimPrefix(headRef, RefHeadsPrefix), nil
 }
 
 func (g Gerrit) CreatePullRequest(ctx context.Context, repo scm.Repository, _ scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
@@ -285,7 +301,7 @@ func (g Gerrit) RemoteReference(baseBranch string, featureBranch string, skipPul
 	if !skipPullRequest && !pushOnly {
 		return "refs/for/" + baseBranch
 	}
-	return "refs/heads/" + featureBranch
+	return RefHeadsPrefix + featureBranch
 }
 
 func generateChangeID(commitMessage string) string {
