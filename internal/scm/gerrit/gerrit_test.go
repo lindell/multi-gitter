@@ -90,6 +90,7 @@ func TestGetRepositories(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
 			ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+				// Ensure we inject repoSearch parameter correctly
 				require.Equal(t, "repo", opt.Regex)
 				return projects, nil, nil
 			},
