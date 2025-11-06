@@ -350,7 +350,7 @@ func TestMergePullRequest(t *testing.T) {
 func TestClosePullRequest(t *testing.T) {
 	g := &Gerrit{
 		client: goGerritClientMock{
-			AbandonChangeFunc: func(_ context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
+			AbandonChangeFunc: func(_ context.Context, changeID string, _ *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
 				// Ensure correct id is used when a change is abandoned
 				require.Equal(t, "repo-active~master~Icc717a31a47beb9b5d9aeb8a1d374883afe89030", changeID)
 				return &gogerrit.ChangeInfo{}, nil, nil
