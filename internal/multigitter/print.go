@@ -42,7 +42,7 @@ func (r Printer) Print(ctx context.Context) error {
 	repos = filterRepositories(repos, r.SkipRepository, r.RegExIncludeRepository, r.RegExExcludeRepository)
 
 	if len(repos) == 0 {
-		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want to change.")
+		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want print to run on.")
 		return nil
 	}
 
