@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/scm"
@@ -21,6 +22,10 @@ type Printer struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
+	RegExIncludeRepository *regexp.Regexp
+	RegExExcludeRepository *regexp.Regexp
+	SkipRepository         []string // A list of repositories that print will skip
+
 	Concurrent int
 	CloneDir   string
 
@@ -32,6 +37,13 @@ func (r Printer) Print(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
 		return err
+	}
+
+	repos = filterRepositories(repos, r.SkipRepository, r.RegExIncludeRepository, r.RegExExcludeRepository)
+
+	if len(repos) == 0 {
+		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want to change.")
+		return nil
 	}
 
 	rc := repocounter.NewCounter()
