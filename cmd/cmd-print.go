@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"regexp"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -36,9 +35,7 @@ func PrintCmd() *cobra.Command {
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr.`)
 	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.")
-	cmd.Flags().StringP("repo-include", "", "", "Include repositories that match with a given Regular Expression")
-	cmd.Flags().StringP("repo-exclude", "", "", "Exclude repositories that match with a given Regular Expression")
-	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
+	configureRepoFilters(cmd)
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureLogging(cmd, "")
@@ -55,9 +52,6 @@ func printCMD(cmd *cobra.Command, _ []string) error {
 	strOutput, _ := flag.GetString("output")
 	strErrOutput, _ := flag.GetString("error-output")
 	cloneDir, _ := flag.GetString("clone-dir")
-	repoInclude, _ := flag.GetString("repo-include")
-	repoExclude, _ := flag.GetString("repo-exclude")
-	skipRepository, _ := flag.GetStringSlice("skip-repo")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -73,21 +67,9 @@ func printCMD(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var regExIncludeRepository *regexp.Regexp
-	var regExExcludeRepository *regexp.Regexp
-	if repoInclude != "" {
-		repoIncludeFilterCompile, err := regexp.Compile(repoInclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-include")
-		}
-		regExIncludeRepository = repoIncludeFilterCompile
-	}
-	if repoExclude != "" {
-		repoExcludeFilterCompile, err := regexp.Compile(repoExclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-exclude")
-		}
-		regExExcludeRepository = repoExcludeFilterCompile
+	filters, err := parseRepoFilters(flag)
+	if err != nil {
+		return err
 	}
 
 	vc, err := getVersionController(flag, true, true)
@@ -126,9 +108,7 @@ func printCMD(cmd *cobra.Command, _ []string) error {
 		Stdout: output,
 		Stderr: errOutput,
 
-		RegExIncludeRepository: regExIncludeRepository,
-		RegExExcludeRepository: regExExcludeRepository,
-		SkipRepository:         skipRepository,
+		RepoFilters: filters,
 
 		Concurrent: concurrent,
 		CloneDir:   cloneDir,
