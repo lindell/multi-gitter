@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"regexp"
 	"sync"
 	"syscall"
 	"unicode"
@@ -69,13 +68,13 @@ type Runner struct {
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 	Assignees        []string
 
-	Concurrent             int
-	SkipPullRequest        bool     // If set, the script will run directly on the base-branch without creating any PR
-	PushOnly               bool     // If set, the script will only publish the feature branch without creating a PR
-	SkipRepository         []string // A list of repositories that run will skip
-	APIPush                bool     // Use the SCM API to commit and push the changes instead of git
-	RegExIncludeRepository *regexp.Regexp
-	RegExExcludeRepository *regexp.Regexp
+	Concurrent      int
+	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
+	PushOnly        bool // If set, the script will only publish the feature branch without creating a PR
+	APIPush         bool // Use the SCM API to commit and push the changes instead of git
+
+	// RepoFilters contains repository filtering options
+	RepoFilters RepoFilters
 
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
@@ -122,7 +121,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
 
-	repos = filterRepositories(repos, r.SkipRepository, r.RegExIncludeRepository, r.RegExExcludeRepository)
+	repos = filterRepositories(repos, r.RepoFilters)
 
 	if len(repos) == 0 {
 		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want to change.")
@@ -173,45 +172,6 @@ func (r *Runner) Run(ctx context.Context) error {
 	}, len(repos), r.Concurrent)
 
 	return nil
-}
-
-// Determines if Repository should be excluded based on provided Regular Expression
-func excludeRepositoryFilter(repoName string, regExp *regexp.Regexp) bool {
-	if regExp == nil {
-		return false
-	}
-	return regExp.MatchString(repoName)
-}
-
-// Determines if Repository should be included based on provided Regular Expression
-func matchesRepositoryFilter(repoName string, regExp *regexp.Regexp) bool {
-	if regExp == nil {
-		return true
-	}
-	return regExp.MatchString(repoName)
-}
-
-func filterRepositories(repos []scm.Repository, skipRepositoryNames []string, regExIncludeRepository *regexp.Regexp,
-	regExExcludeRepository *regexp.Regexp,
-) []scm.Repository {
-	skipReposMap := map[string]struct{}{}
-	for _, skipRepo := range skipRepositoryNames {
-		skipReposMap[skipRepo] = struct{}{}
-	}
-
-	filteredRepos := make([]scm.Repository, 0, len(repos))
-	for _, r := range repos {
-		if _, shouldSkip := skipReposMap[r.FullName()]; shouldSkip {
-			log.Infof("Skipping %s since it is in exclusion list", r.FullName())
-		} else if !matchesRepositoryFilter(r.FullName(), regExIncludeRepository) {
-			log.Infof("Skipping %s since it does not match the inclusion regexp", r.FullName())
-		} else if excludeRepositoryFilter(r.FullName(), regExExcludeRepository) {
-			log.Infof("Skipping %s since it match the exclusion regexp", r.FullName())
-		} else {
-			filteredRepos = append(filteredRepos, r)
-		}
-	}
-	return filteredRepos
 }
 
 func runInParallel(fun func(i int), total int, maxConcurrent int) {
