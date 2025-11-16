@@ -126,7 +126,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	} else if commitMessage == "" {
 		commitMessage = prTitle
 		if prBody != "" {
-			commitMessage += "\n" + prBody
+			commitMessage += "\n\n" + prBody
 		}
 	} else if prTitle == "" {
 		split := strings.SplitN(commitMessage, "\n", 2)
