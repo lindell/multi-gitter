@@ -57,7 +57,7 @@ $ multi-gitter run ./script.sh --dry-run --log-level=debug -O my-org -m "Commit 
 ### Homebrew
 If you are using Mac or Linux, [Homebrew](https://brew.sh/) is an easy way of installing multi-gitter.
 ```bash
-brew install lindell/multi-gitter/multi-gitter
+brew install --cask lindell/multi-gitter/multi-gitter
 ```
 
 ### Manual binary install
