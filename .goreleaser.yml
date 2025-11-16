@@ -74,6 +74,12 @@ homebrew_casks:
     license: "Apache-2.0"
     url:
       verified: github.com/lindell/multi-gitter
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/multi-gitter"]
+          end
 publishers:
   - name: fury.io
     ids:
