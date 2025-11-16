@@ -21,6 +21,9 @@ type Printer struct {
 	Stdout io.Writer
 	Stderr io.Writer
 
+	// RepoFilters contains repository filtering options
+	RepoFilters RepoFilters
+
 	Concurrent int
 	CloneDir   string
 
@@ -32,6 +35,13 @@ func (r Printer) Print(ctx context.Context) error {
 	repos, err := r.VersionController.GetRepositories(ctx)
 	if err != nil {
 		return err
+	}
+
+	repos = filterRepositories(repos, r.RepoFilters)
+
+	if len(repos) == 0 {
+		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want print to run on.")
+		return nil
 	}
 
 	rc := repocounter.NewCounter()
