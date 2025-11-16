@@ -72,6 +72,10 @@ homebrew_casks:
     description: "Update multiple repositories in bulk"
     homepage: https://github.com/lindell/multi-gitter
     license: "Apache-2.0"
+    completions:
+      bash: "completions/multi-gitter.bash"
+      zsh: "completions/multi-gitter.zsh"
+      fish: "completions/multi-gitter.fish"
     url:
       verified: github.com/lindell/multi-gitter
     hooks:
