@@ -61,26 +61,19 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
-brews:
+homebrew_casks:
   - name: multi-gitter
     repository:
       owner: lindell
       name: homebrew-multi-gitter
-    goarm: 6
     commit_author:
       name: Johan Lindell
       email: johan@lindell.me
     description: "Update multiple repositories in bulk"
     homepage: https://github.com/lindell/multi-gitter
     license: "Apache-2.0"
-    directory: Formula
-    install: |-
-      bin.install "multi-gitter"
-      bash_completion.install "completions/multi-gitter.bash" => "multi-gitter"
-      zsh_completion.install "completions/multi-gitter.zsh" => "_multi-gitter"
-      fish_completion.install "completions/multi-gitter.fish"
-    test: |
-      system "#{bin}/multi-gitter", "version"
+    url:
+      verified: github.com/lindell/multi-gitter
 publishers:
   - name: fury.io
     ids:
