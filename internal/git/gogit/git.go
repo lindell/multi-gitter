@@ -255,6 +255,9 @@ func (g *Git) CommitChanges(sinceCommitHash string) ([]internalgit.Changes, erro
 		return nil, errors.WithMessage(err, "could not get current commit")
 	}
 
+	// Go through all commits until we reach the sinceCommitHash
+	// This is is by default only the latest commit, but if we use manual commits,
+	// there might be multiple commits to go through.
 	allChanges := []internalgit.Changes{}
 	for {
 		fromCommit, err := iter.Next()
@@ -280,7 +283,7 @@ func (g *Git) CommitChanges(sinceCommitHash string) ([]internalgit.Changes, erro
 	return allChanges, nil
 }
 
-func (g *Git) changesBetweenCommits(ctx context.Context, from, to *object.Commit) (internalgit.Changes, error) {
+func (g *Git) changesBetweenCommits(_ context.Context, from, to *object.Commit) (internalgit.Changes, error) {
 	toTree, err := to.Tree()
 	if err != nil {
 		return internalgit.Changes{}, errors.WithMessage(err, "could not get current tree")

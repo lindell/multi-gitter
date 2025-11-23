@@ -345,7 +345,6 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			return nil, errors.New("the scm implementation does not support committing through the API")
 		}
 
-		// Todo: Change to ChangesSince(commitBeforeRun)
 		changes, err := commitChecker.CommitChanges(commitHashBeforeRun)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not get diff")
