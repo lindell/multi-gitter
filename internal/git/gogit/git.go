@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
@@ -329,7 +330,7 @@ func (g *Git) changesBetweenCommits(_ context.Context, from, to *object.Commit) 
 	}
 
 	return internalgit.Changes{
-		Message:   to.Message,
+		Message:   strings.TrimSpace(to.Message),
 		Additions: additions,
 		Deletions: deletions,
 		OldHash:   from.Hash.String(),

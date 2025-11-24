@@ -111,7 +111,6 @@ func run(cmd *cobra.Command, _ []string) error {
 	labels, _ := stringSlice(flag, "labels")
 
 	platform, _ := flag.GetString("platform")
-	gitType, _ := flag.GetString("git-type")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -157,9 +156,6 @@ func run(cmd *cobra.Command, _ []string) error {
 	if apiPush {
 		if platform != "github" {
 			return errors.New("api-push is only supported for GitHub")
-		}
-		if gitType != "go" {
-			return errors.New("api-push only works with go-git")
 		}
 	}
 
