@@ -1752,6 +1752,11 @@ func TestGerritTable(t *testing.T) {
 					cmdOut: cobraBuf.String(),
 					took:   took,
 				})
+				if t.Failed() {
+					fmt.Printf("Log output:\n%s\n", string(logData))
+					fmt.Printf("Command output:\n%s\n", cobraBuf.String())
+					fmt.Printf("Standard output:\n%s\n", string(outData))
+				}
 			})
 		}
 	}
