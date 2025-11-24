@@ -27,7 +27,7 @@ func main() {
 		panic(err)
 	}
 
-	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body")
+	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body", "--author", "Author Name <email@address.com>")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
@@ -45,7 +45,7 @@ func main() {
 		panic(err)
 	}
 
-	cmd = exec.Command("git", "commit", "-m", "Manual commit message 2")
+	cmd = exec.Command("git", "commit", "-m", "Manual commit message 2", "--author", "Author Name <email@address.com>")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
