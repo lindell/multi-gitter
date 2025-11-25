@@ -30,8 +30,13 @@ func main() {
 	}
 
 	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body", "--author", "Author Name <email@address.com>")
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
+	stderr := &bytes.Buffer{}
+	stdout := &bytes.Buffer{}
+	cmd.Stderr = stderr
+	cmd.Stdout = stdout
+	if cmd.Run(); err != nil {
+		fmt.Println(stdout.String())
+		fmt.Println(stdout.String())
 		panic(err)
 	}
 
