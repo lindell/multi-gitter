@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 )
@@ -29,6 +30,7 @@ func main() {
 
 	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body", "--author", "Author Name <email@address.com>")
 	if err := cmd.Run(); err != nil {
+		fmt.Println(cmd.String())
 		panic(err)
 	}
 
