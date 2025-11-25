@@ -34,7 +34,7 @@ func main() {
 	stdout := &bytes.Buffer{}
 	cmd.Stderr = stderr
 	cmd.Stdout = stdout
-	if cmd.Run(); err != nil {
+	if err := cmd.Run(); err != nil {
 		fmt.Println(stdout.String())
 		fmt.Println(stdout.String())
 		panic(err)
