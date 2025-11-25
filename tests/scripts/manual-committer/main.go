@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 )
@@ -37,6 +38,7 @@ func main() {
 	if err := cmd.Run(); err != nil {
 		fmt.Println(stdout.String())
 		fmt.Println(stdout.String())
+		log.Fatal(err)
 		panic(err)
 	}
 
