@@ -1502,7 +1502,11 @@ Repositories with a successful run:
 				continue
 			}
 
-			t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
+			var logData []byte
+			var outData []byte
+			cobraBuf := &bytes.Buffer{}
+
+			success := t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
 				// Skip some tests depending on the values in skipTypes
 				if skipOverlap(skipTypes, test.skipTypes) {
 					t.SkipNow()
@@ -1521,8 +1525,6 @@ Repositories with a successful run:
 				defer vc.Clean()
 
 				cmd.OverrideVersionController = vc
-
-				cobraBuf := &bytes.Buffer{}
 
 				staticArgs := []string{
 					"--log-file", logFile.Name(),
@@ -1543,10 +1545,10 @@ Repositories with a successful run:
 					assert.NoError(t, err)
 				}
 
-				logData, err := io.ReadAll(logFile)
+				logData, err = io.ReadAll(logFile)
 				assert.NoError(t, err)
 
-				outData, err := io.ReadAll(outFile)
+				outData, err = io.ReadAll(outFile)
 				assert.NoError(t, err)
 
 				test.verify(t, vc, runData{
@@ -1556,6 +1558,12 @@ Repositories with a successful run:
 					took:   took,
 				})
 			})
+
+			if !success {
+				fmt.Fprintf(os.Stderr, "Log output:\n%s\n", string(logData))
+				fmt.Fprintf(os.Stderr, "Command output:\n%s\n", cobraBuf.String())
+				fmt.Fprintf(os.Stderr, "Standard output:\n%s\n", string(outData))
+			}
 		}
 	}
 }
@@ -1752,10 +1760,6 @@ func TestGerritTable(t *testing.T) {
 					cmdOut: cobraBuf.String(),
 					took:   took,
 				})
-
-				fmt.Fprintf(os.Stderr, "Log output:\n%s\n", string(logData))
-				fmt.Fprintf(os.Stderr, "Command output:\n%s\n", cobraBuf.String())
-				fmt.Fprintf(os.Stderr, "Standard output:\n%s\n", string(outData))
 			})
 		}
 	}
