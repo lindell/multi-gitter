@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 )
@@ -29,8 +30,14 @@ func main() {
 	}
 
 	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body", "--author", "Author Name <email@address.com>")
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		panic(err)
+	}
+
 	if err := cmd.Run(); err != nil {
-		fmt.Println(cmd.CombinedOutput())
+		slurp, _ := io.ReadAll(stderr)
+		fmt.Println(string(slurp))
 		panic(err)
 	}
 
