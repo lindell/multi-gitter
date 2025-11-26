@@ -11,6 +11,15 @@ import (
 const fileName = "test.txt"
 
 func main() {
+	cmd := exec.Command("git", "config", "user.email", "john@doe.com")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+	cmd = exec.Command("git", "config", "user.name", "John Doe")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		panic(err)
@@ -24,7 +33,7 @@ func main() {
 	}
 
 	// Manually commit the changes
-	cmd := exec.Command("git", "add", fileName)
+	cmd = exec.Command("git", "add", fileName)
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
