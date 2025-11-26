@@ -431,7 +431,16 @@ func (r *Runner) remoteReference(baseBranch string, featureBranch string) string
 	return ""
 }
 
-func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogger, repo scm.Repository, prRepo scm.Repository, baseBranch string, featureBranchExist bool, prTitle string, prBody string) (scm.PullRequest, error) {
+func (r *Runner) ensurePullRequestExists(
+	ctx context.Context,
+	log log.FieldLogger,
+	repo scm.Repository,
+	prRepo scm.Repository,
+	baseBranch string,
+	featureBranchExist bool,
+	prTitle string,
+	prBody string,
+) (scm.PullRequest, error) {
 	if r.SkipPullRequest {
 		return nil, nil
 	}
