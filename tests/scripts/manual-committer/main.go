@@ -30,7 +30,7 @@ func main() {
 	}
 
 	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body")
-	cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=Author Name", "GIT_AUTHOR_EMAIL=email@address.com")
+	cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=John Doe", "GIT_AUTHOR_EMAIL=john@doe.com")
 	stderr := &bytes.Buffer{}
 	stdout := &bytes.Buffer{}
 	cmd.Stderr = stderr
@@ -56,7 +56,7 @@ func main() {
 	}
 
 	cmd = exec.Command("git", "commit", "-m", "Manual commit message 2")
-	cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=Author Name", "GIT_AUTHOR_EMAIL=email@address.com")
+	cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=John Doe", "GIT_AUTHOR_EMAIL=john@doe.com")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
