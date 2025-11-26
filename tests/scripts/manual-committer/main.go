@@ -11,6 +11,7 @@ import (
 const fileName = "test.txt"
 
 func main() {
+	// Config git user
 	cmd := exec.Command("git", "config", "user.email", "john@doe.com")
 	if err := cmd.Run(); err != nil {
 		panic(err)
@@ -39,7 +40,6 @@ func main() {
 	}
 
 	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body")
-	cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=Johan Lindell", "GIT_AUTHOR_EMAIL=johan@lindell.com")
 	stderr := &bytes.Buffer{}
 	stdout := &bytes.Buffer{}
 	cmd.Stderr = stderr
@@ -65,7 +65,6 @@ func main() {
 	}
 
 	cmd = exec.Command("git", "commit", "-m", "Manual commit message 2")
-	cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=Johan Lindell", "GIT_AUTHOR_EMAIL=johan@lindell.com")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
