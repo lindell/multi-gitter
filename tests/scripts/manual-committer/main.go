@@ -9,6 +9,16 @@ import (
 const fileName = "test.txt"
 
 func main() {
+	// Config git user
+	cmd := exec.Command("git", "config", "user.email", "john@doe.com")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+	cmd = exec.Command("git", "config", "user.name", "John Doe")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+
 	data, err := os.ReadFile(fileName)
 	if err != nil {
 		panic(err)
@@ -22,12 +32,12 @@ func main() {
 	}
 
 	// Manually commit the changes
-	cmd := exec.Command("git", "add", fileName)
+	cmd = exec.Command("git", "add", fileName)
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
 
-	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body", "--author", "Author Name <email@address.com>")
+	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
@@ -45,7 +55,7 @@ func main() {
 		panic(err)
 	}
 
-	cmd = exec.Command("git", "commit", "-m", "Manual commit message 2", "--author", "Author Name <email@address.com>")
+	cmd = exec.Command("git", "commit", "-m", "Manual commit message 2")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
