@@ -35,8 +35,8 @@ func main() {
 	cmd.Stderr = stderr
 	cmd.Stdout = stdout
 	if err := cmd.Run(); err != nil {
-		fmt.Println(stdout.String())
-		fmt.Println(stdout.String())
+		fmt.Println("STDOUT:", stdout.String())
+		fmt.Println("STDERR:", stderr.String())
 		log.Fatal(err)
 		panic(err)
 	}
