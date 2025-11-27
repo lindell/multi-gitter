@@ -25,37 +25,23 @@ func main() {
 	}
 
 	data = bytes.ReplaceAll(data, []byte("apple"), []byte("banana"))
-
 	err = os.WriteFile(fileName, data, 0600)
 	if err != nil {
 		panic(err)
 	}
 
-	// Manually commit the changes
-	cmd = exec.Command("git", "add", fileName)
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
-
-	cmd = exec.Command("git", "commit", "-m", "Manual commit message 1", "-m", "With a body")
+	cmd = exec.Command("git", "commit", "-am", "Manual commit message 1", "-m", "With a body")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
 
 	data = bytes.ReplaceAll(data, []byte("banana"), []byte("pineapple"))
-
 	err = os.WriteFile(fileName, data, 0600)
 	if err != nil {
 		panic(err)
 	}
 
-	// Manually commit the changes again
-	cmd = exec.Command("git", "add", fileName)
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
-
-	cmd = exec.Command("git", "commit", "-m", "Manual commit message 2")
+	cmd = exec.Command("git", "commit", "-am", "Manual commit message 2")
 	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
