@@ -48,7 +48,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
 	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
-	cmd.Flags().BoolP("manual-commit", "", false, "Don't automatically commit changes. The script must commit the changes itself. Multiple commits are allowed.")
+	cmd.Flags().BoolP("manual-commit", "", false, "Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.")
 	cmd.Flags().BoolP("api-push", "", false, `Push changes through the API instead of git. Only supported for GitHub.
 It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.`)
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
