@@ -192,6 +192,9 @@ log-format: text
 # The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
+# Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.
+manual-commit: false
+
 # If this value is set, reviewers will be randomized.
 max-reviewers: 0
 
@@ -719,6 +722,7 @@ Flags:
       --log-file string            The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string          The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
+      --manual-commit              Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
       --max-team-reviewers int     If this value is set, team reviewers will be randomized
       --merge-type strings         The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge. (default [merge,squash,rebase])
