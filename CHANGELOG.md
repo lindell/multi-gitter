@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.61.0](https://github.com/lindell/multi-gitter/compare/v0.60.0...v0.61.0) (2025-11-27)
+
+
+### Features
+
+* add --manual-commit flag ([#552](https://github.com/lindell/multi-gitter/issues/552)) ([5ff3621](https://github.com/lindell/multi-gitter/commit/5ff3621112b4fef2d0a9a78ea95d57fd4ab77212))
+
 ## [0.60.0](https://github.com/lindell/multi-gitter/compare/v0.59.0...v0.60.0) (2025-11-16)
 
 
