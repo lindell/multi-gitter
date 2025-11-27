@@ -170,8 +170,8 @@ func (g *Git) LatestCommitHash() (string, error) {
 	return strings.TrimSpace(stdOut), err
 }
 
-// CommitChanges returns the changes made in commits since the given commit hash
-func (g *Git) CommitChanges(sinceCommitHash string) ([]git.Changes, error) {
+// ChangesSinceCommit returns the changes made in commits since the given commit hash
+func (g *Git) ChangesSinceCommit(sinceCommitHash string) ([]git.Changes, error) {
 	// Get the list of commits from sinceCommitHash to HEAD, one for each line
 	cmd := exec.Command("git", "rev-list", "--reverse", sinceCommitHash+"..HEAD")
 	stdOut, err := g.run(cmd)

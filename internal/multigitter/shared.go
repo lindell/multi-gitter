@@ -35,6 +35,7 @@ type Git interface {
 	Push(ctx context.Context, remoteName, remoteReference string, force bool) error
 	AddRemote(name, url string) error
 	LatestCommitHash() (string, error)
+	ChangesSinceCommit(sinceCommitHash string) ([]git.Changes, error)
 }
 
 type stackTracer interface {

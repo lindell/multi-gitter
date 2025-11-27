@@ -245,7 +245,8 @@ func (g *Git) LatestCommitHash() (string, error) {
 	return head.Hash().String(), nil
 }
 
-func (g *Git) CommitChanges(sinceCommitHash string) ([]internalgit.Changes, error) {
+// ChangesSinceCommit returns the changes made in commits since the given commit hash
+func (g *Git) ChangesSinceCommit(sinceCommitHash string) ([]internalgit.Changes, error) {
 	iter, err := g.repo.Log(&git.LogOptions{})
 	if err != nil {
 		return nil, err

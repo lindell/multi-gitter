@@ -346,13 +346,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			return nil, errors.Wrap(err, "could not push changes")
 		}
 	} else {
-		commitChecker, hasCommitChecker := sourceController.(git.ChangeFetcher)
 		changePusher, hasChangePusher := r.VersionController.(scm.ChangePusher)
-		if !hasCommitChecker || !hasChangePusher {
+		if !hasChangePusher {
 			return nil, errors.New("the scm implementation does not support committing through the API")
 		}
 
-		changes, err := commitChecker.CommitChanges(commitHashBeforeRun)
+		changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not get diff")
 		}
@@ -389,12 +388,7 @@ func (r *Runner) getPRBodyAndTitle(sourceController Git, commitHashBeforeRun str
 		return r.PullRequestTitle, r.PullRequestBody, nil
 	}
 
-	commitChecker, hasCommitChecker := sourceController.(git.ChangeFetcher)
-	if !hasCommitChecker {
-		return "", "", nil
-	}
-
-	changes, err := commitChecker.CommitChanges(commitHashBeforeRun)
+	changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
 	if err != nil {
 		return "", "", errors.Wrap(err, "could not get commit message")
 	}

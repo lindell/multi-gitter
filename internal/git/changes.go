@@ -15,7 +15,3 @@ type Changes struct {
 	// OldHash is the hash of the previous commit
 	OldHash string
 }
-
-type ChangeFetcher interface {
-	CommitChanges(sinceCommitHash string) ([]Changes, error)
-}
