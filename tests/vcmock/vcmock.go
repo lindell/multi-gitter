@@ -20,7 +20,7 @@ type VersionController struct {
 	PRNumber     int
 	Repositories []Repository
 	PullRequests []PullRequest
-	Changes      []internalgit.Changes
+	Changes      map[string][]internalgit.Changes
 
 	prLock sync.RWMutex
 }
@@ -156,14 +156,17 @@ func (vc *VersionController) SetPRStatus(repoName string, branchName string, new
 
 func (vc *VersionController) Push(
 	ctx context.Context,
-	r scm.Repository,
-	commitMessage string,
-	changes internalgit.Changes,
+	repo scm.Repository,
+	change []internalgit.Changes,
 	featureBranch string,
 	branchExist bool,
 	forcePush bool,
 ) error {
-	vc.Changes = append(vc.Changes, changes)
+	if vc.Changes == nil {
+		vc.Changes = map[string][]internalgit.Changes{}
+	}
+
+	vc.Changes[repo.FullName()] = change
 
 	return nil
 }

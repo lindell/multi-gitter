@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"syscall"
 	"unicode"
@@ -72,6 +73,7 @@ type Runner struct {
 	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
 	PushOnly        bool // If set, the script will only publish the feature branch without creating a PR
 	APIPush         bool // Use the SCM API to commit and push the changes instead of git
+	ManualCommit    bool // If set, multi-gitter will not commit the changes left by the script.
 
 	// RepoFilters contains repository filtering options
 	RepoFilters RepoFilters
@@ -237,6 +239,11 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
+	commitHashBeforeRun, err := sourceController.LatestCommitHash()
+	if err != nil {
+		return nil, err
+	}
+
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
 	if r.DryRun {
 		cmd.Env = append(cmd.Env, "DRY_RUN=true")
@@ -253,20 +260,37 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, transformExecError(err)
 	}
 
-	if changed, err := sourceController.Changes(); err != nil {
-		return nil, err
-	} else if !changed {
-		return nil, errNoChange
+	if !r.ManualCommit {
+		if changed, err := sourceController.Changes(); err != nil {
+			return nil, err
+		} else if !changed {
+			return nil, errNoChange
+		}
+
+		commitMessage := r.enhanceCommitMessage(ctx, repo)
+		err = sourceController.Commit(r.CommitAuthor, commitMessage)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		commitHashAfterRun, err := sourceController.LatestCommitHash()
+		if err != nil {
+			return nil, err
+		}
+
+		if commitHashBeforeRun == commitHashAfterRun {
+			return nil, errNoChange
+		}
+
 	}
 
-	commitMessage := r.enhanceCommitMessage(ctx, repo)
-	err = sourceController.Commit(r.CommitAuthor, commitMessage)
+	prTitle, prBody, err := r.getPRBodyAndTitle(sourceController, commitHashBeforeRun)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not get pull request title and body")
 	}
 
 	if r.Interactive {
-		err = r.interactive(tmpDir, repo)
+		err = r.interactive(tmpDir, repo, commitHashBeforeRun)
 		if err != nil {
 			return nil, err
 		}
@@ -303,7 +327,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exists")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
-			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist, prTitle, prBody)
 			if err != nil {
 				return nil, err
 			}
@@ -322,18 +346,17 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			return nil, errors.Wrap(err, "could not push changes")
 		}
 	} else {
-		commitChecker, hasCommitChecker := sourceController.(git.LastCommitChecker)
 		changePusher, hasChangePusher := r.VersionController.(scm.ChangePusher)
-		if !hasCommitChecker || !hasChangePusher {
+		if !hasChangePusher {
 			return nil, errors.New("the scm implementation does not support committing through the API")
 		}
 
-		changes, err := commitChecker.LastCommitChanges()
+		changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not get diff")
 		}
 
-		err = changePusher.Push(ctx, repo, r.CommitMessage, changes, r.FeatureBranch, featureBranchExist, forcePush)
+		err = changePusher.Push(ctx, repo, changes, r.FeatureBranch, featureBranchExist, forcePush)
 		if err != nil {
 			return nil, err
 		}
@@ -345,7 +368,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}, nil
 	}
 
-	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist, prTitle, prBody)
 }
 
 func (r *Runner) enhanceCommitMessage(ctx context.Context, repo scm.Repository) string {
@@ -355,6 +378,35 @@ func (r *Runner) enhanceCommitMessage(ctx context.Context, repo scm.Repository) 
 		return commitMessage
 	}
 	return r.CommitMessage
+}
+
+// Get the PR title and body
+// In the default case, this is simply the set title and body,
+// but it may also be extracted from a commit messages if manual commits are used
+func (r *Runner) getPRBodyAndTitle(sourceController Git, commitHashBeforeRun string) (string, string, error) {
+	if !r.ManualCommit || r.PullRequestTitle != "" {
+		return r.PullRequestTitle, r.PullRequestBody, nil
+	}
+
+	changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
+	if err != nil {
+		return "", "", errors.Wrap(err, "could not get commit message")
+	}
+
+	if len(changes) == 0 {
+		return "", "", errors.New("no commits found")
+	}
+
+	// Use the first line of the first commit message as the PR title
+	commitMessage := changes[0].Message
+	split := strings.SplitN(commitMessage, "\n", 2)
+	title := strings.TrimSpace(split[0])
+	body := ""
+	if len(split) == 2 {
+		body = strings.TrimSpace(split[1])
+	}
+
+	return title, body, nil
 }
 
 func (r *Runner) featureBranchExist(ctx context.Context, repo scm.Repository, remoteName string, sourceController Git) (bool, error) {
@@ -373,7 +425,16 @@ func (r *Runner) remoteReference(baseBranch string, featureBranch string) string
 	return ""
 }
 
-func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogger, repo scm.Repository, prRepo scm.Repository, baseBranch string, featureBranchExist bool) (scm.PullRequest, error) {
+func (r *Runner) ensurePullRequestExists(
+	ctx context.Context,
+	log log.FieldLogger,
+	repo scm.Repository,
+	prRepo scm.Repository,
+	baseBranch string,
+	featureBranchExist bool,
+	prTitle string,
+	prBody string,
+) (scm.PullRequest, error) {
 	if r.SkipPullRequest {
 		return nil, nil
 	}
@@ -392,8 +453,8 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 		if r.ConflictStrategy == ConflictStrategyReplace {
 			log.Info("Updating pull request since one is already open")
 			return r.VersionController.UpdatePullRequest(ctx, repo, existingPullRequest, scm.NewPullRequest{
-				Title:         r.PullRequestTitle,
-				Body:          r.PullRequestBody,
+				Title:         prTitle,
+				Body:          prBody,
 				Head:          r.FeatureBranch,
 				Base:          baseBranch,
 				Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
@@ -410,8 +471,8 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 
 	log.Info("Creating pull request")
 	return r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
-		Title:         r.PullRequestTitle,
-		Body:          r.PullRequestBody,
+		Title:         prTitle,
+		Body:          prBody,
 		Head:          r.FeatureBranch,
 		Base:          baseBranch,
 		Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
@@ -425,7 +486,7 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(dir string, repo scm.Repository) error {
+func (r *Runner) interactive(dir string, repo scm.Repository, oldCommitHash string) error {
 	fmt.Fprintf(os.Stderr, "Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Fprintln(os.Stderr, interactiveInfo)
 	for {
@@ -447,7 +508,7 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 		switch unicode.ToLower(char) {
 		case 'v':
 			fmt.Fprintln(os.Stderr, "Showing changes...")
-			cmd := exec.Command("git", "diff", "HEAD~1")
+			cmd := exec.Command("git", "diff", oldCommitHash)
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr

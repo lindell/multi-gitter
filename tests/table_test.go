@@ -76,6 +76,7 @@ func TestTable(t *testing.T) {
 	assert.NoError(t, err)
 
 	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
+	manualCommitterBinaryPath := normalizePath(filepath.Join(workingDir, manualCommitterBinaryPath))
 
 	tests := []struct {
 		name        string
@@ -1389,8 +1390,7 @@ Repositories with a successful run:
 			},
 		},
 		{
-			name:        "api-push",
-			gitBackends: []gitBackend{gitBackendGo},
+			name: "api-push",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -1411,11 +1411,86 @@ Repositories with a successful run:
 				assert.Equal(t, runData.cmdOut, "")
 				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
 				require.Len(t, vcMock.Changes, 1)
-				assert.Equal(t, vcMock.Changes[0].Additions, map[string][]byte{
+				changes := vcMock.Changes["owner/example-repository"]
+				require.Len(t, changes, 1)
+				assert.Equal(t, changes[0].Additions, map[string][]byte{
 					"test.txt": []byte("i like bananas"),
 				})
-				assert.Equal(t, vcMock.Changes[0].Deletions, []string{})
-				assert.Len(t, vcMock.Changes[0].OldHash, 40)
+				assert.Equal(t, changes[0].Deletions, []string{})
+				assert.Len(t, changes[0].OldHash, 40)
+			},
+		},
+		{
+			name: "manual-commit",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--manual-commit",
+				manualCommitterBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, runData.cmdOut, "")
+				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "Manual commit message 1", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "With a body", vcMock.PullRequests[0].Body)
+
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+				assert.Contains(t, runData.logOut, "Cloning and running script")
+				assert.Contains(t, runData.logOut, "Pushing changes to remote")
+				assert.Contains(t, runData.logOut, "Creating pull request")
+			},
+		},
+		{
+			name: "manual-commit with api-push",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--manual-commit",
+				"--api-push",
+				manualCommitterBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, runData.cmdOut, "")
+				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
+				require.Len(t, vcMock.Changes, 1)
+				changes := vcMock.Changes["owner/example-repository"]
+
+				require.Len(t, changes, 2)
+
+				assert.Equal(t, changes[0].Message, "Manual commit message 1\n\nWith a body")
+				assert.Equal(t, changes[0].Additions, map[string][]byte{
+					"test.txt": []byte("i like bananas"),
+				})
+				assert.Equal(t, changes[0].Deletions, []string{})
+				assert.Len(t, changes[0].OldHash, 40)
+
+				assert.Equal(t, changes[1].Message, "Manual commit message 2")
+				assert.Equal(t, changes[1].Additions, map[string][]byte{
+					"test.txt": []byte("i like pineapples"),
+				})
+				assert.Equal(t, changes[1].Deletions, []string{})
+				assert.Len(t, changes[1].OldHash, 40)
 			},
 		},
 	}
@@ -1427,7 +1502,11 @@ Repositories with a successful run:
 				continue
 			}
 
-			t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
+			var logData []byte
+			var outData []byte
+			cobraBuf := &bytes.Buffer{}
+
+			success := t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
 				// Skip some tests depending on the values in skipTypes
 				if skipOverlap(skipTypes, test.skipTypes) {
 					t.SkipNow()
@@ -1446,8 +1525,6 @@ Repositories with a successful run:
 				defer vc.Clean()
 
 				cmd.OverrideVersionController = vc
-
-				cobraBuf := &bytes.Buffer{}
 
 				staticArgs := []string{
 					"--log-file", logFile.Name(),
@@ -1468,10 +1545,10 @@ Repositories with a successful run:
 					assert.NoError(t, err)
 				}
 
-				logData, err := io.ReadAll(logFile)
+				logData, err = io.ReadAll(logFile)
 				assert.NoError(t, err)
 
-				outData, err := io.ReadAll(outFile)
+				outData, err = io.ReadAll(outFile)
 				assert.NoError(t, err)
 
 				test.verify(t, vc, runData{
@@ -1481,6 +1558,12 @@ Repositories with a successful run:
 					took:   took,
 				})
 			})
+
+			if !success {
+				fmt.Fprintf(os.Stderr, "Log output:\n%s\n", string(logData))
+				fmt.Fprintf(os.Stderr, "Command output:\n%s\n", cobraBuf.String())
+				fmt.Fprintf(os.Stderr, "Standard output:\n%s\n", string(outData))
+			}
 		}
 	}
 }
