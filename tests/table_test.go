@@ -1385,8 +1385,8 @@ Repositories with a successful run:
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, runData.cmdOut, "")
-				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #0\n")
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #0\n", runData.out)
 			},
 		},
 		{
@@ -1408,15 +1408,15 @@ Repositories with a successful run:
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, runData.cmdOut, "")
-				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #1\n", runData.out)
 				require.Len(t, vcMock.Changes, 1)
 				changes := vcMock.Changes["owner/example-repository"]
 				require.Len(t, changes, 1)
-				assert.Equal(t, changes[0].Additions, map[string][]byte{
+				assert.Equal(t, map[string][]byte{
 					"test.txt": []byte("i like bananas"),
-				})
-				assert.Equal(t, changes[0].Deletions, []string{})
+				}, changes[0].Additions)
+				assert.Equal(t, []string{}, changes[0].Deletions)
 				assert.Len(t, changes[0].OldHash, 40)
 			},
 		},
@@ -1438,8 +1438,8 @@ Repositories with a successful run:
 				manualCommitterBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, runData.cmdOut, "")
-				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #1\n", runData.out)
 				require.Len(t, vcMock.PullRequests, 1)
 				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
 				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
@@ -1471,25 +1471,25 @@ Repositories with a successful run:
 				manualCommitterBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, runData.cmdOut, "")
-				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #1\n")
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #1\n", runData.out)
 				require.Len(t, vcMock.Changes, 1)
 				changes := vcMock.Changes["owner/example-repository"]
 
 				require.Len(t, changes, 2)
 
-				assert.Equal(t, changes[0].Message, "Manual commit message 1\n\nWith a body")
-				assert.Equal(t, changes[0].Additions, map[string][]byte{
+				assert.Equal(t, "Manual commit message 1\n\nWith a body", changes[0].Message)
+				assert.Equal(t, map[string][]byte{
 					"test.txt": []byte("i like bananas"),
-				})
-				assert.Equal(t, changes[0].Deletions, []string{})
+				}, changes[0].Additions)
+				assert.Equal(t, []string{}, changes[0].Deletions)
 				assert.Len(t, changes[0].OldHash, 40)
 
-				assert.Equal(t, changes[1].Message, "Manual commit message 2")
-				assert.Equal(t, changes[1].Additions, map[string][]byte{
+				assert.Equal(t, "Manual commit message 2", changes[1].Message)
+				assert.Equal(t, map[string][]byte{
 					"test.txt": []byte("i like pineapples"),
-				})
-				assert.Equal(t, changes[1].Deletions, []string{})
+				}, changes[1].Additions)
+				assert.Equal(t, []string{}, changes[1].Deletions)
 				assert.Len(t, changes[1].OldHash, 40)
 			},
 		},
