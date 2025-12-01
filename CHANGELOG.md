@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.61.1](https://github.com/lindell/multi-gitter/compare/v0.61.0...v0.61.1) (2025-12-01)
+
+
+### Dependencies
+
+* update module github.com/go-git/go-git/v5 to v5.16.4 ([dcb90c0](https://github.com/lindell/multi-gitter/commit/dcb90c0c547296875eb8b9f02a9caff8e10529a2))
+* update module golang.org/x/net to v0.47.0 ([89337a4](https://github.com/lindell/multi-gitter/commit/89337a441fd3b66455de078bfa3104516534e8f5))
+* update module golang.org/x/oauth2 to v0.33.0 ([c533b3b](https://github.com/lindell/multi-gitter/commit/c533b3bd8339ff328c9fdd7884e41666e13013aa))
+
 ## [0.61.0](https://github.com/lindell/multi-gitter/compare/v0.60.0...v0.61.0) (2025-11-27)
 
 
