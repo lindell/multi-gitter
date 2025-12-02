@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/user"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -26,32 +27,45 @@ const QueryProjectsLimit = 100
 const RefHeadsPrefix = "refs/heads/"
 
 type Gerrit struct {
-	client     GoGerritClient
-	baseURL    string
-	username   string
-	token      string
-	repoSearch string
+	client      GoGerritClient
+	baseURL     string
+	username    string
+	token       string
+	repoListing RepositoryListing
 }
 
-func New(username, token, baseURL, repoSearch string) (*Gerrit, error) {
+type Config struct {
+	Username    string
+	Token       string
+	BaseURL     string
+	RepoListing RepositoryListing
+}
+
+// RepositoryListing contains information about which repositories that should be fetched
+type RepositoryListing struct {
+	Repositories []string
+	RepoSearch   string
+}
+
+func New(config Config) (*Gerrit, error) {
 	ctx := context.Background() // cancellation won't happen in our case (only used by go-gerrit if you inject username and token directly within baseURL)
-	client, err := gogerrit.NewClient(ctx, baseURL, &http.Client{
+	client, err := gogerrit.NewClient(ctx, config.BaseURL, &http.Client{
 		Transport: internalHTTP.LoggingRoundTripper{},
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create gerrit client")
 	}
 
-	client.Authentication.SetBasicAuth(username, token)
+	client.Authentication.SetBasicAuth(config.Username, config.Token)
 
 	return &Gerrit{
 		client: goGerritClient{
 			client: client,
 		},
-		baseURL:    baseURL,
-		username:   username,
-		token:      token,
-		repoSearch: repoSearch,
+		baseURL:     config.BaseURL,
+		username:    config.Username,
+		token:       config.Token,
+		repoListing: config.RepoListing,
 	}, nil
 }
 
@@ -78,9 +92,15 @@ func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 }
 
 func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (repositories []scm.Repository, moreProjects bool, err error) {
+	// Only use RepoSearch when no specific repositories are provided
+	repoSearchRegex := ""
+	if len(g.repoListing.Repositories) == 0 {
+		repoSearchRegex = g.repoListing.RepoSearch
+	}
+
 	opt := &gogerrit.ProjectOptions{
 		Description: true,
-		Regex:       g.repoSearch,
+		Regex:       repoSearchRegex,
 		Type:        "CODE",
 		Skip:        strconv.Itoa(skip),
 		ProjectBaseOptions: gogerrit.ProjectBaseOptions{
@@ -94,6 +114,10 @@ func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (reposito
 
 	for name, project := range *projects {
 		if project.State == "ACTIVE" {
+			if len(g.repoListing.Repositories) != 0 && !slices.Contains(g.repoListing.Repositories, name) {
+				continue
+			}
+
 			repo, err := g.convertRepo(ctx, name)
 			if err != nil {
 				return nil, false, err
