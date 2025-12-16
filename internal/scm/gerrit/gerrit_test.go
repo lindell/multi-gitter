@@ -95,11 +95,13 @@ func TestGetRepositories(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseURL:  "https://gerrit.com",
-		username: "admin",
-		token:    "token123",
-		repoListing: RepositoryListing{
-			RepoSearch: "repo",
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				RepoSearch: "repo",
+			},
 		},
 	}
 
@@ -135,11 +137,13 @@ func TestGetPullRequests(t *testing.T) {
 				return getChangesForQuery(opt.Query[0])
 			},
 		},
-		baseURL:  "https://gerrit.com",
-		username: "admin",
-		token:    "token123",
-		repoListing: RepositoryListing{
-			RepoSearch: "repo",
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				RepoSearch: "repo",
+			},
 		},
 	}
 	prs, err := g.GetPullRequests(context.Background(), "feature")
@@ -444,11 +448,13 @@ func TestGetRepositoriesWithSpecificList(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseURL:  "https://gerrit.com",
-		username: "admin",
-		token:    "token123",
-		repoListing: RepositoryListing{
-			Repositories: []string{"repo-active"},
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"repo-active"},
+			},
 		},
 	}
 
@@ -462,13 +468,13 @@ func TestGetRepositoriesWithSpecificList(t *testing.T) {
 	assert.Equal(t, "https://admin:token123@gerrit.com/a/repo-active", repo.CloneURL())
 
 	// Test with non-existent repository in the list
-	g.repoListing.Repositories = []string{"repo-read-only"}
+	g.config.RepoListing.Repositories = []string{"repo-read-only"}
 	repos, err = g.GetRepositories(context.Background())
 	require.NoError(t, err)
 	require.Len(t, repos, 0)
 
 	// Test with empty repository list
-	g.repoListing.Repositories = []string{}
+	g.config.RepoListing.Repositories = []string{}
 	repos, err = g.GetRepositories(context.Background())
 	require.NoError(t, err)
 	require.Len(t, repos, 3) // Should return all active repos
@@ -541,10 +547,10 @@ func TestNewWithConfigEdgeCases(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, client)
-				assert.Equal(t, tt.config.Username, client.username)
-				assert.Equal(t, tt.config.Token, client.token)
-				assert.Equal(t, tt.config.BaseURL, client.baseURL)
-				assert.Equal(t, tt.config.RepoListing, client.repoListing)
+				assert.Equal(t, tt.config.Username, client.config.Username)
+				assert.Equal(t, tt.config.Token, client.config.Token)
+				assert.Equal(t, tt.config.BaseURL, client.config.BaseURL)
+				assert.Equal(t, tt.config.RepoListing, client.config.RepoListing)
 			}
 		})
 	}
@@ -559,12 +565,14 @@ func TestGetRepositoriesWithBothFilters(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseURL:  "https://gerrit.com",
-		username: "admin",
-		token:    "token123",
-		repoListing: RepositoryListing{
-			Repositories: []string{"repo-active"},
-			RepoSearch:   "should-be-ignored", // This should be ignored when Repositories is provided
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"repo-active"},
+				RepoSearch:   "should-be-ignored", // This should be ignored when Repositories is provided
+			},
 		},
 	}
 
@@ -583,12 +591,14 @@ func TestGetRepositoriesWithEmptyRepositoriesButRepoSearch(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseURL:  "https://gerrit.com",
-		username: "admin",
-		token:    "token123",
-		repoListing: RepositoryListing{
-			Repositories: []string{}, // Empty, so RepoSearch should be used
-			RepoSearch:   "active",
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{}, // Empty, so RepoSearch should be used
+				RepoSearch:   "active",
+			},
 		},
 	}
 
@@ -604,11 +614,13 @@ func TestGetRepositoriesWithCaseSensitiveMatching(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseURL:  "https://gerrit.com",
-		username: "admin",
-		token:    "token123",
-		repoListing: RepositoryListing{
-			Repositories: []string{"REPO-ACTIVE"}, // Different case
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"REPO-ACTIVE"}, // Different case
+			},
 		},
 	}
 
@@ -624,11 +636,13 @@ func TestGetRepositoriesWithInactiveRepoInList(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseURL:  "https://gerrit.com",
-		username: "admin",
-		token:    "token123",
-		repoListing: RepositoryListing{
-			Repositories: []string{"repo-read-only"}, // This repo is READ_ONLY, not ACTIVE
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"repo-read-only"}, // This repo is READ_ONLY, not ACTIVE
+			},
 		},
 	}
 

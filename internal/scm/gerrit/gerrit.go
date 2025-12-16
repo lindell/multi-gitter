@@ -27,11 +27,8 @@ const QueryProjectsLimit = 100
 const RefHeadsPrefix = "refs/heads/"
 
 type Gerrit struct {
-	client      GoGerritClient
-	baseURL     string
-	username    string
-	token       string
-	repoListing RepositoryListing
+	client GoGerritClient
+	config Config
 }
 
 type Config struct {
@@ -62,10 +59,7 @@ func New(config Config) (*Gerrit, error) {
 		client: goGerritClient{
 			client: client,
 		},
-		baseURL:     config.BaseURL,
-		username:    config.Username,
-		token:       config.Token,
-		repoListing: config.RepoListing,
+		config: config,
 	}, nil
 }
 
@@ -94,8 +88,8 @@ func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (repositories []scm.Repository, moreProjects bool, err error) {
 	// Only use RepoSearch when no specific repositories are provided
 	repoSearchRegex := ""
-	if len(g.repoListing.Repositories) == 0 {
-		repoSearchRegex = g.repoListing.RepoSearch
+	if len(g.config.RepoListing.Repositories) == 0 {
+		repoSearchRegex = g.config.RepoListing.RepoSearch
 	}
 
 	opt := &gogerrit.ProjectOptions{
@@ -114,7 +108,7 @@ func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (reposito
 
 	for name, project := range *projects {
 		if project.State == "ACTIVE" {
-			if len(g.repoListing.Repositories) != 0 && !slices.Contains(g.repoListing.Repositories, name) {
+			if len(g.config.RepoListing.Repositories) != 0 && !slices.Contains(g.config.RepoListing.Repositories, name) {
 				continue
 			}
 
@@ -136,11 +130,11 @@ func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (reposito
 
 func (g Gerrit) convertRepo(ctx context.Context, name string) (repository, error) {
 	// Note: maybe we should support cloning via ssh
-	u, err := url.Parse(g.baseURL)
+	u, err := url.Parse(g.config.BaseURL)
 	if err != nil {
 		return repository{}, err
 	}
-	u.User = url.UserPassword(g.username, g.token)
+	u.User = url.UserPassword(g.config.Username, g.config.Token)
 	u.Path = "/a/" + name
 	repoURL := u.String()
 
@@ -205,7 +199,7 @@ func (g Gerrit) GetPullRequests(ctx context.Context, branchName string) ([]scm.P
 
 		for _, change := range changes {
 			if _, ok := projectNames[change.Project]; ok {
-				prs = append(prs, convertChange(change, g.baseURL))
+				prs = append(prs, convertChange(change, g.config.BaseURL))
 			}
 		}
 
@@ -238,7 +232,7 @@ func (g Gerrit) GetOpenPullRequest(ctx context.Context, repo scm.Repository, bra
 		return nil, errors.New("More than one open change for branch " + branchName + " in project " + repo.FullName())
 	}
 
-	return convertChange(changes[0], g.baseURL), nil
+	return convertChange(changes[0], g.config.BaseURL), nil
 }
 
 func (g Gerrit) MergePullRequest(ctx context.Context, pr scm.PullRequest) error {
