@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"os/user"
-	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -64,6 +63,12 @@ func New(config Config) (*Gerrit, error) {
 }
 
 func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
+	// If specific repositories are configured, fetch them directly
+	if len(g.config.RepoListing.Repositories) > 0 {
+		return g.getSpecificRepositories(ctx, g.config.RepoListing.Repositories)
+	}
+
+	// Otherwise, use the existing logic to list all projects with optional search
 	repositories := make([]scm.Repository, 0)
 	skip := 0
 	for {
@@ -82,6 +87,34 @@ func (g Gerrit) GetRepositories(ctx context.Context) ([]scm.Repository, error) {
 	sort.Slice(repositories, func(i, j int) bool {
 		return repositories[i].(repository).name < repositories[j].(repository).name
 	})
+	return repositories, nil
+}
+
+func (g Gerrit) getSpecificRepositories(ctx context.Context, projectNames []string) ([]scm.Repository, error) {
+	repositories := make([]scm.Repository, 0, len(projectNames))
+
+	for _, projectName := range projectNames {
+		project, _, err := g.client.GetProject(ctx, projectName)
+		if err != nil {
+			// Skip non-existent projects, continue with the rest
+			continue
+		}
+
+		// Check if the project is active
+		if project.State == "ACTIVE" {
+			repo, err := g.convertRepo(ctx, projectName)
+			if err != nil {
+				return nil, err
+			}
+			repositories = append(repositories, repo)
+		}
+	}
+
+	// Keep consistent order of repositories
+	sort.Slice(repositories, func(i, j int) bool {
+		return repositories[i].(repository).name < repositories[j].(repository).name
+	})
+
 	return repositories, nil
 }
 
@@ -108,9 +141,6 @@ func (g Gerrit) getRepositoriesWithSkip(ctx context.Context, skip int) (reposito
 
 	for name, project := range *projects {
 		if project.State == "ACTIVE" {
-			if len(g.config.RepoListing.Repositories) != 0 && !slices.Contains(g.config.RepoListing.Repositories, name) {
-				continue
-			}
 
 			repo, err := g.convertRepo(ctx, name)
 			if err != nil {

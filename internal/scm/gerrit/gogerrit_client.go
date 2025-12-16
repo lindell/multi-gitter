@@ -14,6 +14,7 @@ type goGerritClient struct {
 
 type GoGerritClient interface {
 	ListProjects(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error)
+	GetProject(ctx context.Context, projectName string) (*gogerrit.ProjectInfo, *gogerrit.Response, error)
 	QueryChanges(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error)
 	AbandonChange(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
 	SubmitChange(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
@@ -22,6 +23,10 @@ type GoGerritClient interface {
 
 func (ggc goGerritClient) ListProjects(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
 	return ggc.client.Projects.ListProjects(ctx, opt)
+}
+
+func (ggc goGerritClient) GetProject(ctx context.Context, projectName string) (*gogerrit.ProjectInfo, *gogerrit.Response, error) {
+	return ggc.client.Projects.GetProject(ctx, projectName)
 }
 
 func (ggc goGerritClient) QueryChanges(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {

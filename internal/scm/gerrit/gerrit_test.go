@@ -16,6 +16,7 @@ import (
 
 type goGerritClientMock struct {
 	ListProjectsFunc  func(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error)
+	GetProjectFunc    func(ctx context.Context, projectName string) (*gogerrit.ProjectInfo, *gogerrit.Response, error)
 	QueryChangesFunc  func(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error)
 	AbandonChangeFunc func(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
 	SubmitChangeFunc  func(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
@@ -24,6 +25,18 @@ type goGerritClientMock struct {
 
 func (gcm goGerritClientMock) ListProjects(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
 	return gcm.ListProjectsFunc(ctx, opt)
+}
+
+func (gcm goGerritClientMock) GetProject(ctx context.Context, projectName string) (*gogerrit.ProjectInfo, *gogerrit.Response, error) {
+	if gcm.GetProjectFunc != nil {
+		return gcm.GetProjectFunc(ctx, projectName)
+	}
+	// Default implementation for tests: return project info based on the predefined projects map
+	if projectInfo, exists := (*projects)[projectName]; exists {
+		return &projectInfo, nil, nil
+	}
+	// Return error for non-existent projects
+	return nil, nil, errors.New("project not found")
 }
 
 func (gcm goGerritClientMock) QueryChanges(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
