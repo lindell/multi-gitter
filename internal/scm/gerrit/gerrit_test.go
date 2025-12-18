@@ -638,8 +638,9 @@ func TestGetRepositoriesWithCaseSensitiveMatching(t *testing.T) {
 	}
 
 	repos, err := g.GetRepositories(context.Background())
-	require.NoError(t, err)
-	require.Len(t, repos, 0) // Should not match due to case sensitivity
+	require.Error(t, err) // Should error because "REPO-ACTIVE" doesn't exist
+	require.Contains(t, err.Error(), "could not get information about REPO-ACTIVE")
+	require.Nil(t, repos)
 }
 
 func TestGetRepositoriesWithInactiveRepoInList(t *testing.T) {

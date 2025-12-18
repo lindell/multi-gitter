@@ -96,18 +96,19 @@ func (g Gerrit) getSpecificRepositories(ctx context.Context, projectNames []stri
 	for _, projectName := range projectNames {
 		project, _, err := g.client.GetProject(ctx, projectName)
 		if err != nil {
-			// Skip non-existent projects, continue with the rest
-			continue
+			return nil, errors.Wrapf(err, "could not get information about %s", projectName)
 		}
 
 		// Check if the project is active
-		if project.State == "ACTIVE" {
-			repo, err := g.convertRepo(ctx, projectName)
-			if err != nil {
-				return nil, err
-			}
-			repositories = append(repositories, repo)
+		if project.State != "ACTIVE" {
+			continue
 		}
+
+		repo, err := g.convertRepo(ctx, projectName)
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, repo)
 	}
 
 	// Keep consistent order of repositories
