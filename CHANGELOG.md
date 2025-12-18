@@ -1,5 +1,132 @@
 # Changelog
 
+## [0.61.0](https://github.com/lindell/multi-gitter/compare/v0.60.0...v0.61.0) (2025-11-27)
+
+
+### Features
+
+* add --manual-commit flag ([#552](https://github.com/lindell/multi-gitter/issues/552)) ([5ff3621](https://github.com/lindell/multi-gitter/commit/5ff3621112b4fef2d0a9a78ea95d57fd4ab77212))
+
+## [0.60.0](https://github.com/lindell/multi-gitter/compare/v0.59.0...v0.60.0) (2025-11-16)
+
+
+### Features
+
+* add support for skip-repo, repo-include, repo-exclude to print command ([#589](https://github.com/lindell/multi-gitter/issues/589)) ([8e2c150](https://github.com/lindell/multi-gitter/commit/8e2c150e4a4023db018dcbe25ec1107c437398b9))
+* **gerrit:** Replace hardcoded "master" with dynamic HEAD branch retrieval ([#586](https://github.com/lindell/multi-gitter/issues/586)) ([7e422c7](https://github.com/lindell/multi-gitter/commit/7e422c71ea16b4f699dbbcecf277062fbc8d3adf))
+
+
+### Bug Fixes
+
+* use double newline for separating commit title and body ([#591](https://github.com/lindell/multi-gitter/issues/591)) ([f6f3302](https://github.com/lindell/multi-gitter/commit/f6f33023db1be090978761aa9cc64b7ae671bba5))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.22.1 ([77a51e7](https://github.com/lindell/multi-gitter/commit/77a51e795be2ee94c6247505cd80c6af37ad56de))
+* update module github.com/go-git/go-git/v5 to v5.16.3 ([beeb445](https://github.com/lindell/multi-gitter/commit/beeb445b5146b83bfa12c6b1606ca0a1fa603ca3))
+* update module golang.org/x/net to v0.46.0 ([3468651](https://github.com/lindell/multi-gitter/commit/3468651447531a4b297cbc54f13b49c17b43a0c5))
+* update module golang.org/x/oauth2 to v0.32.0 ([baff054](https://github.com/lindell/multi-gitter/commit/baff054454d335919bcd7130dc4d7ac60d5e1064))
+
+## [0.59.0](https://github.com/lindell/multi-gitter/compare/v0.58.0...v0.59.0) (2025-10-06)
+
+
+### Features
+
+* support reading multiple configuration files ([#582](https://github.com/lindell/multi-gitter/issues/582)) ([9e25cec](https://github.com/lindell/multi-gitter/commit/9e25cec5f7f41daa44db8b140175d4fefd158b39))
+
+
+### Miscellaneous
+
+* add multi-gitter binary to gitignore ([ca8105f](https://github.com/lindell/multi-gitter/commit/ca8105f63d801eff826443ef581666054936daae))
+* migrate to stable maps package ([#583](https://github.com/lindell/multi-gitter/issues/583)) ([8f47429](https://github.com/lindell/multi-gitter/commit/8f4742953400cd198c09337148cf46e5af3b84df))
+* update go to 1.25.1 ([#581](https://github.com/lindell/multi-gitter/issues/581)) ([e17a460](https://github.com/lindell/multi-gitter/commit/e17a4608150713ac31dfc285871c4a28feb984af))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.22.0 ([#577](https://github.com/lindell/multi-gitter/issues/577)) ([a5db0c0](https://github.com/lindell/multi-gitter/commit/a5db0c04dc2bf7893f50ff6a2f6fc6ab0601ca39))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.87 ([4584835](https://github.com/lindell/multi-gitter/commit/45848351b06825440634c3c12c4615b237c456b7))
+* update module github.com/spf13/cobra to v1.10.1 ([89b8ac9](https://github.com/lindell/multi-gitter/commit/89b8ac9a13add38a86f339a18cae40a6686b18a0))
+* update module github.com/spf13/pflag to v1.0.10 ([5a124a8](https://github.com/lindell/multi-gitter/commit/5a124a8dc2b316c08b080a04c9dbb6d50444625f))
+* update module github.com/spf13/viper to v1.21.0 ([94ea523](https://github.com/lindell/multi-gitter/commit/94ea523eb8bfe1b23c3043340f42d747a7373fa6))
+* update module golang.org/x/net to v0.44.0 ([#578](https://github.com/lindell/multi-gitter/issues/578)) ([d26dde1](https://github.com/lindell/multi-gitter/commit/d26dde18adddd89ca1d5b3105ebf830308086668))
+* update module golang.org/x/oauth2 to v0.31.0 ([#579](https://github.com/lindell/multi-gitter/issues/579)) ([433ffc9](https://github.com/lindell/multi-gitter/commit/433ffc9399a6f9df83f40289bb602482a5113815))
+
+## [0.58.0](https://github.com/lindell/multi-gitter/compare/v0.57.1...v0.58.0) (2025-08-07)
+
+
+### Features
+
+* new SCM: gerrit ([#565](https://github.com/lindell/multi-gitter/issues/565)) ([90939a7](https://github.com/lindell/multi-gitter/commit/90939a71c798f51ffccffffe00304a059119eff4))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 645b1fa ([b8cae5b](https://github.com/lindell/multi-gitter/commit/b8cae5b39fc08bf6fd2c5aed164061d72b0c214a))
+* update golang.org/x/exp digest to 7e4ce0a ([22c7249](https://github.com/lindell/multi-gitter/commit/22c72494677bdb40917fcb72d9d433c84d295042))
+* update golang.org/x/exp digest to b7579e2 ([f6d5351](https://github.com/lindell/multi-gitter/commit/f6d5351691ae1a3faa4de5d8b84b4b3a0b2d0e88))
+* update module code.gitea.io/sdk/gitea to v0.21.0 ([3aedbec](https://github.com/lindell/multi-gitter/commit/3aedbeca95611058d9d3d87668703ef7514af6e1))
+* update module github.com/go-git/go-git/v5 to v5.16.0 ([b38f4be](https://github.com/lindell/multi-gitter/commit/b38f4be11de057ca208326ea9e823aa3fb0bfaaa))
+* update module github.com/go-git/go-git/v5 to v5.16.2 ([eae99e4](https://github.com/lindell/multi-gitter/commit/eae99e43eaedff79b59524b036f20114713f42cc))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.83 ([facc560](https://github.com/lindell/multi-gitter/commit/facc560bc4f16c149dc46ffabc52cbc18579fff2))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.85 ([d6feff2](https://github.com/lindell/multi-gitter/commit/d6feff20c009fd5b78cade9d6d44bc9e98934537))
+* update module github.com/ktrysmt/go-bitbucket to v0.9.86 ([06d1583](https://github.com/lindell/multi-gitter/commit/06d158380d74700a8d08aba8636ff6d4ab87bcc5))
+* update module github.com/spf13/pflag to v1.0.7 ([749a4e4](https://github.com/lindell/multi-gitter/commit/749a4e4fde294ff7b7fa2ea6be8913c1eea8b9f1))
+* update module golang.org/x/oauth2 to v0.29.0 ([ced70f4](https://github.com/lindell/multi-gitter/commit/ced70f457a6a71f64f5eab4062d70070bcc0adaa))
+* update module golang.org/x/oauth2 to v0.30.0 ([7e1084a](https://github.com/lindell/multi-gitter/commit/7e1084aab2cc0035103f008b9ffb123b5b1ffdca))
+
+## [0.57.1](https://github.com/lindell/multi-gitter/compare/v0.57.0...v0.57.1) (2025-04-23)
+
+
+### Bug Fixes
+
+* api-push now includes path for additions ([#557](https://github.com/lindell/multi-gitter/issues/557)) ([6911474](https://github.com/lindell/multi-gitter/commit/6911474ba3f5be266b6d754926e46aa17b09e97c))
+* fixed problem when both additions and deletions were present with --api-push ([#558](https://github.com/lindell/multi-gitter/issues/558)) ([94902f0](https://github.com/lindell/multi-gitter/commit/94902f0f356e67ffc859d8b9b3a3e9d6d5539a33))
+
+## [0.57.0](https://github.com/lindell/multi-gitter/compare/v0.56.0...v0.57.0) (2025-04-02)
+
+
+### Features
+
+* add api-push ([#548](https://github.com/lindell/multi-gitter/issues/548)) ([70d7bc7](https://github.com/lindell/multi-gitter/commit/70d7bc7a4adec04b51cb741d1206867b33941d4a))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to 054e65f ([e32debc](https://github.com/lindell/multi-gitter/commit/e32debc490491073ba53e4917ad235d8ac6a9ce0))
+* update module github.com/go-git/go-git/v5 to v5.14.0 ([dc9a8a4](https://github.com/lindell/multi-gitter/commit/dc9a8a41751b2b8490854d2999249c5304c3d94f))
+* update module github.com/google/go-github/v68 to v69 ([#539](https://github.com/lindell/multi-gitter/issues/539)) ([51c6779](https://github.com/lindell/multi-gitter/commit/51c6779ac89d9d35a6d69bf149fc1a3c8191df5e))
+* update module github.com/google/go-github/v69 to v70 ([#546](https://github.com/lindell/multi-gitter/issues/546)) ([9f672f9](https://github.com/lindell/multi-gitter/commit/9f672f9f9960c3b1ac6101ae19b49d213d0d8a19))
+* update module github.com/spf13/cobra to v1.9.1 ([37bd4cb](https://github.com/lindell/multi-gitter/commit/37bd4cba4274176c00757d58e8439a963d5426c7))
+* update module github.com/spf13/viper to v1.20.1 ([74b8ce8](https://github.com/lindell/multi-gitter/commit/74b8ce80e08d0a1c9943208ee52d5661256f18e2))
+* update module golang.org/x/oauth2 to v0.27.0 ([b829f13](https://github.com/lindell/multi-gitter/commit/b829f13cfd7b394c1863beda20f30297cb7a677e))
+* update module golang.org/x/oauth2 to v0.28.0 ([0e96e75](https://github.com/lindell/multi-gitter/commit/0e96e755a8c3d00a77565a88fc2989fa5a06c54f))
+
+## [0.56.0](https://github.com/lindell/multi-gitter/compare/v0.55.1...v0.56.0) (2025-02-28)
+
+
+### Features
+
+* log stdout/err of cmdgit executions as Trace level ([#538](https://github.com/lindell/multi-gitter/issues/538)) ([771c8fd](https://github.com/lindell/multi-gitter/commit/771c8fd4bbe10bb0f4d3c2398fd45c2b45783aad))
+
+
+### Dependencies
+
+* update golang.org/x/exp digest to e0ece0d ([ac8651a](https://github.com/lindell/multi-gitter/commit/ac8651accd4acc961835aaa327418dd23e4300ae))
+* update module code.gitea.io/sdk/gitea to v0.20.0 ([10a147d](https://github.com/lindell/multi-gitter/commit/10a147dbe64174899d03979422a43cb03800ce39))
+* update module github.com/go-git/go-git/v5 to v5.13.2 ([9deab1b](https://github.com/lindell/multi-gitter/commit/9deab1b0d97986dae295c7ef88b65d405d034c8c))
+* update module github.com/spf13/pflag to v1.0.6 ([383b00f](https://github.com/lindell/multi-gitter/commit/383b00fe837a8bbde7ac29ea904a07416a3350ce))
+* update module golang.org/x/oauth2 to v0.25.0 ([cc52888](https://github.com/lindell/multi-gitter/commit/cc52888f758ba97a3de2f578a45a27b603d6d0fa))
+
+## [0.55.1](https://github.com/lindell/multi-gitter/compare/v0.55.0...v0.55.1) (2025-01-23)
+
+
+### Bug Fixes
+
+* retry GraphQL calls the same way for v3 API calls ([#524](https://github.com/lindell/multi-gitter/issues/524)) ([6a31f13](https://github.com/lindell/multi-gitter/commit/6a31f13e015d1f560b90c5e50cfc936a69f9f8df))
+* use http logger for BitBucket cloud ([#528](https://github.com/lindell/multi-gitter/issues/528)) ([4fb9e1e](https://github.com/lindell/multi-gitter/commit/4fb9e1e0cd396920ef05099aaeea6327f4df3bfe))
+
 ## [0.55.0](https://github.com/lindell/multi-gitter/compare/v0.54.1...v0.55.0) (2025-01-01)
 
 

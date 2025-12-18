@@ -45,6 +45,7 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 	}
 
 	err = cmd.Run()
+	logGitExecution(cmd, stdout, stderr)
 	if err != nil {
 		matches := errRe.FindStringSubmatch(stderr.String())
 		if matches != nil {
@@ -59,6 +60,14 @@ func (g *Git) run(cmd *exec.Cmd) (string, error) {
 		return "", errors.New(msg)
 	}
 	return stdout.String(), nil
+}
+
+func logGitExecution(cmd *exec.Cmd, stdout *bytes.Buffer, stderr *bytes.Buffer) {
+	log.WithFields(log.Fields{
+		"cmd":    cmd.String(),
+		"stdout": stdout.String(),
+		"stderr": stderr.String(),
+	}).Trace("cmdgit")
 }
 
 // Clone a repository
@@ -146,12 +155,16 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
+func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool) error {
 	args := []string{"push", "--no-verify", remoteName}
 	if force {
 		args = append(args, "--force")
 	}
-	args = append(args, "HEAD")
+	refSpec := "HEAD"
+	if remoteReference != "" {
+		refSpec = refSpec + ":" + remoteReference
+	}
+	args = append(args, refSpec)
 
 	cmd := exec.CommandContext(ctx, "git", args...)
 	_, err := g.run(cmd)
@@ -180,4 +193,97 @@ func AskGitEcho() (abort bool) {
 		return true
 	}
 	return false
+}
+
+// LatestCommitHash returns the latest commit hash
+func (g *Git) LatestCommitHash() (string, error) {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	stdOut, err := g.run(cmd)
+	return strings.TrimSpace(stdOut), err
+}
+
+// ChangesSinceCommit returns the changes made in commits since the given commit hash
+func (g *Git) ChangesSinceCommit(sinceCommitHash string) ([]git.Changes, error) {
+	// Get the list of commits from sinceCommitHash to HEAD, one for each line
+	cmd := exec.Command("git", "rev-list", "--reverse", sinceCommitHash+"..HEAD")
+	stdOut, err := g.run(cmd)
+	if err != nil {
+		return nil, errors.WithMessage(err, "could not get commit list")
+	}
+
+	commitHashes := strings.Split(strings.TrimSpace(stdOut), "\n")
+	if len(commitHashes) == 0 || commitHashes[0] == "" {
+		return nil, errors.New("no commits found")
+	}
+
+	allChanges := []git.Changes{}
+	previousHash := sinceCommitHash
+
+	for _, commitHash := range commitHashes {
+		commitHash = strings.TrimSpace(commitHash)
+		if commitHash == "" {
+			continue
+		}
+
+		changes, err := g.getChangesBetweenCommits(previousHash, commitHash)
+		if err != nil {
+			return nil, err
+		}
+
+		allChanges = append(allChanges, changes)
+		previousHash = commitHash
+	}
+
+	return allChanges, nil
+}
+
+func (g *Git) getChangesBetweenCommits(fromHash, toHash string) (git.Changes, error) {
+	// Get commit message
+	cmd := exec.Command("git", "log", "-1", "--pretty=format:%B", toHash)
+	commitMessage, err := g.run(cmd)
+	if err != nil {
+		return git.Changes{}, errors.WithMessage(err, "could not get commit message")
+	}
+	commitMessage = strings.TrimRight(commitMessage, "\n")
+
+	// Get the list of files changed
+	cmd = exec.Command("git", "diff", "--name-status", fromHash, toHash)
+	diffOutput, err := g.run(cmd)
+	if err != nil {
+		return git.Changes{}, errors.WithMessage(err, "could not get diff")
+	}
+
+	additions := map[string][]byte{}
+	deletions := []string{}
+
+	for _, line := range strings.Split(strings.TrimSpace(diffOutput), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+		status := parts[0]
+		filePath := parts[1]
+
+		switch status {
+		case "A", "M": // Added or Modified
+			cmd = exec.Command("git", "show", toHash+":"+filePath)
+			content, err := g.run(cmd)
+			if err != nil {
+				return git.Changes{}, errors.WithMessage(err, fmt.Sprintf("could not get content of %s", filePath))
+			}
+			additions[filePath] = []byte(content)
+		case "D": // Deleted
+			deletions = append(deletions, filePath)
+		}
+	}
+
+	return git.Changes{
+		Message:   commitMessage,
+		Additions: additions,
+		Deletions: deletions,
+		OldHash:   fromHash,
+	}, nil
 }

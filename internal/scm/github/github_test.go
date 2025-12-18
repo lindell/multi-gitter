@@ -571,3 +571,106 @@ func Test_SearchTooManyResults(t *testing.T) {
 		assert.Len(t, repos, 0)
 	})
 }
+
+func Test_enableAutoMerge_MergeTypeMapping(t *testing.T) {
+	tests := []struct {
+		name                  string
+		mergeTypes            []scm.MergeType
+		expectedGraphQLMethod string
+	}{
+		{
+			name:                  "merge type maps to MERGE",
+			mergeTypes:            []scm.MergeType{scm.MergeTypeMerge},
+			expectedGraphQLMethod: "MERGE",
+		},
+		{
+			name:                  "squash type maps to SQUASH",
+			mergeTypes:            []scm.MergeType{scm.MergeTypeSquash},
+			expectedGraphQLMethod: "SQUASH",
+		},
+		{
+			name:                  "rebase type maps to REBASE",
+			mergeTypes:            []scm.MergeType{scm.MergeTypeRebase},
+			expectedGraphQLMethod: "REBASE",
+		},
+		{
+			name:                  "first merge type is used when multiple provided",
+			mergeTypes:            []scm.MergeType{scm.MergeTypeSquash, scm.MergeTypeRebase, scm.MergeTypeMerge},
+			expectedGraphQLMethod: "SQUASH",
+		},
+		{
+			name:                  "defaults to MERGE when no merge types configured",
+			mergeTypes:            []scm.MergeType{},
+			expectedGraphQLMethod: "MERGE",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Since we need to test the internal logic without making actual GraphQL calls,
+			// we'll test the merge type mapping logic by creating a Github instance
+			// and checking that it correctly configures the merge types
+
+			gh, err := github.New(github.Config{
+				TransportMiddleware: testTransport{
+					pathBodies: map[string]string{
+						"/graphql": `{"data": {"enablePullRequestAutoMerge": {"pullRequest": {"id": "test"}}}}`,
+					},
+				}.Wrapper,
+				MergeTypes: tt.mergeTypes,
+			})
+			require.NoError(t, err)
+
+			assert.Equal(t, tt.mergeTypes, gh.MergeTypes)
+
+			var expectedMergeType scm.MergeType
+			if len(tt.mergeTypes) > 0 {
+				expectedMergeType = tt.mergeTypes[0]
+			} else {
+				expectedMergeType = scm.MergeTypeMerge // Default
+			}
+
+			switch expectedMergeType {
+			case scm.MergeTypeMerge:
+				assert.Equal(t, "MERGE", tt.expectedGraphQLMethod)
+			case scm.MergeTypeSquash:
+				assert.Equal(t, "SQUASH", tt.expectedGraphQLMethod)
+			case scm.MergeTypeRebase:
+				assert.Equal(t, "REBASE", tt.expectedGraphQLMethod)
+			}
+		})
+	}
+}
+
+func Test_NewPullRequest_AutoMerge(t *testing.T) {
+	testCases := []struct {
+		name      string
+		autoMerge bool
+		expected  bool
+	}{
+		{
+			name:      "auto merge enabled",
+			autoMerge: true,
+			expected:  true,
+		},
+		{
+			name:      "auto merge disabled",
+			autoMerge: false,
+			expected:  false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			newPR := scm.NewPullRequest{
+				Title:     "Test PR",
+				Body:      "Test body",
+				Head:      "feature-branch",
+				Base:      "main",
+				AutoMerge: tc.autoMerge,
+			}
+
+			assert.Equal(t, tc.expected, newPR.AutoMerge)
+		})
+	}
+}

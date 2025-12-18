@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -519,7 +518,7 @@ func (b *BitbucketServer) deleteBranch(ctx context.Context, pr pullRequest) erro
 	request.Header.Add("Content-Type", "application/json")
 	request.Header.Add(
 		"Authorization",
-		"Basic "+base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", b.username, b.token))),
+		"Bearer "+b.token,
 	)
 
 	response, err := b.httpClient.Do(request)

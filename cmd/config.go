@@ -9,7 +9,7 @@ import (
 )
 
 func configureConfig(cmd *cobra.Command) {
-	cmd.Flags().StringP("config", "", "", "Path of the config file.")
+	cmd.Flags().StringArrayP("config", "", nil, "Path of the config file.")
 }
 
 func initializeConfig(cmd *cobra.Command) error {
@@ -23,18 +23,20 @@ func initializeConfig(cmd *cobra.Command) error {
 }
 
 func initializeDynamicConfig(cmd *cobra.Command) error {
-	configFile, _ := cmd.Flags().GetString("config")
-	if configFile == "" {
+	configFiles, _ := cmd.Flags().GetStringArray("config")
+	if len(configFiles) == 0 {
 		return nil
 	}
 
 	v := viper.New()
 
-	v.SetConfigFile(configFile)
 	v.SetConfigType("yaml")
 
-	if err := v.ReadInConfig(); err != nil {
-		return err
+	for _, file := range configFiles {
+		v.SetConfigFile(file)
+		if err := v.MergeInConfig(); err != nil {
+			return err
+		}
 	}
 
 	bindFlags(cmd, v)

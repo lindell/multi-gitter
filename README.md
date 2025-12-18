@@ -6,8 +6,8 @@
 </h1>
 
 <div align="center">
-  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ABuilding"><img alt="Go build status" src="https://github.com/lindell/multi-gitter/workflows/Building/badge.svg?branch=master" /></a>
-  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ATesting"><img alt="Go test status" src="https://github.com/lindell/multi-gitter/workflows/Testing/badge.svg?branch=master" /></a>
+  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ABuilding"><img alt="Go build status" src="https://github.com/lindell/multi-gitter/actions/workflows/build.yaml/badge.svg?branch=master" /></a>
+  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ATesting"><img alt="Go test status" src="https://github.com/lindell/multi-gitter/actions/workflows/test.yaml/badge.svg?branch=master" /></a>
   <a href="https://goreportcard.com/report/github.com/lindell/multi-gitter"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/lindell/multi-gitter" /></a>
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/lindell/multi-gitter"><img alt="OpenSSF Scorecard" src="https://api.securityscorecards.dev/projects/github.com/lindell/multi-gitter/badge" /></a>
 </div>
@@ -57,7 +57,7 @@ $ multi-gitter run ./script.sh --dry-run --log-level=debug -O my-org -m "Commit 
 ### Homebrew
 If you are using Mac or Linux, [Homebrew](https://brew.sh/) is an easy way of installing multi-gitter.
 ```bash
-brew install lindell/multi-gitter/multi-gitter
+brew install --cask lindell/multi-gitter/multi-gitter
 ```
 
 ### Manual binary install
@@ -93,7 +93,7 @@ In Gitea, access tokens can be generated under Settings -> Applications -> Manag
 
 ## Config file
 
-All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
+All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. You can also specify this flag multiple times, where later files override configs set in earlier files. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
 
 
 
@@ -101,6 +101,10 @@ All configuration in multi-gitter can be done through command line flags, config
   <summary>All available run options</summary>
 
 ```yaml
+# Push changes through the API instead of git. Only supported for GitHub.
+# It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.
+api-push: false
+
 # The username of the assignees to be added on the pull request.
 assignees:
   - example
@@ -117,7 +121,7 @@ author-name:
 # The branch which the changes will be based on.
 base-branch:
 
-# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -188,11 +192,20 @@ log-format: text
 # The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
+# Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.
+manual-commit: false
+
 # If this value is set, reviewers will be randomized.
 max-reviewers: 0
 
 # If this value is set, team reviewers will be randomized
 max-team-reviewers: 0
+
+# The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge.
+merge-type:
+  - merge
+  - squash
+  - rebase
 
 # The name of a GitHub organization. All repositories in that organization will be used.
 org:
@@ -204,8 +217,11 @@ output: "-"
 # Don't use any terminal formatting when printing the output.
 plain-output: false
 
-# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta
 platform: github
+
+# Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.
+pr-auto-merge: false
 
 # The body of the commit message. Will default to everything but the first line of the commit message if none is set.
 pr-body:
@@ -244,7 +260,7 @@ skip-forks: false
 # Skip pull request and directly push to the branch.
 skip-pr: false
 
-# Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
+# Skip specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
 skip-repo:
   - example
 
@@ -255,7 +271,7 @@ ssh-auth: false
 team-reviewers:
   - example
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -279,7 +295,7 @@ username:
 # The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
 auth-type: app-password
 
-# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -313,7 +329,7 @@ log-format: text
 # The level of logging that should be made. Available values: trace, debug, info, error.
 log-level: info
 
-# The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed.
+# The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed.
 merge-type:
   - merge
   - squash
@@ -326,7 +342,7 @@ org:
 # Don't use any terminal formatting when printing the output.
 plain-output: false
 
-# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -347,7 +363,7 @@ skip-forks: false
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -371,7 +387,7 @@ username:
 # The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
 auth-type: app-password
 
-# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -415,7 +431,7 @@ output: "-"
 # Don't use any terminal formatting when printing the output.
 plain-output: false
 
-# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -436,7 +452,7 @@ skip-forks: false
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -460,7 +476,7 @@ username:
 # The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
 auth-type: app-password
 
-# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
 base-url:
 
 # The name of the branch where changes are committed.
@@ -501,7 +517,7 @@ org:
 # Don't use any terminal formatting when printing the output.
 plain-output: false
 
-# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -522,7 +538,7 @@ skip-forks: false
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -546,7 +562,7 @@ username:
 # The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token.
 auth-type: app-password
 
-# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
 base-url:
 
 # The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
@@ -599,7 +615,7 @@ output: "-"
 # Don't use any terminal formatting when printing the output.
 plain-output: false
 
-# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta
 platform: github
 
 # The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -611,16 +627,26 @@ repo:
   - my-org/js-repo
   - other-org/python-repo
 
+# Exclude repositories that match with a given Regular Expression
+repo-exclude:
+
+# Include repositories that match with a given Regular Expression
+repo-include:
+
 # Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use `fork:true` to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
 repo-search:
 
 # Skip repositories which are forks.
 skip-forks: false
 
+# Skip specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
+skip-repo:
+  - example
+
 # Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
 ssh-auth: false
 
-# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
 token:
 
 # The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
@@ -659,18 +685,20 @@ Usage:
   multi-gitter run [script path] [flags]
 
 Flags:
+      --api-push                   Push changes through the API instead of git. Only supported for GitHub.
+                                   It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.
   -a, --assignees strings          The username of the assignees to be added on the pull request.
       --auth-type string           The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
       --author-email string        Email of the committer. If not set, the global git config setting will be used.
       --author-name string         Name of the committer. If not set, the global git config setting will be used.
       --base-branch string         The branch which the changes will be based on.
-  -g, --base-url string            Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+  -g, --base-url string            Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
   -B, --branch string              The name of the branch where changes are committed. (default "multi-gitter-branch")
       --clone-dir string           The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
       --code-search fork:true      Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
   -m, --commit-message string      The commit message. Will default to title + body if none is set.
   -C, --concurrent int             The maximum number of concurrent runs. (default 1)
-      --config string              Path of the config file.
+      --config stringArray         Path of the config file.
       --conflict-strategy string   What should happen if the branch already exist.
                                    Available values:
                                      skip: Skip making any changes to the existing branch and do not create a new pull request.
@@ -694,12 +722,15 @@ Flags:
       --log-file string            The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string          The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string           The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
+      --manual-commit              Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.
   -M, --max-reviewers int          If this value is set, reviewers will be randomized.
       --max-team-reviewers int     If this value is set, team reviewers will be randomized
+      --merge-type strings         The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. The first type is used for auto-merge. (default [merge,squash,rebase])
   -O, --org strings                The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string              The file that the output of the script should be outputted to. "-" means stdout. (default "-")
       --plain-output               Don't use any terminal formatting when printing the output.
-  -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta (default "github")
+  -p, --platform string            The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
+      --pr-auto-merge              Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.
   -b, --pr-body string             The body of the commit message. Will default to everything but the first line of the commit message if none is set.
   -t, --pr-title string            The title of the PR. Will default to the first line of the commit message if none is set.
   -P, --project strings            The name, including owner of a GitLab project in the format "ownerName/repoName".
@@ -711,10 +742,10 @@ Flags:
   -r, --reviewers strings          The username of the reviewers to be added on the pull request.
       --skip-forks                 Skip repositories which are forks.
       --skip-pr                    Skip pull request and directly push to the branch.
-  -s, --skip-repo strings          Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
+  -s, --skip-repo strings          Skip specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                   Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
       --team-reviewers strings     Github team names of the reviewers, in format: 'org/team'
-  -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+  -T, --token string               The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
       --topic strings              The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings               The name of a user. All repositories owned by that user will be used.
   -u, --username string            The Bitbucket server username.
@@ -729,10 +760,10 @@ Usage:
 
 Flags:
       --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
-  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
       --fork                    Use pull requests made from forks instead of from the same repository.
       --fork-owner string       If set, use forks from the defined value instead of the logged in user.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
@@ -741,16 +772,16 @@ Flags:
       --log-file string         The file where all logs should be printed to. "-" means stdout. (default "-")
       --log-format string       The formatting of the logs. Available values: text, json, json-pretty. (default "text")
   -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
-      --merge-type strings      The type of merge that should be done (GitHub). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
+      --merge-type strings      The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed. (default [merge,squash,rebase])
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
       --plain-output            Don't use any terminal formatting when printing the output.
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
@@ -765,10 +796,10 @@ Usage:
 
 Flags:
       --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
-  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
       --fork                    Use pull requests made from forks instead of from the same repository.
       --fork-owner string       If set, use forks from the defined value instead of the logged in user.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
@@ -780,13 +811,13 @@ Flags:
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string           The file that the output of the script should be outputted to. "-" means stdout. (default "-")
       --plain-output            Don't use any terminal formatting when printing the output.
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
@@ -801,10 +832,10 @@ Usage:
 
 Flags:
       --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
-  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
   -B, --branch string           The name of the branch where changes are committed. (default "multi-gitter-branch")
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
       --fork                    Use pull requests made from forks instead of from the same repository.
       --fork-owner string       If set, use forks from the defined value instead of the logged in user.
   -G, --group strings           The name of a GitLab organization. All repositories in that group will be used.
@@ -815,13 +846,13 @@ Flags:
   -L, --log-level string        The level of logging that should be made. Available values: trace, debug, info, error. (default "info")
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
       --plain-output            Don't use any terminal formatting when printing the output.
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.
@@ -841,11 +872,11 @@ Usage:
 
 Flags:
       --auth-type string        The authentication type. Used only for Bitbucket cloud. Available values: app-password, workspace-token. (default "app-password")
-  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+  -g, --base-url string         Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket, Gerrit.
       --clone-dir string        The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.
       --code-search fork:true   Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use fork:true to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
   -C, --concurrent int          The maximum number of concurrent runs. (default 1)
-      --config string           Path of the config file.
+      --config stringArray      Path of the config file.
   -E, --error-output string     The file that the output of the script should be outputted to. "-" means stderr. (default "-")
   -f, --fetch-depth int         Limit fetching to the specified number of commits. Set to 0 for no limit. (default 1)
       --git-type string         The type of git implementation to use.
@@ -862,13 +893,16 @@ Flags:
   -O, --org strings             The name of a GitHub organization. All repositories in that organization will be used.
   -o, --output string           The file that the output of the script should be outputted to. "-" means stdout. (default "-")
       --plain-output            Don't use any terminal formatting when printing the output.
-  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta (default "github")
+  -p, --platform string         The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud, gerrit. Note: bitbucket_cloud is in Beta (default "github")
   -P, --project strings         The name, including owner of a GitLab project in the format "ownerName/repoName".
   -R, --repo strings            The name, including owner of a GitHub repository in the format "ownerName/repoName".
+      --repo-exclude string     Exclude repositories that match with a given Regular Expression
+      --repo-include string     Include repositories that match with a given Regular Expression
       --repo-search fork:true   Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use fork:true to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
       --skip-forks              Skip repositories which are forks.
+  -s, --skip-repo strings       Skip specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
       --ssh-auth                Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
-  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+  -T, --token string            The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable.
       --topic strings           The topic of a GitHub/GitLab/Gitea repository. All repositories having at least one matching topic are targeted.
   -U, --user strings            The name of a user. All repositories owned by that user will be used.
   -u, --username string         The Bitbucket server username.

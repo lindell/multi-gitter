@@ -12,6 +12,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+func (g *Github) makeGraphQLRequestWithRetry(ctx context.Context, query string, data interface{}, res interface{}) error {
+	return retryAPIRequest(ctx, func() error {
+		return g.makeGraphQLRequest(ctx, query, data, res)
+	})
+}
+
 func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data interface{}, res interface{}) error {
 	type reqData struct {
 		Query string      `json:"query"`
@@ -46,6 +52,11 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 	}
 	defer resp.Body.Close()
 
+	retryAfterErr := retryAfterFromHTTPResponse(resp)
+	if retryAfterErr != nil {
+		return retryAfterErr
+	}
+
 	resultData := struct {
 		Data   json.RawMessage `json:"data"`
 		Errors []struct {
@@ -71,6 +82,10 @@ func (g *Github) makeGraphQLRequest(ctx context.Context, query string, data inte
 
 	if resp.StatusCode >= 400 {
 		return errors.Errorf("could not make GitHub GraphQL request: %s", resultData.Message)
+	}
+
+	if res == nil {
+		return nil
 	}
 
 	if err := json.Unmarshal(resultData.Data, res); err != nil {

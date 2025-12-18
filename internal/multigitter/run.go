@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"regexp"
+	"strings"
 	"sync"
 	"syscall"
 	"unicode"
@@ -35,6 +35,18 @@ type VersionController interface {
 	ForkRepository(ctx context.Context, repo scm.Repository, newOwner string) (scm.Repository, error)
 }
 
+type VersionControllerEnhanceCommit interface {
+	EnhanceCommit(ctx context.Context, repo scm.Repository, branchName string, commitMessage string) (string, error)
+}
+
+type VersionControllerFeatureBranchExist interface {
+	FeatureBranchExist(ctx context.Context, repo scm.Repository, branchName string) (bool, error)
+}
+
+type VersionControllerRemoteReference interface {
+	RemoteReference(baseBranch string, featureBranch string, skipPullRequest bool, pushOnly bool) string
+}
+
 // Runner contains fields to be able to do the run
 type Runner struct {
 	VersionController VersionController
@@ -57,12 +69,14 @@ type Runner struct {
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 	Assignees        []string
 
-	Concurrent             int
-	SkipPullRequest        bool     // If set, the script will run directly on the base-branch without creating any PR
-	PushOnly               bool     // If set, the script will only publish the feature branch without creating a PR
-	SkipRepository         []string // A list of repositories that run will skip
-	RegExIncludeRepository *regexp.Regexp
-	RegExExcludeRepository *regexp.Regexp
+	Concurrent      int
+	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
+	PushOnly        bool // If set, the script will only publish the feature branch without creating a PR
+	APIPush         bool // Use the SCM API to commit and push the changes instead of git
+	ManualCommit    bool // If set, multi-gitter will not commit the changes left by the script.
+
+	// RepoFilters contains repository filtering options
+	RepoFilters RepoFilters
 
 	Fork      bool   // If set, create a fork and make the pull request from it
 	ForkOwner string // The owner of the new fork. If empty, the fork should happen on the logged in user
@@ -70,6 +84,8 @@ type Runner struct {
 	ConflictStrategy ConflictStrategy // Defines what will happen if a branch already exists
 
 	Draft bool // If set, creates Pull Requests as draft
+
+	AutoMerge bool // If set, enables auto-merge for created Pull Requests
 
 	Labels   []string // Labels to be added to the pull request
 	CloneDir string   // Directory to clone repositories to
@@ -107,7 +123,7 @@ func (r *Runner) Run(ctx context.Context) error {
 		return errors.Wrap(err, "could not fetch repositories")
 	}
 
-	repos = filterRepositories(repos, r.SkipRepository, r.RegExIncludeRepository, r.RegExExcludeRepository)
+	repos = filterRepositories(repos, r.RepoFilters)
 
 	if len(repos) == 0 {
 		log.Infof("No repositories found. Please make sure the user of the token has the correct access to the repos you want to change.")
@@ -158,45 +174,6 @@ func (r *Runner) Run(ctx context.Context) error {
 	}, len(repos), r.Concurrent)
 
 	return nil
-}
-
-// Determines if Repository should be excluded based on provided Regular Expression
-func excludeRepositoryFilter(repoName string, regExp *regexp.Regexp) bool {
-	if regExp == nil {
-		return false
-	}
-	return regExp.MatchString(repoName)
-}
-
-// Determines if Repository should be included based on provided Regular Expression
-func matchesRepositoryFilter(repoName string, regExp *regexp.Regexp) bool {
-	if regExp == nil {
-		return true
-	}
-	return regExp.MatchString(repoName)
-}
-
-func filterRepositories(repos []scm.Repository, skipRepositoryNames []string, regExIncludeRepository *regexp.Regexp,
-	regExExcludeRepository *regexp.Regexp,
-) []scm.Repository {
-	skipReposMap := map[string]struct{}{}
-	for _, skipRepo := range skipRepositoryNames {
-		skipReposMap[skipRepo] = struct{}{}
-	}
-
-	filteredRepos := make([]scm.Repository, 0, len(repos))
-	for _, r := range repos {
-		if _, shouldSkip := skipReposMap[r.FullName()]; shouldSkip {
-			log.Infof("Skipping %s since it is in exclusion list", r.FullName())
-		} else if !matchesRepositoryFilter(r.FullName(), regExIncludeRepository) {
-			log.Infof("Skipping %s since it does not match the inclusion regexp", r.FullName())
-		} else if excludeRepositoryFilter(r.FullName(), regExExcludeRepository) {
-			log.Infof("Skipping %s since it match the exclusion regexp", r.FullName())
-		} else {
-			filteredRepos = append(filteredRepos, r)
-		}
-	}
-	return filteredRepos
 }
 
 func runInParallel(fun func(i int), total int, maxConcurrent int) {
@@ -262,6 +239,11 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
+	commitHashBeforeRun, err := sourceController.LatestCommitHash()
+	if err != nil {
+		return nil, err
+	}
+
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)
 	if r.DryRun {
 		cmd.Env = append(cmd.Env, "DRY_RUN=true")
@@ -278,19 +260,37 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, transformExecError(err)
 	}
 
-	if changed, err := sourceController.Changes(); err != nil {
-		return nil, err
-	} else if !changed {
-		return nil, errNoChange
+	if !r.ManualCommit {
+		if changed, err := sourceController.Changes(); err != nil {
+			return nil, err
+		} else if !changed {
+			return nil, errNoChange
+		}
+
+		commitMessage := r.enhanceCommitMessage(ctx, repo)
+		err = sourceController.Commit(r.CommitAuthor, commitMessage)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		commitHashAfterRun, err := sourceController.LatestCommitHash()
+		if err != nil {
+			return nil, err
+		}
+
+		if commitHashBeforeRun == commitHashAfterRun {
+			return nil, errNoChange
+		}
+
 	}
 
-	err = sourceController.Commit(r.CommitAuthor, r.CommitMessage)
+	prTitle, prBody, err := r.getPRBodyAndTitle(sourceController, commitHashBeforeRun)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not get pull request title and body")
 	}
 
 	if r.Interactive {
-		err = r.interactive(tmpDir, repo)
+		err = r.interactive(tmpDir, repo, commitHashBeforeRun)
 		if err != nil {
 			return nil, err
 		}
@@ -323,11 +323,11 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	// Determine if a branch already exists and (depending on the conflict strategy) skip making changes
 	featureBranchExist := false
 	if !r.SkipPullRequest && !r.PushOnly {
-		featureBranchExist, err = sourceController.BranchExist(remoteName, r.FeatureBranch)
+		featureBranchExist, err = r.featureBranchExist(ctx, repo, remoteName, sourceController)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exists")
 		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
-			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist, prTitle, prBody)
 			if err != nil {
 				return nil, err
 			}
@@ -338,9 +338,28 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log.Info("Pushing changes to remote")
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
-	err = sourceController.Push(ctx, remoteName, forcePush)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not push changes")
+
+	if !r.APIPush {
+		remoteReference := r.remoteReference(baseBranch, r.FeatureBranch)
+		err = sourceController.Push(ctx, remoteName, remoteReference, forcePush)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not push changes")
+		}
+	} else {
+		changePusher, hasChangePusher := r.VersionController.(scm.ChangePusher)
+		if !hasChangePusher {
+			return nil, errors.New("the scm implementation does not support committing through the API")
+		}
+
+		changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not get diff")
+		}
+
+		err = changePusher.Push(ctx, repo, changes, r.FeatureBranch, featureBranchExist, forcePush)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if r.PushOnly {
@@ -349,10 +368,73 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}, nil
 	}
 
-	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist)
+	return r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist, prTitle, prBody)
 }
 
-func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogger, repo scm.Repository, prRepo scm.Repository, baseBranch string, featureBranchExist bool) (scm.PullRequest, error) {
+func (r *Runner) enhanceCommitMessage(ctx context.Context, repo scm.Repository) string {
+	vcs, ok := r.VersionController.(VersionControllerEnhanceCommit)
+	if ok {
+		commitMessage, _ := vcs.EnhanceCommit(ctx, repo, r.FeatureBranch, r.CommitMessage)
+		return commitMessage
+	}
+	return r.CommitMessage
+}
+
+// Get the PR title and body
+// In the default case, this is simply the set title and body,
+// but it may also be extracted from a commit messages if manual commits are used
+func (r *Runner) getPRBodyAndTitle(sourceController Git, commitHashBeforeRun string) (string, string, error) {
+	if !r.ManualCommit || r.PullRequestTitle != "" {
+		return r.PullRequestTitle, r.PullRequestBody, nil
+	}
+
+	changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
+	if err != nil {
+		return "", "", errors.Wrap(err, "could not get commit message")
+	}
+
+	if len(changes) == 0 {
+		return "", "", errors.New("no commits found")
+	}
+
+	// Use the first line of the first commit message as the PR title
+	commitMessage := changes[0].Message
+	split := strings.SplitN(commitMessage, "\n", 2)
+	title := strings.TrimSpace(split[0])
+	body := ""
+	if len(split) == 2 {
+		body = strings.TrimSpace(split[1])
+	}
+
+	return title, body, nil
+}
+
+func (r *Runner) featureBranchExist(ctx context.Context, repo scm.Repository, remoteName string, sourceController Git) (bool, error) {
+	vcs, ok := r.VersionController.(VersionControllerFeatureBranchExist)
+	if ok {
+		return vcs.FeatureBranchExist(ctx, repo, r.FeatureBranch)
+	}
+	return sourceController.BranchExist(remoteName, r.FeatureBranch)
+}
+
+func (r *Runner) remoteReference(baseBranch string, featureBranch string) string {
+	vcs, ok := r.VersionController.(VersionControllerRemoteReference)
+	if ok {
+		return vcs.RemoteReference(baseBranch, featureBranch, r.SkipPullRequest, r.PushOnly)
+	}
+	return ""
+}
+
+func (r *Runner) ensurePullRequestExists(
+	ctx context.Context,
+	log log.FieldLogger,
+	repo scm.Repository,
+	prRepo scm.Repository,
+	baseBranch string,
+	featureBranchExist bool,
+	prTitle string,
+	prBody string,
+) (scm.PullRequest, error) {
 	if r.SkipPullRequest {
 		return nil, nil
 	}
@@ -371,14 +453,15 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 		if r.ConflictStrategy == ConflictStrategyReplace {
 			log.Info("Updating pull request since one is already open")
 			return r.VersionController.UpdatePullRequest(ctx, repo, existingPullRequest, scm.NewPullRequest{
-				Title:         r.PullRequestTitle,
-				Body:          r.PullRequestBody,
+				Title:         prTitle,
+				Body:          prBody,
 				Head:          r.FeatureBranch,
 				Base:          baseBranch,
 				Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
 				TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
 				Assignees:     r.Assignees,
 				Draft:         r.Draft,
+				AutoMerge:     r.AutoMerge,
 				Labels:        r.Labels,
 			})
 		}
@@ -388,21 +471,22 @@ func (r *Runner) ensurePullRequestExists(ctx context.Context, log log.FieldLogge
 
 	log.Info("Creating pull request")
 	return r.VersionController.CreatePullRequest(ctx, repo, prRepo, scm.NewPullRequest{
-		Title:         r.PullRequestTitle,
-		Body:          r.PullRequestBody,
+		Title:         prTitle,
+		Body:          prBody,
 		Head:          r.FeatureBranch,
 		Base:          baseBranch,
 		Reviewers:     getReviewers(r.Reviewers, r.MaxReviewers),
 		TeamReviewers: getReviewers(r.TeamReviewers, r.MaxTeamReviewers),
 		Assignees:     r.Assignees,
 		Draft:         r.Draft,
+		AutoMerge:     r.AutoMerge,
 		Labels:        r.Labels,
 	})
 }
 
 var interactiveInfo = `(V)iew changes. (A)ccept or (R)eject`
 
-func (r *Runner) interactive(dir string, repo scm.Repository) error {
+func (r *Runner) interactive(dir string, repo scm.Repository, oldCommitHash string) error {
 	fmt.Fprintf(os.Stderr, "Changes were made to %s\n", terminal.Bold(repo.FullName()))
 	fmt.Fprintln(os.Stderr, interactiveInfo)
 	for {
@@ -424,7 +508,7 @@ func (r *Runner) interactive(dir string, repo scm.Repository) error {
 		switch unicode.ToLower(char) {
 		case 'v':
 			fmt.Fprintln(os.Stderr, "Showing changes...")
-			cmd := exec.Command("git", "diff", "HEAD~1")
+			cmd := exec.Command("git", "diff", oldCommitHash)
 			cmd.Dir = dir
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr

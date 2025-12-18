@@ -3,7 +3,7 @@ package github
 import (
 	"fmt"
 
-	"github.com/google/go-github/v68/github"
+	"github.com/google/go-github/v70/github"
 	"github.com/lindell/multi-gitter/internal/git"
 )
 
@@ -24,6 +24,7 @@ func (g *Github) convertRepo(r *github.Repository) (repository, error) {
 
 	return repository{
 		url:           repoURL,
+		id:            r.GetNodeID(),
 		name:          r.GetName(),
 		ownerName:     r.GetOwner().GetLogin(),
 		defaultBranch: r.GetDefaultBranch(),
@@ -33,6 +34,7 @@ func (g *Github) convertRepo(r *github.Repository) (repository, error) {
 
 type repository struct {
 	url           string
+	id            string
 	name          string
 	ownerName     string
 	defaultBranch string

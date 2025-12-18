@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"regexp"
 	"strings"
 	"syscall"
 
@@ -49,7 +48,9 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
 	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
-	cmd.Flags().StringSliceP("skip-repo", "s", nil, "Skip changes on specified repositories, the name is including the owner of repository in the format \"ownerName/repoName\".")
+	cmd.Flags().BoolP("manual-commit", "", false, "Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.")
+	cmd.Flags().BoolP("api-push", "", false, `Push changes through the API instead of git. Only supported for GitHub.
+It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.`)
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
 	cmd.Flags().StringP("conflict-strategy", "", "skip", `What should happen if the branch already exist.
@@ -58,6 +59,8 @@ Available values:
   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
 `)
 	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
+	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.")
+	configureMergeType(cmd, true)
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
 	})
@@ -65,8 +68,7 @@ Available values:
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.")
-	cmd.Flags().StringP("repo-include", "", "", "Include repositories that match with a given Regular Expression")
-	cmd.Flags().StringP("repo-exclude", "", "", "Exclude repositories that match with a given Regular Expression")
+	configureRepoFilters(cmd)
 	configureGit(cmd)
 	configurePlatform(cmd)
 	configureRunPlatform(cmd, true)
@@ -92,7 +94,8 @@ func run(cmd *cobra.Command, _ []string) error {
 	concurrent, _ := flag.GetInt("concurrent")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	pushOnly, _ := flag.GetBool("push-only")
-	skipRepository, _ := flag.GetStringSlice("skip-repo")
+	manualCommit, _ := flag.GetBool("manual-commit")
+	apiPush, _ := flag.GetBool("api-push")
 	interactive, _ := flag.GetBool("interactive")
 	dryRun, _ := flag.GetBool("dry-run")
 	forkMode, _ := flag.GetBool("fork")
@@ -103,10 +106,11 @@ func run(cmd *cobra.Command, _ []string) error {
 	strOutput, _ := flag.GetString("output")
 	assignees, _ := stringSlice(flag, "assignees")
 	draft, _ := flag.GetBool("draft")
+	prAutoMerge, _ := flag.GetBool("pr-auto-merge")
 	cloneDir, _ := flag.GetString("clone-dir")
 	labels, _ := stringSlice(flag, "labels")
-	repoInclude, _ := flag.GetString("repo-include")
-	repoExclude, _ := flag.GetString("repo-exclude")
+
+	platform, _ := flag.GetString("platform")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -118,12 +122,12 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Set commit message based on pr title and body or the reverse
-	if commitMessage == "" && prTitle == "" {
+	if commitMessage == "" && prTitle == "" && !manualCommit {
 		return errors.New("pull request title or commit message must be set")
 	} else if commitMessage == "" {
 		commitMessage = prTitle
 		if prBody != "" {
-			commitMessage += "\n" + prBody
+			commitMessage += "\n\n" + prBody
 		}
 	} else if prTitle == "" {
 		split := strings.SplitN(commitMessage, "\n", 2)
@@ -149,6 +153,12 @@ func run(cmd *cobra.Command, _ []string) error {
 		return errors.New("--concurrent and --interactive can't be used at the same time")
 	}
 
+	if apiPush {
+		if platform != "github" {
+			return errors.New("api-push is only supported for GitHub")
+		}
+	}
+
 	// Parse commit author data
 	var commitAuthor *git.CommitAuthor
 	if authorName != "" || authorEmail != "" {
@@ -168,21 +178,9 @@ func run(cmd *cobra.Command, _ []string) error {
 		return errors.New("max-team-reviewers cannot be negative")
 	}
 
-	var regExIncludeRepository *regexp.Regexp
-	var regExExcludeRepository *regexp.Regexp
-	if repoInclude != "" {
-		repoIncludeFilterCompile, err := regexp.Compile(repoInclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-include")
-		}
-		regExIncludeRepository = repoIncludeFilterCompile
-	}
-	if repoExclude != "" {
-		repoExcludeFilterCompile, err := regexp.Compile(repoExclude)
-		if err != nil {
-			return errors.WithMessage(err, "could not parse repo-exclude")
-		}
-		regExExcludeRepository = repoExcludeFilterCompile
+	filters, err := parseRepoFilters(flag)
+	if err != nil {
+		return err
 	}
 
 	vc, err := getVersionController(flag, true, false)
@@ -226,29 +224,30 @@ func run(cmd *cobra.Command, _ []string) error {
 
 		VersionController: vc,
 
-		CommitMessage:          commitMessage,
-		PullRequestTitle:       prTitle,
-		PullRequestBody:        prBody,
-		Reviewers:              reviewers,
-		TeamReviewers:          teamReviewers,
-		MaxReviewers:           maxReviewers,
-		MaxTeamReviewers:       maxTeamReviewers,
-		Interactive:            interactive,
-		DryRun:                 dryRun,
-		RegExIncludeRepository: regExIncludeRepository,
-		RegExExcludeRepository: regExExcludeRepository,
-		Fork:                   forkMode,
-		ForkOwner:              forkOwner,
-		SkipPullRequest:        skipPullRequest,
-		PushOnly:               pushOnly,
-		SkipRepository:         skipRepository,
-		CommitAuthor:           commitAuthor,
-		BaseBranch:             baseBranchName,
-		Assignees:              assignees,
-		ConflictStrategy:       conflictStrategy,
-		Draft:                  draft,
-		Labels:                 labels,
-		CloneDir:               cloneDir,
+		CommitMessage:    commitMessage,
+		PullRequestTitle: prTitle,
+		PullRequestBody:  prBody,
+		Reviewers:        reviewers,
+		TeamReviewers:    teamReviewers,
+		MaxReviewers:     maxReviewers,
+		MaxTeamReviewers: maxTeamReviewers,
+		Interactive:      interactive,
+		DryRun:           dryRun,
+		Fork:             forkMode,
+		ForkOwner:        forkOwner,
+		SkipPullRequest:  skipPullRequest,
+		PushOnly:         pushOnly,
+		APIPush:          apiPush,
+		ManualCommit:     manualCommit,
+		RepoFilters:      filters,
+		CommitAuthor:     commitAuthor,
+		BaseBranch:       baseBranchName,
+		Assignees:        assignees,
+		ConflictStrategy: conflictStrategy,
+		Draft:            draft,
+		AutoMerge:        prAutoMerge,
+		Labels:           labels,
+		CloneDir:         cloneDir,
 
 		Concurrent: concurrent,
 

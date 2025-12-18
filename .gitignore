@@ -14,7 +14,9 @@
 # Dependency directories (remove the comment below to include it)
 vendor/
 
+# Binaries
 main
+multi-gitter
 
 tmp-docs/
 

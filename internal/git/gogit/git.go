@@ -3,11 +3,15 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"io"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/utils/merkletrie"
 	internalgit "github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
 
@@ -208,11 +212,24 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(ctx context.Context, remoteName string, force bool) error {
+func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool) error {
+	var refSpecs []config.RefSpec
+
+	if remoteReference != "" {
+		// go-git doesn't support refSpec like HEAD:<name>, so first we need to resolve SHA1 commit related to HEAD
+		head, err := g.repo.Head()
+		if err != nil {
+			return errors.Wrap(err, "Unable to get HEAD")
+		}
+		refSpecs = []config.RefSpec{
+			config.RefSpec(head.Hash().String() + ":" + remoteReference),
+		}
+	}
 	return g.repo.PushContext(ctx, &git.PushOptions{
 		RemoteName: remoteName,
 		Force:      force,
 		Auth:       g.credentials(),
+		RefSpecs:   refSpecs,
 	})
 }
 
@@ -234,4 +251,106 @@ func (g *Git) credentials() *http.BasicAuth {
 		Username: g.Credentials.Username,
 		Password: g.Credentials.Password,
 	}
+}
+
+// LatestCommitHash returns the latest commit hash
+func (g *Git) LatestCommitHash() (string, error) {
+	head, err := g.repo.Head()
+	if err != nil {
+		return "", err
+	}
+	return head.Hash().String(), nil
+}
+
+// ChangesSinceCommit returns the changes made in commits since the given commit hash
+func (g *Git) ChangesSinceCommit(sinceCommitHash string) ([]internalgit.Changes, error) {
+	iter, err := g.repo.Log(&git.LogOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	toCommit, err := iter.Next()
+	if err != nil {
+		return nil, errors.WithMessage(err, "could not get current commit")
+	}
+
+	// Go through all commits until we reach the sinceCommitHash
+	// This is is by default only the latest commit, but if we use manual commits,
+	// there might be multiple commits to go through.
+	allChanges := []internalgit.Changes{}
+	for {
+		fromCommit, err := iter.Next()
+		if err != nil {
+			return nil, errors.WithMessage(err, "could not get last commit")
+		}
+
+		changes, err := g.changesBetweenCommits(context.Background(), fromCommit, toCommit)
+		if err != nil {
+			return nil, errors.WithMessage(err, "could not get changes")
+		}
+		allChanges = append(allChanges, changes)
+
+		if sinceCommitHash == fromCommit.Hash.String() {
+			break
+		}
+		toCommit = fromCommit
+	}
+
+	// Reverse the order of the changes to get the earliest commit first
+	slices.Reverse(allChanges)
+
+	return allChanges, nil
+}
+
+func (g *Git) changesBetweenCommits(_ context.Context, from, to *object.Commit) (internalgit.Changes, error) {
+	toTree, err := to.Tree()
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get current tree")
+	}
+	fromTree, err := from.Tree()
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get current tree")
+	}
+
+	changes, err := fromTree.Diff(toTree)
+	if err != nil {
+		return internalgit.Changes{}, errors.WithMessage(err, "could not get diff")
+	}
+
+	additions := map[string][]byte{}
+	deletions := []string{}
+	for _, change := range changes {
+		action, err := change.Action()
+		if err != nil {
+			return internalgit.Changes{}, errors.WithMessage(err, "could not get action")
+		}
+
+		if action == merkletrie.Insert || action == merkletrie.Modify {
+			_, to, err := change.Files()
+			if err != nil {
+				return internalgit.Changes{}, errors.WithMessage(err, "could not get files")
+			}
+
+			reader, err := to.Reader()
+			if err != nil {
+				return internalgit.Changes{}, errors.WithMessage(err, "could not get reader")
+			}
+			bytes, err := io.ReadAll(reader)
+			reader.Close()
+			if err != nil {
+				return internalgit.Changes{}, errors.WithMessage(err, "could not read file")
+			}
+
+			additions[change.To.Name] = bytes
+		} else if action == merkletrie.Delete {
+			deletions = append(deletions, change.From.Name)
+		}
+	}
+
+	return internalgit.Changes{
+		Message:   strings.TrimSpace(to.Message),
+		Additions: additions,
+		Deletions: deletions,
+		OldHash:   from.Hash.String(),
+	}, nil
 }

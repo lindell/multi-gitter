@@ -6,6 +6,7 @@ import (
 
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
 
@@ -15,6 +16,18 @@ func outputFlag() *flag.FlagSet {
 	flags.StringP("output", "o", "-", `The file that the output of the script should be outputted to. "-" means stdout.`)
 
 	return flags
+}
+
+func configureMergeType(cmd *cobra.Command, includeAutoMergeText bool) {
+	description := "The type of merge that should be done (GitHub/Gitea). Multiple types can be used as backup strategies if the first one is not allowed."
+	if includeAutoMergeText {
+		description += " The first type is used for auto-merge."
+	}
+
+	cmd.Flags().StringSliceP("merge-type", "", []string{"merge", "squash", "rebase"}, description)
+	_ = cmd.RegisterFlagCompletionFunc("merge-type", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+		return []string{"merge", "squash", "rebase"}, cobra.ShellCompDirectiveNoFileComp
+	})
 }
 
 func getToken(flag *flag.FlagSet) (string, error) {
@@ -37,11 +50,13 @@ func getToken(flag *flag.FlagSet) (string, error) {
 			token = ght
 		} else if ght := os.Getenv("BITBUCKET_CLOUD_WORKSPACE_TOKEN"); ght != "" {
 			token = ght
+		} else if ght := os.Getenv("GERRIT_TOKEN"); ght != "" {
+			token = ght
 		}
 	}
 
 	if token == "" {
-		return "", errors.New("either the --token flag or the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable has to be set")
+		return "", errors.New("either the --token flag or the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN/GERRIT_TOKEN environment variable has to be set")
 	}
 
 	return token, nil

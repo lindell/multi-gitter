@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	git "github.com/go-git/go-git/v5"
+	internalgit "github.com/lindell/multi-gitter/internal/git"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/pkg/errors"
 )
@@ -19,6 +20,7 @@ type VersionController struct {
 	PRNumber     int
 	Repositories []Repository
 	PullRequests []PullRequest
+	Changes      map[string][]internalgit.Changes
 
 	prLock sync.RWMutex
 }
@@ -150,6 +152,23 @@ func (vc *VersionController) SetPRStatus(repoName string, branchName string, new
 			vc.PullRequests[i].PRStatus = newStatus
 		}
 	}
+}
+
+func (vc *VersionController) Push(
+	ctx context.Context,
+	repo scm.Repository,
+	change []internalgit.Changes,
+	featureBranch string,
+	branchExist bool,
+	forcePush bool,
+) error {
+	if vc.Changes == nil {
+		vc.Changes = map[string][]internalgit.Changes{}
+	}
+
+	vc.Changes[repo.FullName()] = change
+
+	return nil
 }
 
 // GetAutocompleteOrganizations gets organizations for autocompletion

@@ -6,8 +6,8 @@
 </h1>
 
 <div align="center">
-  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ABuilding"><img alt="Go build status" src="https://github.com/lindell/multi-gitter/workflows/Building/badge.svg?branch=master" /></a>
-  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ATesting"><img alt="Go test status" src="https://github.com/lindell/multi-gitter/workflows/Testing/badge.svg?branch=master" /></a>
+  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ABuilding"><img alt="Go build status" src="https://github.com/lindell/multi-gitter/actions/workflows/build.yaml/badge.svg?branch=master" /></a>
+  <a href="https://github.com/lindell/multi-gitter/actions?query=branch%3Amaster+workflow%3ATesting"><img alt="Go test status" src="https://github.com/lindell/multi-gitter/actions/workflows/test.yaml/badge.svg?branch=master" /></a>
   <a href="https://goreportcard.com/report/github.com/lindell/multi-gitter"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/lindell/multi-gitter" /></a>
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/lindell/multi-gitter"><img alt="OpenSSF Scorecard" src="https://api.securityscorecards.dev/projects/github.com/lindell/multi-gitter/badge" /></a>
 </div>
@@ -57,7 +57,7 @@ $ multi-gitter run ./script.sh --dry-run --log-level=debug -O my-org -m "Commit 
 ### Homebrew
 If you are using Mac or Linux, [Homebrew](https://brew.sh/) is an easy way of installing multi-gitter.
 ```bash
-brew install lindell/multi-gitter/multi-gitter
+brew install --cask lindell/multi-gitter/multi-gitter
 ```
 
 ### Manual binary install
@@ -93,7 +93,7 @@ In Gitea, access tokens can be generated under Settings -> Applications -> Manag
 
 ## Config file
 
-All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
+All configuration in multi-gitter can be done through command line flags, configuration files or a combination of both. If you want to use a configuration file, simply use the `--config=./path/to/config.yaml` option. You can also specify this flag multiple times, where later files override configs set in earlier files. Multi-gitter will also read from the file `~/.multi-gitter/config` and take and configuration from there. The priority of configs are first flags, then defined config file and lastly the static config file.
 
 {{range .Commands}}
 {{if .YAMLExample}}

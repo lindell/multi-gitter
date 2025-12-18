@@ -12,8 +12,10 @@ import (
 	"time"
 
 	"github.com/lindell/multi-gitter/cmd"
+	"github.com/lindell/multi-gitter/internal/multigitter"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -74,6 +76,7 @@ func TestTable(t *testing.T) {
 	assert.NoError(t, err)
 
 	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
+	manualCommitterBinaryPath := normalizePath(filepath.Join(workingDir, manualCommitterBinaryPath))
 
 	tests := []struct {
 		name        string
@@ -861,7 +864,7 @@ Repositories with a successful run:
 				"--author-name", "Test Author",
 				"--author-email", "test@example.com",
 				"-B", "custom-branch-name",
-				"--config", "test-config.yaml",
+				"--config", "data/test-config.yaml",
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
@@ -869,6 +872,67 @@ Repositories with a successful run:
 				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
 				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
 				assert.Equal(t, "config-message", vcMock.PullRequests[0].Title)
+
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-change #1
+`, runData.out)
+			},
+		},
+
+		{
+			name: "overriding config files",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--config", "data/test-config.yaml",
+				"--config", "data/test-config-override.yaml",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "override-message", vcMock.PullRequests[0].Title)
+
+				assert.Equal(t, `Repositories with a successful run:
+  owner/should-change #1
+`, runData.out)
+			},
+		},
+
+		{
+			name: "merging config files",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--config", "data/test-config.yaml",
+				"--config", "data/test-config2.yaml",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "config-message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "test body", vcMock.PullRequests[0].Body)
 
 				assert.Equal(t, `Repositories with a successful run:
   owner/should-change #1
@@ -1321,8 +1385,112 @@ Repositories with a successful run:
 				changerBinaryPath,
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Equal(t, runData.cmdOut, "")
-				assert.Equal(t, runData.out, "Repositories with a successful run:\n  owner/example-repository #0\n")
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #0\n", runData.out)
+			},
+		},
+		{
+			name: "api-push",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--api-push",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #1\n", runData.out)
+				require.Len(t, vcMock.Changes, 1)
+				changes := vcMock.Changes["owner/example-repository"]
+				require.Len(t, changes, 1)
+				assert.Equal(t, map[string][]byte{
+					"test.txt": []byte("i like bananas"),
+				}, changes[0].Additions)
+				assert.Equal(t, []string{}, changes[0].Deletions)
+				assert.Len(t, changes[0].OldHash, 40)
+			},
+		},
+		{
+			name: "manual-commit",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--manual-commit",
+				manualCommitterBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #1\n", runData.out)
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "Manual commit message 1", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "With a body", vcMock.PullRequests[0].Body)
+
+				assert.Contains(t, runData.logOut, "Running on 1 repositories")
+				assert.Contains(t, runData.logOut, "Cloning and running script")
+				assert.Contains(t, runData.logOut, "Pushing changes to remote")
+				assert.Contains(t, runData.logOut, "Creating pull request")
+			},
+		},
+		{
+			name: "manual-commit with api-push",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--manual-commit",
+				"--api-push",
+				manualCommitterBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #1\n", runData.out)
+				require.Len(t, vcMock.Changes, 1)
+				changes := vcMock.Changes["owner/example-repository"]
+
+				require.Len(t, changes, 2)
+
+				assert.Equal(t, "Manual commit message 1\n\nWith a body", changes[0].Message)
+				assert.Equal(t, map[string][]byte{
+					"test.txt": []byte("i like bananas"),
+				}, changes[0].Additions)
+				assert.Equal(t, []string{}, changes[0].Deletions)
+				assert.Len(t, changes[0].OldHash, 40)
+
+				assert.Equal(t, "Manual commit message 2", changes[1].Message)
+				assert.Equal(t, map[string][]byte{
+					"test.txt": []byte("i like pineapples"),
+				}, changes[1].Additions)
+				assert.Equal(t, []string{}, changes[1].Deletions)
+				assert.Len(t, changes[1].OldHash, 40)
 			},
 		},
 	}
@@ -1334,7 +1502,11 @@ Repositories with a successful run:
 				continue
 			}
 
-			t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
+			var logData []byte
+			var outData []byte
+			cobraBuf := &bytes.Buffer{}
+
+			success := t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
 				// Skip some tests depending on the values in skipTypes
 				if skipOverlap(skipTypes, test.skipTypes) {
 					t.SkipNow()
@@ -1351,6 +1523,207 @@ Repositories with a successful run:
 				vc := test.vcCreate(t)
 
 				defer vc.Clean()
+
+				cmd.OverrideVersionController = vc
+
+				staticArgs := []string{
+					"--log-file", logFile.Name(),
+					"--output", outFile.Name(),
+					"--git-type", string(gitBackend),
+				}
+
+				command := cmd.RootCmd()
+				command.SetOut(cobraBuf)
+				command.SetErr(cobraBuf)
+				command.SetArgs(append(staticArgs, test.args...))
+				before := time.Now()
+				err = command.Execute()
+				took := time.Since(before)
+				if test.expectErr {
+					assert.Error(t, err)
+				} else {
+					assert.NoError(t, err)
+				}
+
+				logData, err = io.ReadAll(logFile)
+				assert.NoError(t, err)
+
+				outData, err = io.ReadAll(outFile)
+				assert.NoError(t, err)
+
+				test.verify(t, vc, runData{
+					logOut: string(logData),
+					out:    string(outData),
+					cmdOut: cobraBuf.String(),
+					took:   took,
+				})
+			})
+
+			if !success {
+				fmt.Fprintf(os.Stderr, "Log output:\n%s\n", string(logData))
+				fmt.Fprintf(os.Stderr, "Command output:\n%s\n", cobraBuf.String())
+				fmt.Fprintf(os.Stderr, "Standard output:\n%s\n", string(outData))
+			}
+		}
+	}
+}
+
+func TestGerritTable(t *testing.T) {
+	workingDir, err := os.Getwd()
+	assert.NoError(t, err)
+
+	changerBinaryPath := normalizePath(filepath.Join(workingDir, changerBinaryPath))
+
+	tests := []struct {
+		name     string
+		vcCreate func(t *testing.T) multigitter.VersionController
+		args     []string
+
+		verify func(t *testing.T, vcMock multigitter.VersionController, runData runData)
+		clean  func(t *testing.T, vcMock multigitter.VersionController)
+
+		expectErr bool
+	}{
+		{
+			name: "when PR does not exist",
+			vcCreate: func(t *testing.T) multigitter.VersionController {
+				return &vcmock.GerritVersionController{
+					VC: vcmock.VersionController{
+						Repositories: []vcmock.Repository{
+							createRepo(t, "owner", "should-change", "i like apples"),
+						},
+						PullRequests: []vcmock.PullRequest{},
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock multigitter.VersionController, runData runData) {
+				gerritMock := vcMock.(*vcmock.GerritVersionController)
+				commitMessage, _ := getCommitMessage(t, gerritMock.VC.Repositories[0].Path, "refs/heads/mocked-custom-branch-name")
+				assert.Equal(t, "custom message\n\nMocked-Footer: custom-branch-name", strings.TrimSuffix(commitMessage, "\n"))
+
+				assert.Equal(t, "custom-branch-name", gerritMock.VC.PullRequests[0].Head)
+				assert.Equal(t, "master", gerritMock.VC.PullRequests[0].Base)
+				assert.Equal(t, "custom message", gerritMock.VC.PullRequests[0].Title)
+			},
+			clean: func(t *testing.T, vcMock multigitter.VersionController) {
+				vcMock.(*vcmock.GerritVersionController).Clean()
+			},
+			expectErr: false,
+		},
+		{
+			name: "when PR already exists and conflict strategy=skip",
+			vcCreate: func(t *testing.T) multigitter.VersionController {
+				repoExistingPR := createRepo(t, "owner", "already-existing-pr", "i like apples")
+
+				return &vcmock.GerritVersionController{
+					VC: vcmock.VersionController{
+						Repositories: []vcmock.Repository{
+							repoExistingPR,
+						},
+						PullRequests: []vcmock.PullRequest{
+							{
+								PRStatus:   scm.PullRequestStatusPending,
+								PRNumber:   10,
+								Repository: repoExistingPR,
+								NewPullRequest: scm.NewPullRequest{
+									Head: "custom-branch-name",
+								},
+							},
+						},
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock multigitter.VersionController, runData runData) {
+				gerritMock := vcMock.(*vcmock.GerritVersionController)
+
+				_, err := getCommitMessage(t, gerritMock.VC.Repositories[0].Path, "refs/heads/mocked-custom-branch-name")
+				assert.Error(t, err, "reference not found")
+			},
+			clean: func(t *testing.T, vcMock multigitter.VersionController) {
+				vcMock.(*vcmock.GerritVersionController).Clean()
+			},
+			expectErr: false,
+		},
+		{
+			name: "when PR already exists and conflict strategy=replace",
+			vcCreate: func(t *testing.T) multigitter.VersionController {
+				repoExistingPR := createRepo(t, "owner", "already-existing-pr", "i like apples")
+
+				return &vcmock.GerritVersionController{
+					VC: vcmock.VersionController{
+						Repositories: []vcmock.Repository{
+							repoExistingPR,
+						},
+						PullRequests: []vcmock.PullRequest{
+							{
+								PRStatus:   scm.PullRequestStatusPending,
+								PRNumber:   10,
+								Repository: repoExistingPR,
+								NewPullRequest: scm.NewPullRequest{
+									Head: "custom-branch-name",
+									Base: "master",
+								},
+							},
+						},
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--conflict-strategy", "replace",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock multigitter.VersionController, runData runData) {
+				gerritMock := vcMock.(*vcmock.GerritVersionController)
+
+				commitMessage, _ := getCommitMessage(t, gerritMock.VC.Repositories[0].Path, "refs/heads/mocked-custom-branch-name")
+				assert.Equal(t, "custom message\n\nMocked-Footer: custom-branch-name", strings.TrimSuffix(commitMessage, "\n"))
+
+				assert.Equal(t, "custom-branch-name", gerritMock.VC.PullRequests[0].Head)
+				assert.Equal(t, "master", gerritMock.VC.PullRequests[0].Base)
+				assert.Equal(t, "custom message", gerritMock.VC.PullRequests[0].Title)
+			},
+			clean: func(t *testing.T, vcMock multigitter.VersionController) {
+				vcMock.(*vcmock.GerritVersionController).Clean()
+			},
+			expectErr: false,
+		},
+	}
+
+	for _, gitBackend := range gitBackends {
+		for _, test := range tests {
+			t.Run(fmt.Sprintf("%s_%s", gitBackend, test.name), func(t *testing.T) {
+				logFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-log")
+				require.NoError(t, err)
+				defer os.Remove(logFile.Name())
+
+				outFile, err := os.CreateTemp(os.TempDir(), "multi-gitter-test-output")
+				require.NoError(t, err)
+				defer os.Remove(outFile.Name())
+
+				vc := test.vcCreate(t)
+
+				defer test.clean(t, vc)
 
 				cmd.OverrideVersionController = vc
 

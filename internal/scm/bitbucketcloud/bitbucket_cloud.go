@@ -58,6 +58,10 @@ func New(username string, token string, repositories []string, workspaces []stri
 		bitbucketCloud.bbClient = bitbucket.NewOAuthbearerToken(token)
 	}
 
+	bitbucketCloud.bbClient.HttpClient.Transport = internalHTTP.LoggingRoundTripper{
+		Next: bitbucketCloud.bbClient.HttpClient.Transport,
+	}
+
 	return bitbucketCloud, nil
 }
 
