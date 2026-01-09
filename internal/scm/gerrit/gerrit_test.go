@@ -16,6 +16,7 @@ import (
 
 type goGerritClientMock struct {
 	ListProjectsFunc  func(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error)
+	GetProjectFunc    func(ctx context.Context, projectName string) (*gogerrit.ProjectInfo, *gogerrit.Response, error)
 	QueryChangesFunc  func(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error)
 	AbandonChangeFunc func(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
 	SubmitChangeFunc  func(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
@@ -24,6 +25,18 @@ type goGerritClientMock struct {
 
 func (gcm goGerritClientMock) ListProjects(ctx context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
 	return gcm.ListProjectsFunc(ctx, opt)
+}
+
+func (gcm goGerritClientMock) GetProject(ctx context.Context, projectName string) (*gogerrit.ProjectInfo, *gogerrit.Response, error) {
+	if gcm.GetProjectFunc != nil {
+		return gcm.GetProjectFunc(ctx, projectName)
+	}
+	// Default implementation for tests: return project info based on the predefined projects map
+	if projectInfo, exists := (*projects)[projectName]; exists {
+		return &projectInfo, nil, nil
+	}
+	// Return error for non-existent projects
+	return nil, nil, errors.New("project not found")
 }
 
 func (gcm goGerritClientMock) QueryChanges(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
@@ -95,10 +108,14 @@ func TestGetRepositories(t *testing.T) {
 				return projects, nil, nil
 			},
 		},
-		baseURL:    "https://gerrit.com",
-		username:   "admin",
-		token:      "token123",
-		repoSearch: "repo",
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				RepoSearch: "repo",
+			},
+		},
 	}
 
 	repos, err := g.GetRepositories(context.Background())
@@ -133,10 +150,14 @@ func TestGetPullRequests(t *testing.T) {
 				return getChangesForQuery(opt.Query[0])
 			},
 		},
-		baseURL:    "https://gerrit.com",
-		username:   "admin",
-		token:      "token123",
-		repoSearch: "repo",
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				RepoSearch: "repo",
+			},
+		},
 	}
 	prs, err := g.GetPullRequests(context.Background(), "feature")
 	require.NoError(t, err)
@@ -429,4 +450,217 @@ func TestGetDefaultBranch(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetRepositoriesWithSpecificList(t *testing.T) {
+	g := &Gerrit{
+		client: goGerritClientMock{
+			ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+				// Verify we don't inject repoSearch when using specific repo list
+				require.Empty(t, opt.Regex)
+				return projects, nil, nil
+			},
+		},
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"repo-active"},
+			},
+		},
+	}
+
+	repos, err := g.GetRepositories(context.Background())
+	require.NoError(t, err)
+	require.Len(t, repos, 1)
+
+	repo := repos[0]
+	assert.Equal(t, "repo-active", repo.FullName())
+	assert.Equal(t, "master", repo.DefaultBranch())
+	assert.Equal(t, "https://admin:token123@gerrit.com/a/repo-active", repo.CloneURL())
+
+	// Test with non-existent repository in the list
+	g.config.RepoListing.Repositories = []string{"repo-read-only"}
+	repos, err = g.GetRepositories(context.Background())
+	require.NoError(t, err)
+	require.Len(t, repos, 0)
+
+	// Test with empty repository list
+	g.config.RepoListing.Repositories = []string{}
+	repos, err = g.GetRepositories(context.Background())
+	require.NoError(t, err)
+	require.Len(t, repos, 3) // Should return all active repos
+
+	// Test with error from client
+	g.client = goGerritClientMock{
+		ListProjectsFunc: func(_ context.Context, _ *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+			return nil, nil, assert.AnError
+		},
+	}
+	repos, err = g.GetRepositories(context.Background())
+	require.Error(t, err)
+	require.Nil(t, repos)
+}
+
+func TestNewWithConfigEdgeCases(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      Config
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "valid config",
+			config: Config{
+				Username: "user",
+				Token:    "token",
+				BaseURL:  "https://gerrit.example.com",
+				RepoListing: RepositoryListing{
+					RepoSearch: "test",
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "empty username",
+			config: Config{
+				Username: "",
+				Token:    "token",
+				BaseURL:  "https://gerrit.example.com",
+			},
+			expectError: false, // Should still work, just no auth
+		},
+		{
+			name: "invalid base URL",
+			config: Config{
+				Username: "user",
+				Token:    "token",
+				BaseURL:  "not-a-url",
+			},
+			expectError: false, // go-gerrit is permissive with URL formats
+		},
+		{
+			name: "empty base URL",
+			config: Config{
+				Username: "user",
+				Token:    "token",
+				BaseURL:  "",
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client, err := New(tt.config)
+			if tt.expectError {
+				require.Error(t, err)
+				require.Nil(t, client)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, client)
+				assert.Equal(t, tt.config.Username, client.config.Username)
+				assert.Equal(t, tt.config.Token, client.config.Token)
+				assert.Equal(t, tt.config.BaseURL, client.config.BaseURL)
+				assert.Equal(t, tt.config.RepoListing, client.config.RepoListing)
+			}
+		})
+	}
+}
+
+func TestGetRepositoriesWithBothFilters(t *testing.T) {
+	g := &Gerrit{
+		client: goGerritClientMock{
+			ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+				// When both Repositories and RepoSearch are provided, RepoSearch should be ignored
+				require.Empty(t, opt.Regex, "RepoSearch should be ignored when specific repositories are provided")
+				return projects, nil, nil
+			},
+		},
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"repo-active"},
+				RepoSearch:   "should-be-ignored", // This should be ignored when Repositories is provided
+			},
+		},
+	}
+
+	repos, err := g.GetRepositories(context.Background())
+	require.NoError(t, err)
+	require.Len(t, repos, 1)
+	assert.Equal(t, "repo-active", repos[0].FullName())
+}
+
+func TestGetRepositoriesWithEmptyRepositoriesButRepoSearch(t *testing.T) {
+	g := &Gerrit{
+		client: goGerritClientMock{
+			ListProjectsFunc: func(_ context.Context, opt *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+				// When Repositories is empty, RepoSearch should be used
+				require.Equal(t, "active", opt.Regex)
+				return projects, nil, nil
+			},
+		},
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{}, // Empty, so RepoSearch should be used
+				RepoSearch:   "active",
+			},
+		},
+	}
+
+	repos, err := g.GetRepositories(context.Background())
+	require.NoError(t, err)
+	require.Len(t, repos, 3) // Should return all active repos matching "active"
+}
+
+func TestGetRepositoriesWithCaseSensitiveMatching(t *testing.T) {
+	g := &Gerrit{
+		client: goGerritClientMock{
+			ListProjectsFunc: func(_ context.Context, _ *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+				return projects, nil, nil
+			},
+		},
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"REPO-ACTIVE"}, // Different case
+			},
+		},
+	}
+
+	repos, err := g.GetRepositories(context.Background())
+	require.Error(t, err) // Should error because "REPO-ACTIVE" doesn't exist
+	require.Contains(t, err.Error(), "could not get information about REPO-ACTIVE")
+	require.Nil(t, repos)
+}
+
+func TestGetRepositoriesWithInactiveRepoInList(t *testing.T) {
+	g := &Gerrit{
+		client: goGerritClientMock{
+			ListProjectsFunc: func(_ context.Context, _ *gogerrit.ProjectOptions) (*map[string]gogerrit.ProjectInfo, *gogerrit.Response, error) {
+				return projects, nil, nil
+			},
+		},
+		config: Config{
+			BaseURL:  "https://gerrit.com",
+			Username: "admin",
+			Token:    "token123",
+			RepoListing: RepositoryListing{
+				Repositories: []string{"repo-read-only"}, // This repo is READ_ONLY, not ACTIVE
+			},
+		},
+	}
+
+	repos, err := g.GetRepositories(context.Background())
+	require.NoError(t, err)
+	require.Len(t, repos, 0) // Should not return inactive repos even if in the list
 }
