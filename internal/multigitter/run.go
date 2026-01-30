@@ -70,10 +70,11 @@ type Runner struct {
 	Assignees        []string
 
 	Concurrent      int
-	SkipPullRequest bool // If set, the script will run directly on the base-branch without creating any PR
-	PushOnly        bool // If set, the script will only publish the feature branch without creating a PR
-	APIPush         bool // Use the SCM API to commit and push the changes instead of git
-	ManualCommit    bool // If set, multi-gitter will not commit the changes left by the script.
+	SkipPullRequest bool     // If set, the script will run directly on the base-branch without creating any PR
+	PushOnly        bool     // If set, the script will only publish the feature branch without creating a PR
+	APIPush         bool     // Use the SCM API to commit and push the changes instead of git
+	PushOptions     []string // Options to pass to git push command
+	ManualCommit    bool     // If set, multi-gitter will not commit the changes left by the script.
 
 	// RepoFilters contains repository filtering options
 	RepoFilters RepoFilters

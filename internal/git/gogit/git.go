@@ -207,7 +207,7 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool) error {
+func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool, pushOptions ...string) error {
 	var refSpecs []config.RefSpec
 
 	if remoteReference != "" {
@@ -220,10 +220,21 @@ func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, forc
 			config.RefSpec(head.Hash().String() + ":" + remoteReference),
 		}
 	}
+
+	// convert the provided pushOptions to a map[string]string by mapping each value to true
+	var pushOpts map[string]string
+	if len(pushOptions) > 0 {
+		pushOpts = make(map[string]string)
+		for _, option := range pushOptions {
+			pushOpts[option] = "true"
+		}
+	}
+
 	return g.repo.PushContext(ctx, &git.PushOptions{
 		RemoteName: remoteName,
 		Force:      force,
 		RefSpecs:   refSpecs,
+		Options:    pushOpts,
 	})
 }
 
