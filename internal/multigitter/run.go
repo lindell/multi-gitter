@@ -342,7 +342,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	if !r.APIPush {
 		remoteReference := r.remoteReference(baseBranch, r.FeatureBranch)
-		err = sourceController.Push(ctx, remoteName, remoteReference, forcePush)
+		err = sourceController.Push(ctx, remoteName, remoteReference, forcePush, r.PushOptions...)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not push changes")
 		}
