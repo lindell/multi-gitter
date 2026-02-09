@@ -68,6 +68,40 @@ func (g *Git) Clone(ctx context.Context, url string, baseName string) error {
 	return err
 }
 
+// FetchAndResetToDefault fetches the latest changes from origin and performs a hard reset
+// to the default branch. This is used with the --keep option to reuse already-cloned repositories.
+func (g *Git) FetchAndResetToDefault(ctx context.Context, baseName string) error {
+	// Checkout the base branch (in case we are on a feature branch)
+	cmd := exec.CommandContext(ctx, "git", "checkout", baseName)
+	_, err := g.run(cmd)
+	if err != nil {
+		return errors.Wrap(err, "could not checkout base branch")
+	}
+
+	// Fetch latest changes
+	cmd = exec.CommandContext(ctx, "git", "fetch", "origin", baseName)
+	_, err = g.run(cmd)
+	if err != nil {
+		return errors.Wrap(err, "could not fetch from origin")
+	}
+
+	// Hard reset to origin's base branch
+	cmd = exec.CommandContext(ctx, "git", "reset", "--hard", "origin/"+baseName)
+	_, err = g.run(cmd)
+	if err != nil {
+		return errors.Wrap(err, "could not hard reset to origin base branch")
+	}
+
+	// Clean untracked files
+	cmd = exec.CommandContext(ctx, "git", "clean", "-fd")
+	_, err = g.run(cmd)
+	if err != nil {
+		return errors.Wrap(err, "could not clean untracked files")
+	}
+
+	return nil
+}
+
 // ChangeBranch changes the branch
 func (g *Git) ChangeBranch(branchName string) error {
 	cmd := exec.Command("git", "checkout", "-b", branchName)
