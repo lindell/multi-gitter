@@ -1,0 +1,4 @@
+commit-message: test with push options
+push-option:
+  - ci.skip
+  - merge_request.create

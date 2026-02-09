@@ -1390,6 +1390,59 @@ Repositories with a successful run:
 			},
 		},
 		{
+			name:        "push-option with flag",
+			gitBackends: []gitBackend{gitBackendGo},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--push-option", "ci.skip",
+				"--push-option", "merge_request.create",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, "", runData.cmdOut)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #1\n", runData.out)
+				require.Len(t, vcMock.PullRequests, 1)
+			},
+		},
+		{
+			name:        "push-option with config",
+			gitBackends: []gitBackend{gitBackendGo},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "should-change", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"--config", "data/test-config-push-option.yaml",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[0].Base)
+				assert.Equal(t, "test with push options", vcMock.PullRequests[0].Title)
+
+				assert.Equal(t, "Repositories with a successful run:\n  owner/should-change #1\n", runData.out)
+			},
+		},
+		{
 			name: "api-push",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
