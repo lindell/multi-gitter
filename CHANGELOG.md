@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.62.0](https://github.com/lindell/multi-gitter/compare/v0.61.0...v0.62.0) (2026-02-10)
+
+
+### Features
+
+* **gerrit:** add support for specifying a list of repositories on the Gerrit platform ([#587](https://github.com/lindell/multi-gitter/issues/587)) ([7c8613c](https://github.com/lindell/multi-gitter/commit/7c8613c0122c14885ff59e6e1db46cd867956500))
+
+
+### Dependencies
+
+* update module github.com/andygrunwald/go-gerrit to v1.1.1 ([b9161da](https://github.com/lindell/multi-gitter/commit/b9161da331a50f4924a1623c3cda9ad58f15c7e5))
+* update module github.com/go-git/go-git/v5 to v5.16.4 ([dcb90c0](https://github.com/lindell/multi-gitter/commit/dcb90c0c547296875eb8b9f02a9caff8e10529a2))
+* update module github.com/go-git/go-git/v5 to v5.16.5 [security] ([0a0b479](https://github.com/lindell/multi-gitter/commit/0a0b4790ed8904899a8d12ca99ea99b7e2f540bc))
+* update module github.com/sirupsen/logrus to v1.9.4 ([a58ad1d](https://github.com/lindell/multi-gitter/commit/a58ad1dab42e765e1f0b8227dcd3804b4bb83b2e))
+* update module github.com/spf13/cobra to v1.10.2 ([2967f1a](https://github.com/lindell/multi-gitter/commit/2967f1a9a0371af4ea6c86860b0ddd1214fe7eb2))
+* update module golang.org/x/net to v0.47.0 ([89337a4](https://github.com/lindell/multi-gitter/commit/89337a441fd3b66455de078bfa3104516534e8f5))
+* update module golang.org/x/net to v0.48.0 ([6701172](https://github.com/lindell/multi-gitter/commit/6701172aaff8823582c7e09db64decdb62d59a79))
+* update module golang.org/x/net to v0.49.0 ([fb6bd69](https://github.com/lindell/multi-gitter/commit/fb6bd69089a66f3be8cc04257f9b01fed81c6e0d))
+* update module golang.org/x/oauth2 to v0.33.0 ([c533b3b](https://github.com/lindell/multi-gitter/commit/c533b3bd8339ff328c9fdd7884e41666e13013aa))
+* update module golang.org/x/oauth2 to v0.34.0 ([d73b452](https://github.com/lindell/multi-gitter/commit/d73b452901cddd7c287fe3c21a78fa3e215ef5d0))
+
 ## [0.61.0](https://github.com/lindell/multi-gitter/compare/v0.60.0...v0.61.0) (2025-11-27)
 
 
