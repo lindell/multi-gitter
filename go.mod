@@ -7,7 +7,7 @@ require (
 	github.com/andygrunwald/go-gerrit v1.1.1
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240917142304-df385efaac68
-	github.com/go-git/go-git/v5 v5.16.4
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/google/go-github/v70 v70.0.0
 	github.com/ktrysmt/go-bitbucket v0.9.87
 	github.com/mitchellh/mapstructure v1.5.0
