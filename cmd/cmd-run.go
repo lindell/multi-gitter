@@ -51,6 +51,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().BoolP("manual-commit", "", false, "Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.")
 	cmd.Flags().BoolP("api-push", "", false, `Push changes through the API instead of git. Only supported for GitHub.
 It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.`)
+	cmd.Flags().StringSliceP("push-option", "", nil, "Options to pass to 'git push' (e.g., ci.skip, merge_request.create).")
 	cmd.Flags().BoolP("interactive", "i", false, "Take manual decision before committing any change. Requires git to be installed.")
 	cmd.Flags().BoolP("dry-run", "d", false, "Run without pushing changes or creating pull requests.")
 	cmd.Flags().StringP("conflict-strategy", "", "skip", `What should happen if the branch already exist.
@@ -96,6 +97,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	pushOnly, _ := flag.GetBool("push-only")
 	manualCommit, _ := flag.GetBool("manual-commit")
 	apiPush, _ := flag.GetBool("api-push")
+	pushOptions, _ := stringSlice(flag, "push-option")
 	interactive, _ := flag.GetBool("interactive")
 	dryRun, _ := flag.GetBool("dry-run")
 	forkMode, _ := flag.GetBool("fork")
@@ -238,6 +240,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		SkipPullRequest:  skipPullRequest,
 		PushOnly:         pushOnly,
 		APIPush:          apiPush,
+		PushOptions:      pushOptions,
 		ManualCommit:     manualCommit,
 		RepoFilters:      filters,
 		CommitAuthor:     commitAuthor,

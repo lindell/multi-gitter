@@ -140,8 +140,12 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool) error {
+func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool, pushOptions ...string) error {
 	args := []string{"push", "--no-verify", remoteName}
+	// append push options, each option prepended with "--push-option="
+	for _, option := range pushOptions {
+		args = append(args, "--push-option="+option)
+	}
 	if force {
 		args = append(args, "--force")
 	}
