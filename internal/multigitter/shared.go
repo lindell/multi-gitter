@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
@@ -36,6 +37,7 @@ type Git interface {
 	AddRemote(name, url string) error
 	LatestCommitHash() (string, error)
 	ChangesSinceCommit(sinceCommitHash string) ([]git.Changes, error)
+	FetchAndResetToDefault(ctx context.Context, baseName string) error
 }
 
 type stackTracer interface {
@@ -127,4 +129,29 @@ func makeAbsolutePath(path string) (string, error) {
 	}
 
 	return path, nil
+}
+
+// keepDir returns a deterministic directory path for a given repository name
+// within the clone directory. The repo full name (e.g. "owner/repo") is sanitized
+// so that slashes become dashes.
+func keepDir(cloneDir string, repoFullName string) (string, error) {
+	if cloneDir == "" {
+		cloneDir = os.TempDir()
+	}
+
+	absDir, err := makeAbsolutePath(cloneDir)
+	if err != nil {
+		return "", err
+	}
+
+	err = createDirectoryIfDoesntExist(absDir)
+	if err != nil {
+		return "", err
+	}
+
+	// Sanitize the repo name for use as a directory name
+	safeName := strings.ReplaceAll(repoFullName, "/", "-")
+	dir := filepath.Join(absDir, "multi-gitter-"+safeName)
+
+	return dir, nil
 }

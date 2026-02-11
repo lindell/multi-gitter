@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -91,6 +92,8 @@ type Runner struct {
 	CloneDir string   // Directory to clone repositories to
 
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
+
+	Keep bool // If set, skip deletion of cloned repos and reuse them if already present
 
 	CreateGit func(dir string) Git
 }
@@ -208,11 +211,20 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
-	tmpDir, err := createTempDir(r.CloneDir)
 
-	defer os.RemoveAll(tmpDir)
+	var tmpDir string
+	var err error
+	if r.Keep {
+		tmpDir, err = keepDir(r.CloneDir, repo.FullName())
+	} else {
+		tmpDir, err = createTempDir(r.CloneDir)
+	}
 	if err != nil {
 		return nil, err
+	}
+
+	if !r.Keep {
+		defer os.RemoveAll(tmpDir)
 	}
 
 	sourceController := r.CreateGit(tmpDir)
@@ -226,9 +238,39 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errors.Errorf("both the feature branch and base branch was named %s, if you intended to push directly into the base branch, please use the `skip-pr` option", baseBranch)
 	}
 
-	err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
-	if err != nil {
-		return nil, err
+	// If keep mode is enabled and the directory already exists, reuse it with a hard reset
+	if r.Keep {
+		if _, statErr := os.Stat(filepath.Join(tmpDir, ".git")); statErr == nil {
+			log.Info("Reusing existing clone, resetting to base branch")
+			err = sourceController.FetchAndResetToDefault(ctx, baseBranch)
+			if err != nil {
+				// If reset fails, remove and re-clone
+				log.WithError(err).Info("Reset failed, re-cloning")
+				os.RemoveAll(tmpDir)
+				err = os.MkdirAll(tmpDir, 0755)
+				if err != nil {
+					return nil, err
+				}
+				err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			err = os.MkdirAll(tmpDir, 0755)
+			if err != nil {
+				return nil, err
+			}
+			err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Change the branch to the feature branch

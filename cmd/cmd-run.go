@@ -68,6 +68,7 @@ Available values:
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("author-email", "", "", "Email of the committer. If not set, the global git config setting will be used.")
 	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.")
+	cmd.Flags().BoolP("keep", "", false, "Skip the deletion of cloned repositories after running. Reuse already cloned repositories if present, performing a hard reset to the base branch before running the script.")
 	configureRepoFilters(cmd)
 	configureGit(cmd)
 	configurePlatform(cmd)
@@ -108,6 +109,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	draft, _ := flag.GetBool("draft")
 	prAutoMerge, _ := flag.GetBool("pr-auto-merge")
 	cloneDir, _ := flag.GetString("clone-dir")
+	keep, _ := flag.GetBool("keep")
 	labels, _ := stringSlice(flag, "labels")
 
 	platform, _ := flag.GetString("platform")
@@ -248,6 +250,7 @@ func run(cmd *cobra.Command, _ []string) error {
 		AutoMerge:        prAutoMerge,
 		Labels:           labels,
 		CloneDir:         cloneDir,
+		Keep:             keep,
 
 		Concurrent: concurrent,
 
