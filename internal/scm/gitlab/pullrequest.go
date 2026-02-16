@@ -9,10 +9,10 @@ import (
 type pullRequest struct {
 	ownerName  string
 	repoName   string
-	targetPID  int
-	sourcePID  int
+	targetPID  int64
+	sourcePID  int64
 	branchName string
-	iid        int
+	iid        int64
 	webURL     string
 	status     scm.PullRequestStatus
 }

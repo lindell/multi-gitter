@@ -12,7 +12,7 @@ import (
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/scm"
 	log "github.com/sirupsen/logrus"
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 // New create a new Gitlab client
@@ -146,9 +146,9 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 	}
 
 	// Remove duplicate projects
-	projectMap := map[int]*gitlab.Project{}
+	projectMap := map[int64]*gitlab.Project{}
 	for _, proj := range allProjects {
-		projectMap[proj.ID] = proj
+		projectMap[int64(proj.ID)] = proj
 	}
 	allProjects = make([]*gitlab.Project, 0, len(projectMap))
 	for _, proj := range projectMap {
@@ -169,7 +169,7 @@ func (g *Gitlab) getGroupProjects(ctx context.Context, groupName string) ([]*git
 		projects, _, err := g.glClient.Groups.ListGroupProjects(groupName, &gitlab.ListGroupProjectsOptions{
 			ListOptions: gitlab.ListOptions{
 				PerPage: 100,
-				Page:    i,
+				Page:    int64(i),
 			},
 			Archived:                 &archived,
 			IncludeSubGroups:         &g.Config.IncludeSubgroups,
@@ -197,7 +197,7 @@ func (g *Gitlab) getProject(ctx context.Context, projRef ProjectReference) (*git
 	if err != nil {
 		return nil, err
 	}
-	return project, err
+	return project, nil
 }
 
 func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitlab.Project, error) {
@@ -207,7 +207,7 @@ func (g *Gitlab) getUserProjects(ctx context.Context, username string) ([]*gitla
 		projects, _, err := g.glClient.Projects.ListUserProjects(username, &gitlab.ListProjectsOptions{
 			ListOptions: gitlab.ListOptions{
 				PerPage: 100,
-				Page:    i,
+				Page:    int64(i),
 			},
 			Archived: &archived,
 		}, gitlab.WithContext(ctx))
@@ -281,9 +281,9 @@ func (g *Gitlab) CreatePullRequest(ctx context.Context, repo scm.Repository, prR
 	}, nil
 }
 
-func (g *Gitlab) getUserIds(ctx context.Context, usernames []string) ([]int, error) {
+func (g *Gitlab) getUserIds(ctx context.Context, usernames []string) ([]int64, error) {
 	// Convert from usernames to user ids
-	var assigneeIDs []int
+	var assigneeIDs []int64
 
 	if len(usernames) > 0 {
 		var err error
@@ -296,8 +296,8 @@ func (g *Gitlab) getUserIds(ctx context.Context, usernames []string) ([]int, err
 	return assigneeIDs, nil
 }
 
-func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int, error) {
-	userIDs := make([]int, len(usernames))
+func (g *Gitlab) getUserIDs(ctx context.Context, usernames []string) ([]int64, error) {
+	userIDs := make([]int64, len(usernames))
 	for i := range usernames {
 		users, _, err := g.glClient.Users.ListUsers(&gitlab.ListUsersOptions{
 			Username: &usernames[i],
@@ -416,7 +416,8 @@ func (g *Gitlab) getPullRequest(ctx context.Context, branchName string, project 
 
 	mr, _, err := g.glClient.MergeRequests.GetMergeRequest(project.ID, mrs[0].IID, nil, gitlab.WithContext(ctx))
 	if err != nil {
-		return mrs[0], err
+		mr = &gitlab.MergeRequest{BasicMergeRequest: *mrs[0]}
+		return mr, err
 	}
 	return mr, nil
 }
@@ -456,7 +457,10 @@ func (g *Gitlab) GetOpenPullRequest(ctx context.Context, repo scm.Repository, br
 		return nil, nil
 	}
 
-	return convertMergeRequest(mrs[0], project.name, project.ownerName), nil
+	return convertMergeRequest(
+		&gitlab.MergeRequest{BasicMergeRequest: *mrs[0]},
+		project.name,
+		project.ownerName), nil
 }
 
 // MergePullRequest merges a pull request
