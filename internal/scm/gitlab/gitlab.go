@@ -148,7 +148,7 @@ func (g *Gitlab) getProjects(ctx context.Context) ([]*gitlab.Project, error) {
 	// Remove duplicate projects
 	projectMap := map[int64]*gitlab.Project{}
 	for _, proj := range allProjects {
-		projectMap[int64(proj.ID)] = proj
+		projectMap[proj.ID] = proj
 	}
 	allProjects = make([]*gitlab.Project, 0, len(projectMap))
 	for _, proj := range projectMap {
