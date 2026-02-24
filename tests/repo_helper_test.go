@@ -40,6 +40,17 @@ func createDummyRepo(dataInFile string, dir string) (string, error) {
 		return "", err
 	}
 
+	// Enable push options for the repository to allow testing with cmdgit
+	cfg, err := repo.Config()
+	if err != nil {
+		return "", err
+	}
+	cfg.Raw.SetOption("receive", "", "advertisePushOptions", "true")
+	err = repo.SetConfig(cfg)
+	if err != nil {
+		return "", err
+	}
+
 	testFilePath := filepath.Join(tmpDir, fileName)
 
 	err = os.WriteFile(testFilePath, []byte(dataInFile), 0600)

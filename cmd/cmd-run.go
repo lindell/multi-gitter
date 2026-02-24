@@ -195,12 +195,6 @@ func run(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Validate that push-options are not used with gogit
-	gitType, _ := flag.GetString("git-type")
-	if gitType == "go" && len(pushOptions) > 0 {
-		return errors.New("push-options are not supported with git-type=go, use git-type=cmd instead")
-	}
-
 	executablePath, arguments, err := parseCommand(flag.Arg(0))
 	if err != nil {
 		return err

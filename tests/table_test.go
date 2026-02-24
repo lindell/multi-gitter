@@ -1443,7 +1443,7 @@ Repositories with a successful run:
 			},
 		},
 		{
-			name:        "push-option with gogit should error",
+			name:        "push-option with go git type should fail",
 			gitBackends: []gitBackend{gitBackendGo},
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
@@ -1461,9 +1461,9 @@ Repositories with a successful run:
 				"--push-option", "ci.skip",
 				changerBinaryPath,
 			},
-			expectErr: true,
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
-				assert.Contains(t, runData.cmdOut, "push-options are not supported with git-type=go")
+				assert.Contains(t, runData.out, "push options are not supported with git-type=go")
+				require.Len(t, vcMock.PullRequests, 0)
 			},
 		},
 		{
