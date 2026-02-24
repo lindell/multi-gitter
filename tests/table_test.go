@@ -1391,7 +1391,7 @@ Repositories with a successful run:
 		},
 		{
 			name:        "push-option with flag",
-			gitBackends: []gitBackend{gitBackendGo},
+			gitBackends: []gitBackend{gitBackendCmd},
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -1417,7 +1417,7 @@ Repositories with a successful run:
 		},
 		{
 			name:        "push-option with config",
-			gitBackends: []gitBackend{gitBackendGo},
+			gitBackends: []gitBackend{gitBackendCmd},
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
 					Repositories: []vcmock.Repository{
@@ -1440,6 +1440,30 @@ Repositories with a successful run:
 				assert.Equal(t, "test with push options", vcMock.PullRequests[0].Title)
 
 				assert.Equal(t, "Repositories with a successful run:\n  owner/should-change #1\n", runData.out)
+			},
+		},
+		{
+			name:        "push-option with gogit should error",
+			gitBackends: []gitBackend{gitBackendGo},
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						createRepo(t, "owner", "example-repository", "i like apples"),
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--push-option", "ci.skip",
+				changerBinaryPath,
+			},
+			expectErr: true,
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Contains(t, runData.cmdOut, "push-options are not supported with git-type=go")
 			},
 		},
 		{

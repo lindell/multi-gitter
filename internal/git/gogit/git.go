@@ -208,6 +208,11 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 
 // Push the committed changes to the remote
 func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool, pushOptions ...string) error {
+	// Push options are not supported with gogit implementation
+	if len(pushOptions) > 0 {
+		return errors.New("push options are not supported with the go-git implementation, use git-type=cmd instead")
+	}
+
 	var refSpecs []config.RefSpec
 
 	if remoteReference != "" {
@@ -221,20 +226,10 @@ func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, forc
 		}
 	}
 
-	// convert the provided pushOptions to a map[string]string by mapping each value to true
-	var pushOpts map[string]string
-	if len(pushOptions) > 0 {
-		pushOpts = make(map[string]string)
-		for _, option := range pushOptions {
-			pushOpts[option] = "true"
-		}
-	}
-
 	return g.repo.PushContext(ctx, &git.PushOptions{
 		RemoteName: remoteName,
 		Force:      force,
 		RefSpecs:   refSpecs,
-		Options:    pushOpts,
 	})
 }
 
