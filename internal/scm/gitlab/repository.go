@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/xanzy/go-gitlab"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 func (g *Gitlab) convertProject(project *gitlab.Project) (repository, error) {
@@ -43,7 +43,7 @@ func shouldSquash(project *gitlab.Project) bool {
 
 type repository struct {
 	url           string
-	pid           int
+	pid           int64
 	name          string
 	ownerName     string
 	defaultBranch string
