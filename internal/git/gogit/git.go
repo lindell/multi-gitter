@@ -207,7 +207,13 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 }
 
 // Push the committed changes to the remote
-func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool) error {
+func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool, pushOptions ...string) error {
+	// Push options are not supported with the go-git implementation
+	// TODO this can be fixed when go-git v6 stable is available and used in multi-gitter
+	if len(pushOptions) > 0 {
+		return errors.New("push options are not supported with git-type=go, use git-type=cmd instead")
+	}
+
 	var refSpecs []config.RefSpec
 
 	if remoteReference != "" {
@@ -220,6 +226,7 @@ func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, forc
 			config.RefSpec(head.Hash().String() + ":" + remoteReference),
 		}
 	}
+
 	return g.repo.PushContext(ctx, &git.PushOptions{
 		RemoteName: remoteName,
 		Force:      force,
