@@ -27,6 +27,8 @@ type Printer struct {
 	Concurrent int
 	CloneDir   string
 
+	Keep bool // If set, skip deletion of cloned repos and reuse them if already present
+
 	CreateGit func(dir string) Git
 }
 
@@ -77,16 +79,28 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
-	tmpDir, err := createTempDir(r.CloneDir)
 
-	defer os.RemoveAll(tmpDir)
+	var tmpDir string
+	var err error
+	if r.Keep {
+		tmpDir, err = keepDir(r.CloneDir, repo.FullName())
+	} else {
+		tmpDir, err = createTempDir(r.CloneDir)
+	}
 	if err != nil {
 		return err
 	}
 
+	if !r.Keep {
+		defer os.RemoveAll(tmpDir)
+	}
+
 	sourceController := r.CreateGit(tmpDir)
 
-	err = sourceController.Clone(ctx, repo.CloneURL(), repo.DefaultBranch())
+	baseBranch := repo.DefaultBranch()
+
+	// Clone or reuse the repository
+	err = cloneOrReuseRepository(ctx, sourceController, tmpDir, repo, baseBranch, r.Keep, log)
 	if err != nil {
 		return err
 	}
