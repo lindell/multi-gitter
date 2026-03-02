@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -239,39 +238,10 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errors.Errorf("both the feature branch and base branch was named %s, if you intended to push directly into the base branch, please use the `skip-pr` option", baseBranch)
 	}
 
-	// If keep mode is enabled and the directory already exists, reuse it with a hard reset
-	if r.Keep {
-		if _, statErr := os.Stat(filepath.Join(tmpDir, ".git")); statErr == nil {
-			log.Info("Reusing existing clone, resetting to base branch")
-			err = sourceController.FetchAndResetToDefault(ctx, baseBranch)
-			if err != nil {
-				// If reset fails, remove and re-clone
-				log.WithError(err).Info("Reset failed, re-cloning")
-				os.RemoveAll(tmpDir)
-				err = os.MkdirAll(tmpDir, 0755)
-				if err != nil {
-					return nil, err
-				}
-				err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
-				if err != nil {
-					return nil, err
-				}
-			}
-		} else {
-			err = os.MkdirAll(tmpDir, 0755)
-			if err != nil {
-				return nil, err
-			}
-			err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
-			if err != nil {
-				return nil, err
-			}
-		}
-	} else {
-		err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
-		if err != nil {
-			return nil, err
-		}
+	// Clone or reuse the repository
+	err = cloneOrReuseRepository(ctx, sourceController, tmpDir, repo, baseBranch, r.Keep, log)
+	if err != nil {
+		return nil, err
 	}
 
 	// Change the branch to the feature branch
@@ -324,7 +294,6 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		if commitHashBeforeRun == commitHashAfterRun {
 			return nil, errNoChange
 		}
-
 	}
 
 	prTitle, prBody, err := r.getPRBodyAndTitle(sourceController, commitHashBeforeRun)

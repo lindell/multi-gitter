@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/lindell/multi-gitter/internal/multigitter/repocounter"
 	"github.com/lindell/multi-gitter/internal/scm"
@@ -100,39 +99,10 @@ func (r Printer) runSingleRepo(ctx context.Context, repo scm.Repository) error {
 
 	baseBranch := repo.DefaultBranch()
 
-	// If keep mode is enabled and the directory already exists, reuse it with a hard reset
-	if r.Keep {
-		if _, statErr := os.Stat(filepath.Join(tmpDir, ".git")); statErr == nil {
-			log.Info("Reusing existing clone, resetting to base branch")
-			err = sourceController.FetchAndResetToDefault(ctx, baseBranch)
-			if err != nil {
-				// If reset fails, remove and re-clone
-				log.WithError(err).Info("Reset failed, re-cloning")
-				os.RemoveAll(tmpDir)
-				err = os.MkdirAll(tmpDir, 0755)
-				if err != nil {
-					return err
-				}
-				err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
-				if err != nil {
-					return err
-				}
-			}
-		} else {
-			err = os.MkdirAll(tmpDir, 0755)
-			if err != nil {
-				return err
-			}
-			err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
-		if err != nil {
-			return err
-		}
+	// Clone or reuse the repository
+	err = cloneOrReuseRepository(ctx, sourceController, tmpDir, repo, baseBranch, r.Keep, log)
+	if err != nil {
+		return err
 	}
 
 	cmd := prepareScriptCommand(ctx, repo, tmpDir, r.ScriptPath, r.Arguments)

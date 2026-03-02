@@ -10,6 +10,7 @@ import (
 
 	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type urler interface {
@@ -24,6 +25,45 @@ func transformExecError(err error) error {
 		}
 	}
 	return err
+}
+
+// cloneOrReuseRepository handles cloning or reusing an existing repository.
+// When keep is enabled, it attempts to reuse an existing clone by resetting to the base branch.
+// If keep is disabled or reset fails, it performs a fresh clone.
+func cloneOrReuseRepository(ctx context.Context, sourceController Git, tmpDir string, repo interface{ CloneURL() string }, baseBranch string, keep bool, logger log.FieldLogger) error {
+	// If keep mode is enabled and the directory already exists, try to reuse it with a hard reset
+	if keep {
+		if _, statErr := os.Stat(filepath.Join(tmpDir, ".git")); statErr == nil {
+			logger.Info("Reusing existing clone, resetting to base branch")
+			err := sourceController.FetchAndResetToDefault(ctx, baseBranch)
+			if err != nil {
+				// If reset fails, remove and re-clone
+				logger.WithError(err).Info("Reset failed, re-cloning")
+				os.RemoveAll(tmpDir)
+				err = os.MkdirAll(tmpDir, 0755)
+				if err != nil {
+					return err
+				}
+				err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		// Keep is enabled but .git doesn't exist, so we need to create the directory and clone
+		err := os.MkdirAll(tmpDir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Clone the repository (either keep is disabled, or directory doesn't exist)
+	err := sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Git is a git implementation
