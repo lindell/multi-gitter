@@ -9,7 +9,7 @@ require (
 	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240917142304-df385efaac68
 	github.com/go-git/go-git/v5 v5.17.0
 	github.com/google/go-github/v70 v70.0.0
-	github.com/ktrysmt/go-bitbucket v0.9.87
+	github.com/ktrysmt/go-bitbucket v0.9.94
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.4
@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	gitlab.com/gitlab-org/api/client-go v1.44.0
 	golang.org/x/net v0.51.0
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 )
 
 require (
