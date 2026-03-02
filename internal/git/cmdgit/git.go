@@ -79,7 +79,11 @@ func (g *Git) FetchAndResetToDefault(ctx context.Context, baseName string) error
 	}
 
 	// Fetch latest changes
-	cmd = exec.CommandContext(ctx, "git", "fetch", "origin", baseName)
+	args := []string{"fetch", "origin", baseName}
+	if g.FetchDepth > 0 {
+		args = append(args, "--depth", fmt.Sprint(g.FetchDepth))
+	}
+	cmd = exec.CommandContext(ctx, "git", args...)
 	_, err = g.run(cmd)
 	if err != nil {
 		return errors.Wrap(err, "could not fetch from origin")
