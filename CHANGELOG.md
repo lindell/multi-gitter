@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.63.0](https://github.com/lindell/multi-gitter/compare/v0.62.0...v0.63.0) (2026-03-02)
+
+
+### Features
+
+* support push options ([#604](https://github.com/lindell/multi-gitter/issues/604)) ([85f6bc7](https://github.com/lindell/multi-gitter/commit/85f6bc71bd833d5f3f0028629bad563b1746ae16))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.23.2 ([cd6c048](https://github.com/lindell/multi-gitter/commit/cd6c048bb82eb6a1107d48590d9cd2b86ed891ef))
+* update module github.com/go-git/go-git/v5 to v5.17.0 ([852782e](https://github.com/lindell/multi-gitter/commit/852782ecf9a07ecc52c377cfbcc2fe75f367525e))
+* update module gitlab.com/gitlab-org/api/client-go to v1.44.0 ([2d48ac7](https://github.com/lindell/multi-gitter/commit/2d48ac76e739434ef92728b04c36ee3a7be6dc96))
+* update module golang.org/x/net to v0.51.0 ([b75d44e](https://github.com/lindell/multi-gitter/commit/b75d44ee2e4c03e63d4066821d64bbdfb29b0959))
+* update module golang.org/x/oauth2 to v0.35.0 ([33906a2](https://github.com/lindell/multi-gitter/commit/33906a2355f0c4a0112dc116f31556ff7865fe61))
+
 ## [0.62.0](https://github.com/lindell/multi-gitter/compare/v0.61.0...v0.62.0) (2026-02-25)
 
 
