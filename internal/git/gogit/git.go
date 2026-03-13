@@ -3,6 +3,7 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -232,6 +233,46 @@ func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, forc
 		Force:      force,
 		RefSpecs:   refSpecs,
 	})
+}
+
+// FetchAndRebase fetches the remote branch and soft-resets the current branch onto it,
+// preserving the working tree so the caller can recommit on top.
+func (g *Git) FetchAndRebase(ctx context.Context, remoteName, branchName string) (string, error) {
+	// Fetch the remote feature branch with a force-update refspec (+) to ensure we
+	// get the latest state even in single-branch shallow clones.
+	refSpec := config.RefSpec(fmt.Sprintf("+refs/heads/%s:refs/remotes/%s/%s", branchName, remoteName, branchName))
+	err := g.repo.FetchContext(ctx, &git.FetchOptions{
+		RemoteName: remoteName,
+		RefSpecs:   []config.RefSpec{refSpec},
+		Tags:       git.NoTags,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return "", errors.Wrap(err, "could not fetch remote branch")
+	}
+
+	// Clear shallow boundaries so push negotiation can walk the parent history
+	// of our commit without hitting "object not found" errors.
+	if err := g.repo.Storer.SetShallow(nil); err != nil {
+		return "", errors.Wrap(err, "could not clear shallow boundaries")
+	}
+
+	// Mixed reset to the remote branch tip: updates HEAD and index to match
+	// the remote branch, but preserves the working tree so the caller can
+	// detect changes with Changes() and recommit on top.
+	remoteRef, err := g.repo.Reference(plumbing.NewRemoteReferenceName(remoteName, branchName), true)
+	if err != nil {
+		return "", errors.Wrap(err, "could not get remote branch reference")
+	}
+
+	w, err := g.repo.Worktree()
+	if err != nil {
+		return "", errors.Wrap(err, "could not get worktree")
+	}
+	if err := w.Reset(&git.ResetOptions{Commit: remoteRef.Hash(), Mode: git.MixedReset}); err != nil {
+		return "", errors.Wrap(err, "could not reset to remote branch")
+	}
+
+	return remoteRef.Hash().String(), nil
 }
 
 // AddRemote adds a new remote

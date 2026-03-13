@@ -1059,6 +1059,104 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "append conflict strategy",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				// Create and run mg with these different repositories:
+				// 1. No branch exist when running, change is expected
+				// 2. A branch exist, but no PR
+				// 3. A branch and pull request exist
+				// 4. No branch exist when running, no change should be made
+				// 5. A branch exist, no change compared to the base branch should be made
+				// 6. A branch exist with the same content the script would produce (tree-level no-op)
+				repo1 := createRepo(t, "owner", "no-existing-branch", "i like apples")
+				repo2 := createRepo(t, "owner", "existing-branch", "i like apples")
+				changeBranch(t, repo2.Path, "custom-branch-name", true)
+				changeTestFile(t, repo2.Path, "i like apple", "test change")
+				changeBranch(t, repo2.Path, "master", false)
+				repo3 := createRepo(t, "owner", "existing-pr", "i like apples")
+				changeBranch(t, repo3.Path, "custom-branch-name", true)
+				changeTestFile(t, repo3.Path, "i like apple", "test change")
+				changeBranch(t, repo3.Path, "master", false)
+				repo4 := createRepo(t, "owner", "no-change-1", "i like oranges")
+				repo5 := createRepo(t, "owner", "no-change-2", "i like oranges")
+				changeBranch(t, repo5.Path, "custom-branch-name", true)
+				changeTestFile(t, repo5.Path, "i like apples", "test change")
+				changeBranch(t, repo5.Path, "master", false)
+				repo6 := createRepo(t, "owner", "already-up-to-date", "i like apples")
+				changeBranch(t, repo6.Path, "custom-branch-name", true)
+				changeTestFile(t, repo6.Path, "i like bananas", "already changed")
+				changeBranch(t, repo6.Path, "master", false)
+
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{
+						repo1,
+						repo2,
+						repo3,
+						repo4,
+						repo5,
+						repo6,
+					},
+					PullRequests: []vcmock.PullRequest{
+						{
+							PRStatus:   scm.PullRequestStatusSuccess,
+							PRNumber:   42,
+							Repository: repo3,
+							NewPullRequest: scm.NewPullRequest{
+								Title: "original title",
+								Body:  "original body",
+								Head:  "custom-branch-name",
+							},
+						},
+					},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--conflict-strategy", "append",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				require.Len(t, vcMock.PullRequests, 3)
+				assert.Equal(t, "custom message", vcMock.PullRequests[0].Title)
+				assert.Equal(t, "", vcMock.PullRequests[0].Body)
+				assert.Equal(t, 42, vcMock.PullRequests[0].PRNumber)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[1].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[1].Base)
+				assert.Equal(t, "custom message", vcMock.PullRequests[1].Title)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[2].Head)
+				assert.Equal(t, "master", vcMock.PullRequests[2].Base)
+				assert.Equal(t, "custom message", vcMock.PullRequests[2].Title)
+
+				assert.Contains(t, runData.logOut, "Running on 6 repositories")
+				assert.Equal(t, 6, strings.Count(runData.logOut, "Cloning and running script"))
+				assert.Equal(t, 3, strings.Count(runData.logOut, "Pushing changes to remote"))
+				assert.Equal(t, 2, strings.Count(runData.logOut, "Creating pull request"))
+				assert.Equal(t, 1, strings.Count(runData.logOut, "Updating pull request since one is already open"))
+
+				assert.Equal(t, `No data was changed:
+  owner/no-change-1
+  owner/no-change-2
+  owner/already-up-to-date
+Repositories with a successful run:
+  owner/no-existing-branch #1
+  owner/existing-branch #2
+  owner/existing-pr #42
+`, runData.out)
+
+				changeBranch(t, vcMock.Repositories[0].Path, "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[0].Path))
+				changeBranch(t, vcMock.Repositories[1].Path, "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[1].Path))
+				changeBranch(t, vcMock.Repositories[2].Path, "custom-branch-name", false)
+				assert.Equal(t, "i like bananas", readTestFile(t, vcMock.Repositories[2].Path))
+			},
+		},
+
+		{
 			name: "multi line message body",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
