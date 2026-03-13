@@ -160,6 +160,36 @@ func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, forc
 	return err
 }
 
+// FetchAndRebase fetches the remote branch and soft-resets the current branch onto it,
+// preserving the working tree so the caller can recommit on top.
+func (g *Git) FetchAndRebase(ctx context.Context, remoteName, branchName string) (string, error) {
+	// Use an explicit refspec to create the remote-tracking ref. Single-branch clones
+	// only track the base branch, so a plain "git fetch <remote> <branch>" would store
+	// the result in FETCH_HEAD without creating <remote>/<branch>.
+	refSpec := fmt.Sprintf("+refs/heads/%s:refs/remotes/%s/%s", branchName, remoteName, branchName)
+	cmd := exec.CommandContext(ctx, "git", "fetch", remoteName, refSpec)
+	_, err := g.run(cmd)
+	if err != nil {
+		return "", errors.Wrap(err, "could not fetch remote branch")
+	}
+
+	// Mixed reset to the remote branch tip: updates HEAD and index to match
+	// the remote branch, but preserves the working tree so the caller can
+	// detect changes with Changes() and recommit on top.
+	remoteRef := remoteName + "/" + branchName
+	cmd = exec.Command("git", "reset", remoteRef)
+	_, err = g.run(cmd)
+	if err != nil {
+		return "", errors.Wrap(err, "could not reset to remote branch")
+	}
+
+	remoteTipHash, err := g.run(exec.Command("git", "rev-parse", "HEAD"))
+	if err != nil {
+		return "", errors.Wrap(err, "could not get remote branch hash")
+	}
+	return strings.TrimSpace(remoteTipHash), nil
+}
+
 // AddRemote adds a new remote
 func (g *Git) AddRemote(name, url string) error {
 	cmd := exec.Command("git", "remote", "add", name, url)
