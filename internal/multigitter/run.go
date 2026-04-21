@@ -93,6 +93,8 @@ type Runner struct {
 
 	Interactive bool // If set, interactive mode is activated and the user will be asked to verify every change
 
+	Keep bool // If set, skip deletion of cloned repos and reuse them if already present
+
 	CreateGit func(dir string) Git
 }
 
@@ -209,11 +211,20 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 
 	log := log.WithField("repo", repo.FullName())
 	log.Info("Cloning and running script")
-	tmpDir, err := createTempDir(r.CloneDir)
 
-	defer os.RemoveAll(tmpDir)
+	var tmpDir string
+	var err error
+	if r.Keep {
+		tmpDir, err = keepDir(r.CloneDir, repo.FullName())
+	} else {
+		tmpDir, err = createTempDir(r.CloneDir)
+	}
 	if err != nil {
 		return nil, err
+	}
+
+	if !r.Keep {
+		defer os.RemoveAll(tmpDir)
 	}
 
 	sourceController := r.CreateGit(tmpDir)
@@ -227,7 +238,8 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, errors.Errorf("both the feature branch and base branch was named %s, if you intended to push directly into the base branch, please use the `skip-pr` option", baseBranch)
 	}
 
-	err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+	// Clone or reuse the repository
+	err = cloneOrReuseRepository(ctx, sourceController, tmpDir, repo, baseBranch, r.Keep, log)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +294,6 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		if commitHashBeforeRun == commitHashAfterRun {
 			return nil, errNoChange
 		}
-
 	}
 
 	prTitle, prBody, err := r.getPRBodyAndTitle(sourceController, commitHashBeforeRun)
