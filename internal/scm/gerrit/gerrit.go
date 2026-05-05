@@ -302,7 +302,7 @@ func (g Gerrit) queryChanges(ctx context.Context, branchName string, filters []s
 	defaultFilters := []string{
 		"footer:" + FooterBranch + "=" + branchName,
 	}
-	query := strings.Join(append(defaultFilters, filters...), "+")
+	query := strings.Join(append(defaultFilters, filters...), " ")
 
 	opt := &gogerrit.QueryChangeOptions{
 		QueryOptions: gogerrit.QueryOptions{
