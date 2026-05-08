@@ -12,7 +12,7 @@ import (
 	internalHTTP "github.com/lindell/multi-gitter/internal/http"
 	"github.com/lindell/multi-gitter/internal/scm"
 	log "github.com/sirupsen/logrus"
-	gitlab "gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
 )
 
 // New create a new Gitlab client
