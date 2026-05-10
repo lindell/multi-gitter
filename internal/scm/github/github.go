@@ -171,10 +171,10 @@ func (g *Github) GetRepositories(ctx context.Context) ([]scm.Repository, error) 
 
 		if g.checkPermissions {
 			switch {
-			case !permissions["pull"]:
+			case permissions.Pull != nil && !*permissions.Pull:
 				log.Debug("Skipping repository since the token does not have pull permissions")
 				continue
-			case !g.Fork && !g.ReadOnly && !permissions["push"]:
+			case !g.Fork && !g.ReadOnly && permissions.Push != nil && !*permissions.Push:
 				log.Debug("Skipping repository since the token does not have push permissions and the run will not fork")
 				continue
 			}
