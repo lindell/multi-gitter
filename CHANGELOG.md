@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.63.1](https://github.com/lindell/multi-gitter/compare/v0.63.0...v0.63.1) (2026-05-10)
+
+
+### Bug Fixes
+
+* **gerrit:** use space instead of '+' as Gerrit query parameter separator ([#618](https://github.com/lindell/multi-gitter/issues/618)) ([8306bd6](https://github.com/lindell/multi-gitter/commit/8306bd628db2527fcad752534c4eb9b59ce5e67b))
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.24.1 ([0d98069](https://github.com/lindell/multi-gitter/commit/0d98069b655e85d1e17a5af099a99bfe9e63093e))
+* update module github.com/go-git/go-git/v5 to v5.17.1 [security] ([9e576d1](https://github.com/lindell/multi-gitter/commit/9e576d18f221c0a7a4f8595ac2b18eac47d1c179))
+* update module github.com/go-git/go-git/v5 to v5.18.0 [security] ([20b9feb](https://github.com/lindell/multi-gitter/commit/20b9febab71eda362880663cad598b82b720a6bc))
+* update module github.com/google/go-github/v70 to v85 ([#617](https://github.com/lindell/multi-gitter/issues/617)) ([dc9efcb](https://github.com/lindell/multi-gitter/commit/dc9efcb9bb03871693362ef2f52334b967589673))
+* update module gitlab.com/gitlab-org/api/client-go to v1.46.0 ([e8fa53b](https://github.com/lindell/multi-gitter/commit/e8fa53beb5f63a061aee232cc86eef16bc398970))
+* update module gitlab.com/gitlab-org/api/client-go to v2 ([#615](https://github.com/lindell/multi-gitter/issues/615)) ([ba939c6](https://github.com/lindell/multi-gitter/commit/ba939c6509220506050b9a3ae4760743402b28b1))
+* update module golang.org/x/net to v0.52.0 ([8e8c178](https://github.com/lindell/multi-gitter/commit/8e8c17817f17f5cd2c8e98b45e38b2869dc3485c))
+* update module golang.org/x/net to v0.53.0 ([063b47d](https://github.com/lindell/multi-gitter/commit/063b47db582ef8b35292f30314f442a5aa7c1cd5))
+* update module golang.org/x/oauth2 to v0.36.0 ([5a3095f](https://github.com/lindell/multi-gitter/commit/5a3095fe3c7d7ba6a61fc7619c8e5983c1c8194e))
+
 ## [0.63.0](https://github.com/lindell/multi-gitter/compare/v0.62.0...v0.63.0) (2026-03-02)
 
 
