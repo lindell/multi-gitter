@@ -251,8 +251,8 @@ func run(cmd *cobra.Command, _ []string) error {
 		ConflictStrategy: conflictStrategy,
 		Draft:            draft,
 		AutoMerge:        prAutoMerge,
-		Labels:   labels,
-		CloneDir: cloneDir,
+		Labels:           labels,
+		CloneDir:         cloneDir,
 
 		Concurrent:        concurrent,
 		SleepBetweenBatch: sleepBetweenBatch,
