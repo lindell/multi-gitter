@@ -180,27 +180,52 @@ func (r *Runner) Run(ctx context.Context) error {
 }
 
 func runInParallel(fun func(i int), total int, maxConcurrent int, sleepBetweenBatch time.Duration) {
+	if sleepBetweenBatch == 0 {
+		// Fast path: no sleep, use simple semaphore pattern
+		concurrentGoroutines := make(chan struct{}, maxConcurrent)
+		var wg sync.WaitGroup
+		wg.Add(total)
+		for i := 0; i < total; i++ {
+			concurrentGoroutines <- struct{}{}
+			go func(i int) {
+				defer wg.Done()
+				fun(i)
+				<-concurrentGoroutines
+			}(i)
+		}
+		wg.Wait()
+		return
+	}
+
+	// Slow path: sleep between batches
 	concurrentGoroutines := make(chan struct{}, maxConcurrent)
 	var wg sync.WaitGroup
+	wg.Add(total)
 
-	for i := 0; i < total; i++ {
-		// If we need to sleep between batches and we're starting a new batch (not the first)
-		if sleepBetweenBatch > 0 && i > 0 && i%maxConcurrent == 0 {
-			// Wait for the previous batch to complete before sleeping
-			wg.Wait()
+	for batchStart := 0; batchStart < total; batchStart += maxConcurrent {
+		if batchStart > 0 && sleepBetweenBatch > 0 {
 			log.Infof("Sleeping for %v before starting next batch", sleepBetweenBatch)
 			time.Sleep(sleepBetweenBatch)
-			// Reset wait group for the next batch
-			wg = sync.WaitGroup{}
 		}
 
-		wg.Add(1)
-		concurrentGoroutines <- struct{}{}
-		go func(i int) {
-			defer wg.Done()
-			fun(i)
-			<-concurrentGoroutines
-		}(i)
+		batchEnd := batchStart + maxConcurrent
+		if batchEnd > total {
+			batchEnd = total
+		}
+
+		var batchWg sync.WaitGroup
+		for i := batchStart; i < batchEnd; i++ {
+			batchWg.Add(1)
+			concurrentGoroutines <- struct{}{}
+			go func(i int) {
+				defer wg.Done()
+				defer batchWg.Done()
+				fun(i)
+				<-concurrentGoroutines
+			}(i)
+		}
+		// Wait for this batch to complete before starting the next
+		batchWg.Wait()
 	}
 	wg.Wait()
 }
