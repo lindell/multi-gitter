@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 	"unicode"
 
 	"github.com/eiannone/keyboard"
@@ -69,12 +70,13 @@ type Runner struct {
 	BaseBranch       string // The base branch of the PR, use default branch if not set
 	Assignees        []string
 
-	Concurrent      int
-	SkipPullRequest bool     // If set, the script will run directly on the base-branch without creating any PR
-	PushOnly        bool     // If set, the script will only publish the feature branch without creating a PR
-	APIPush         bool     // Use the SCM API to commit and push the changes instead of git
-	PushOptions     []string // Options to pass to git push command
-	ManualCommit    bool     // If set, multi-gitter will not commit the changes left by the script.
+	Concurrent         int
+	SleepBetweenBatch  time.Duration // Sleep duration between concurrent batches
+	SkipPullRequest    bool          // If set, the script will run directly on the base-branch without creating any PR
+	PushOnly           bool          // If set, the script will only publish the feature branch without creating a PR
+	APIPush            bool          // Use the SCM API to commit and push the changes instead of git
+	PushOptions        []string      // Options to pass to git push command
+	ManualCommit       bool          // If set, multi-gitter will not commit the changes left by the script.
 
 	// RepoFilters contains repository filtering options
 	RepoFilters RepoFilters
@@ -172,16 +174,27 @@ func (r *Runner) Run(ctx context.Context) error {
 		} else {
 			rc.AddSuccessRepositories(repos[i])
 		}
-	}, len(repos), r.Concurrent)
+	}, len(repos), r.Concurrent, r.SleepBetweenBatch)
 
 	return nil
 }
 
-func runInParallel(fun func(i int), total int, maxConcurrent int) {
+func runInParallel(fun func(i int), total int, maxConcurrent int, sleepBetweenBatch time.Duration) {
 	concurrentGoroutines := make(chan struct{}, maxConcurrent)
 	var wg sync.WaitGroup
-	wg.Add(total)
+
 	for i := 0; i < total; i++ {
+		// If we need to sleep between batches and we're starting a new batch (not the first)
+		if sleepBetweenBatch > 0 && i > 0 && i%maxConcurrent == 0 {
+			// Wait for the previous batch to complete before sleeping
+			wg.Wait()
+			log.Infof("Sleeping for %v before starting next batch", sleepBetweenBatch)
+			time.Sleep(sleepBetweenBatch)
+			// Reset wait group for the next batch
+			wg = sync.WaitGroup{}
+		}
+
+		wg.Add(1)
 		concurrentGoroutines <- struct{}{}
 		go func(i int) {
 			defer wg.Done()
