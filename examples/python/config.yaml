@@ -1,0 +1,140 @@
+# The personal access token for the targeting platform. Can also be set using the GITHUB_TOKEN/GITLAB_TOKEN/GITEA_TOKEN/BITBUCKET_SERVER_TOKEN/BITBUCKET_CLOUD_APP_PASSWORD/BITBUCKET_CLOUD_WORKSPACE_TOKEN environment variable.
+token: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# The username of the assignees to be added on the pull request.
+assignees:
+  - sina.py
+
+# Email of the committer. If not set, the global git config setting will be used.
+author-email: 
+  - si.sarsharpoor@gmail.com
+
+# Name of the committer. If not set, the global git config setting will be used.
+author-name:
+  - Sina
+
+# Labels to be added to any created pull request.
+labels:
+  - generated
+
+# The username of the reviewers to be added on the pull request.
+reviewers:
+  # - someone-username
+
+# The commit message. Will default to title + body if none is set.
+commit-message:
+  - "feat: Bump Events Library"
+
+# The body of the commit message. Will default to everything but the first line of the commit message if none is set.
+pr-body: "## Summary of Changes\n
+  bump events to version 2.0.0 and minor related update."
+
+# The title of the PR. Will default to the first line of the commit message if none is set.
+pr-title: Bump Event library
+
+# Run without pushing changes or creating pull requests.
+dry-run: false
+
+# The level of logging that should be made. Available values: trace, debug, info, error.
+log-level: info
+
+# Take manual decision before committing any change. Requires git to be installed.
+interactive: false
+
+# The branch which the changes will be based on.
+# base-branch:
+
+# Base URL of the target platform, needs to be changed for GitHub enterprise, a self-hosted GitLab instance, Gitea or BitBucket.
+base-url:
+
+# The name of the branch where changes are committed.
+branch: 
+  - feat-bump-event-library-branch
+
+# Use a code search to find a set of repositories to target (GitHub only). Repeated results from a given repository will be ignored, forks are NOT included by default (use `fork:true` to include them). See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-code.
+# Note: Search for C# repositories that have the ABC.Event package or any subpackage
+code-search:
+  - org:MyOrg Include="ABC.Event
+
+
+# What should happen if the branch already exist.
+# Available values:
+#   skip: Skip making any changes to the existing branch and do not create a new pull request.
+#   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
+conflict-strategy: replace
+
+# The name, including owner of a GitHub repository in the format "ownerName/repoName".
+# repo:
+#   - org/repo
+#   - another-org/another-repo
+
+# Exclude repositories that match with a given Regular Expression
+repo-exclude:
+
+# Include repositories that match with a given Regular Expression
+repo-include:
+
+# Use a repository search to find repositories to target (GitHub only). Forks are NOT included by default, use `fork:true` to include them. See the GitHub documentation for full syntax: https://docs.github.com/en/search-github/searching-on-github/searching-for-repositories.
+repo-search:
+
+# Skip repositories which are forks.
+skip-forks: true
+
+# Skip pull request and directly push to the branch.
+skip-pr: false
+
+# Skip changes on specified repositories, the name is including the owner of repository in the format "ownerName/repoName".
+skip-repo:
+  - example
+
+# The maximum number of concurrent runs.
+concurrent: 1
+
+# Create pull request(s) as draft.
+draft: false
+
+# Limit fetching to the specified number of commits. Set to 0 for no limit.
+fetch-depth: 1
+
+# Fork the repository instead of creating a new branch on the same owner.
+fork: false
+
+# If set, make the fork to the defined value. Default behavior is for the fork to be on the logged in user.
+fork-owner:
+
+# The type of git implementation to use.
+# Available values:
+#   go: Uses go-git, a Go native implementation of git. This is compiled with the multi-gitter binary, and no extra dependencies are needed.
+#   cmd: Calls out to the git command. This requires git to be installed and available with by calling "git".
+git-type: go
+
+# The file where all logs should be printed to. "-" means stdout.
+log-file: "-"
+
+# The formatting of the logs. Available values: text, json, json-pretty.
+log-format: text
+
+# If this value is set, reviewers will be randomized.
+max-reviewers: 0
+
+# If this value is set, team reviewers will be randomized
+max-team-reviewers: 0
+
+# The file that the output of the script should be outputted to. "-" means stdout.
+output: "-"
+
+# Don't use any terminal formatting when printing the output.
+plain-output: false
+
+# The platform that is used. Available values: github, gitlab, gitea, bitbucket_server, bitbucket_cloud. Note: bitbucket_cloud is in Beta
+platform: github
+
+# Skip pull request and only push the feature branch.
+push-only: false
+
+# Use SSH cloning URL instead of HTTPS + token. This requires that a setup with ssh keys that have access to all repos and that the server is already in known_hosts.
+ssh-auth: false
+
+# Push changes through the API instead of git. Only supported for GitHub.
+# It has the benefit of automatically producing verified commits. However, it is slower and not suited for changes to large files.
+api-push: false
