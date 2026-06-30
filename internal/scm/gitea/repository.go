@@ -23,6 +23,7 @@ func (g *Gitea) convertRepository(repo *gitea.Repository) (repository, error) {
 
 	return repository{
 		url:           repoURL,
+		webURL:        repo.HTMLURL,
 		name:          repo.Name,
 		ownerName:     repo.Owner.UserName,
 		defaultBranch: repo.DefaultBranch,
@@ -31,6 +32,7 @@ func (g *Gitea) convertRepository(repo *gitea.Repository) (repository, error) {
 
 type repository struct {
 	url           string
+	webURL        string
 	name          string
 	ownerName     string
 	defaultBranch string
@@ -41,8 +43,11 @@ func (r repository) CloneURL() string {
 }
 
 func (r repository) BranchURL(branchName string) string {
-	// Not yet implemented
-	return ""
+	if r.webURL == "" {
+		return ""
+	}
+
+	return r.webURL + "/src/branch/" + url.PathEscape(branchName)
 }
 
 func (r repository) DefaultBranch() string {

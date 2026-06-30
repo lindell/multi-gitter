@@ -2,6 +2,7 @@ package bitbucketserver
 
 import (
 	"net/url"
+	"path"
 	"strings"
 
 	bitbucketv1 "github.com/gfleury/go-bitbucket-v1"
@@ -35,6 +36,7 @@ func (b *BitbucketServer) convertRepository(bitbucketRepository *bitbucketv1.Rep
 		project:       bitbucketRepository.Project.Key,
 		defaultBranch: defaultBranch.DisplayID,
 		cloneURL:      cloneURL,
+		webURL:        b.repositoryWebURL(bitbucketRepository.Project.Key, bitbucketRepository.Slug),
 	}
 
 	return &repo, nil
@@ -56,6 +58,7 @@ type repository struct {
 	project       string
 	defaultBranch string
 	cloneURL      string
+	webURL        string
 }
 
 func (r repository) CloneURL() string {
@@ -63,8 +66,11 @@ func (r repository) CloneURL() string {
 }
 
 func (r repository) BranchURL(branchName string) string {
-	// Not yet implemented
-	return ""
+	if r.webURL == "" {
+		return ""
+	}
+
+	return r.webURL + "/browse?at=" + url.QueryEscape("refs/heads/"+branchName)
 }
 
 func (r repository) DefaultBranch() string {
@@ -73,4 +79,19 @@ func (r repository) DefaultBranch() string {
 
 func (r repository) FullName() string {
 	return r.project + "/" + r.name
+}
+
+func (b *BitbucketServer) repositoryWebURL(projectKey, slug string) string {
+	if b.baseURL == nil {
+		return ""
+	}
+
+	browserURL := *b.baseURL
+	browserURL.Path = strings.TrimSuffix(browserURL.Path, "/rest")
+	browserURL.Path = path.Join(browserURL.Path, "projects", projectKey, "repos", slug)
+	browserURL.RawPath = ""
+	browserURL.RawQuery = ""
+	browserURL.Fragment = ""
+
+	return browserURL.String()
 }
