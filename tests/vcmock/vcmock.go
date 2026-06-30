@@ -5,6 +5,7 @@ package vcmock
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sync"
@@ -255,6 +256,10 @@ type Repository struct {
 // CloneURL return the URL (filepath) of the repository on disk
 func (r Repository) CloneURL() string {
 	return fmt.Sprintf(`file://%s`, filepath.ToSlash(r.Path))
+}
+
+func (r Repository) BranchURL(branchName string) string {
+	return fmt.Sprintf("https://github.com/%s/%s/tree/%s", r.OwnerName, r.RepoName, url.PathEscape(branchName))
 }
 
 // DefaultBranch returns "master"
