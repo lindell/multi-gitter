@@ -24,6 +24,7 @@ func (g *Github) convertRepo(r *github.Repository) (repository, error) {
 
 	return repository{
 		url:           repoURL,
+		webURL:        r.GetHTMLURL(),
 		id:            r.GetNodeID(),
 		name:          r.GetName(),
 		ownerName:     r.GetOwner().GetLogin(),
@@ -33,6 +34,7 @@ func (g *Github) convertRepo(r *github.Repository) (repository, error) {
 
 type repository struct {
 	url           string
+	webURL        string
 	id            string
 	name          string
 	ownerName     string
@@ -41,6 +43,14 @@ type repository struct {
 
 func (r repository) CloneURL() string {
 	return r.url
+}
+
+func (r repository) BranchURL(branchName string) string {
+	if r.webURL == "" {
+		return ""
+	}
+
+	return r.webURL + "/tree/" + url.PathEscape(branchName)
 }
 
 func (r repository) DefaultBranch() string {

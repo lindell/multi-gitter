@@ -105,6 +105,11 @@ func (r repository) CloneURL() string {
 	return r.cloneURL
 }
 
+func (r repository) BranchURL(branchName string) string {
+	// Not yet implemented
+	return ""
+}
+
 func (r repository) DefaultBranch() string {
 	return r.defaultBranch
 }

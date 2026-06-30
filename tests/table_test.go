@@ -13,6 +13,7 @@ import (
 
 	"github.com/lindell/multi-gitter/cmd"
 	"github.com/lindell/multi-gitter/internal/multigitter"
+	"github.com/lindell/multi-gitter/internal/multigitter/terminal"
 	"github.com/lindell/multi-gitter/internal/scm"
 	"github.com/lindell/multi-gitter/tests/vcmock"
 
@@ -1386,7 +1387,7 @@ Repositories with a successful run:
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				assert.Equal(t, "", runData.cmdOut)
-				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #0\n", runData.out)
+				assert.Equal(t, "Repositories with a successful run:\n  "+terminal.Link("owner/example-repository #0", "https://github.com/owner/example-repository/tree/custom-branch-name")+"\n", runData.out)
 			},
 		},
 		{
