@@ -9,7 +9,7 @@ require (
 	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240917142304-df385efaac68
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/google/go-github/v85 v85.0.0
-	github.com/ktrysmt/go-bitbucket v0.9.87
+	github.com/ktrysmt/go-bitbucket v0.10.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.4
