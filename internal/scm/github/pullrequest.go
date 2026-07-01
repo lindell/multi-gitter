@@ -3,7 +3,7 @@ package github
 import (
 	"fmt"
 
-	"github.com/google/go-github/v85/github"
+	"github.com/google/go-github/v88/github"
 
 	"github.com/lindell/multi-gitter/internal/scm"
 )
