@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.63.2](https://github.com/lindell/multi-gitter/compare/v0.63.1...v0.63.2) (2026-07-01)
+
+
+### Dependencies
+
+* update module code.gitea.io/sdk/gitea to v0.25.1 ([8e46f55](https://github.com/lindell/multi-gitter/commit/8e46f556676cc03ce33982013c0696381513f8cb))
+* update module github.com/go-git/go-git/v5 to v5.19.0 [security] ([af9ea1a](https://github.com/lindell/multi-gitter/commit/af9ea1aa6c7e2eedf236c779e200222ccb980555))
+* update module github.com/go-git/go-git/v5 to v5.19.1 [security] ([c9b4182](https://github.com/lindell/multi-gitter/commit/c9b41827a84f6c4c94e34f09853586114232ab35))
+* update module gitlab.com/gitlab-org/api/client-go/v2 to v2.38.0 ([603173c](https://github.com/lindell/multi-gitter/commit/603173cf3907163e6f5c4633733e5b55a50ed917))
+* update module gitlab.com/gitlab-org/api/client-go/v2 to v2.43.0 ([f9c9768](https://github.com/lindell/multi-gitter/commit/f9c9768162e0dd7f8aad371b4a9c825812f3d98d))
+* update module golang.org/x/net to v0.56.0 ([55cdf48](https://github.com/lindell/multi-gitter/commit/55cdf48a8dde6af650f8f4ee975c9d812688a4b1))
+
 ## [0.63.1](https://github.com/lindell/multi-gitter/compare/v0.63.0...v0.63.1) (2026-05-10)
 
 
