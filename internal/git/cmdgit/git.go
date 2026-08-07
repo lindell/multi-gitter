@@ -160,6 +160,51 @@ func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, forc
 	return err
 }
 
+func (g *Git) FetchAndRebase(ctx context.Context, remoteName, branchName string) (string, error) {
+	tmpBranch := "__script_tmp__"
+
+	if _, err := g.run(exec.CommandContext(ctx, "git", "switch", "-c", tmpBranch)); err != nil {
+		return "", errors.Wrap(err, "could not create temp branch")
+	}
+
+	if _, err := g.run(exec.CommandContext(ctx, "git", "add", "-A")); err != nil {
+		return "", errors.Wrap(err, "could not stage working tree")
+	}
+
+	if _, err := g.run(exec.CommandContext(ctx, "git", "commit", "-m", "__snapshot__")); err != nil {
+		return "", errors.Wrap(err, "could not snapshot working tree")
+	}
+
+	if _, err := g.run(exec.CommandContext(ctx, "git", "switch", "-")); err != nil {
+		return "", errors.Wrap(err, "could not switch back")
+	}
+
+	refSpec := fmt.Sprintf("+refs/heads/%s:refs/remotes/%s/%s", branchName, remoteName, branchName)
+	if _, err := g.run(exec.CommandContext(ctx, "git", "fetch", remoteName, refSpec)); err != nil {
+		return "", errors.Wrap(err, "could not fetch remote branch")
+	}
+
+	remoteRef := remoteName + "/" + branchName
+
+	if _, err := g.run(exec.CommandContext(ctx, "git", "reset", "--hard", remoteRef)); err != nil {
+		return "", errors.Wrap(err, "could not reset to remote branch")
+	}
+
+	if _, err := g.run(exec.CommandContext(ctx, "git", "cherry-pick", "-n", "-X", "theirs", tmpBranch)); err != nil {
+		g.run(exec.CommandContext(ctx, "git", "cherry-pick", "--abort"))
+		return "", errors.Wrap(err, "could not apply working tree snapshot")
+	}
+
+	g.run(exec.CommandContext(ctx, "git", "branch", "-D", tmpBranch))
+
+	head, err := g.run(exec.CommandContext(ctx, "git", "rev-parse", "HEAD"))
+	if err != nil {
+		return "", errors.Wrap(err, "could not get head hash")
+	}
+
+	return strings.TrimSpace(head), nil
+}
+
 // AddRemote adds a new remote
 func (g *Git) AddRemote(name, url string) error {
 	cmd := exec.Command("git", "remote", "add", name, url)
