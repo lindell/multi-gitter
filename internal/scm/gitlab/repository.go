@@ -22,6 +22,7 @@ func (g *Gitlab) convertProject(project *gitlab.Project) (repository, error) {
 
 	return repository{
 		url:           cloneURL,
+		webURL:        project.WebURL,
 		pid:           project.ID,
 		name:          project.Path,
 		ownerName:     project.Namespace.FullPath,
@@ -43,6 +44,7 @@ func shouldSquash(project *gitlab.Project) bool {
 
 type repository struct {
 	url           string
+	webURL        string
 	pid           int64
 	name          string
 	ownerName     string
@@ -52,6 +54,14 @@ type repository struct {
 
 func (r repository) CloneURL() string {
 	return r.url
+}
+
+func (r repository) BranchURL(branchName string) string {
+	if r.webURL == "" {
+		return ""
+	}
+
+	return r.webURL + "/-/tree/" + url.PathEscape(branchName)
 }
 
 func (r repository) DefaultBranch() string {
