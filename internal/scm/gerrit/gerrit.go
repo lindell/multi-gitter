@@ -193,18 +193,46 @@ func (g Gerrit) getDefaultBranch(ctx context.Context, projectName string) (strin
 
 func (g Gerrit) CreatePullRequest(ctx context.Context, repo scm.Repository, _ scm.Repository, newPR scm.NewPullRequest) (scm.PullRequest, error) {
 	// In Gerrit context, pushing a commit to refs/for/<base_branch> is enough to create automatically a change.
-	// So here, we are just "fetching" the change related to current branch (Head of PR)
-	// Not yet implemented: reviewers, team reviewers, assignees, draft, labels
+	// So here, we are just "fetching" the change related to current branch (Head of PR).
+	// Labels are mapped to Gerrit hashtags.
+	// Not yet implemented: reviewers, team reviewers, assignees, draft
 
-	return g.getChange(ctx, repo, newPR.Head)
+	pr, err := g.getChange(ctx, repo, newPR.Head)
+	if err != nil {
+		return nil, err
+	}
+	if err := g.setHashtags(ctx, pr.(change).id, newPR.Labels); err != nil {
+		return nil, err
+	}
+	return pr, nil
 }
 
 func (g Gerrit) UpdatePullRequest(ctx context.Context, repo scm.Repository, _ scm.PullRequest, updatedPR scm.NewPullRequest) (scm.PullRequest, error) {
 	// In Gerrit context, pushing a commit to refs/for/<base_branch> is enough to create automatically a change.
-	// So here, we are just "fetching" the change related
-	// Not yet implemented: reviewers, team reviewers, assignees, draft, labels
+	// So here, we are just "fetching" the change related.
+	// Labels are mapped to Gerrit hashtags.
+	// Not yet implemented: reviewers, team reviewers, assignees, draft
 
-	return g.getChange(ctx, repo, updatedPR.Head)
+	pr, err := g.getChange(ctx, repo, updatedPR.Head)
+	if err != nil {
+		return nil, err
+	}
+	if err := g.setHashtags(ctx, pr.(change).id, updatedPR.Labels); err != nil {
+		return nil, err
+	}
+	return pr, nil
+}
+
+// setHashtags maps multi-gitter labels to Gerrit hashtags on the given change.
+func (g Gerrit) setHashtags(ctx context.Context, changeID string, labels []string) error {
+	if len(labels) == 0 {
+		return nil
+	}
+	_, _, err := g.client.SetHashtags(ctx, changeID, &gogerrit.HashtagsInput{Add: labels})
+	if err != nil {
+		return errors.Wrapf(err, "failed to set hashtags on change %s", changeID)
+	}
+	return nil
 }
 
 func (g Gerrit) GetPullRequests(ctx context.Context, branchName string) ([]scm.PullRequest, error) {
