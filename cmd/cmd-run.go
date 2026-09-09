@@ -46,6 +46,7 @@ func RunCmd() *cobra.Command {
 	cmd.Flags().IntP("max-reviewers", "M", 0, "If this value is set, reviewers will be randomized.")
 	cmd.Flags().IntP("max-team-reviewers", "", 0, "If this value is set, team reviewers will be randomized")
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
+	cmd.Flags().DurationP("sleep-between-batch", "", 0, "Sleep duration between concurrent batches (e.g., 30s, 1m).")
 	cmd.Flags().BoolP("skip-pr", "", false, "Skip pull request and directly push to the branch.")
 	cmd.Flags().BoolP("push-only", "", false, "Skip pull request and only push the feature branch.")
 	cmd.Flags().BoolP("manual-commit", "", false, "Let the script commit the changes, multiple commits are allowed, multi-gitter will still open a pull request when changes are detected.")
@@ -93,6 +94,7 @@ func run(cmd *cobra.Command, _ []string) error {
 	maxReviewers, _ := flag.GetInt("max-reviewers")
 	maxTeamReviewers, _ := flag.GetInt("max-team-reviewers")
 	concurrent, _ := flag.GetInt("concurrent")
+	sleepBetweenBatch, _ := flag.GetDuration("sleep-between-batch")
 	skipPullRequest, _ := flag.GetBool("skip-pr")
 	pushOnly, _ := flag.GetBool("push-only")
 	manualCommit, _ := flag.GetBool("manual-commit")
@@ -252,7 +254,8 @@ func run(cmd *cobra.Command, _ []string) error {
 		Labels:           labels,
 		CloneDir:         cloneDir,
 
-		Concurrent: concurrent,
+		Concurrent:        concurrent,
+		SleepBetweenBatch: sleepBetweenBatch,
 
 		CreateGit: gitCreator,
 	}
