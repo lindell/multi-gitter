@@ -58,12 +58,13 @@ It has the benefit of automatically producing verified commits. However, it is s
 Available values:
   skip: Skip making any changes to the existing branch and do not create a new pull request.
   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
+  append: Push only the relative differences between the existing branch and the new changes as a single commit, then reuse any existing pull request, or create a new one if none exist.
 `)
 	cmd.Flags().BoolP("draft", "", false, "Create pull request(s) as draft.")
 	cmd.Flags().BoolP("pr-auto-merge", "", false, "Enable auto-merge for created pull requests. PRs will be automatically merged when all required checks pass (GitHub) or when pipeline succeeds (GitLab). Use --merge-type to specify the merge strategy for GitHub.")
 	configureMergeType(cmd, true)
 	_ = cmd.RegisterFlagCompletionFunc("conflict-strategy", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return []string{"skip", "replace"}, cobra.ShellCompDirectiveNoFileComp
+		return []string{"skip", "replace", "append"}, cobra.ShellCompDirectiveNoFileComp
 	})
 	cmd.Flags().StringSliceP("labels", "", nil, "Labels to be added to any created pull request.")
 	cmd.Flags().StringP("author-name", "", "", "Name of the committer. If not set, the global git config setting will be used.")
