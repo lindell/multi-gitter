@@ -337,16 +337,34 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
-	log.Info("Pushing changes to remote")
 	forcePush := featureBranchExist && r.ConflictStrategy == ConflictStrategyReplace
 
-	if !r.APIPush {
+	// The replace strategy force pushes, which re-triggers CI even when the branch content did
+	// not change. Skip the push if the remote branch already contains these exact changes. This
+	// only applies to the normal branch push, not to backends with a custom remote reference
+	// (such as Gerrit) that push to a review ref instead of the feature branch.
+	_, customRemoteReference := r.VersionController.(VersionControllerRemoteReference)
+	skipPush := false
+	if forcePush && !r.APIPush && !customRemoteReference {
+		differs, err := sourceController.DiffsWithRemoteBranch(ctx, remoteName, r.FeatureBranch)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not compare local changes with the remote branch")
+		}
+		skipPush = !differs
+	}
+
+	switch {
+	case skipPush:
+		log.Info("Remote branch already contains these changes, skipping push")
+	case !r.APIPush:
+		log.Info("Pushing changes to remote")
 		remoteReference := r.remoteReference(baseBranch, r.FeatureBranch)
 		err = sourceController.Push(ctx, remoteName, remoteReference, forcePush, r.PushOptions...)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not push changes")
 		}
-	} else {
+	default:
+		log.Info("Pushing changes to remote")
 		changePusher, hasChangePusher := r.VersionController.(scm.ChangePusher)
 		if !hasChangePusher {
 			return nil, errors.New("the scm implementation does not support committing through the API")

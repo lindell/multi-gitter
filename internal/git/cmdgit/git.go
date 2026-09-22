@@ -139,6 +139,33 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 	return strings.Contains(stdOut, fmt.Sprintf("\trefs/heads/%s\n", branchName)), nil
 }
 
+// DiffsWithRemoteBranch reports whether the local HEAD has a different tree than the given
+// branch on the remote. It fetches the remote branch and compares the root tree hashes, so a
+// commit that only differs in metadata (such as its timestamp) is not counted as a difference.
+func (g *Git) DiffsWithRemoteBranch(ctx context.Context, remoteName, branchName string) (bool, error) {
+	cmd := exec.CommandContext(ctx, "git", "fetch", "--no-tags", remoteName, branchName)
+	if _, err := g.run(cmd); err != nil {
+		return false, errors.Wrap(err, "could not fetch the remote branch")
+	}
+
+	remoteTree, err := g.treeHash("FETCH_HEAD")
+	if err != nil {
+		return false, err
+	}
+	localTree, err := g.treeHash("HEAD")
+	if err != nil {
+		return false, err
+	}
+
+	return remoteTree != localTree, nil
+}
+
+func (g *Git) treeHash(rev string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", rev+"^{tree}")
+	out, err := g.run(cmd)
+	return strings.TrimSpace(out), err
+}
+
 // Push the committed changes to the remote
 func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, force bool, pushOptions ...string) error {
 	args := []string{"push", "--no-verify", remoteName}
