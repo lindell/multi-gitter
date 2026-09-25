@@ -18,6 +18,7 @@ type GoGerritClient interface {
 	QueryChanges(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error)
 	AbandonChange(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
 	SubmitChange(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
+	SetHashtags(ctx context.Context, changeID string, input *gogerrit.HashtagsInput) ([]string, *gogerrit.Response, error)
 	GetHEAD(ctx context.Context, projectName string) (string, *gogerrit.Response, error)
 }
 
@@ -39,6 +40,10 @@ func (ggc goGerritClient) AbandonChange(ctx context.Context, changeID string, in
 
 func (ggc goGerritClient) SubmitChange(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
 	return ggc.client.Changes.SubmitChange(ctx, changeID, input)
+}
+
+func (ggc goGerritClient) SetHashtags(ctx context.Context, changeID string, input *gogerrit.HashtagsInput) ([]string, *gogerrit.Response, error) {
+	return ggc.client.Changes.SetHashtags(ctx, changeID, input)
 }
 
 func (ggc goGerritClient) GetHEAD(ctx context.Context, projectName string) (string, *gogerrit.Response, error) {

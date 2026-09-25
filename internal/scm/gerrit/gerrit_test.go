@@ -20,6 +20,7 @@ type goGerritClientMock struct {
 	QueryChangesFunc  func(ctx context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error)
 	AbandonChangeFunc func(ctx context.Context, changeID string, input *gogerrit.AbandonInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
 	SubmitChangeFunc  func(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error)
+	SetHashtagsFunc   func(ctx context.Context, changeID string, input *gogerrit.HashtagsInput) ([]string, *gogerrit.Response, error)
 	GetHEADFunc       func(ctx context.Context, projectName string) (string, *gogerrit.Response, error)
 }
 
@@ -49,6 +50,13 @@ func (gcm goGerritClientMock) AbandonChange(ctx context.Context, changeID string
 
 func (gcm goGerritClientMock) SubmitChange(ctx context.Context, changeID string, input *gogerrit.SubmitInput) (*gogerrit.ChangeInfo, *gogerrit.Response, error) {
 	return gcm.SubmitChangeFunc(ctx, changeID, input)
+}
+
+func (gcm goGerritClientMock) SetHashtags(ctx context.Context, changeID string, input *gogerrit.HashtagsInput) ([]string, *gogerrit.Response, error) {
+	if gcm.SetHashtagsFunc != nil {
+		return gcm.SetHashtagsFunc(ctx, changeID, input)
+	}
+	return input.Add, nil, nil
 }
 
 func (gcm goGerritClientMock) GetHEAD(ctx context.Context, projectName string) (string, *gogerrit.Response, error) {
@@ -224,36 +232,54 @@ func TestGetOpenPullRequest(t *testing.T) {
 }
 
 func TestCreatePullRequest(t *testing.T) {
+	var hashtags []string
 	g := &Gerrit{
 		client: goGerritClientMock{
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
 				return getChangesForQuery(opt.Query[0])
 			},
+			SetHashtagsFunc: func(_ context.Context, _ string, input *gogerrit.HashtagsInput) ([]string, *gogerrit.Response, error) {
+				hashtags = input.Add
+				return input.Add, nil, nil
+			},
 		},
 	}
 	repo := repository{name: "repo-active"}
-	pr, err := g.CreatePullRequest(context.Background(), repo, repo, scm.NewPullRequest{Head: "feature"})
+	pr, err := g.CreatePullRequest(context.Background(), repo, repo, scm.NewPullRequest{Head: "feature", Labels: []string{"label1", "label2"}})
 	require.NoError(t, err)
 	require.NotNil(t, pr)
 	assert.Equal(t, "I123", pr.(change).changeID)
+	assert.Equal(t, []string{"label1", "label2"}, hashtags)
+
+	// No labels means no hashtags call
+	hashtags = nil
+	_, err = g.CreatePullRequest(context.Background(), repo, repo, scm.NewPullRequest{Head: "feature"})
+	require.NoError(t, err)
+	assert.Nil(t, hashtags)
 
 	_, err = g.CreatePullRequest(context.Background(), repo, repo, scm.NewPullRequest{Head: "unknown-feature"})
 	require.Error(t, err)
 }
 
 func TestUpdatePullRequest(t *testing.T) {
+	var hashtags []string
 	g := &Gerrit{
 		client: goGerritClientMock{
 			QueryChangesFunc: func(_ context.Context, opt *gogerrit.QueryChangeOptions) (*[]gogerrit.ChangeInfo, *gogerrit.Response, error) {
 				return getChangesForQuery(opt.Query[0])
 			},
+			SetHashtagsFunc: func(_ context.Context, _ string, input *gogerrit.HashtagsInput) ([]string, *gogerrit.Response, error) {
+				hashtags = input.Add
+				return input.Add, nil, nil
+			},
 		},
 	}
 	repo := repository{name: "repo-active"}
-	pr, err := g.UpdatePullRequest(context.Background(), repo, change{}, scm.NewPullRequest{Head: "feature"})
+	pr, err := g.UpdatePullRequest(context.Background(), repo, change{}, scm.NewPullRequest{Head: "feature", Labels: []string{"label1", "label2"}})
 	require.NoError(t, err)
 	require.NotNil(t, pr)
 	assert.Equal(t, "I123", pr.(change).changeID)
+	assert.Equal(t, []string{"label1", "label2"}, hashtags)
 
 	_, err = g.UpdatePullRequest(context.Background(), repo, change{}, scm.NewPullRequest{Head: "unknown-feature"})
 	require.Error(t, err)
