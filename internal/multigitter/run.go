@@ -240,7 +240,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		}
 	}
 
-	commitHashBeforeRun, err := sourceController.LatestCommitHash()
+	baselineCommitHash, err := sourceController.LatestCommitHash()
 	if err != nil {
 		return nil, err
 	}
@@ -261,52 +261,12 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		return nil, transformExecError(err)
 	}
 
-	if !r.ManualCommit {
-		if changed, err := sourceController.Changes(); err != nil {
-			return nil, err
-		} else if !changed {
-			return nil, errNoChange
-		}
-
-		commitMessage := r.enhanceCommitMessage(ctx, repo)
-		err = sourceController.Commit(r.CommitAuthor, commitMessage)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		commitHashAfterRun, err := sourceController.LatestCommitHash()
-		if err != nil {
-			return nil, err
-		}
-
-		if commitHashBeforeRun == commitHashAfterRun {
-			return nil, errNoChange
-		}
-
-	}
-
-	prTitle, prBody, err := r.getPRBodyAndTitle(sourceController, commitHashBeforeRun)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not get pull request title and body")
-	}
-
-	if r.Interactive {
-		err = r.interactive(tmpDir, repo, commitHashBeforeRun)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if r.DryRun {
-		log.Info("Skipping pushing changes because of dry run")
-		return dryRunPullRequest{
-			Repository: repo,
-		}, nil
-	}
-
+	// Resolve remote state and rebase onto existing branch before detecting changes
 	remoteName := "origin"
 	prRepo := repo
-	if r.Fork {
+	featureBranchExist := false
+
+	if !r.DryRun && r.Fork {
 		log.Info("Forking repository")
 
 		prRepo, err = r.VersionController.ForkRepository(ctx, repo, r.ForkOwner)
@@ -321,20 +281,71 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 		remoteName = "fork"
 	}
 
-	// Determine if a branch already exists and (depending on the conflict strategy) skip making changes
-	featureBranchExist := false
-	if !r.SkipPullRequest && !r.PushOnly {
+	if !r.DryRun && !r.SkipPullRequest && !r.PushOnly {
 		featureBranchExist, err = r.featureBranchExist(ctx, repo, remoteName, sourceController)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not verify if branch already exists")
-		} else if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
-			pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist, prTitle, prBody)
-			if err != nil {
-				return nil, err
-			}
-
-			return pr, errBranchExist
 		}
+	}
+
+	// Rebase onto the existing remote branch so changes are appended on top
+	if featureBranchExist && r.ConflictStrategy == ConflictStrategyAppend {
+		baselineCommitHash, err = sourceController.FetchAndRebase(ctx, remoteName, r.FeatureBranch)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not rebase onto existing branch")
+		}
+	}
+
+	// Detect changes and commit if the script did not commit on its own
+	if !r.ManualCommit {
+		if changed, err := sourceController.Changes(); err != nil {
+			return nil, err
+		} else if !changed {
+			return nil, errNoChange
+		}
+
+		commitMessage := r.enhanceCommitMessage(ctx, repo)
+		if err := sourceController.Commit(r.CommitAuthor, commitMessage); err != nil {
+			return nil, err
+		}
+	} else {
+		commitHashAfterRun, err := sourceController.LatestCommitHash()
+		if err != nil {
+			return nil, err
+		}
+
+		if baselineCommitHash == commitHashAfterRun {
+			return nil, errNoChange
+		}
+	}
+
+	if r.Interactive {
+		err = r.interactive(tmpDir, repo, baselineCommitHash)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	prTitle, prBody, err := r.getPRBodyAndTitle(sourceController, baselineCommitHash)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get pull request title and body")
+	}
+
+	if r.DryRun {
+		log.Info("Skipping pushing changes because of dry run")
+		return dryRunPullRequest{
+			Repository: repo,
+		}, nil
+	}
+
+	// Ensure the existing PR is returned without pushing new changes
+	if featureBranchExist && r.ConflictStrategy == ConflictStrategySkip {
+		pr, err := r.ensurePullRequestExists(ctx, log, repo, prRepo, baseBranch, featureBranchExist, prTitle, prBody)
+		if err != nil {
+			return nil, err
+		}
+
+		return pr, errBranchExist
 	}
 
 	log.Info("Pushing changes to remote")
@@ -352,7 +363,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 			return nil, errors.New("the scm implementation does not support committing through the API")
 		}
 
-		changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
+		changes, err := sourceController.ChangesSinceCommit(baselineCommitHash)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not get diff")
 		}
@@ -384,12 +395,12 @@ func (r *Runner) enhanceCommitMessage(ctx context.Context, repo scm.Repository) 
 // Get the PR title and body
 // In the default case, this is simply the set title and body,
 // but it may also be extracted from a commit messages if manual commits are used
-func (r *Runner) getPRBodyAndTitle(sourceController Git, commitHashBeforeRun string) (string, string, error) {
+func (r *Runner) getPRBodyAndTitle(sourceController Git, baselineCommitHash string) (string, string, error) {
 	if !r.ManualCommit || r.PullRequestTitle != "" {
 		return r.PullRequestTitle, r.PullRequestBody, nil
 	}
 
-	changes, err := sourceController.ChangesSinceCommit(commitHashBeforeRun)
+	changes, err := sourceController.ChangesSinceCommit(baselineCommitHash)
 	if err != nil {
 		return "", "", errors.Wrap(err, "could not get commit message")
 	}
@@ -451,7 +462,7 @@ func (r *Runner) ensurePullRequestExists(
 	}
 
 	if existingPullRequest != nil {
-		if r.ConflictStrategy == ConflictStrategyReplace {
+		if r.ConflictStrategy != ConflictStrategySkip {
 			log.Info("Updating pull request since one is already open")
 			return r.VersionController.UpdatePullRequest(ctx, repo, existingPullRequest, scm.NewPullRequest{
 				Title:         prTitle,

@@ -143,6 +143,7 @@ concurrent: 1
 # Available values:
 #   skip: Skip making any changes to the existing branch and do not create a new pull request.
 #   replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
+#   append: Push only the relative differences between the existing branch and the new changes as a single commit, then reuse any existing pull request, or create a new one if none exist.
 conflict-strategy: skip
 
 # Create pull request(s) as draft.
@@ -707,6 +708,7 @@ Flags:
                                    Available values:
                                      skip: Skip making any changes to the existing branch and do not create a new pull request.
                                      replace: Replace the existing content of the branch by force pushing any new changes, then reuse any existing pull request, or create a new one if none exist.
+                                     append: Push only the relative differences between the existing branch and the new changes as a single commit, then reuse any existing pull request, or create a new one if none exist.
                                     (default "skip")
       --draft                      Create pull request(s) as draft.
   -d, --dry-run                    Run without pushing changes or creating pull requests.

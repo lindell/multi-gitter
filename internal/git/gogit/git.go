@@ -234,6 +234,12 @@ func (g *Git) Push(ctx context.Context, remoteName, remoteReference string, forc
 	})
 }
 
+// FetchAndRebase fetches the remote branch and soft-resets the current branch onto it,
+// preserving the working tree so the caller can recommit on top.
+func (g *Git) FetchAndRebase(ctx context.Context, remoteName, branchName string) (string, error) {
+	return "", errors.New("conflict-strategy=append is not supported with git-type=go, use git-type=cmd instead")
+}
+
 // AddRemote adds a new remote
 func (g *Git) AddRemote(name, url string) error {
 	_, err := g.repo.CreateRemote(&config.RemoteConfig{
