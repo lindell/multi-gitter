@@ -1059,6 +1059,44 @@ Repositories with a successful run:
 		},
 
 		{
+			name: "replace conflict strategy without changes",
+			vcCreate: func(t *testing.T) *vcmock.VersionController {
+				// The feature branch already holds the exact changes the run would produce, so the
+				// replace strategy should not force push again (see issue #239).
+				repo := createRepo(t, "owner", "already-up-to-date", "i like apples")
+				changeBranch(t, repo.Path, "custom-branch-name", true)
+				changeTestFile(t, repo.Path, "i like bananas", "apply change")
+				changeBranch(t, repo.Path, "master", false)
+
+				return &vcmock.VersionController{
+					Repositories: []vcmock.Repository{repo},
+				}
+			},
+			args: []string{
+				"run",
+				"--author-name", "Test Author",
+				"--author-email", "test@example.com",
+				"-B", "custom-branch-name",
+				"-m", "custom message",
+				"--conflict-strategy", "replace",
+				changerBinaryPath,
+			},
+			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
+				assert.Equal(t, 0, strings.Count(runData.logOut, "Pushing changes to remote"))
+				assert.Contains(t, runData.logOut, "skipping push")
+
+				// A pull request is still opened for the already existing branch.
+				require.Len(t, vcMock.PullRequests, 1)
+				assert.Equal(t, "custom-branch-name", vcMock.PullRequests[0].Head)
+
+				// The feature branch tip is left untouched, proving nothing was force pushed.
+				message, err := getCommitMessage(t, vcMock.Repositories[0].Path, "refs/heads/custom-branch-name")
+				require.NoError(t, err)
+				assert.Equal(t, "apply change", strings.TrimSuffix(message, "\n"))
+			},
+		},
+
+		{
 			name: "multi line message body",
 			vcCreate: func(t *testing.T) *vcmock.VersionController {
 				return &vcmock.VersionController{
