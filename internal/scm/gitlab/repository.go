@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	gitlab "gitlab.com/gitlab-org/api/client-go/v2"
+	gitlab "gitlab.com/gitlab-org/api/client-go/v3"
 )
 
 func (g *Gitlab) convertProject(project *gitlab.Project) (repository, error) {
