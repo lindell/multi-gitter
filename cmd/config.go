@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -49,6 +51,12 @@ func initializeStaticConfig(cmd *cobra.Command) error {
 
 	v.SetConfigType("yaml")
 	v.SetConfigName("config")
+
+	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
+		v.AddConfigPath(filepath.Join(xdgConfigHome, "multi-gitter"))
+	} else {
+		v.AddConfigPath("$HOME/.config/multi-gitter")
+	}
 	v.AddConfigPath("$HOME/.multi-gitter")
 
 	// Attempt to read the config file, gracefully ignoring errors
