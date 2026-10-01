@@ -1,6 +1,6 @@
 module github.com/lindell/multi-gitter
 
-go 1.26
+go 1.26.0
 
 require (
 	code.gitea.io/sdk/gitea v0.25.1
@@ -8,7 +8,7 @@ require (
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
 	github.com/gfleury/go-bitbucket-v1 v0.0.0-20240917142304-df385efaac68
 	github.com/go-git/go-git/v5 v5.19.2
-	github.com/google/go-github/v85 v85.0.0
+	github.com/google/go-github/v92 v92.0.0
 	github.com/ktrysmt/go-bitbucket v0.9.87
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
