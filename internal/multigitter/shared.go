@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/lindell/multi-gitter/internal/git"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type urler interface {
@@ -25,6 +27,45 @@ func transformExecError(err error) error {
 	return err
 }
 
+// cloneOrReuseRepository handles cloning or reusing an existing repository.
+// When keep is enabled, it attempts to reuse an existing clone by resetting to the base branch.
+// If keep is disabled or reset fails, it performs a fresh clone.
+func cloneOrReuseRepository(ctx context.Context, sourceController Git, tmpDir string, repo interface{ CloneURL() string }, baseBranch string, keep bool, logger log.FieldLogger) error {
+	// If keep mode is enabled and the directory already exists, try to reuse it with a hard reset
+	if keep {
+		if _, statErr := os.Stat(filepath.Join(tmpDir, ".git")); statErr == nil {
+			logger.Info("Reusing existing clone, resetting to base branch")
+			err := sourceController.FetchAndResetToDefault(ctx, baseBranch)
+			if err != nil {
+				// If reset fails, remove and re-clone
+				logger.WithError(err).Info("Reset failed, re-cloning")
+				os.RemoveAll(tmpDir)
+				err = os.MkdirAll(tmpDir, 0755)
+				if err != nil {
+					return err
+				}
+				err = sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		// Keep is enabled but .git doesn't exist, so we need to create the directory and clone
+		err := os.MkdirAll(tmpDir, 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Clone the repository (either keep is disabled, or directory doesn't exist)
+	err := sourceController.Clone(ctx, repo.CloneURL(), baseBranch)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Git is a git implementation
 type Git interface {
 	Clone(ctx context.Context, url string, baseName string) error
@@ -36,6 +77,7 @@ type Git interface {
 	AddRemote(name, url string) error
 	LatestCommitHash() (string, error)
 	ChangesSinceCommit(sinceCommitHash string) ([]git.Changes, error)
+	FetchAndResetToDefault(ctx context.Context, baseName string) error
 }
 
 type stackTracer interface {
@@ -127,4 +169,29 @@ func makeAbsolutePath(path string) (string, error) {
 	}
 
 	return path, nil
+}
+
+// keepDir returns a deterministic directory path for a given repository name
+// within the clone directory. The repo full name (e.g. "owner/repo") is sanitized
+// so that slashes become dashes.
+func keepDir(cloneDir string, repoFullName string) (string, error) {
+	if cloneDir == "" {
+		cloneDir = os.TempDir()
+	}
+
+	absDir, err := makeAbsolutePath(cloneDir)
+	if err != nil {
+		return "", err
+	}
+
+	err = createDirectoryIfDoesntExist(absDir)
+	if err != nil {
+		return "", err
+	}
+
+	// Sanitize the repo name for use as a directory name
+	safeName := strings.ReplaceAll(repoFullName, "/", "-")
+	dir := filepath.Join(absDir, "multi-gitter-"+safeName)
+
+	return dir, nil
 }
