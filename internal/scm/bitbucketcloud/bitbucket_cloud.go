@@ -383,7 +383,16 @@ func (bbc *BitbucketCloud) convertRepository(repo bitbucket.Repository) (*reposi
 		project:       repo.Project.Name,
 		defaultBranch: repo.Mainbranch.Name,
 		cloneURL:      cloneURL,
+		webURL:        firstHref(rLinks.HTML),
 	}, nil
+}
+
+func firstHref(links []hrefLink) string {
+	if len(links) == 0 {
+		return ""
+	}
+
+	return links[0].Href
 }
 
 func findLinkType(cloneLinks []hrefLink, cloneType string, repoName string) (string, error) {

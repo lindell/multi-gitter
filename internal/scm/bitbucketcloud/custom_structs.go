@@ -2,6 +2,7 @@ package bitbucketcloud
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/ktrysmt/go-bitbucket"
 	"github.com/lindell/multi-gitter/internal/scm"
@@ -99,10 +100,19 @@ type repository struct {
 	project       string
 	defaultBranch string
 	cloneURL      string
+	webURL        string
 }
 
 func (r repository) CloneURL() string {
 	return r.cloneURL
+}
+
+func (r repository) BranchURL(branchName string) string {
+	if r.webURL == "" {
+		return ""
+	}
+
+	return r.webURL + "/branch/" + url.PathEscape(branchName)
 }
 
 func (r repository) DefaultBranch() string {
