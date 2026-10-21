@@ -76,8 +76,6 @@ homebrew_casks:
       bash: "completions/multi-gitter.bash"
       zsh: "completions/multi-gitter.zsh"
       fish: "completions/multi-gitter.fish"
-    url:
-      verified: github.com/lindell/multi-gitter
     hooks:
       post:
         install: |
