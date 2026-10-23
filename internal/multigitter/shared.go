@@ -36,6 +36,7 @@ type Git interface {
 	AddRemote(name, url string) error
 	LatestCommitHash() (string, error)
 	ChangesSinceCommit(sinceCommitHash string) ([]git.Changes, error)
+	FetchAndRebase(ctx context.Context, remoteName, branchName string) (remoteTipHash string, err error)
 }
 
 type stackTracer interface {
@@ -61,6 +62,8 @@ const (
 	ConflictStrategySkip ConflictStrategy = iota + 1
 	// ConflictStrategyReplace will ignore any existing branch and replace it with new changes
 	ConflictStrategyReplace
+	// ConflictStrategyAppend will push only the new changes as a single commit on top of the existing branch
+	ConflictStrategyAppend
 )
 
 // ParseConflictStrategy parses a conflict strategy from a string
@@ -72,6 +75,8 @@ func ParseConflictStrategy(str string) (ConflictStrategy, error) {
 		return ConflictStrategySkip, nil
 	case "replace":
 		return ConflictStrategyReplace, nil
+	case "append":
+		return ConflictStrategyAppend, nil
 	}
 }
 
