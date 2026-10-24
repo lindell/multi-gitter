@@ -46,6 +46,67 @@ func (g *Git) Clone(ctx context.Context, url string, baseName string) error {
 	return nil
 }
 
+// FetchAndResetToDefault fetches the latest changes from origin and performs a hard reset
+// to the default branch. This is used with the --keep option to reuse already-cloned repositories.
+func (g *Git) FetchAndResetToDefault(ctx context.Context, baseName string) error {
+	if g.repo == nil {
+		// Open existing repository from disk
+		r, err := git.PlainOpen(g.Directory)
+		if err != nil {
+			return errors.Wrap(err, "could not open existing repository")
+		}
+		g.repo = r
+	}
+
+	w, err := g.repo.Worktree()
+	if err != nil {
+		return errors.Wrap(err, "could not get worktree")
+	}
+
+	// Checkout the base branch
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.NewBranchReferenceName(baseName),
+		Force:  true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not checkout base branch")
+	}
+
+	// Fetch latest changes
+	err = g.repo.FetchContext(ctx, &git.FetchOptions{
+		RemoteName: "origin",
+		Depth:      g.FetchDepth,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return errors.Wrap(err, "could not fetch from origin")
+	}
+
+	// Resolve the remote reference
+	remoteRef, err := g.repo.Reference(plumbing.NewRemoteReferenceName("origin", baseName), true)
+	if err != nil {
+		return errors.Wrap(err, "could not resolve remote reference")
+	}
+
+	// Hard reset to the remote reference
+	err = w.Reset(&git.ResetOptions{
+		Commit: remoteRef.Hash(),
+		Mode:   git.HardReset,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not hard reset")
+	}
+
+	// Clean untracked files
+	err = w.Clean(&git.CleanOptions{
+		Dir: true,
+	})
+	if err != nil {
+		return errors.Wrap(err, "could not clean untracked files")
+	}
+
+	return nil
+}
+
 // ChangeBranch changes the branch
 func (g *Git) ChangeBranch(branchName string) error {
 	w, err := g.repo.Worktree()
