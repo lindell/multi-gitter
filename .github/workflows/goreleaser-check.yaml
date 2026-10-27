@@ -4,6 +4,7 @@ on:
     branches:
       - "release-please--**"
       - "renovate/all-non-major-github-actions"
+      - "renovate/goreleaser-goreleaser-action-*"
       - master
 
 permissions:
