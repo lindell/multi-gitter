@@ -24,13 +24,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'go' ]
+        language: [ 'actions', 'go' ]
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Set up Go
+      if: ${{ matrix.language == 'go' }}
       uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: 'go.mod'
@@ -42,6 +43,7 @@ jobs:
         languages: ${{ matrix.language }}
 
     - name: Autobuild
+      if: ${{ matrix.language == 'go' }}
       uses: github/codeql-action/autobuild@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
 
     - name: Perform CodeQL Analysis
