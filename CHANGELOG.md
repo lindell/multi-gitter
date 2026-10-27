@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.65.0](https://github.com/lindell/multi-gitter/compare/v0.64.0...v0.65.0) (2026-10-27)
+
+
+### Features
+
+* support XDG Base Directory Specification for config location ([#633](https://github.com/lindell/multi-gitter/issues/633)) ([8705bbc](https://github.com/lindell/multi-gitter/commit/8705bbcea465d7e666ac626c5f58f1ce0b02f9cf))
+
 ## [0.64.0](https://github.com/lindell/multi-gitter/compare/v0.63.1...v0.64.0) (2026-10-22)
 
 
