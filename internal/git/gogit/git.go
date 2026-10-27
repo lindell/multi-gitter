@@ -3,6 +3,7 @@ package gogit
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -204,6 +205,45 @@ func (g *Git) BranchExist(remoteName, branchName string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// DiffsWithRemoteBranch reports whether the local HEAD has a different tree than the given
+// branch on the remote. It fetches the remote branch and compares the root tree hashes, so a
+// commit that only differs in metadata (such as its timestamp) is not counted as a difference.
+func (g *Git) DiffsWithRemoteBranch(ctx context.Context, remoteName, branchName string) (bool, error) {
+	remote, err := g.repo.Remote(remoteName)
+	if err != nil {
+		return false, err
+	}
+
+	remoteRefName := plumbing.NewRemoteReferenceName(remoteName, branchName)
+	refSpec := config.RefSpec(fmt.Sprintf("+refs/heads/%s:%s", branchName, remoteRefName))
+	err = remote.FetchContext(ctx, &git.FetchOptions{
+		RefSpecs: []config.RefSpec{refSpec},
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return false, errors.Wrap(err, "could not fetch the remote branch")
+	}
+
+	remoteRef, err := g.repo.Reference(remoteRefName, true)
+	if err != nil {
+		return false, err
+	}
+	remoteCommit, err := g.repo.CommitObject(remoteRef.Hash())
+	if err != nil {
+		return false, err
+	}
+
+	head, err := g.repo.Head()
+	if err != nil {
+		return false, err
+	}
+	localCommit, err := g.repo.CommitObject(head.Hash())
+	if err != nil {
+		return false, err
+	}
+
+	return remoteCommit.TreeHash != localCommit.TreeHash, nil
 }
 
 // Push the committed changes to the remote
