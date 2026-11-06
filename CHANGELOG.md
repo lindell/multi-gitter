@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.65.0](https://github.com/lindell/multi-gitter/compare/v0.64.0...v0.65.0) (2026-11-06)
+
+
+### Features
+
+* support XDG Base Directory Specification for config location ([#633](https://github.com/lindell/multi-gitter/issues/633)) ([8705bbc](https://github.com/lindell/multi-gitter/commit/8705bbcea465d7e666ac626c5f58f1ce0b02f9cf))
+
+
+### Bug Fixes
+
+* replace deprecated Homebrew cask postflight with postflight_steps ([#648](https://github.com/lindell/multi-gitter/issues/648)) ([2204e16](https://github.com/lindell/multi-gitter/commit/2204e16193a76520c703668902be57dbae18fd69))
+
+
+### Dependencies
+
+* update module github.com/go-git/go-git/v5 to v5.19.3 ([b7b6acb](https://github.com/lindell/multi-gitter/commit/b7b6acb7b4e32a24dd3fe60c53c15ee1e452ddd7))
+* update module golang.org/x/net to v0.62.0 ([510de88](https://github.com/lindell/multi-gitter/commit/510de88937b4c23990fb40aa2466a5faaa50b7d9))
+
 ## [0.64.0](https://github.com/lindell/multi-gitter/compare/v0.63.1...v0.64.0) (2026-10-22)
 
 
