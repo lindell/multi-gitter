@@ -35,6 +35,7 @@ func PrintCmd() *cobra.Command {
 	cmd.Flags().IntP("concurrent", "C", 1, "The maximum number of concurrent runs.")
 	cmd.Flags().StringP("error-output", "E", "-", `The file that the output of the script should be outputted to. "-" means stderr.`)
 	cmd.Flags().StringP("clone-dir", "", "", "The temporary directory where the repositories will be cloned. If not set, the default os temporary directory will be used.")
+	cmd.Flags().BoolP("keep", "", false, "Skip the deletion of cloned repositories after running. Reuse already cloned repositories if present.")
 	configureRepoFilters(cmd)
 	configureGit(cmd)
 	configurePlatform(cmd)
@@ -52,6 +53,7 @@ func printCMD(cmd *cobra.Command, _ []string) error {
 	strOutput, _ := flag.GetString("output")
 	strErrOutput, _ := flag.GetString("error-output")
 	cloneDir, _ := flag.GetString("clone-dir")
+	keep, _ := flag.GetBool("keep")
 
 	if concurrent < 1 {
 		return errors.New("concurrent runs can't be less than one")
@@ -112,6 +114,7 @@ func printCMD(cmd *cobra.Command, _ []string) error {
 
 		Concurrent: concurrent,
 		CloneDir:   cloneDir,
+		Keep:       keep,
 
 		CreateGit: gitCreator,
 	}
