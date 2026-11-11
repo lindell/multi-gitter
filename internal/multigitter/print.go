@@ -65,7 +65,7 @@ func (r Printer) Print(ctx context.Context) error {
 		}
 
 		rc.AddSuccessRepositories(repos[i])
-	}, len(repos), r.Concurrent)
+	}, len(repos), r.Concurrent, 0)
 
 	return nil
 }
