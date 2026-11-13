@@ -4,6 +4,8 @@ package scm
 type Repository interface {
 	// CloneURL returns the clone address of the repository
 	CloneURL() string
+	// BranchURL returns a browser URL for the named branch when available
+	BranchURL(branchName string) string
 	// DefaultBranch returns the name of the default branch of the repository
 	DefaultBranch() string
 	// FullName returns the full id of the repository, usually ownerName/repoName

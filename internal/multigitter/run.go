@@ -106,6 +106,7 @@ var (
 type dryRunPullRequest struct {
 	status     scm.PullRequestStatus
 	Repository scm.Repository
+	branchName string
 }
 
 func (pr dryRunPullRequest) Status() scm.PullRequestStatus {
@@ -114,6 +115,14 @@ func (pr dryRunPullRequest) Status() scm.PullRequestStatus {
 
 func (pr dryRunPullRequest) String() string {
 	return fmt.Sprintf("%s #0", pr.Repository.FullName())
+}
+
+func (pr dryRunPullRequest) URL() string {
+	if pr.branchName == "" {
+		return ""
+	}
+
+	return pr.Repository.BranchURL(pr.branchName)
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
@@ -366,6 +375,7 @@ func (r *Runner) runSingleRepo(ctx context.Context, repo scm.Repository) (scm.Pu
 	if r.PushOnly {
 		return dryRunPullRequest{
 			Repository: repo,
+			branchName: r.FeatureBranch,
 		}, nil
 	}
 

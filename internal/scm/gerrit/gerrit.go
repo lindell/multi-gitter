@@ -177,6 +177,7 @@ func (g Gerrit) convertRepo(ctx context.Context, name string) (repository, error
 
 	return repository{
 		url:           repoURL,
+		webURL:        strings.TrimSuffix(g.config.BaseURL, "/") + "/admin/repos/" + name,
 		name:          name,
 		defaultBranch: defaultBranch,
 	}, nil
