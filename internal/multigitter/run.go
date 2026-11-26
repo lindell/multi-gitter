@@ -112,8 +112,10 @@ func (pr dryRunPullRequest) Status() scm.PullRequestStatus {
 	return pr.status
 }
 
+// String names only the repository: a dry run or a push-only run creates no
+// pull request, so there is no number to show.
 func (pr dryRunPullRequest) String() string {
-	return fmt.Sprintf("%s #0", pr.Repository.FullName())
+	return pr.Repository.FullName()
 }
 
 // Run runs a script for multiple repositories and creates PRs with the changes made
