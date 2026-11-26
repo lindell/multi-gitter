@@ -372,6 +372,8 @@ func TestTable(t *testing.T) {
 				require.Len(t, vcMock.PullRequests, 0)
 				assert.True(t, branchExist(t, vcMock.Repositories[0].Path, "master"))
 				assert.False(t, branchExist(t, vcMock.Repositories[0].Path, "custom-branch-name"))
+				// A dry run creates no pull request, so the summary shows no PR number (#650).
+				assert.Equal(t, "Repositories with a successful run:\n  owner/should-change\n", runData.out)
 			},
 		},
 		{
@@ -1386,7 +1388,7 @@ Repositories with a successful run:
 			},
 			verify: func(t *testing.T, vcMock *vcmock.VersionController, runData runData) {
 				assert.Equal(t, "", runData.cmdOut)
-				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository #0\n", runData.out)
+				assert.Equal(t, "Repositories with a successful run:\n  owner/example-repository\n", runData.out)
 			},
 		},
 		{
